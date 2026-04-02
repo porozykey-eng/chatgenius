@@ -1,0 +1,15 @@
+{
+  "name": "chatgenius-extension",
+  "version": "1.0.0",
+  "description": "ChatGenius AI - WhatsApp/Messenger 智能回复助手",
+  "scripts": {
+    "dev": "vite",
+    "build": "vite build",
+    "preview": "vite preview"
+  },
+  "devDependencies": {
+    "@types/chrome": "^0.0.260",
+    "typescript": "^5.3.3",
+    "vite": "^5.0.12"
+  }
+}

@@ -1,0 +1,422 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title data-i18n="title">AI Auto-Reply | Elite Guide</title>
+  <style>
+    @import url('https://fonts.googleapis.com/css2?family=Inter:wght@200;300;400;500;600;700&family=JetBrains+Mono:wght@400;500&display=swap');
+    
+    :root {
+      --bg: #050505;
+      --surface: #0a0a0a;
+      --surface-bright: #111111;
+      --primary: #ffffff;
+      --accent: #6366f1;
+      --accent-glow: rgba(99, 102, 241, 0.3);
+      --text-main: #ffffff;
+      --text-muted: rgba(255, 255, 255, 0.5);
+      --border: rgba(255, 255, 255, 0.06);
+      --font-sans: 'Inter', system-ui, -apple-system, sans-serif;
+      --font-mono: 'JetBrains Mono', monospace;
+      --nav-width: 280px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; -webkit-font-smoothing: antialiased; }
+    html { scroll-behavior: smooth; scroll-padding-top: 100px; }
+    body {
+      font-family: var(--font-sans);
+      background-color: var(--bg);
+      color: var(--text-main);
+      line-height: 1.6;
+      display: flex;
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: var(--nav-width);
+      background: var(--bg);
+      border-right: 1px solid var(--border);
+      padding: 60px 32px;
+      position: fixed;
+      height: 100vh;
+      z-index: 100;
+      display: flex;
+      flex-direction: column;
+    }
+
+    @media (max-width: 1024px) {
+      .sidebar { display: none; }
+      .main-content { margin-left: 0 !important; }
+      .hero, .section, footer { padding: 60px 24px !important; }
+      h1 { font-size: 48px !important; }
+    }
+
+    .logo {
+      font-size: 12px;
+      font-weight: 800;
+      letter-spacing: 0.2em;
+      text-transform: uppercase;
+      margin-bottom: 80px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      color: var(--primary);
+    }
+    .logo-dot { 
+      width: 10px; 
+      height: 10px; 
+      background: var(--accent); 
+      border-radius: 50%; 
+      box-shadow: 0 0 20px var(--accent);
+      animation: pulse 2s infinite;
+    }
+    @keyframes pulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .nav-section { margin-bottom: 48px; }
+    .nav-label {
+      font-size: 10px;
+      text-transform: uppercase;
+      letter-spacing: 0.25em;
+      color: var(--text-muted);
+      margin-bottom: 24px;
+      display: block;
+      font-weight: 600;
+    }
+    .nav-item {
+      display: block;
+      color: var(--text-muted);
+      text-decoration: none;
+      font-size: 13px;
+      margin-bottom: 18px;
+      transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      position: relative;
+      padding-left: 0;
+    }
+    .nav-item:hover, .nav-item.active { 
+      color: var(--text-main); 
+    }
+    .nav-item.active {
+      font-weight: 600;
+      padding-left: 16px;
+    }
+    .nav-item.active::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%);
+      width: 4px;
+      height: 4px;
+      background: var(--accent);
+      border-radius: 50%;
+      box-shadow: 0 0 10px var(--accent);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      margin-left: var(--nav-width);
+      background: var(--bg);
+      position: relative;
+    }
+
+    .top-bar {
+      height: 80px;
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      padding: 0 60px;
+      position: sticky;
+      top: 0;
+      background: rgba(5, 5, 5, 0.8);
+      backdrop-filter: blur(20px);
+      z-index: 90;
+      border-bottom: 1px solid var(--border);
+    }
+
+    .lang-toggle {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      color: var(--text-main);
+      padding: 8px 20px;
+      border-radius: 100px;
+      font-size: 11px;
+      font-weight: 600;
+      letter-spacing: 0.05em;
+      cursor: pointer;
+      transition: all 0.3s;
+    }
+    .lang-toggle:hover { 
+      background: var(--primary); 
+      color: var(--bg); 
+      transform: translateY(-1px);
+    }
+
+    .hero {
+      padding: 160px 80px 100px;
+      max-width: 1100px;
+      position: relative;
+    }
+    .hero::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: radial-gradient(circle at 20% 30%, var(--accent-glow) 0%, transparent 70%);
+      pointer-events: none;
+      opacity: 0.4;
+    }
+
+    .badge {
+      font-family: var(--font-mono);
+      font-size: 10px;
+      color: var(--accent);
+      background: rgba(99, 102, 241, 0.1);
+      border: 1px solid rgba(99, 102, 241, 0.2);
+      padding: 6px 16px;
+      border-radius: 100px;
+      display: inline-block;
+      margin-bottom: 32px;
+      letter-spacing: 0.15em;
+      font-weight: 500;
+    }
+    h1 {
+      font-size: 96px;
+      font-weight: 200;
+      line-height: 0.9;
+      letter-spacing: -0.05em;
+      margin-bottom: 40px;
+      background: linear-gradient(to bottom, #fff 40%, rgba(255,255,255,0.4));
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero-p {
+      font-size: 22px;
+      font-weight: 300;
+      color: var(--text-muted);
+      max-width: 640px;
+      line-height: 1.6;
+    }
+
+    .section {
+      padding: 120px 80px;
+      max-width: 1300px;
+      border-top: 1px solid var(--border);
+      opacity: 0;
+      transform: translateY(30px);
+      transition: all 0.8s cubic-bezier(0.23, 1, 0.32, 1);
+    }
+    .section.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .section-num { 
+      font-family: var(--font-mono); 
+      font-size: 12px; 
+      color: var(--accent); 
+      margin-bottom: 16px; 
+      display: block; 
+      letter-spacing: 0.2em;
+    }
+    h2 { font-size: 40px; font-weight: 300; letter-spacing: -0.03em; margin-bottom: 80px; }
+
+    .bento-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 24px;
+    }
+    .bento-item {
+      background: var(--surface);
+      border: 1px solid var(--border);
+      padding: 48px;
+      border-radius: 32px;
+      transition: all 0.5s cubic-bezier(0.23, 1, 0.32, 1);
+      position: relative;
+      overflow: hidden;
+    }
+    .bento-item::after {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: linear-gradient(135deg, rgba(255,255,255,0.05) 0%, transparent 100%);
+      opacity: 0;
+      transition: opacity 0.5s;
+    }
+    .bento-item:hover { 
+      border-color: rgba(255, 255, 255, 0.15); 
+      background: var(--surface-bright); 
+      transform: translateY(-8px); 
+      box-shadow: 0 20px 40px rgba(0,0,0,0.4);
+    }
+    .bento-item:hover::after { opacity: 1; }
+
+    .bento-item.large { grid-column: span 2; }
+    .bento-title { font-size: 20px; font-weight: 600; margin-bottom: 16px; letter-spacing: -0.01em; }
+    .bento-desc { font-size: 15px; color: var(--text-muted); line-height: 1.7; font-weight: 300; }
+
+    .steps { display: flex; flex-direction: column; gap: 60px; }
+    .step { display: grid; grid-template-columns: 80px 1fr; gap: 32px; }
+    .step-idx { font-family: var(--font-mono); font-size: 14px; color: var(--text-muted); opacity: 0.3; }
+    .step-content h4 { font-size: 20px; font-weight: 600; margin-bottom: 12px; letter-spacing: -0.01em; }
+    .step-content p { color: var(--text-muted); font-size: 16px; font-weight: 300; line-height: 1.7; }
+
+    .log-item { display: grid; grid-template-columns: 160px 1fr; gap: 60px; margin-bottom: 60px; }
+    .log-meta { font-family: var(--font-mono); font-size: 11px; color: var(--accent); letter-spacing: 0.15em; font-weight: 500; }
+    .log-body h4 { font-size: 18px; font-weight: 600; margin-bottom: 12px; }
+    .log-body p { font-size: 15px; color: var(--text-muted); font-weight: 300; line-height: 1.7; }
+
+    footer {
+      padding: 100px 80px;
+      border-top: 1px solid var(--border);
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      color: var(--text-muted);
+      font-size: 11px;
+      letter-spacing: 0.05em;
+    }
+    .footer-brand { font-family: var(--font-mono); font-weight: 500; color: var(--text-main); }
+  </style>
+</head>
+<body>
+  <div class="app-container">
+    <aside class="sidebar">
+      <div class="logo">
+        <div class="logo-dot"></div>
+        <span data-i18n="navTitle">AI AUTO-REPLY</span>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label" data-i18n="navLabelGuide">Navigation</span>
+        <a href="#setup" class="nav-item" data-i18n="sec1Title">Configuration</a>
+        <a href="#personas" class="nav-item" data-i18n="sec2Title">Personas</a>
+        <a href="#usage" class="nav-item" data-i18n="sec3Title">Experience</a>
+      </div>
+      <div class="nav-section">
+        <span class="nav-label" data-i18n="navLabelAdvanced">System</span>
+        <a href="#pro" class="nav-item" data-i18n="sec4Title">Pro Intelligence</a>
+        <a href="#changelog" class="nav-item" data-i18n="navChangelog">Timeline</a>
+      </div>
+    </aside>
+
+    <main class="main-content">
+      <div class="top-bar">
+        <button id="langToggle" class="lang-toggle">EN / ZH</button>
+      </div>
+
+      <header class="hero">
+        <div class="badge" data-i18n="badgeText">SYSTEM VERSION 1.9.0</div>
+        <h1 data-i18n="heroTitle">Master the Art of AI Communication</h1>
+        <p class="hero-p" data-i18n="heroDesc">Elevate your digital presence with sophisticated AI automation. Seamlessly integrated, ethically designed, and built for the modern professional.</p>
+      </header>
+
+      <section id="setup" class="section">
+        <span class="section-num">01</span>
+        <h2 data-i18n="sec1Title">Core Configuration</h2>
+        <div class="steps">
+          <div class="step">
+            <span class="step-idx">01</span>
+            <div class="step-content">
+              <h4 data-i18n="sec1L1Title">Access Interface</h4>
+              <p data-i18n="sec1L1">Initialize the system by selecting the extension icon in your secure browser environment.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-idx">02</span>
+            <div class="step-content">
+              <h4 data-i18n="sec1L2Title">Intelligence Provider</h4>
+              <p data-i18n="sec1L2">Select your preferred neural engine (OpenAI, DeepSeek, or Gemini) to power your conversations.</p>
+            </div>
+          </div>
+          <div class="step">
+            <span class="step-idx">03</span>
+            <div class="step-content">
+              <h4 data-i18n="sec1L4Title">Secure Authentication</h4>
+              <p data-i18n="sec1L4">Input your encrypted API credentials. Your data remains local, private, and under your control.</p>
+            </div>
+          </div>
+        </div>
+      </section>
+
+      <section id="personas" class="section">
+        <span class="section-num">02</span>
+        <h2 data-i18n="sec2Title">Digital Personas</h2>
+        <div class="bento-grid">
+          <div class="bento-item large">
+            <h4 class="bento-title" data-i18n="sec2P1">Tailored Identity</h4>
+            <p class="bento-desc" data-i18n="sec2PromptGuide">Define the exact tone, expertise, and behavioral boundaries of your AI. Whether it's a high-stakes sales closer or a empathetic support lead, the choice is yours.</p>
+          </div>
+          <div class="bento-item">
+            <h4 class="bento-title" data-i18n="sec2L4Title">Naming</h4>
+            <p class="bento-desc" data-i18n="sec2L4">Assign unique identifiers to your personas for rapid switching in real-time environments.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="usage" class="section">
+        <span class="section-num">03</span>
+        <h2 data-i18n="sec3Title">Seamless Experience</h2>
+        <div class="bento-grid">
+          <div class="bento-item">
+            <h4 class="bento-title" data-i18n="sec3L2Title">Floating Interface</h4>
+            <p class="bento-desc" data-i18n="sec3L2">A non-intrusive, elegant trigger that appears exactly when you need it within your chat workflow.</p>
+          </div>
+          <div class="bento-item">
+            <h4 class="bento-title" data-i18n="sec3L3Title">Command Shortcuts</h4>
+            <p class="bento-desc" data-i18n="sec3L3">Execute complex AI generations with a single keystroke (Alt + 1), designed for maximum efficiency.</p>
+          </div>
+          <div class="bento-item">
+            <h4 class="bento-title" data-i18n="sec3L4Title">Contextual Typing</h4>
+            <p class="bento-desc" data-i18n="sec3L4">The system analyzes conversation history to generate responses that feel human, relevant, and precise.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="pro" class="section">
+        <span class="section-num">04</span>
+        <h2 data-i18n="sec4Title">Pro Intelligence</h2>
+        <div class="bento-grid">
+          <div class="bento-item large">
+            <h4 class="bento-title" data-i18n="sec4L1Title">Knowledge Synthesis</h4>
+            <p class="bento-desc" data-i18n="sec4L1">Upload your proprietary FAQ or documentation. The AI synthesizes this data to provide hyper-accurate, brand-consistent answers.</p>
+          </div>
+          <div class="bento-item">
+            <h4 class="bento-title" data-i18n="sec4L2Title">Infinite Scaling</h4>
+            <p class="bento-desc" data-i18n="sec4L2">Unlock unlimited personas and advanced model parameters for complex business logic.</p>
+          </div>
+        </div>
+      </section>
+
+      <section id="changelog" class="section">
+        <span class="section-num">05</span>
+        <h2 data-i18n="navChangelog">System Evolution</h2>
+        <div class="log-item">
+          <div class="log-meta" data-i18n="v190Date">MAR 2026</div>
+          <div class="log-body">
+            <h4 data-i18n="v190Title">v1.9.0 — Intelligence & Branding</h4>
+            <p data-i18n="v190Desc">Official AI provider branding, SVG icons, and custom provider support.</p>
+          </div>
+        </div>
+      </section>
+
+      <footer>
+        <div data-i18n="footerText">© 2026 AI AUTO-REPLY ELITE. ALL RIGHTS RESERVED.</div>
+        <div style="font-family: var(--font-mono); opacity: 0.5;">SECURE. PRIVATE. POWERFUL.</div>
+      </footer>
+    </main>
+  </div>
+  <script src="intro.js"></script>
+</body>
+</html>

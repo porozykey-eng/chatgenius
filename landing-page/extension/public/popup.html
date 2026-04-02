@@ -1,0 +1,120 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGenius AI</title>
+  <link rel="stylesheet" href="popup.css">
+</head>
+<body>
+  <div class="container">
+    <!-- Header -->
+    <header class="header">
+      <div class="logo">
+        <svg width="24" height="24" viewBox="0 0 24 24" fill="none">
+          <rect width="24" height="24" rx="6" fill="url(#gradient)"/>
+          <path d="M7 9h10M7 12h10M7 15h6" stroke="white" stroke-width="2" stroke-linecap="round"/>
+          <defs>
+            <linearGradient id="gradient" x1="0" y1="0" x2="24" y2="24">
+              <stop offset="0%" stop-color="#8B5CF6"/>
+              <stop offset="100%" stop-color="#A855F7"/>
+            </linearGradient>
+          </defs>
+        </svg>
+        <span class="logo-text">ChatGenius AI</span>
+      </div>
+      <div class="version">v1.0.0</div>
+    </header>
+
+    <!-- Quota Display -->
+    <section class="quota-section">
+      <div class="quota-header">
+        <span class="quota-label">今日剩余</span>
+        <span class="quota-status" id="pro-badge" style="display: none;">PRO</span>
+      </div>
+      <div class="quota-display">
+        <span class="quota-number" id="remaining-count">--</span>
+        <span class="quota-slash" id="quota-slash">/</span>
+        <span class="quota-total" id="quota-total">50</span>
+      </div>
+      <div class="quota-bar">
+        <div class="quota-bar-fill" id="quota-bar-fill"></div>
+      </div>
+    </section>
+
+    <!-- License Activation -->
+    <section class="activation-section" id="activation-section">
+      <div class="activation-header">
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"/>
+        </svg>
+        <span>激活 Pro 版</span>
+      </div>
+      <div class="activation-input-group">
+        <input type="text" id="license-input" placeholder="输入激活码" maxlength="20">
+        <button id="activate-btn" class="btn-activate">激活</button>
+      </div>
+      <div class="activation-message" id="activation-message"></div>
+    </section>
+
+    <!-- Pro User Section (hidden by default) -->
+    <section class="pro-section" id="pro-section" style="display: none;">
+      <div class="pro-header">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none">
+          <path d="M12 2L15.09 8.26L22 9.27L17 14.14L18.18 21.02L12 17.77L5.82 21.02L7 14.14L2 9.27L8.91 8.26L12 2Z" fill="#FCD34D"/>
+        </svg>
+        <span>Pro 会员</span>
+      </div>
+      <div class="pro-info">
+        <span class="pro-type" id="pro-type">永久版</span>
+        <span class="pro-unlimited">无限使用</span>
+      </div>
+    </section>
+
+    <!-- Settings -->
+    <section class="settings-section">
+      <div class="settings-header">
+        <span>AI 模型配置</span>
+      </div>
+      
+      <div class="setting-item">
+        <label>API Key</label>
+        <input type="password" id="api-key-input" placeholder="输入 API Key">
+      </div>
+      
+      <div class="setting-item">
+        <label>模型选择</label>
+        <select id="model-select">
+          <option value="deepseek-chat">DeepSeek Chat</option>
+          <option value="gpt-4o">GPT-4o</option>
+          <option value="gpt-4o-mini">GPT-4o Mini</option>
+          <option value="moonshot-v1-8k">Kimi (月之暗面)</option>
+          <option value="qwen-turbo">通义千问</option>
+          <option value="glm-4">智谱清言</option>
+        </select>
+      </div>
+      
+      <div class="setting-item">
+        <label>回复风格</label>
+        <select id="tone-select">
+          <option value="professional">专业商务</option>
+          <option value="friendly">友好亲切</option>
+          <option value="formal">正式严谨</option>
+          <option value="casual">轻松随意</option>
+        </select>
+      </div>
+    </section>
+
+    <!-- Footer -->
+    <footer class="footer">
+      <a href="https://chatgenius.ai" target="_blank">官网</a>
+      <span>•</span>
+      <a href="https://chatgenius.ai/docs" target="_blank">文档</a>
+      <span>•</span>
+      <a href="https://chatgenius.ai/pricing" target="_blank">升级 Pro</a>
+    </footer>
+  </div>
+
+  <script src="popup.js"></script>
+</body>
+</html>

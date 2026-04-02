@@ -1,0 +1,1886 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>ChatGenius AI - 设置</title>
+  <style>
+    /* ================================
+       Design System - Apple/Linear Style
+       ================================ */
+    
+    /* Light Theme */
+    :root[data-theme="light"] {
+      --bg-primary: #f5f5f7;
+      --bg-secondary: #ffffff;
+      --bg-elevated: #ffffff;
+      --bg-hover: #f0f0f2;
+      --bg-active: #e8e8ea;
+      --bg-tertiary: #fafafa;
+      
+      --text-primary: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --text-tertiary: #86868b;
+      --text-placeholder: #aeaeb2;
+      
+      --border-subtle: rgba(0, 0, 0, 0.04);
+      --border-default: rgba(0, 0, 0, 0.08);
+      --border-strong: rgba(0, 0, 0, 0.12);
+      --border-focus: rgba(0, 0, 0, 0.5);
+      
+      --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --accent-solid: #667eea;
+      --accent-glow: rgba(102, 126, 234, 0.25);
+      --accent-text: #667eea;
+      
+      --success: #34c759;
+      --success-bg: rgba(52, 199, 89, 0.1);
+      --success-text: #248a3d;
+      --warning: #ff9500;
+      --error: #ff3b30;
+      --error-bg: rgba(255, 59, 48, 0.1);
+      
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+      --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.16);
+      --shadow-glow: 0 4px 20px rgba(102, 126, 234, 0.3);
+      
+      --radius-xs: 4px;
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 20px;
+      --radius-2xl: 24px;
+      --radius-full: 9999px;
+      
+      --transition-fast: 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-base: 0.2s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-smooth: 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+      --transition-bounce: 0.4s cubic-bezier(0.34, 1.56, 0.64, 1);
+      
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      --font-mono: "SF Mono", "Fira Code", monospace;
+      
+      --spacing-1: 4px;
+      --spacing-2: 8px;
+      --spacing-3: 12px;
+      --spacing-4: 16px;
+      --spacing-5: 20px;
+      --spacing-6: 24px;
+      --spacing-7: 28px;
+      --spacing-8: 32px;
+      --spacing-10: 40px;
+      --spacing-12: 48px;
+      --spacing-16: 64px;
+    }
+    
+    /* Dark Theme */
+    :root[data-theme="dark"] {
+      --bg-primary: #000000;
+      --bg-secondary: #0a0a0a;
+      --bg-elevated: #111111;
+      --bg-hover: #1a1a1a;
+      --bg-active: #222222;
+      --bg-tertiary: #0d0d0d;
+      
+      --text-primary: #f5f5f7;
+      --text-secondary: #a1a1a6;
+      --text-tertiary: #6e6e73;
+      --text-placeholder: #3a3a3c;
+      
+      --border-subtle: rgba(255, 255, 255, 0.04);
+      --border-default: rgba(255, 255, 255, 0.08);
+      --border-strong: rgba(255, 255, 255, 0.12);
+      --border-focus: rgba(255, 255, 255, 0.5);
+      
+      --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --accent-solid: #667eea;
+      --accent-glow: rgba(102, 126, 234, 0.35);
+      --accent-text: #8b9eeb;
+      
+      --success: #32d74b;
+      --success-bg: rgba(50, 215, 75, 0.15);
+      --success-text: #4ade80;
+      --warning: #ffb340;
+      --error: #ff453a;
+      --error-bg: rgba(255, 69, 58, 0.15);
+      
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.4);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.5);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.6);
+      --shadow-xl: 0 16px 48px rgba(0, 0, 0, 0.7);
+      --shadow-glow: 0 4px 24px rgba(102, 126, 234, 0.4);
+    }
+    
+    /* Base Styles */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    
+    html {
+      scroll-behavior: smooth;
+    }
+    
+    body {
+      font-family: var(--font-sans);
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      -webkit-font-smoothing: antialiased;
+      -moz-osx-font-smoothing: grayscale;
+      transition: background var(--transition-smooth), color var(--transition-smooth);
+      min-height: 100vh;
+      line-height: 1.5;
+    }
+    
+    /* ================================
+       Layout
+       ================================ */
+    .page-container {
+      max-width: 880px;
+      margin: 0 auto;
+      padding: var(--spacing-10) var(--spacing-6);
+    }
+
+    /* ================================
+       Tabs Navigation
+       ================================ */
+    .tabs-nav {
+      display: flex;
+      gap: var(--spacing-1);
+      padding: var(--spacing-1);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      margin-bottom: var(--spacing-6);
+      border: 1px solid var(--border-subtle);
+      overflow-x: auto;
+      -webkit-overflow-scrolling: touch;
+    }
+
+    .tabs-nav::-webkit-scrollbar {
+      display: none;
+    }
+
+    .tab-btn {
+      flex: 1;
+      min-width: 120px;
+      height: 40px;
+      border: none;
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 14px;
+      font-weight: 500;
+      font-family: var(--font-sans);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      white-space: nowrap;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-2);
+    }
+
+    .tab-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .tab-btn.active {
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tab-btn svg {
+      width: 16px;
+      height: 16px;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+      animation: fadeInUp 0.3s ease-out;
+    }
+
+    /* ================================
+       Header
+       ================================ */
+    .page-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-10);
+      padding-bottom: var(--spacing-6);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+    
+    .header-brand {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-4);
+    }
+    
+    .brand-icon {
+      width: 44px;
+      height: 44px;
+      background: var(--accent-gradient);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      box-shadow: var(--shadow-glow);
+    }
+    
+    .brand-icon svg {
+      width: 24px;
+      height: 24px;
+      color: #ffffff;
+    }
+    
+    .page-title {
+      font-size: 28px;
+      font-weight: 700;
+      letter-spacing: -0.03em;
+      color: var(--text-primary);
+    }
+    
+    .header-actions {
+      display: flex;
+      gap: var(--spacing-2);
+    }
+    
+    .icon-btn {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+      font-size: 14px;
+      font-weight: 500;
+    }
+    
+    .icon-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+    
+    .icon-btn svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    /* ================================
+       Stats Grid
+       ================================ */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-8);
+    }
+    
+    .stat-card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-5);
+      border: 1px solid var(--border-subtle);
+      text-align: center;
+      transition: all var(--transition-base);
+    }
+    
+    .stat-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      color: var(--text-primary);
+    }
+    
+    .stat-label {
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      margin-top: var(--spacing-1);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    
+    /* ================================
+       Panels (Cards)
+       ================================ */
+    .panel-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-6);
+    }
+    
+    .panel {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-xl);
+      padding: var(--spacing-6);
+      border: 1px solid var(--border-subtle);
+      transition: all var(--transition-base);
+    }
+    
+    .panel:hover {
+      box-shadow: var(--shadow-md);
+    }
+    
+    .panel-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-2);
+    }
+    
+    .panel-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: var(--bg-tertiary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      color: var(--text-secondary);
+    }
+    
+    .panel-icon svg {
+      width: 18px;
+      height: 18px;
+    }
+    
+    .panel-title {
+      font-size: 16px;
+      font-weight: 600;
+      letter-spacing: -0.01em;
+      color: var(--text-primary);
+    }
+    
+    .panel-desc {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-bottom: var(--spacing-5);
+      line-height: 1.5;
+    }
+    
+    /* ================================
+       Form Elements
+       ================================ */
+    .form-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-5);
+    }
+    
+    .form-group {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+    }
+    
+    .form-group.full-width {
+      grid-column: 1 / -1;
+    }
+    
+    .form-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.02em;
+    }
+    
+    .form-input,
+    .form-select,
+    .form-textarea {
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-3) var(--spacing-4);
+      font-size: 14px;
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+      transition: all var(--transition-fast);
+      outline: none;
+      width: 100%;
+    }
+    
+    .form-select {
+      appearance: none;
+      background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' width='16' height='16' viewBox='0 0 24 24' fill='none' stroke='%2386868b' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='m6 9 6 6 6-6'/%3E%3C/svg%3E");
+      background-repeat: no-repeat;
+      background-position: right 12px center;
+      padding-right: 40px;
+      cursor: pointer;
+    }
+    
+    .form-textarea {
+      min-height: 100px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+    
+    .form-input:hover,
+    .form-select:hover,
+    .form-textarea:hover {
+      border-color: var(--border-strong);
+    }
+    
+    .form-input:focus,
+    .form-select:focus,
+    .form-textarea:focus {
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+    
+    /* Range Slider */
+    .range-wrapper {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+    
+    .form-range {
+      flex: 1;
+      height: 4px;
+      appearance: none;
+      background: var(--border-default);
+      border-radius: var(--radius-full);
+      outline: none;
+    }
+    
+    .form-range::-webkit-slider-thumb {
+      appearance: none;
+      width: 16px;
+      height: 16px;
+      background: var(--accent-gradient);
+      border-radius: 50%;
+      cursor: pointer;
+      box-shadow: var(--shadow-sm);
+      transition: all var(--transition-fast);
+    }
+    
+    .form-range::-webkit-slider-thumb:hover {
+      transform: scale(1.1);
+      box-shadow: var(--shadow-glow);
+    }
+    
+    .range-value {
+      min-width: 44px;
+      text-align: right;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-secondary);
+      font-variant-numeric: tabular-nums;
+    }
+    
+    /* ================================
+       Persona & FAQ Items
+       ================================ */
+    .item-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-4);
+    }
+
+    /* Persona Card Styles */
+    .persona-card {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-5);
+      border: 2px solid var(--border-default);
+      transition: all var(--transition-base);
+      position: relative;
+      overflow: hidden;
+    }
+
+    .persona-card::before {
+      content: '';
+      position: absolute;
+      top: 0;
+      left: 0;
+      right: 0;
+      height: 3px;
+      background: var(--border-default);
+      transition: background var(--transition-base);
+    }
+
+    .persona-card:hover {
+      border-color: var(--border-strong);
+      box-shadow: var(--shadow-md);
+    }
+
+    .persona-card.active {
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .persona-card.active::before {
+      background: var(--accent-gradient);
+    }
+
+    .persona-card-header {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-4);
+    }
+
+    .persona-avatar {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .persona-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .persona-name-input {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      padding: var(--spacing-2) var(--spacing-3);
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-2);
+      transition: all var(--transition-fast);
+    }
+
+    .persona-name-input:focus {
+      outline: none;
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    .persona-status {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-1);
+      font-size: 12px;
+      font-weight: 500;
+      padding: var(--spacing-1) var(--spacing-2);
+      border-radius: var(--radius-full);
+      background: var(--bg-secondary);
+      color: var(--text-tertiary);
+    }
+
+    .persona-status.active {
+      background: var(--success-bg);
+      color: var(--success);
+    }
+
+    .persona-status-dot {
+      width: 6px;
+      height: 6px;
+      border-radius: 50%;
+      background: currentColor;
+    }
+
+    .persona-actions {
+      display: flex;
+      gap: var(--spacing-2);
+      flex-shrink: 0;
+    }
+
+    .persona-action-btn {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      border: none;
+      background: var(--bg-secondary);
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .persona-action-btn:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .persona-action-btn.delete:hover {
+      background: var(--error-bg);
+      color: var(--error);
+    }
+
+    .persona-prompt-input {
+      width: 100%;
+      min-height: 120px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-3);
+      font-size: 13px;
+      line-height: 1.6;
+      color: var(--text-primary);
+      resize: vertical;
+      transition: all var(--transition-fast);
+    }
+
+    .persona-prompt-input:focus {
+      outline: none;
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    .persona-toggle-btn {
+      width: 100%;
+      margin-top: var(--spacing-3);
+      height: 36px;
+      border-radius: var(--radius-sm);
+      border: 1px solid var(--accent-solid);
+      background: transparent;
+      color: var(--accent-solid);
+      font-size: 13px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .persona-toggle-btn:hover {
+      background: var(--accent-solid);
+      color: #ffffff;
+    }
+
+    .persona-card.active .persona-toggle-btn {
+      background: var(--accent-gradient);
+      border: none;
+      color: #ffffff;
+      cursor: default;
+    }
+
+    /* Old item-card styles for FAQ */
+    .item-card {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-4);
+      border: 1px solid var(--border-default);
+      transition: all var(--transition-fast);
+    }
+
+    .item-card:hover {
+      border-color: var(--border-strong);
+    }
+
+    .item-card.active {
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    .item-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-3);
+    }
+
+    .item-radio {
+      width: 18px;
+      height: 18px;
+      accent-color: var(--accent-solid);
+      cursor: pointer;
+    }
+
+    .item-name {
+      flex: 1;
+      background: var(--bg-secondary);
+    }
+
+    .item-delete {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: none;
+      color: var(--error);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      opacity: 0.5;
+      transition: all var(--transition-fast);
+    }
+
+    .item-delete:hover {
+      opacity: 1;
+      background: var(--error-bg);
+    }
+
+    .item-content {
+      background: var(--bg-secondary);
+    }
+
+    /* FAQ Actions */
+    .faq-actions {
+      display: flex;
+      gap: var(--spacing-3);
+      margin-top: var(--spacing-2);
+      align-items: center;
+    }
+
+    .faq-actions .btn-add {
+      flex: 1;
+    }
+
+    .import-export-btns {
+      display: flex;
+      gap: var(--spacing-2);
+    }
+
+    .import-export-btns .btn {
+      padding: 0 var(--spacing-4);
+      gap: var(--spacing-1);
+      font-size: 13px;
+    }
+
+    /* ================================
+       Button Preview
+       ================================ */
+    .preview-container {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-6);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      margin-top: var(--spacing-3);
+    }
+    
+    .preview-btn {
+      width: 48px;
+      height: 48px;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+    
+    .preview-btn svg {
+      width: 22px;
+      height: 22px;
+      fill: #ffffff;
+    }
+    
+    /* Button Themes */
+    .preview-btn.theme-gradient {
+      background: var(--accent-gradient);
+      box-shadow: var(--shadow-glow);
+    }
+    
+    .preview-btn.theme-minimal {
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .preview-btn.theme-minimal svg {
+      fill: var(--text-primary);
+    }
+    
+    .preview-btn.theme-neon {
+      background: #000;
+      border: 2px solid #00ffcc;
+      box-shadow: 0 0 12px rgba(0, 255, 204, 0.4);
+    }
+    
+    .preview-btn.theme-neon svg {
+      fill: #00ffcc;
+    }
+    
+    .preview-btn.theme-glass {
+      background: rgba(255, 255, 255, 0.1);
+      backdrop-filter: blur(12px);
+      border: 1px solid rgba(255, 255, 255, 0.2);
+      box-shadow: var(--shadow-md);
+    }
+    
+    /* ================================
+       Live Preview Chat
+       ================================ */
+    .preview-chat {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-4);
+      min-height: 180px;
+      max-height: 280px;
+      overflow-y: auto;
+      border: 1px solid var(--border-default);
+    }
+    
+    .chat-bubble {
+      max-width: 85%;
+      padding: var(--spacing-3) var(--spacing-4);
+      border-radius: var(--radius-lg);
+      font-size: 13px;
+      line-height: 1.4;
+    }
+    
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: var(--accent-gradient);
+      color: #ffffff;
+      border-bottom-right-radius: var(--radius-xs);
+    }
+    
+    .chat-bubble.ai {
+      align-self: flex-start;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-default);
+      border-bottom-left-radius: var(--radius-xs);
+    }
+    
+    .preview-input-row {
+      display: flex;
+      gap: var(--spacing-3);
+      margin-top: var(--spacing-4);
+    }
+    
+    .preview-input-row .form-input {
+      flex: 1;
+    }
+    
+    /* ================================
+       Pro Panel (Featured)
+       ================================ */
+    .panel.pro-panel {
+      background: linear-gradient(135deg, #111111 0%, #1a1a1a 100%);
+      border: 1px solid rgba(255, 255, 255, 0.08);
+      color: #ffffff;
+    }
+    
+    :root[data-theme="dark"] .panel.pro-panel {
+      background: linear-gradient(135deg, #0a0a0a 0%, #111111 100%);
+    }
+    
+    .pro-panel .panel-title {
+      color: #ffffff;
+    }
+    
+    .pro-panel .panel-desc {
+      color: #a1a1a6;
+    }
+    
+    .pro-badge {
+      background: var(--accent-gradient);
+      color: #ffffff;
+      font-size: 11px;
+      font-weight: 700;
+      padding: var(--spacing-1) var(--spacing-3);
+      border-radius: var(--radius-full);
+      letter-spacing: 0.03em;
+      text-transform: uppercase;
+      margin-left: auto;
+    }
+    
+    .pro-features {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: var(--spacing-4);
+      margin-top: var(--spacing-5);
+    }
+    
+    .pro-feature {
+      display: flex;
+      align-items: flex-start;
+      gap: var(--spacing-3);
+    }
+    
+    .pro-feature-icon {
+      font-size: 22px;
+      line-height: 1;
+    }
+    
+    .pro-feature-text h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: #ffffff;
+      margin-bottom: var(--spacing-1);
+    }
+    
+    .pro-feature-text p {
+      font-size: 12px;
+      color: #8e8e93;
+    }
+    
+    .pro-upgrade-btn {
+      width: 100%;
+      height: 48px;
+      margin-top: var(--spacing-6);
+      background: #ffffff;
+      border: none;
+      border-radius: var(--radius-md);
+      color: #000000;
+      font-size: 15px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--transition-base);
+    }
+    
+    .pro-upgrade-btn:hover {
+      transform: scale(1.02);
+      box-shadow: 0 8px 24px rgba(255, 255, 255, 0.15);
+    }
+    
+    /* ================================
+       Buttons
+       ================================ */
+    .btn {
+      height: 44px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: var(--spacing-2);
+      outline: none;
+      border: none;
+    }
+    
+    .btn svg {
+      width: 16px;
+      height: 16px;
+    }
+    
+    .btn-primary {
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      box-shadow: var(--shadow-sm);
+    }
+    
+    .btn-primary:hover {
+      transform: translateY(-1px);
+      box-shadow: var(--shadow-md);
+    }
+    
+    .btn-secondary {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid var(--border-default);
+    }
+    
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+      border-color: var(--border-strong);
+    }
+    
+    .btn-add {
+      width: 100%;
+      margin-top: var(--spacing-2);
+    }
+    
+    .save-section {
+      margin-top: var(--spacing-8);
+      padding-top: var(--spacing-6);
+      border-top: 1px solid var(--border-subtle);
+    }
+    
+    .btn-save {
+      width: 100%;
+      height: 52px;
+      font-size: 15px;
+    }
+    
+    /* ================================
+       Toast
+       ================================ */
+    .toast {
+      position: fixed;
+      bottom: var(--spacing-6);
+      right: var(--spacing-6);
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      padding: var(--spacing-4) var(--spacing-5);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-default);
+      font-size: 14px;
+      font-weight: 500;
+      opacity: 0;
+      transform: translateY(20px);
+      transition: all var(--transition-smooth);
+      box-shadow: var(--shadow-lg);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      z-index: 1000;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    .toast.success svg { color: var(--success); }
+    .toast.error {
+      background: var(--error-bg);
+      border-color: var(--error);
+    }
+    .toast.error svg { color: var(--error); }
+
+    /* ================================
+       FAQ Management
+       ================================ */
+    .faq-toolbar {
+      display: flex;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-4);
+      flex-wrap: wrap;
+    }
+
+    .faq-search {
+      flex: 1;
+      min-width: 200px;
+      position: relative;
+    }
+
+    .faq-search-input {
+      width: 100%;
+      height: 40px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      padding: 0 var(--spacing-4) 0 36px;
+      font-size: 14px;
+      color: var(--text-primary);
+      transition: all var(--transition-fast);
+    }
+
+    .faq-search-input:focus {
+      outline: none;
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .faq-search-icon {
+      position: absolute;
+      left: 12px;
+      top: 50%;
+      transform: translateY(-50%);
+      color: var(--text-tertiary);
+      width: 16px;
+      height: 16px;
+    }
+
+    .faq-category-select {
+      height: 40px;
+      min-width: 150px;
+    }
+
+    .faq-category-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-1);
+      padding: var(--spacing-1) var(--spacing-2);
+      border-radius: var(--radius-full);
+      font-size: 11px;
+      font-weight: 500;
+      background: var(--accent-glow);
+      color: var(--accent-solid);
+      margin-bottom: var(--spacing-2);
+    }
+
+    .faq-item {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      padding: var(--spacing-4);
+      border: 1px solid var(--border-default);
+      margin-bottom: var(--spacing-3);
+      transition: all var(--transition-fast);
+    }
+
+    .faq-item:hover {
+      border-color: var(--border-strong);
+    }
+
+    .faq-item-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      margin-bottom: var(--spacing-3);
+    }
+
+    .faq-item-input {
+      width: 100%;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      padding: var(--spacing-2) var(--spacing-3);
+      font-size: 13px;
+      color: var(--text-primary);
+      transition: all var(--transition-fast);
+    }
+
+    .faq-item-input:focus {
+      outline: none;
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+    }
+
+    .faq-item-input.question {
+      font-weight: 600;
+    }
+
+    /* ================================
+       Persona Actions Row
+       ================================ */
+    .persona-actions-row {
+      display: flex;
+      gap: var(--spacing-3);
+      margin-top: var(--spacing-4);
+    }
+
+    .persona-actions-row .btn {
+      flex: 1;
+    }
+
+    /* ================================
+       Template Library Modal
+       ================================ */
+    .template-modal {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1001;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-6);
+    }
+
+    .template-modal.show {
+      display: flex;
+    }
+
+    .template-modal-content {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-xl);
+      max-width: 600px;
+      width: 100%;
+      padding: var(--spacing-6);
+      border: 1px solid var(--border-default);
+      box-shadow: var(--shadow-xl);
+    }
+
+    .template-modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: var(--spacing-4);
+    }
+
+    .template-modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .template-modal-close {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      cursor: pointer;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      transition: all var(--transition-fast);
+    }
+
+    .template-modal-close:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .template-modal-desc {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      margin-bottom: var(--spacing-5);
+    }
+
+    .template-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: var(--spacing-4);
+    }
+
+    .template-card {
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-lg);
+      padding: var(--spacing-4);
+      border: 1px solid var(--border-default);
+      transition: all var(--transition-fast);
+      cursor: pointer;
+    }
+
+    .template-card:hover {
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 2px var(--accent-glow);
+      transform: translateY(-2px);
+    }
+
+    .template-card-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-3);
+    }
+
+    .template-card-icon {
+      width: 40px;
+      height: 40px;
+      border-radius: var(--radius-md);
+      background: var(--accent-gradient);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 20px;
+    }
+
+    .template-card-name {
+      font-size: 15px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .template-card-desc {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      line-height: 1.4;
+      margin-bottom: var(--spacing-3);
+    }
+
+    .template-card-btn {
+      width: 100%;
+      height: 32px;
+      border-radius: var(--radius-sm);
+      background: transparent;
+      border: 1px solid var(--accent-solid);
+      color: var(--accent-solid);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .template-card:hover .template-card-btn {
+      background: var(--accent-solid);
+      color: #ffffff;
+    }
+
+    /* ================================
+       Onboarding Tour
+       ================================ */
+    .onboarding-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.7);
+      z-index: 2000;
+      display: none;
+      align-items: center;
+      justify-content: center;
+    }
+
+    .onboarding-overlay.show {
+      display: flex;
+    }
+
+    .onboarding-spotlight {
+      position: fixed;
+      z-index: 2001;
+      border-radius: var(--radius-lg);
+      box-shadow: 0 0 0 4px rgba(102, 126, 234, 0.5), 0 0 0 9999px rgba(0, 0, 0, 0.7);
+      transition: all 0.3s ease;
+      pointer-events: none;
+    }
+
+    .onboarding-tooltip {
+      position: fixed;
+      z-index: 2002;
+      background: var(--bg-secondary);
+      border-radius: var(--radius-xl);
+      padding: var(--spacing-6);
+      max-width: 360px;
+      border: 1px solid var(--border-default);
+      box-shadow: var(--shadow-xl);
+      animation: fadeInUp 0.3s ease-out;
+    }
+
+    .onboarding-tooltip-arrow {
+      position: absolute;
+      width: 12px;
+      height: 12px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      transform: rotate(45deg);
+      z-index: -1;
+    }
+
+    .onboarding-step-number {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      width: 28px;
+      height: 28px;
+      border-radius: 50%;
+      background: var(--accent-gradient);
+      color: #ffffff;
+      font-size: 14px;
+      font-weight: 600;
+      margin-bottom: var(--spacing-3);
+    }
+
+    .onboarding-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-2);
+    }
+
+    .onboarding-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+      margin-bottom: var(--spacing-5);
+    }
+
+    .onboarding-nav {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-3);
+    }
+
+    .onboarding-progress {
+      display: flex;
+      gap: var(--spacing-2);
+    }
+
+    .onboarding-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--border-default);
+      transition: all var(--transition-fast);
+    }
+
+    .onboarding-dot.active {
+      background: var(--accent-solid);
+      width: 20px;
+      border-radius: var(--radius-full);
+    }
+
+    .onboarding-dot.completed {
+      background: var(--success);
+    }
+
+    .onboarding-btn {
+      height: 36px;
+      border-radius: var(--radius-sm);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--transition-fast);
+      border: none;
+      padding: 0 var(--spacing-4);
+    }
+
+    .onboarding-btn-skip {
+      background: transparent;
+      color: var(--text-tertiary);
+    }
+
+    .onboarding-btn-skip:hover {
+      color: var(--text-secondary);
+    }
+
+    .onboarding-btn-next {
+      background: var(--accent-gradient);
+      color: #ffffff;
+    }
+
+    .onboarding-btn-next:hover {
+      box-shadow: var(--shadow-glow);
+    }
+
+    .onboarding-btn-finish {
+      background: var(--success);
+      color: #ffffff;
+    }
+
+    @media (max-width: 480px) {
+      .template-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+
+    /* ================================
+       Modal
+       ================================ */
+    .modal-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      backdrop-filter: blur(4px);
+      z-index: 1000;
+      align-items: center;
+      justify-content: center;
+      padding: var(--spacing-6);
+    }
+    
+    .modal-overlay.show {
+      display: flex;
+    }
+    
+    .modal-content {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-xl);
+      max-width: 480px;
+      width: 100%;
+      padding: var(--spacing-6);
+      border: 1px solid var(--border-default);
+      box-shadow: var(--shadow-xl);
+    }
+    
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: var(--spacing-4);
+      color: var(--text-primary);
+    }
+    
+    .modal-body {
+      font-size: 14px;
+      line-height: 1.6;
+      color: var(--text-secondary);
+      margin-bottom: var(--spacing-6);
+    }
+    
+    /* ================================
+       Animations
+       ================================ */
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
+    
+    .animate-spin {
+      animation: spin 1s linear infinite;
+    }
+    
+    @keyframes fadeInUp {
+      from {
+        opacity: 0;
+        transform: translateY(10px);
+      }
+      to {
+        opacity: 1;
+        transform: translateY(0);
+      }
+    }
+    
+    .animate-fadeInUp {
+      animation: fadeInUp 0.3s ease-out forwards;
+    }
+    
+    /* Responsive */
+    @media (max-width: 640px) {
+      .page-container {
+        padding: var(--spacing-5) var(--spacing-4);
+      }
+      
+      .form-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .stats-grid {
+        grid-template-columns: 1fr;
+      }
+      
+      .pro-features {
+        grid-template-columns: 1fr;
+      }
+      
+      .page-title {
+        font-size: 22px;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="page-container">
+    <!-- Header -->
+    <header class="page-header">
+      <div class="header-brand">
+        <div class="brand-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+          </svg>
+        </div>
+        <h1 class="page-title" data-i18n="title">ChatGenius AI 设置</h1>
+      </div>
+      <div class="header-actions">
+        <button class="icon-btn" id="helpBtn" title="帮助">❓</button>
+        <button class="icon-btn" id="themeToggle" title="切换主题">🌙</button>
+        <button class="icon-btn" id="langToggle" title="切换语言">EN</button>
+      </div>
+    </header>
+
+    <!-- Stats -->
+    <div class="stats-grid">
+      <div class="stat-card">
+        <div class="stat-value" id="statReplies">0</div>
+        <div class="stat-label" data-i18n="statReplies">累计回复</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statTimeSaved">0%</div>
+        <div class="stat-label" data-i18n="statTimeSaved">节省时间</div>
+      </div>
+      <div class="stat-card">
+        <div class="stat-value" id="statStatus">标准版</div>
+        <div class="stat-label" data-i18n="statStatus">版本状态</div>
+      </div>
+    </div>
+
+    <!-- Tabs Navigation -->
+    <nav class="tabs-nav">
+      <button class="tab-btn active" data-tab="personas">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span data-i18n="tabPersonas">AI 角色</span>
+      </button>
+      <button class="tab-btn" data-tab="knowledge">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="10"></circle>
+          <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+          <line x1="12" y1="17" x2="12.01" y2="17"></line>
+        </svg>
+        <span data-i18n="tabKnowledge">知识库</span>
+      </button>
+      <button class="tab-btn" data-tab="settings">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="12" cy="12" r="3"></circle>
+          <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+        </svg>
+        <span data-i18n="tabSettings">偏好设置</span>
+      </button>
+      <button class="tab-btn" data-tab="upgrade">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+        </svg>
+        <span data-i18n="tabUpgrade">升级</span>
+      </button>
+    </nav>
+
+    <!-- Tab Content: Personas -->
+    <div class="tab-content active" id="tab-personas">
+      <div class="panel-grid">
+        <!-- Personas Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                <circle cx="12" cy="7" r="4"></circle>
+              </svg>
+            </div>
+            <h2 class="panel-title" data-i18n="personaSettings">自定义角色</h2>
+          </div>
+          <p class="panel-desc" data-i18n="personaHelp">创建多个 AI 角色，选择一个作为当前激活角色。</p>
+          <div class="item-list" id="personaList"></div>
+          <div class="persona-actions-row">
+            <button class="btn btn-secondary" id="addPersonaBtn" data-i18n="addPersona">+ 添加角色</button>
+            <button class="btn btn-secondary" id="templateLibraryBtn">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+              <span data-i18n="templateLibrary">模板库</span>
+            </button>
+          </div>
+        </div>
+
+        <!-- Live Preview Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                <line x1="9" y1="9" x2="15" y2="15"></line>
+                <line x1="15" y1="9" x2="9" y2="15"></line>
+              </svg>
+            </div>
+            <h2 class="panel-title" data-i18n="livePreview">实时人设预览</h2>
+          </div>
+          <p class="panel-desc" data-i18n="previewHelp">测试当前激活角色的回复效果。</p>
+          <div class="preview-chat" id="previewChat">
+            <div class="chat-bubble user">你好，我想咨询一下产品详情。</div>
+            <div class="chat-bubble ai">您好！很高兴为您服务。请问您想了解哪款产品的具体信息呢？</div>
+          </div>
+          <div class="preview-input-row">
+            <input type="text" class="form-input" id="previewInput" placeholder="输入测试消息...">
+            <button class="btn btn-primary" id="previewSendBtn">发送</button>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Content: Knowledge -->
+    <div class="tab-content" id="tab-knowledge">
+      <div class="panel-grid">
+        <!-- FAQ Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                <line x1="12" y1="17" x2="12.01" y2="17"></line>
+              </svg>
+            </div>
+            <h2 class="panel-title" data-i18n="faq">知识库 / FAQ</h2>
+          </div>
+          <p class="panel-desc" data-i18n="faqHelp">添加常见问答，AI 会自然融入这些信息。</p>
+
+          <!-- FAQ Toolbar -->
+          <div class="faq-toolbar">
+            <div class="faq-search">
+              <svg class="faq-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="11" cy="11" r="8"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" class="faq-search-input" id="faqSearch" placeholder="搜索问答...">
+            </div>
+            <select class="form-select faq-category-select" id="faqCategoryFilter">
+              <option value="all">全部分类</option>
+              <option value="product">产品相关</option>
+              <option value="price">价格咨询</option>
+              <option value="service">售后服务</option>
+              <option value="other">其他</option>
+            </select>
+          </div>
+
+          <div class="item-list" id="faqList"></div>
+          <div class="faq-actions">
+            <button class="btn btn-secondary btn-add" id="addFaqBtn" data-i18n="addFaq">+ 添加问答</button>
+            <div class="import-export-btns">
+              <button class="btn btn-secondary" id="importFaqBtn" title="导入FAQ">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                导入
+              </button>
+              <button class="btn btn-secondary" id="exportFaqBtn" title="导出FAQ">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                导出
+              </button>
+            </div>
+          </div>
+          <input type="file" id="faqFileInput" accept=".json" style="display: none;">
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Content: Settings -->
+    <div class="tab-content" id="tab-settings">
+      <div class="panel-grid">
+        <!-- Reply Settings Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 20h9"></path>
+                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+              </svg>
+            </div>
+            <h2 class="panel-title" data-i18n="replySettings">回复偏好</h2>
+          </div>
+          <div class="form-grid" style="margin-top: var(--spacing-4);">
+            <div class="form-group">
+              <label class="form-label" for="tone" data-i18n="tone">回复语气</label>
+              <select class="form-select" id="tone">
+                <option value="auto" data-i18n="toneAuto">自动 (根据语境)</option>
+                <option value="professional" data-i18n="tonePro">专业严谨</option>
+                <option value="friendly" data-i18n="toneFriendly">热情友好</option>
+                <option value="empathetic" data-i18n="toneEmpathetic">共情理解</option>
+                <option value="direct" data-i18n="toneDirect">直接干练</option>
+              </select>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="replyLength" data-i18n="replyLength">回复长度</label>
+              <select class="form-select" id="replyLength">
+                <option value="auto" data-i18n="lenAuto">自动</option>
+                <option value="short" data-i18n="lenShort">简短 (1-2句话)</option>
+                <option value="medium" data-i18n="lenMedium">适中 (2-4句话)</option>
+                <option value="long" data-i18n="lenLong">详细</option>
+              </select>
+            </div>
+          </div>
+        </div>
+
+        <!-- UI Settings Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="3"></circle>
+                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+              </svg>
+            </div>
+            <h2 class="panel-title" data-i18n="uiSettings">界面与交互</h2>
+          </div>
+          <div class="form-grid" style="margin-top: var(--spacing-4);">
+            <div class="form-group full-width">
+              <label class="form-label" for="shortcut" data-i18n="shortcut">快捷键</label>
+              <input type="text" class="form-input" id="shortcut" readonly placeholder="按下组合键设置...">
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="btnTheme" data-i18n="btnTheme">悬浮按钮主题</label>
+              <select class="form-select" id="btnTheme">
+                <option value="gradient" data-i18n="themeGradient">渐变发光</option>
+                <option value="minimal" data-i18n="themeMinimal">极简主义</option>
+                <option value="neon" data-i18n="themeNeon">霓虹</option>
+                <option value="glass" data-i18n="themeGlass">毛玻璃</option>
+              </select>
+              <div class="preview-container">
+                <div class="preview-btn theme-gradient" id="btnPreview">
+                  <svg viewBox="0 0 24 24"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                </div>
+              </div>
+            </div>
+            <div class="form-group">
+              <label class="form-label" for="btnOpacity" data-i18n="btnOpacity">按钮透明度</label>
+              <div class="range-wrapper">
+                <input type="range" class="form-range" id="btnOpacity" min="0" max="100" value="100">
+                <span class="range-value" id="opacityVal">100%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+
+    <!-- Tab Content: Upgrade -->
+    <div class="tab-content" id="tab-upgrade">
+      <div class="panel-grid">
+        <!-- Pro Panel -->
+        <div class="panel pro-panel">
+          <div class="panel-header">
+            <div class="panel-icon" style="background: rgba(255,255,255,0.1);">
+              <svg viewBox="0 0 24 24" fill="none" stroke="#ffffff" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+              </svg>
+            </div>
+            <h2 class="panel-title" data-i18n="proTitle">Elite Pro 专业版</h2>
+            <span class="pro-badge">PRO</span>
+          </div>
+          <p class="panel-desc">解锁全部高级功能，获得更好的使用体验。</p>
+          <div class="pro-features" id="proFeatures"></div>
+          <button class="pro-upgrade-btn" id="upgradeBtn" data-i18n="proUpgradeBtn">升级至专业版</button>
+        </div>
+      </div>
+    </div>
+
+    <!-- Save Section -->
+    <div class="save-section">
+      <button class="btn btn-primary btn-save" id="saveBtn" data-i18n="save">保存全部设置</button>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <span id="toastMsg">保存成功</span>
+  </div>
+
+  <!-- Help Modal -->
+  <div class="modal-overlay" id="helpModal">
+    <div class="modal-content">
+      <h2 class="modal-title" data-i18n="instructionsTitle">使用指南</h2>
+      <div class="modal-body" data-i18n="instructionsContent">
+        1. 配置 API：点击扩展图标，选择服务商并输入 API Key。<br><br>
+        2. 设置人设：在此页面创建自定义 AI 角色。<br><br>
+        3. 开始使用：打开 WhatsApp/Messenger 网页，点击悬浮按钮生成智能回复。
+      </div>
+      <button class="btn btn-primary" id="closeHelpBtn" style="width: 100%;" data-i18n="close">知道了</button>
+    </div>
+  </div>
+
+  <!-- Template Library Modal -->
+  <div class="template-modal" id="templateModal">
+    <div class="template-modal-content">
+      <div class="template-modal-header">
+        <h2 class="template-modal-title" data-i18n="templateLibrary">角色模板库</h2>
+        <button class="template-modal-close" id="closeTemplateBtn">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+        </button>
+      </div>
+      <p class="template-modal-desc" data-i18n="templateHelp">选择预设模板快速创建新角色，节省时间。</p>
+      <div class="template-grid" id="templateGrid"></div>
+    </div>
+  </div>
+
+  <!-- Onboarding Tour -->
+  <div class="onboarding-overlay" id="onboardingOverlay">
+    <div class="onboarding-spotlight" id="onboardingSpotlight"></div>
+    <div class="onboarding-tooltip" id="onboardingTooltip">
+      <div class="onboarding-step-number" id="onboardingStepNumber">1</div>
+      <h3 class="onboarding-title" id="onboardingTitle"></h3>
+      <p class="onboarding-desc" id="onboardingDesc"></p>
+      <div class="onboarding-nav">
+        <button class="onboarding-btn onboarding-btn-skip" id="onboardingSkip">跳过</button>
+        <div class="onboarding-progress" id="onboardingProgress"></div>
+        <button class="onboarding-btn onboarding-btn-next" id="onboardingNext">下一步</button>
+      </div>
+    </div>
+  </div>
+
+  <script src="options.js"></script>
+</body>
+</html>
