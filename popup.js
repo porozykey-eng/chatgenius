@@ -367,7 +367,34 @@ document.addEventListener('DOMContentLoaded', () => {
     if (provider !== 'custom') {
       apiUrlInput.value = PROVIDERS[provider].url;
     }
+    updateFreeApiLink(provider);
   });
+
+  // Free API Key links
+  const FREE_API_LINKS = {
+    deepseek: { url: 'https://platform.deepseek.com/signup', text: '🎁 免费获取 API Key (DeepSeek 送500万tokens)' },
+    moonshot: { url: 'https://platform.moonshot.cn/', text: '🎁 免费获取 Kimi API Key' },
+    qwen: { url: 'https://dashscope.console.aliyun.com/', text: '🎁 免费获取通义千问 API Key' },
+    zhipu: { url: 'https://open.bigmodel.cn/', text: '🎁 免费获取智谱 API Key (新用户送tokens)' },
+    doubao: { url: 'https://console.volcengine.com/ark', text: '🎁 免费获取豆包 API Key' },
+    openai: { url: 'https://platform.openai.com/signup', text: '🔗 获取 OpenAI API Key' },
+    google: { url: 'https://aistudio.google.com/apikey', text: '🎁 免费获取 Google API Key' },
+    custom: { url: null, text: null }
+  };
+
+  function updateFreeApiLink(provider) {
+    const link = document.getElementById('freeApiLink');
+    if (!link) return;
+
+    const info = FREE_API_LINKS[provider];
+    if (info && info.url) {
+      link.href = info.url;
+      link.textContent = info.text;
+      link.style.display = 'block';
+    } else {
+      link.style.display = 'none';
+    }
+  }
 
   modelSelect.addEventListener('change', (e) => {
     const provider = providerSelect.value;
@@ -418,6 +445,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     providerSelect.value = data.provider;
     updateModels(data.provider, data.modelName);
+    updateFreeApiLink(data.provider);
     if (data.provider === 'custom') {
       customProviderNameInput.value = data.customProviderName || '';
     }

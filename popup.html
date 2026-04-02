@@ -316,7 +316,28 @@
       color: var(--text-tertiary);
       margin-top: var(--spacing-1);
     }
-    
+
+    .free-api-link {
+      display: block;
+      margin-top: var(--spacing-2);
+      padding: var(--spacing-2) var(--spacing-3);
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.1) 0%, rgba(118, 75, 162, 0.1) 100%);
+      border: 1px solid rgba(102, 126, 234, 0.2);
+      border-radius: var(--radius-sm);
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--accent-solid);
+      text-decoration: none;
+      transition: all var(--transition-fast);
+      text-align: center;
+    }
+
+    .free-api-link:hover {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 0.15) 0%, rgba(118, 75, 162, 0.15) 100%);
+      border-color: var(--accent-solid);
+      transform: translateY(-1px);
+    }
+
     /* Model Select with Recommended Badge */
     .form-select option {
       padding: var(--spacing-2);
@@ -598,6 +619,9 @@
           </svg>
         </button>
       </div>
+      <a href="https://platform.deepseek.com/signup" target="_blank" class="free-api-link" id="freeApiLink">
+        🎁 免费获取 API Key (DeepSeek 送500万tokens)
+      </a>
     </div>
 
     <!-- Buttons -->
