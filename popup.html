@@ -338,6 +338,22 @@
       transform: translateY(-1px);
     }
 
+    .more-free-link {
+      display: block;
+      margin-top: var(--spacing-2);
+      padding: var(--spacing-1) var(--spacing-2);
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      text-decoration: none;
+      transition: all var(--transition-fast);
+      text-align: center;
+    }
+
+    .more-free-link:hover {
+      color: var(--accent-solid);
+    }
+
     /* Model Select with Recommended Badge */
     .form-select option {
       padding: var(--spacing-2);
@@ -621,6 +637,9 @@
       </div>
       <a href="https://platform.deepseek.com/signup" target="_blank" class="free-api-link" id="freeApiLink">
         🎁 免费获取 API Key (DeepSeek 送500万tokens)
+      </a>
+      <a href="free-api.html" target="_blank" class="more-free-link">
+        📚 查看更多免费API推荐 →
       </a>
     </div>
 

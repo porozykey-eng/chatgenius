@@ -1,0 +1,631 @@
+<!DOCTYPE html>
+<html lang="zh-CN" data-theme="light">
+<head>
+  <meta charset="UTF-8">
+  <title>免费大模型 API 推荐 - ChatGenius AI</title>
+  <style>
+    :root {
+      --bg-primary: #f5f5f7;
+      --bg-secondary: #ffffff;
+      --bg-elevated: #ffffff;
+      --bg-hover: #f0f0f2;
+      --text-primary: #1d1d1f;
+      --text-secondary: #6e6e73;
+      --text-tertiary: #86868b;
+      --border-default: rgba(0, 0, 0, 0.08);
+      --accent-gradient: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      --accent-solid: #667eea;
+      --accent-glow: rgba(102, 126, 234, 0.25);
+      --success: #34c759;
+      --warning: #ff9500;
+      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.06);
+      --shadow-md: 0 4px 16px rgba(0, 0, 0, 0.08);
+      --shadow-lg: 0 8px 32px rgba(0, 0, 0, 0.12);
+      --radius-sm: 8px;
+      --radius-md: 12px;
+      --radius-lg: 16px;
+      --radius-xl: 24px;
+    }
+
+    * { box-sizing: border-box; margin: 0; padding: 0; }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, "SF Pro Display", "Segoe UI", Roboto, sans-serif;
+      background: var(--bg-primary);
+      color: var(--text-primary);
+      min-height: 100vh;
+      line-height: 1.6;
+    }
+
+    .container {
+      max-width: 900px;
+      margin: 0 auto;
+      padding: 40px 24px;
+    }
+
+    .header {
+      text-align: center;
+      margin-bottom: 48px;
+    }
+
+    .header-icon {
+      width: 64px;
+      height: 64px;
+      background: var(--accent-gradient);
+      border-radius: var(--radius-lg);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      margin: 0 auto 20px;
+      box-shadow: var(--shadow-md);
+    }
+
+    .header-icon svg {
+      width: 32px;
+      height: 32px;
+      color: white;
+    }
+
+    h1 {
+      font-size: 32px;
+      font-weight: 700;
+      letter-spacing: -0.02em;
+      margin-bottom: 12px;
+    }
+
+    .subtitle {
+      font-size: 17px;
+      color: var(--text-secondary);
+      max-width: 600px;
+      margin: 0 auto;
+    }
+
+    .section {
+      margin-bottom: 40px;
+    }
+
+    .section-title {
+      font-size: 22px;
+      font-weight: 600;
+      margin-bottom: 20px;
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .section-title .badge {
+      font-size: 12px;
+      padding: 4px 12px;
+      border-radius: 20px;
+      background: var(--accent-glow);
+      color: var(--accent-solid);
+      font-weight: 500;
+    }
+
+    .card-grid {
+      display: grid;
+      gap: 16px;
+    }
+
+    .card {
+      background: var(--bg-secondary);
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      border: 1px solid var(--border-default);
+      transition: all 0.2s ease;
+    }
+
+    .card:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-2px);
+    }
+
+    .card-header {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      margin-bottom: 16px;
+    }
+
+    .card-brand {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+
+    .card-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+    }
+
+    .card-name {
+      font-size: 18px;
+      font-weight: 600;
+    }
+
+    .card-tagline {
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+
+    .card-badge {
+      padding: 6px 14px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 600;
+    }
+
+    .badge-best {
+      background: linear-gradient(135deg, #34c759 0%, #30d158 100%);
+      color: white;
+    }
+
+    .badge-hot {
+      background: linear-gradient(135deg, #ff9500 0%, #ff6b00 100%);
+      color: white;
+    }
+
+    .badge-new {
+      background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+      color: white;
+    }
+
+    .card-body {
+      margin-bottom: 16px;
+    }
+
+    .card-desc {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin-bottom: 12px;
+    }
+
+    .feature-list {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+    }
+
+    .feature-tag {
+      padding: 4px 10px;
+      background: var(--bg-hover);
+      border-radius: 6px;
+      font-size: 12px;
+      color: var(--text-secondary);
+    }
+
+    .free-quota {
+      background: linear-gradient(135deg, rgba(52, 199, 89, 0.1) 0%, rgba(48, 209, 88, 0.1) 100%);
+      border: 1px solid rgba(52, 199, 89, 0.2);
+      border-radius: var(--radius-sm);
+      padding: 12px 16px;
+      margin-bottom: 16px;
+    }
+
+    .free-quota-title {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--success);
+      margin-bottom: 4px;
+    }
+
+    .free-quota-text {
+      font-size: 14px;
+      color: var(--text-primary);
+      font-weight: 500;
+    }
+
+    .card-footer {
+      display: flex;
+      gap: 12px;
+    }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      height: 40px;
+      padding: 0 20px;
+      border-radius: var(--radius-sm);
+      font-size: 14px;
+      font-weight: 600;
+      cursor: pointer;
+      transition: all 0.2s ease;
+      text-decoration: none;
+      border: none;
+    }
+
+    .btn-primary {
+      background: var(--accent-gradient);
+      color: white;
+      flex: 1;
+    }
+
+    .btn-primary:hover {
+      box-shadow: var(--shadow-md);
+      transform: translateY(-1px);
+    }
+
+    .btn-secondary {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .btn-secondary:hover {
+      background: var(--border-default);
+    }
+
+    .tips-box {
+      background: linear-gradient(135deg, rgba(255, 149, 0, 0.1) 0%, rgba(255, 107, 0, 0.1) 100%);
+      border: 1px solid rgba(255, 149, 0, 0.2);
+      border-radius: var(--radius-md);
+      padding: 20px 24px;
+      margin-top: 40px;
+    }
+
+    .tips-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--warning);
+      margin-bottom: 12px;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .tips-list {
+      list-style: none;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+
+    .tips-list li {
+      padding: 6px 0;
+      padding-left: 20px;
+      position: relative;
+    }
+
+    .tips-list li::before {
+      content: "•";
+      position: absolute;
+      left: 0;
+      color: var(--warning);
+    }
+
+    .footer {
+      text-align: center;
+      padding: 40px 0;
+      color: var(--text-tertiary);
+      font-size: 13px;
+    }
+
+    .footer a {
+      color: var(--accent-solid);
+      text-decoration: none;
+    }
+
+    @media (max-width: 640px) {
+      .container { padding: 24px 16px; }
+      h1 { font-size: 24px; }
+      .card-header { flex-direction: column; gap: 12px; }
+      .card-footer { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <div class="header">
+      <div class="header-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
+      </div>
+      <h1>2026 免费大模型 API 推荐</h1>
+      <p class="subtitle">精选全球最慷慨的免费大模型API，助你零成本体验AI强大能力</p>
+    </div>
+
+    <!-- 国内精品 -->
+    <div class="section">
+      <h2 class="section-title">
+        国内精品
+        <span class="badge">中文最佳</span>
+      </h2>
+      <div class="card-grid">
+
+        <!-- DeepSeek -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-brand">
+              <div class="card-icon" style="background: linear-gradient(135deg, #6366f1 0%, #8b5cf6 100%);">🧠</div>
+              <div>
+                <div class="card-name">DeepSeek 深度求索</div>
+                <div class="card-tagline">性价比之王，中文逻辑与代码能力顶尖</div>
+              </div>
+            </div>
+            <span class="card-badge badge-best">最推荐</span>
+          </div>
+          <div class="card-body">
+            <div class="free-quota">
+              <div class="free-quota-title">🎁 免费额度</div>
+              <div class="free-quota-text">新用户送 500万~1000万 Tokens，定价极低，非常耐用</div>
+            </div>
+            <p class="card-desc">提供 DeepSeek V3 (通用对话) 和 R1 (深度推理) 模型，适合复杂推理任务。国产模型中的佼佼者，代码能力极强。</p>
+            <div class="feature-list">
+              <span class="feature-tag">中文顶尖</span>
+              <span class="feature-tag">代码能力强</span>
+              <span class="feature-tag">超低价格</span>
+              <span class="feature-tag">R1推理模型</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="https://platform.deepseek.com/signup" target="_blank" class="btn btn-primary">立即注册</a>
+            <a href="https://platform.deepseek.com/docs" target="_blank" class="btn btn-secondary">查看文档</a>
+          </div>
+        </div>
+
+        <!-- Kimi -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-brand">
+              <div class="card-icon" style="background: linear-gradient(135deg, #f59e0b 0%, #d97706 100%);">🌙</div>
+              <div>
+                <div class="card-name">Kimi 月之暗面</div>
+                <div class="card-tagline">长文本理解能力极强，万亿参数旗舰</div>
+              </div>
+            </div>
+            <span class="card-badge badge-hot">热门</span>
+          </div>
+          <div class="card-body">
+            <div class="free-quota">
+              <div class="free-quota-title">🎁 免费额度</div>
+              <div class="free-quota-text">注册送 15~50元额度，常有数千万Token赠送活动</div>
+            </div>
+            <p class="card-desc">Kimi K2.5 万亿参数旗舰模型，适合处理长篇文档、法律文书、超长论文分析。支持128K超长上下文。</p>
+            <div class="feature-list">
+              <span class="feature-tag">超长上下文</span>
+              <span class="feature-tag">文档理解强</span>
+              <span class="feature-tag">万亿参数</span>
+              <span class="feature-tag">128K窗口</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="https://platform.moonshot.cn/" target="_blank" class="btn btn-primary">立即注册</a>
+            <a href="https://platform.moonshot.cn/docs" target="_blank" class="btn btn-secondary">查看文档</a>
+          </div>
+        </div>
+
+        <!-- 智谱 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-brand">
+              <div class="card-icon" style="background: linear-gradient(135deg, #10b981 0%, #059669 100%);">💎</div>
+              <div>
+                <div class="card-name">智谱清言 GLM</div>
+                <div class="card-tagline">清华系，GLM-4.5/4.7 Flash 免费可用</div>
+              </div>
+            </div>
+            <span class="card-badge badge-new">免费模型</span>
+          </div>
+          <div class="card-body">
+            <div class="free-quota">
+              <div class="free-quota-title">🎁 免费额度</div>
+              <div class="free-quota-text">新用户送Tokens，GLM-4.5/4.7 Flash 模型免费调用</div>
+            </div>
+            <p class="card-desc">GLM系列模型支持多模态，Flash版本完全免费。适合日常对话、文档处理等场景。</p>
+            <div class="feature-list">
+              <span class="feature-tag">免费模型</span>
+              <span class="feature-tag">多模态</span>
+              <span class="feature-tag">清华技术</span>
+              <span class="feature-tag">国产领先</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="https://open.bigmodel.cn/" target="_blank" class="btn btn-primary">立即注册</a>
+            <a href="https://open.bigmodel.cn/dev/api" target="_blank" class="btn btn-secondary">查看文档</a>
+          </div>
+        </div>
+
+        <!-- 通义千问 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-brand">
+              <div class="card-icon" style="background: linear-gradient(135deg, #3b82f6 0%, #1d4ed8 100%);">☁️</div>
+              <div>
+                <div class="card-name">通义千问 Qwen</div>
+                <div class="card-tagline">阿里云出品，开源模型标杆</div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="free-quota">
+              <div class="free-quota-title">🎁 免费额度</div>
+              <div class="free-quota-text">新用户送免费Tokens，部分模型有免费额度</div>
+            </div>
+            <p class="card-desc">Qwen3系列开源模型能力强劲，支持多种尺寸。通义千问Max/Plus等商业模型也有免费额度。</p>
+            <div class="feature-list">
+              <span class="feature-tag">开源标杆</span>
+              <span class="feature-tag">多尺寸</span>
+              <span class="feature-tag">阿里生态</span>
+              <span class="feature-tag">企业稳定</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="https://dashscope.console.aliyun.com/" target="_blank" class="btn btn-primary">立即注册</a>
+            <a href="https://help.aliyun.com/zh/dashscope/" target="_blank" class="btn btn-secondary">查看文档</a>
+          </div>
+        </div>
+
+        <!-- 豆包 -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-brand">
+              <div class="card-icon" style="background: linear-gradient(135deg, #ec4899 0%, #be185d 100%);">🫛</div>
+              <div>
+                <div class="card-name">豆包 字节跳动</div>
+                <div class="card-tagline">字节生态，稳定性高，响应速度快</div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="free-quota">
+              <div class="free-quota-title">🎁 免费额度</div>
+              <div class="free-quota-text">每款模型送 50万Tokens 初始额度</div>
+            </div>
+            <p class="card-desc">豆包2.0 Pro系列模型，适合对话、写作、代码等场景。火山引擎稳定性有保障。</p>
+            <div class="feature-list">
+              <span class="feature-tag">字节生态</span>
+              <span class="feature-tag">响应快</span>
+              <span class="feature-tag">企业稳定</span>
+              <span class="feature-tag">多模型</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="https://console.volcengine.com/ark" target="_blank" class="btn btn-primary">立即注册</a>
+            <a href="https://www.volcengine.com/docs/82379" target="_blank" class="btn btn-secondary">查看文档</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 国际主流 -->
+    <div class="section">
+      <h2 class="section-title">
+        国际主流
+        <span class="badge">性能强劲</span>
+      </h2>
+      <div class="card-grid">
+
+        <!-- Google Gemini -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-brand">
+              <div class="card-icon" style="background: linear-gradient(135deg, #4285f4 0%, #ea4335 50%, #fbbc05 100%);">✨</div>
+              <div>
+                <div class="card-name">Google Gemini</div>
+                <div class="card-tagline">目前全球最慷慨的免费API之一</div>
+              </div>
+            </div>
+            <span class="card-badge badge-best">额度最大</span>
+          </div>
+          <div class="card-body">
+            <div class="free-quota">
+              <div class="free-quota-title">🎁 免费额度</div>
+              <div class="free-quota-text">Gemini 2.5 Flash 免费层级，每分钟高RPM，每月数百万Tokens</div>
+            </div>
+            <p class="card-desc">支持1M+ Token超大窗口，多模态输入（视频、图片、音频）。免费层级数据可能用于模型改进。</p>
+            <div class="feature-list">
+              <span class="feature-tag">1M+窗口</span>
+              <span class="feature-tag">多模态</span>
+              <span class="feature-tag">完全免费</span>
+              <span class="feature-tag">全球最强</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="https://aistudio.google.com/apikey" target="_blank" class="btn btn-primary">获取 API Key</a>
+            <a href="https://ai.google.dev/docs" target="_blank" class="btn btn-secondary">查看文档</a>
+          </div>
+        </div>
+
+        <!-- Groq -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-brand">
+              <div class="card-icon" style="background: linear-gradient(135deg, #f97316 0%, #ea580c 100%);">⚡</div>
+              <div>
+                <div class="card-name">Groq</div>
+                <div class="card-tagline">快到不可思议的极速推理</div>
+              </div>
+            </div>
+            <span class="card-badge badge-hot">极速</span>
+          </div>
+          <div class="card-body">
+            <div class="free-quota">
+              <div class="free-quota-title">🎁 免费额度</div>
+              <div class="free-quota-text">Free Tier 可用，RPM限制但速度极快（数百Token/s）</div>
+            </div>
+            <p class="card-desc">专用LPU芯片提供极速推理，托管Llama 3.3、Qwen 3等开源模型。适合需要极低延迟的实时应用。</p>
+            <div class="feature-list">
+              <span class="feature-tag">极速推理</span>
+              <span class="feature-tag">LPU芯片</span>
+              <span class="feature-tag">开源模型</span>
+              <span class="feature-tag">实时对话</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="https://console.groq.com/" target="_blank" class="btn btn-primary">立即注册</a>
+            <a href="https://console.groq.com/docs" target="_blank" class="btn btn-secondary">查看文档</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 聚合平台 -->
+    <div class="section">
+      <h2 class="section-title">
+        聚合平台
+        <span class="badge">一站式</span>
+      </h2>
+      <div class="card-grid">
+
+        <!-- OpenRouter -->
+        <div class="card">
+          <div class="card-header">
+            <div class="card-brand">
+              <div class="card-icon" style="background: linear-gradient(135deg, #6366f1 0%, #a855f7 100%);">🔀</div>
+              <div>
+                <div class="card-name">OpenRouter</div>
+                <div class="card-tagline">一个接口调用全球模型</div>
+              </div>
+            </div>
+          </div>
+          <div class="card-body">
+            <div class="free-quota">
+              <div class="free-quota-title">🎁 免费模型</div>
+              <div class="free-quota-text">聚合大量 :free 标记模型，可轮换使用不同免费模型</div>
+            </div>
+            <p class="card-desc">统一的API格式访问多种模型，包括Llama 3 8B Free等免费模型。支持自动回退和负载均衡。</p>
+            <div class="feature-list">
+              <span class="feature-tag">多模型</span>
+              <span class="feature-tag">统一接口</span>
+              <span class="feature-tag">免费模型</span>
+              <span class="feature-tag">负载均衡</span>
+            </div>
+          </div>
+          <div class="card-footer">
+            <a href="https://openrouter.ai/" target="_blank" class="btn btn-primary">立即注册</a>
+            <a href="https://openrouter.ai/docs" target="_blank" class="btn btn-secondary">查看文档</a>
+          </div>
+        </div>
+
+      </div>
+    </div>
+
+    <!-- 使用提示 -->
+    <div class="tips-box">
+      <div class="tips-title">
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="12" y1="8" x2="12" y2="12"></line><line x1="12" y1="16" x2="12.01" y2="16"></line></svg>
+        使用提示
+      </div>
+      <ul class="tips-list">
+        <li>免费额度通常有时效限制，建议根据项目需求选择合适的平台</li>
+        <li>部分免费层级的数据可能被用于模型训练，敏感项目请注意隐私政策</li>
+        <li>免费API通常有RPM（每分钟请求数）限制，生产环境建议考虑付费</li>
+        <li>推荐新手从 DeepSeek 或 Google Gemini 开始，额度大、体验好</li>
+      </ul>
+    </div>
+
+    <div class="footer">
+      <p>ChatGenius AI · 让AI回复更简单</p>
+      <p style="margin-top: 8px;"><a href="https://github.com/porozykey-eng/airepeat-home" target="_blank">GitHub</a></p>
+    </div>
+  </div>
+</body>
+</html>
