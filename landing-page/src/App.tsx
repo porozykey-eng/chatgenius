@@ -1833,16 +1833,28 @@ function Footer() {
             </p>
           </div>
           {[
-            { title: '产品', links: ['功能特性', '支持模型', '定价方案', '更新日志'] },
-            { title: '资源', links: ['使用文档', 'API 文档', '常见问题', '博客'] },
-            { title: '公司', links: ['关于我们', '联系我们', '加入我们', '隐私政策'] },
+            { title: '产品', links: [
+              { name: '功能特性', href: '#features' },
+              { name: '支持模型', href: '#models' },
+              { name: '定价方案', href: '#pricing' },
+              { name: '免费 API 推荐', href: 'http://127.0.0.1:1680/free-api.html', target: '_blank' }
+            ]},
+            { title: '资源', links: [
+              { name: '使用文档', href: '#' },
+              { name: '常见问题', href: '#faq' },
+              { name: 'GitHub', href: 'https://github.com/porozykey-eng/airepeat-home', target: '_blank' }
+            ]},
+            { title: '联系', links: [
+              { name: '关于我们', href: '#about' },
+              { name: '隐私政策', href: '#privacy' }
+            ]},
           ].map((col, i) => (
             <div key={i}>
               <h4 className="font-semibold mb-4 text-sm uppercase tracking-wider text-white/60">{col.title}</h4>
               <ul className="space-y-3">
                 {col.links.map((link, j) => (
                   <li key={j}>
-                    <a href="#" className="text-white/40 hover:text-white text-sm transition-colors">{link}</a>
+                    <a href={link.href} target={link.target || '_self'} className="text-white/40 hover:text-white text-sm transition-colors">{link.name}</a>
                   </li>
                 ))}
               </ul>
