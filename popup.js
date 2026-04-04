@@ -396,6 +396,97 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // API Usage Stats
+  function ensureApiUsageStatsPanel() {
+    // Create panel if it doesn't exist
+    let statsPanel = document.getElementById('apiUsageStats');
+    if (statsPanel) return statsPanel;
+    
+    const apiKeyDiv = document.getElementById('apiKey')?.parentElement?.parentElement;
+    if (!apiKeyDiv) return null;
+    
+    statsPanel = document.createElement('div');
+    statsPanel.id = 'apiUsageStats';
+    statsPanel.className = 'api-usage-stats';
+    statsPanel.style.cssText = 'margin-top: var(--spacing-3); padding: var(--spacing-3); background: var(--bg-tertiary); border-radius: var(--radius-md); border: 1px solid var(--border-subtle); display: none;';
+    statsPanel.innerHTML = `
+      <div class="usage-stat-row" style="display: flex; align-items: center; gap: var(--spacing-2); margin-bottom: var(--spacing-2);">
+        <span class="usage-label" style="font-size: 13px; color: var(--text-secondary);">本月已用:</span>
+        <span class="usage-value" id="monthUsed" style="font-size: 14px; font-weight: 600; color: var(--text-primary);">0</span>
+        <span class="usage-unit" style="font-size: 12px; color: var(--text-tertiary);">tokens</span>
+      </div>
+      <div class="usage-progress-bar" style="height: 6px; background: var(--bg-active); border-radius: var(--radius-full); overflow: hidden; margin-bottom: var(--spacing-2);">
+        <div class="usage-progress-fill" id="usageProgressFill" style="height: 100%; width: 0%; background: linear-gradient(90deg, var(--success) 0%, var(--accent-solid) 100%); border-radius: var(--radius-full); transition: width var(--transition-smooth), background var(--transition-smooth);"></div>
+      </div>
+      <div class="usage-hint" id="usageHint" style="font-size: 12px; color: var(--text-tertiary); text-align: center;">剩余额度充足</div>
+    `;
+    
+    apiKeyDiv.after(statsPanel);
+    return statsPanel;
+  }
+  
+  function updateApiUsageStats() {
+    const statsPanel = ensureApiUsageStatsPanel();
+    if (!statsPanel) return;
+    
+    const monthUsedEl = document.getElementById('monthUsed');
+    const progressFill = document.getElementById('usageProgressFill');
+    const usageHint = document.getElementById('usageHint');
+    
+    if (!monthUsedEl || !progressFill || !usageHint) return;
+    
+    chrome.storage.sync.get({
+      monthlyTokenUsed: 0,
+      monthlyTokenLimit: 5000000, // Default 5M for DeepSeek free tier
+      apiQuotaWarning: true
+    }, (data) => {
+      const monthUsed = data.monthlyTokenUsed || 0;
+      const tokenLimit = data.monthlyTokenLimit || 5000000;
+      const usagePercent = Math.min((monthUsed / tokenLimit) * 100, 100);
+      
+      // Show panel if API key is set
+      const apiKey = document.getElementById('apiKey').value;
+      if (apiKey) {
+        statsPanel.style.display = 'block';
+      } else {
+        statsPanel.style.display = 'none';
+        return;
+      }
+      
+      // Update display
+      monthUsedEl.textContent = formatTokenCount(monthUsed);
+      progressFill.style.width = usagePercent + '%';
+      
+      // Update hint and color based on usage
+      if (usagePercent >= 90) {
+        progressFill.style.background = 'linear-gradient(90deg, var(--warning) 0%, var(--error) 100%)';
+        usageHint.textContent = '⚠️ 额度即将用完，请及时充值';
+        usageHint.style.color = 'var(--error)';
+      } else if (usagePercent >= 70) {
+        progressFill.style.background = 'linear-gradient(90deg, var(--warning) 0%, var(--error) 100%)';
+        usageHint.textContent = '⚠️ 剩余额度不足 30%';
+        usageHint.style.color = 'var(--warning)';
+      } else if (usagePercent >= 50) {
+        progressFill.style.background = 'linear-gradient(90deg, var(--success) 0%, var(--accent-solid) 100%)';
+        usageHint.textContent = '剩余额度充足';
+        usageHint.style.color = 'var(--text-tertiary)';
+      } else {
+        progressFill.style.background = 'linear-gradient(90deg, var(--success) 0%, var(--accent-solid) 100%)';
+        usageHint.textContent = '✅ 额度充足，放心使用';
+        usageHint.style.color = 'var(--success)';
+      }
+    });
+  }
+  
+  function formatTokenCount(tokens) {
+    if (tokens >= 1000000) {
+      return (tokens / 1000000).toFixed(1) + 'M';
+    } else if (tokens >= 1000) {
+      return (tokens / 1000).toFixed(1) + 'K';
+    }
+    return tokens.toString();
+  }
+
   modelSelect.addEventListener('change', (e) => {
     const provider = providerSelect.value;
     if (e.target.value === 'custom') {
@@ -436,7 +527,10 @@ document.addEventListener('DOMContentLoaded', () => {
     apiKey: '',
     theme: 'light',
     lang: 'zh',
-    connectionValid: null
+    connectionValid: null,
+    personas: [],
+    activePersonaId: null,
+    totalReplies: 0
   }, (data) => {
     updateStatus(data);
     currentLang = data.lang;
@@ -451,6 +545,15 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     apiUrlInput.value = data.apiUrl;
     apiKeyInput.value = data.apiKey;
+    
+    // Update API usage stats
+    updateApiUsageStats();
+
+    // Load quick persona switcher
+    loadQuickPersonaSwitcher(data.personas, data.activePersonaId);
+
+    // Update stats in status bar
+    updateStatsDisplay(data.totalReplies);
   });
 
   // Save settings
@@ -573,5 +676,52 @@ document.addEventListener('DOMContentLoaded', () => {
         testBtn.innerHTML = originalText;
       }
     });
+  }
+
+  // Quick Persona Switcher Functions
+  function loadQuickPersonaSwitcher(personas, activePersonaId) {
+    const quickPersonaSection = document.getElementById('quickPersonaSection');
+    const quickPersonaSelect = document.getElementById('quickPersonaSelect');
+
+    if (!quickPersonaSection || !quickPersonaSelect) return;
+
+    if (!personas || personas.length === 0) {
+      quickPersonaSection.style.display = 'none';
+      return;
+    }
+
+    quickPersonaSection.style.display = 'block';
+    quickPersonaSelect.innerHTML = '';
+
+    personas.forEach(persona => {
+      const option = document.createElement('option');
+      option.value = persona.id;
+      option.textContent = persona.name || (currentLang === 'zh' ? '未命名角色' : 'Unnamed Persona');
+      if (persona.id === activePersonaId) {
+        option.selected = true;
+      }
+      quickPersonaSelect.appendChild(option);
+    });
+
+    quickPersonaSelect.addEventListener('change', (e) => {
+      const selectedId = e.target.value;
+      chrome.storage.sync.set({ activePersonaId: selectedId }, () => {
+        showToast(currentLang === 'zh' ? '已切换人设' : 'Persona switched', 'success');
+      });
+    });
+  }
+
+  function updateStatsDisplay(totalReplies) {
+    // Update status bar to show stats
+    const statusBar = document.getElementById('statusBar');
+    if (!statusBar || totalReplies === 0) return;
+
+    const statsText = document.createElement('span');
+    statsText.style.cssText = 'margin-left: auto; font-size: 12px; color: var(--text-tertiary);';
+    statsText.textContent = totalReplies >= 1000 
+      ? (totalReplies / 1000).toFixed(1) + 'k 回复' 
+      : totalReplies + ' 回复';
+    
+    statusBar.appendChild(statsText);
   }
 });

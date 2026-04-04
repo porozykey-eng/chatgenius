@@ -255,6 +255,11 @@ document.addEventListener('DOMContentLoaded', () => {
   const faqFileInput = document.getElementById('faqFileInput');
   const faqSearchInput = document.getElementById('faqSearch');
   const faqCategoryFilter = document.getElementById('faqCategoryFilter');
+  
+  // Persona search and recent tags
+  const personaSearchInput = document.getElementById('personaSearch');
+  const recentTagsContainer = document.getElementById('recentTagsContainer');
+  const recentTags = document.getElementById('recentTags');
 
   // FAQ categories
   const FAQ_CATEGORIES = {
@@ -266,6 +271,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   let faqSearchQuery = '';
   let faqCategoryQuery = 'all';
+  let personaSearchQuery = '';
+  let recentPersonas = []; // Track recently used personas
+  let selectedFaqIndices = new Set(); // Track selected FAQ items for batch operations
+  
+  // Batch operation elements
+  const faqBatchToolbar = document.getElementById('faqBatchToolbar');
+  const faqSelectAll = document.getElementById('faqSelectAll');
+  const batchCount = document.getElementById('batchCount');
+  const batchDeleteBtn = document.getElementById('batchDeleteBtn');
+  const batchCategorySelect = document.getElementById('batchCategorySelect');
+  const smartCategorizeBtn = document.getElementById('smartCategorizeBtn');
   const btnThemeSelect = document.getElementById('btnTheme');
   const btnPreview = document.getElementById('btnPreview');
   const btnOpacityInput = document.getElementById('btnOpacity');
@@ -320,6 +336,84 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   updateStats();
+  
+  // Weekly Statistics
+  function updateWeeklyStats() {
+    chrome.storage.sync.get({
+      weeklyReplies: 0,
+      weeklyTimeSaved: 0,
+      weeklySuccessCount: 0,
+      weeklyFailedCount: 0,
+      weeklyModelUsage: {},
+      weekStartTimestamp: Date.now() - (7 * 24 * 60 * 60 * 1000) // Default to 7 days ago
+    }, (data) => {
+      const weekRepliesEl = document.getElementById('weekReplies');
+      const weekSavedEl = document.getElementById('weekSaved');
+      const weekSuccessEl = document.getElementById('weekSuccess');
+      const topModelEl = document.getElementById('topModel');
+      const weeklyPanel = document.getElementById('weeklyStatsPanel');
+      
+      const weekReplies = data.weeklyReplies || 0;
+      const weekSuccessCount = data.weeklySuccessCount || 0;
+      const weekFailedCount = data.weeklyFailedCount || 0;
+      const weeklyTimeSaved = data.weeklyTimeSaved || 0;
+      const weeklyModelUsage = data.weeklyModelUsage || {};
+      
+      // Only show panel if there's data
+      if (weekReplies > 0 || weekSuccessCount > 0 || weekFailedCount > 0) {
+        if (weeklyPanel) weeklyPanel.style.display = 'block';
+      }
+      
+      // Update weekly replies
+      if (weekRepliesEl) {
+        weekRepliesEl.textContent = weekReplies.toLocaleString();
+      }
+      
+      // Update time saved
+      if (weekSavedEl) {
+        if (weeklyTimeSaved >= 60) {
+          weekSavedEl.textContent = Math.round(weeklyTimeSaved / 60) + 'h';
+        } else {
+          weekSavedEl.textContent = Math.round(weeklyTimeSaved) + 'm';
+        }
+      }
+      
+      // Update success rate
+      if (weekSuccessEl) {
+        const total = weekSuccessCount + weekFailedCount;
+        if (total > 0) {
+          const successRate = Math.round((weekSuccessCount / total) * 100);
+          weekSuccessEl.textContent = successRate + '%';
+        } else {
+          weekSuccessEl.textContent = '-';
+        }
+      }
+      
+      // Update most used model
+      if (topModelEl) {
+        let topModel = '-';
+        let maxUsage = 0;
+        Object.entries(weeklyModelUsage).forEach(([model, count]) => {
+          if (count > maxUsage) {
+            maxUsage = count;
+            topModel = model;
+          }
+        });
+        
+        // Shorten model name for display
+        if (topModel !== '-') {
+          if (topModel.includes('/')) {
+            topModel = topModel.split('/').pop();
+          }
+          if (topModel.length > 20) {
+            topModel = topModel.substring(0, 20) + '...';
+          }
+        }
+        topModelEl.textContent = topModel;
+      }
+    });
+  }
+  updateWeeklyStats();
   
   function renderProFeatures() {
     proFeaturesContainer.innerHTML = '';
@@ -476,7 +570,28 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function renderPersonas() {
     personaList.innerHTML = '';
-    personas.forEach((persona, index) => {
+    
+    // Filter personas based on search query
+    const filteredPersonas = personas.filter(persona => {
+      if (!personaSearchQuery) return true;
+      const query = personaSearchQuery.toLowerCase();
+      const nameMatch = persona.name.toLowerCase().includes(query);
+      const promptMatch = persona.prompt.toLowerCase().includes(query);
+      return nameMatch || promptMatch;
+    });
+    
+    if (filteredPersonas.length === 0 && personas.length > 0) {
+      // Show no results message
+      const noResults = document.createElement('div');
+      noResults.className = 'persona-no-results';
+      noResults.style.cssText = 'padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 14px;';
+      noResults.textContent = currentLang === 'zh' ? '没有找到匹配的角色' : 'No matching personas found';
+      personaList.appendChild(noResults);
+      return;
+    }
+    
+    filteredPersonas.forEach((persona) => {
+      const index = personas.findIndex(p => p.id === persona.id);
       const card = document.createElement('div');
       card.className = 'persona-card' + (persona.id === activePersonaId ? ' active' : '');
 
@@ -566,7 +681,9 @@ document.addEventListener('DOMContentLoaded', () => {
       if (persona.id !== activePersonaId) {
         toggleBtn.onclick = () => {
           activePersonaId = persona.id;
+          addToRecentPersonas(persona);
           renderPersonas();
+          renderRecentTags();
         };
       }
 
@@ -583,6 +700,58 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!activePersonaId) activePersonaId = newId;
     renderPersonas();
   });
+
+  // Recent Personas functionality
+  function addToRecentPersonas(persona) {
+    // Remove if already exists
+    recentPersonas = recentPersonas.filter(p => p.id !== persona.id);
+    // Add to front (max 5 recent personas)
+    recentPersonas.unshift(persona);
+    if (recentPersonas.length > 5) {
+      recentPersonas.pop();
+    }
+    // Save to storage
+    chrome.storage.sync.set({ recentPersonas });
+  }
+
+  function renderRecentTags() {
+    if (!recentTagsContainer || !recentTags) return;
+    
+    if (recentPersonas.length === 0) {
+      recentTagsContainer.style.display = 'none';
+      return;
+    }
+    
+    recentTagsContainer.style.display = 'flex';
+    recentTags.innerHTML = '';
+    
+    recentPersonas.forEach(persona => {
+      const tag = document.createElement('div');
+      tag.className = 'recent-tag' + (persona.id === activePersonaId ? ' active' : '');
+      tag.innerHTML = `
+        <svg class="recent-tag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+          <circle cx="12" cy="7" r="4"></circle>
+        </svg>
+        <span>${persona.name || '未命名角色'}</span>
+      `;
+      tag.onclick = () => {
+        activePersonaId = persona.id;
+        addToRecentPersonas(persona);
+        renderPersonas();
+        renderRecentTags();
+      };
+      recentTags.appendChild(tag);
+    });
+  }
+
+  // Persona Search functionality
+  if (personaSearchInput) {
+    personaSearchInput.addEventListener('input', (e) => {
+      personaSearchQuery = e.target.value.trim();
+      renderPersonas();
+    });
+  }
 
   // Template Library functionality
   const templateLibraryBtn = document.getElementById('templateLibraryBtn');
@@ -709,6 +878,23 @@ document.addEventListener('DOMContentLoaded', () => {
 
       const div = document.createElement('div');
       div.className = 'faq-item';
+      div.dataset.index = index;
+
+      // Add checkbox for batch operations
+      const checkbox = document.createElement('input');
+      checkbox.type = 'checkbox';
+      checkbox.className = 'faq-item-checkbox';
+      checkbox.id = 'faq-' + index;
+      checkbox.checked = selectedFaqIndices.has(index);
+      checkbox.onchange = (e) => {
+        if (e.target.checked) {
+          selectedFaqIndices.add(index);
+        } else {
+          selectedFaqIndices.delete(index);
+        }
+        updateBatchToolbar();
+      };
+      div.appendChild(checkbox);
 
       // Category tag and selector row
       const headerRow = document.createElement('div');
@@ -779,6 +965,9 @@ document.addEventListener('DOMContentLoaded', () => {
       div.appendChild(aInput);
       faqList.appendChild(div);
     });
+    
+    // Update batch toolbar after rendering
+    updateBatchToolbar();
   }
 
   // FAQ Search and Filter event listeners
@@ -793,6 +982,137 @@ document.addEventListener('DOMContentLoaded', () => {
     faqCategoryFilter.addEventListener('change', (e) => {
       faqCategoryQuery = e.target.value;
       renderFaq();
+    });
+  }
+
+  // Batch Operations Functions
+  function updateBatchToolbar() {
+    if (!faqBatchToolbar || !batchCount) return;
+    
+    const count = selectedFaqIndices.size;
+    batchCount.textContent = '已选 ' + count + ' 项';
+    
+    // Show/hide toolbar based on selection
+    if (count > 0) {
+      faqBatchToolbar.style.display = 'flex';
+    } else {
+      faqBatchToolbar.style.display = 'none';
+    }
+    
+    // Update select all checkbox
+    const visibleItems = faqList.querySelectorAll('.faq-item');
+    const allVisibleSelected = visibleItems.length > 0 && 
+      Array.from(visibleItems).every(item => {
+        const checkbox = item.querySelector('.faq-item-checkbox');
+        return checkbox && checkbox.checked;
+      });
+    
+    if (faqSelectAll) {
+      faqSelectAll.checked = allVisibleSelected;
+    }
+  }
+
+  // Select All functionality
+  if (faqSelectAll) {
+    faqSelectAll.addEventListener('change', (e) => {
+      const checkboxes = faqList.querySelectorAll('.faq-item-checkbox');
+      checkboxes.forEach(cb => {
+        cb.checked = e.target.checked;
+        const index = parseInt(cb.id.replace('faq-', ''));
+        if (e.target.checked) {
+          selectedFaqIndices.add(index);
+        } else {
+          selectedFaqIndices.delete(index);
+        }
+      });
+      updateBatchToolbar();
+    });
+  }
+
+  // Batch Delete
+  if (batchDeleteBtn) {
+    batchDeleteBtn.addEventListener('click', () => {
+      if (selectedFaqIndices.size === 0) return;
+      
+      const count = selectedFaqIndices.size;
+      if (confirm(currentLang === 'zh' ? 
+        '确定要删除选中的 ' + count + ' 条问答吗？' : 
+        'Are you sure you want to delete ' + count + ' selected Q&A items?')) {
+        
+        // Remove selected items (sort indices in descending order to avoid index shifting)
+        const sortedIndices = Array.from(selectedFaqIndices).sort((a, b) => b - a);
+        sortedIndices.forEach(index => {
+          faqData.splice(index, 1);
+        });
+        
+        selectedFaqIndices.clear();
+        renderFaq();
+        updateBatchToolbar();
+        showToast(currentLang === 'zh' ? 
+          '已删除 ' + count + ' 条问答' : 
+          'Deleted ' + count + ' Q&A items');
+      }
+    });
+  }
+
+  // Batch Category Change
+  if (batchCategorySelect) {
+    batchCategorySelect.addEventListener('change', (e) => {
+      const category = e.target.value;
+      if (!category || selectedFaqIndices.size === 0) return;
+      
+      selectedFaqIndices.forEach(index => {
+        if (faqData[index]) {
+          faqData[index].category = category;
+        }
+      });
+      
+      e.target.value = ''; // Reset select
+      renderFaq();
+      updateBatchToolbar();
+      showToast(currentLang === 'zh' ? 
+        '已更新 ' + selectedFaqIndices.size + ' 条问答的分类' : 
+        'Updated category for ' + selectedFaqIndices.size + ' Q&A items');
+    });
+  }
+
+  // Smart Categorize - Auto-categorize based on question content
+  if (smartCategorizeBtn) {
+    smartCategorizeBtn.addEventListener('click', () => {
+      let changedCount = 0;
+      
+      faqData.forEach((item, index) => {
+        const question = item.q.toLowerCase();
+        const answer = item.a.toLowerCase();
+        const text = question + ' ' + answer;
+        
+        // Keyword-based categorization
+        let predictedCategory = 'other';
+        
+        // Price-related keywords
+        if (/\b(price|cost|payment|pay|cheap|expensive|discount|refund|currency|美元 | 价格 | 费用 | 付款 | 支付 | 便宜 | 贵 | 折扣 | 退款|钱)\b/i.test(text)) {
+          predictedCategory = 'price';
+        }
+        // Product-related keywords
+        else if (/\b(product|item|feature|specification|size|color|material|quality|warranty|产品 | 商品 | 物品 | 功能 | 规格 | 尺寸 | 颜色 | 材质 | 质量 | 保修 | 型号)\b/i.test(text)) {
+          predictedCategory = 'product';
+        }
+        // Service-related keywords
+        else if (/\b(service|support|help|return|exchange|shipping|delivery|track|warranty|repair|服务 | 支持 | 帮助 | 退货 | 换货 | 发货 | 物流 | 跟踪 | 维修 | 售后)\b/i.test(text)) {
+          predictedCategory = 'service';
+        }
+        
+        // Update if different and not manually set
+        if (item.category !== predictedCategory) {
+          item.category = predictedCategory;
+          changedCount++;
+        }
+      });
+      
+      renderFaq();
+      showToast(currentLang === 'zh' ? 
+        '智能分类完成！更新了 ' + changedCount + ' 条问答' : 
+        'Smart categorization complete! Updated ' + changedCount + ' items');
     });
   }
 
@@ -957,9 +1277,12 @@ document.addEventListener('DOMContentLoaded', () => {
     if (personas.length > 0 && !activePersonaId) {
       activePersonaId = personas[0].id;
     }
+    // Load recent personas
+    recentPersonas = data.recentPersonas || [];
     renderPersonas();
     renderFaq();
     renderProFeatures();
+    renderRecentTags();
 
     shortcutInput.value = data.shortcut;
     toneSelect.value = data.tone;
@@ -973,7 +1296,30 @@ document.addEventListener('DOMContentLoaded', () => {
     btnOpacityInput.value = data.btnOpacity;
     opacityVal.textContent = data.btnOpacity + '%';
     btnPreview.style.opacity = data.btnOpacity / 100;
+    
+    // Update shortcut display in quick start guide
+    const shortcutDisplay = document.getElementById('shortcutDisplay');
+    if (shortcutDisplay && data.shortcut) {
+      shortcutDisplay.textContent = data.shortcut;
+    }
   });
+
+  // Replay Onboarding functionality
+  const replayOnboardingBtn = document.getElementById('replayOnboardingBtn');
+  if (replayOnboardingBtn) {
+    replayOnboardingBtn.addEventListener('click', () => {
+      if (confirm(currentLang === 'zh' ? 
+        '确定要重新播放新手引导吗？' : 
+        'Are you sure you want to replay the onboarding tour?')) {
+        
+        // Reset onboarding flag
+        chrome.storage.sync.set({ onboardingCompleted: false }, () => {
+          // Reload page to trigger onboarding
+          location.reload();
+        });
+      }
+    });
+  }
 
   const upgradeBtn = document.getElementById('upgradeBtn');
   upgradeBtn.addEventListener('click', () => {
@@ -1008,7 +1354,8 @@ document.addEventListener('DOMContentLoaded', () => {
       btnTheme,
       btnOpacity,
       theme: currentTheme,
-      lang: currentLang
+      lang: currentLang,
+      recentPersonas
     }, () => {
       showToast(I18N[currentLang].saved);
       saveBtn.disabled = false;
@@ -1016,6 +1363,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Re-render to show cleaned up lists
       personas = validPersonas;
       faqData = validFaq;
+      selectedFaqIndices.clear(); // Clear selection on save
       renderPersonas();
       renderFaq();
     });

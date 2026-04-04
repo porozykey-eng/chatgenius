@@ -322,7 +322,38 @@
       text-transform: uppercase;
       letter-spacing: 0.02em;
     }
-    
+
+    .weekly-stats-panel {
+      margin-bottom: var(--spacing-8);
+    }
+
+    .weekly-stats-grid {
+      display: grid;
+      grid-template-columns: repeat(4, 1fr);
+      gap: var(--spacing-4);
+      margin-top: var(--spacing-4);
+    }
+
+    .weekly-stat-item {
+      text-align: center;
+      padding: var(--spacing-4);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .weekly-stat-value {
+      font-size: 20px;
+      font-weight: 700;
+      color: var(--accent-solid);
+      margin-bottom: var(--spacing-1);
+    }
+
+    .weekly-stat-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+    }
+
     /* ================================
        Panels (Cards)
        ================================ */
@@ -379,6 +410,104 @@
       color: var(--text-tertiary);
       margin-bottom: var(--spacing-5);
       line-height: 1.5;
+    }
+
+    /* Persona Toolbar with Search and Recent Tags */
+    .persona-toolbar {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-4);
+    }
+
+    .persona-search {
+      position: relative;
+    }
+
+    .persona-search-icon {
+      position: absolute;
+      left: var(--spacing-3);
+      top: 50%;
+      transform: translateY(-50%);
+      width: 18px;
+      height: 18px;
+      color: var(--text-tertiary);
+      pointer-events: none;
+    }
+
+    .persona-search-input {
+      width: 100%;
+      padding: var(--spacing-3) var(--spacing-3) var(--spacing-3) var(--spacing-10);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      transition: all var(--transition-base);
+    }
+
+    .persona-search-input:focus {
+      outline: none;
+      border-color: var(--accent-solid);
+      box-shadow: 0 0 0 3px var(--accent-glow);
+    }
+
+    .persona-search-input::placeholder {
+      color: var(--text-placeholder);
+    }
+
+    .recent-tags-container {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      flex-wrap: wrap;
+      padding: var(--spacing-3);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+    }
+
+    .recent-label {
+      font-size: 12px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .recent-tags {
+      display: flex;
+      gap: var(--spacing-2);
+      flex-wrap: wrap;
+    }
+
+    .recent-tag {
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-1);
+      padding: var(--spacing-1) var(--spacing-2);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-full);
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: all var(--transition-fast);
+    }
+
+    .recent-tag:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent-solid);
+      color: var(--accent-solid);
+    }
+
+    .recent-tag.active {
+      background: var(--accent-solid);
+      border-color: var(--accent-solid);
+      color: white;
+    }
+
+    .recent-tag-icon {
+      width: 14px;
+      height: 14px;
     }
     
     /* ================================
@@ -1109,6 +1238,140 @@
       min-width: 150px;
     }
 
+    /* FAQ Batch Operations Toolbar */
+    .faq-batch-toolbar {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      padding: var(--spacing-3) var(--spacing-4);
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      margin-bottom: var(--spacing-4);
+      gap: var(--spacing-3);
+      flex-wrap: wrap;
+    }
+
+    .batch-selection {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+    }
+
+    .batch-select-all {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+    }
+
+    .batch-select-label {
+      font-size: 14px;
+      color: var(--text-primary);
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .batch-count {
+      font-size: 13px;
+      color: var(--text-secondary);
+      font-weight: 500;
+    }
+
+    .batch-actions {
+      display: flex;
+      gap: var(--spacing-2);
+      align-items: center;
+      flex-wrap: wrap;
+    }
+
+    .btn-sm {
+      padding: var(--spacing-1) var(--spacing-2);
+      font-size: 13px;
+      height: 32px;
+      display: inline-flex;
+      align-items: center;
+      gap: var(--spacing-1);
+    }
+
+    .form-select-sm {
+      height: 32px;
+      font-size: 13px;
+      min-width: 120px;
+    }
+
+    /* FAQ item checkbox */
+    .faq-item-checkbox {
+      width: 18px;
+      height: 18px;
+      cursor: pointer;
+      margin-right: var(--spacing-2);
+      flex-shrink: 0;
+    }
+
+    .faq-item.selected {
+      background: var(--bg-active);
+      border-left: 3px solid var(--accent-solid);
+    }
+
+    .faq-item-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+      margin-bottom: var(--spacing-2);
+    }
+
+    /* Quick Start Guide */
+    .quick-start-grid {
+      display: grid;
+      grid-template-columns: 1fr;
+      gap: var(--spacing-4);
+      margin-top: var(--spacing-4);
+    }
+
+    .quick-start-item {
+      display: flex;
+      gap: var(--spacing-3);
+      padding: var(--spacing-3);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      transition: all var(--transition-fast);
+    }
+
+    .quick-start-item:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent-glow);
+    }
+
+    .quick-start-icon {
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .quick-start-content h4 {
+      font-size: 14px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: var(--spacing-1);
+    }
+
+    .quick-start-content p {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+
+    .quick-start-content kbd {
+      display: inline-block;
+      padding: 2px 6px;
+      font-size: 12px;
+      font-family: var(--font-mono);
+      background: var(--bg-active);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-xs);
+      color: var(--text-primary);
+    }
+
     .faq-category-tag {
       display: inline-flex;
       align-items: center;
@@ -1566,6 +1829,7 @@
         <h1 class="page-title" data-i18n="title">ChatGenius AI 设置</h1>
       </div>
       <div class="header-actions">
+        <button class="icon-btn" id="replayOnboardingBtn" title="重新播放引导">🎬</button>
         <button class="icon-btn" id="helpBtn" title="帮助">❓</button>
         <button class="icon-btn" id="themeToggle" title="切换主题">🌙</button>
         <button class="icon-btn" id="langToggle" title="切换语言">EN</button>
@@ -1585,6 +1849,41 @@
       <div class="stat-card">
         <div class="stat-value" id="statStatus">标准版</div>
         <div class="stat-label" data-i18n="statStatus">版本状态</div>
+      </div>
+    </div>
+
+    <!-- Weekly Stats -->
+    <div class="weekly-stats-panel" id="weeklyStatsPanel" style="display: none;">
+      <div class="panel">
+        <div class="panel-header">
+          <div class="panel-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="3" y="4" width="18" height="18" rx="2" ry="2"></rect>
+              <line x1="16" y1="2" x2="16" y2="6"></line>
+              <line x1="8" y1="2" x2="8" y2="6"></line>
+              <line x1="3" y1="10" x2="21" y2="10"></line>
+            </svg>
+          </div>
+          <h2 class="panel-title">本周使用统计</h2>
+        </div>
+        <div class="weekly-stats-grid">
+          <div class="weekly-stat-item">
+            <div class="weekly-stat-value" id="weekReplies">0</div>
+            <div class="weekly-stat-label">本周回复</div>
+          </div>
+          <div class="weekly-stat-item">
+            <div class="weekly-stat-value" id="weekSaved">0m</div>
+            <div class="weekly-stat-label">节省时间</div>
+          </div>
+          <div class="weekly-stat-item">
+            <div class="weekly-stat-value" id="weekSuccess">0%</div>
+            <div class="weekly-stat-label">成功率</div>
+          </div>
+          <div class="weekly-stat-item">
+            <div class="weekly-stat-value" id="topModel">-</div>
+            <div class="weekly-stat-label">常用模型</div>
+          </div>
+        </div>
       </div>
     </div>
 
@@ -1635,6 +1934,22 @@
             <h2 class="panel-title" data-i18n="personaSettings">自定义角色</h2>
           </div>
           <p class="panel-desc" data-i18n="personaHelp">创建多个 AI 角色，选择一个作为当前激活角色。</p>
+          
+          <!-- Persona Toolbar with Search and Recent Tags -->
+          <div class="persona-toolbar">
+            <div class="persona-search">
+              <svg class="persona-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+              </svg>
+              <input type="text" class="persona-search-input" id="personaSearch" placeholder="搜索角色名称或提示词...">
+            </div>
+            <div class="recent-tags-container" id="recentTagsContainer" style="display: none;">
+              <span class="recent-label">最近使用：</span>
+              <div class="recent-tags" id="recentTags"></div>
+            </div>
+          </div>
+          
           <div class="item-list" id="personaList"></div>
           <div class="persona-actions-row">
             <button class="btn btn-secondary" id="addPersonaBtn" data-i18n="addPersona">+ 添加角色</button>
@@ -1703,6 +2018,32 @@
               <option value="service">售后服务</option>
               <option value="other">其他</option>
             </select>
+          </div>
+
+          <!-- Batch Operations Toolbar -->
+          <div class="faq-batch-toolbar" id="faqBatchToolbar" style="display: none;">
+            <div class="batch-selection">
+              <input type="checkbox" id="faqSelectAll" class="batch-select-all">
+              <label for="faqSelectAll" class="batch-select-label">全选</label>
+              <span class="batch-count" id="batchCount">已选 0 项</span>
+            </div>
+            <div class="batch-actions">
+              <button class="btn btn-sm btn-secondary" id="batchDeleteBtn" title="批量删除">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                删除
+              </button>
+              <select class="form-select form-select-sm" id="batchCategorySelect" title="批量移动分类">
+                <option value="">移动到分类...</option>
+                <option value="product">产品相关</option>
+                <option value="price">价格咨询</option>
+                <option value="service">售后服务</option>
+                <option value="other">其他</option>
+              </select>
+              <button class="btn btn-sm btn-secondary" id="smartCategorizeBtn" title="智能分类">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 12 2.1 12.1"></path><path d="M19.5 19.5c-1.4-1.4-3.5-2.8-6-3.5"></path></svg>
+                智能分类
+              </button>
+            </div>
           </div>
 
           <div class="item-list" id="faqList"></div>
@@ -1796,6 +2137,48 @@
               <div class="range-wrapper">
                 <input type="range" class="form-range" id="btnOpacity" min="0" max="100" value="100">
                 <span class="range-value" id="opacityVal">100%</span>
+              </div>
+            </div>
+          </div>
+        </div>
+
+        <!-- Quick Start Guide Panel -->
+        <div class="panel">
+          <div class="panel-header">
+            <div class="panel-icon">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"></path>
+              </svg>
+            </div>
+            <h2 class="panel-title">快捷操作指南</h2>
+          </div>
+          <div class="quick-start-grid">
+            <div class="quick-start-item">
+              <div class="quick-start-icon">⌨️</div>
+              <div class="quick-start-content">
+                <h4>快捷键</h4>
+                <p>在聊天窗口按 <kbd id="shortcutDisplay">Alt+1</kbd> 快速生成回复</p>
+              </div>
+            </div>
+            <div class="quick-start-item">
+              <div class="quick-start-icon">🎯</div>
+              <div class="quick-start-content">
+                <h4>悬浮按钮</h4>
+                <p>长按 500ms 拖动，短按点击生成回复</p>
+              </div>
+            </div>
+            <div class="quick-start-item">
+              <div class="quick-start-icon">🎭</div>
+              <div class="quick-start-content">
+                <h4>切换人设</h4>
+                <p>在 popup 或设置中选择不同角色，AI 会根据角色设定回复</p>
+              </div>
+            </div>
+            <div class="quick-start-item">
+              <div class="quick-start-icon">📚</div>
+              <div class="quick-start-content">
+                <h4>知识库</h4>
+                <p>添加 FAQ 后，AI 会自动融入这些信息到回复中</p>
               </div>
             </div>
           </div>
