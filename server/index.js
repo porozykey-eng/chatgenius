@@ -99,6 +99,13 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// Serve landing page static files
+const landingPath = __dirname + '/../landing-page/dist';
+app.use(express.static(landingPath));
+app.get('*', (req, res) => {
+  res.sendFile(landingPath + '/index.html');
+});
+
 // Global error handler - hide internal details in production
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
