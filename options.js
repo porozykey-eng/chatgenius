@@ -1,6 +1,9 @@
 const I18N = {
+  // SYNC: Backend API base URL - must match across all files (background.js, options.js)
+  API_BASE_URL: 'https://chat.sopie.cc',
   en: {
     title: 'AI Auto-Reply Settings',
+    subtitle: 'Manage your AI personas, knowledge base and preferences',
     instructionsTitle: 'User Guide',
     close: 'Got it',
     instructionsContent: '1. Configure API: Click the extension icon in the toolbar to set your AI Provider and API Key.<br><br>2. Set Persona: Define your custom persona below (e.g., Sales Manager, Tech Support) so the AI knows how to act.<br><br>3. Use in Chat: Open WhatsApp or Messenger web. A floating "AI Reply" button will appear. Click it (or use the shortcut) to generate a context-aware reply based on the recent chat history.',
@@ -41,10 +44,6 @@ const I18N = {
     themeGlass: 'Glassmorphism',
     themeNeon: 'Cyber Neon',
     themeMinimal: 'Minimalist',
-    theme3D: '3D Pop',
-    themeCyberpunk: 'Cyberpunk',
-    themeMaterial: 'Material Design',
-    themeHolographic: 'Holographic',
     btnOpacity: 'Button Opacity',
     save: 'Save Settings',
     saved: 'Saved Successfully!',
@@ -66,10 +65,115 @@ const I18N = {
     templateProduct: 'Product Consultant',
     templateProductDesc: 'Knowledgeable consultant for product recommendations',
     templateSuccess: 'Customer Success',
-    templateSuccessDesc: 'Dedicated manager for customer onboarding'
+    templateSuccessDesc: 'Dedicated manager for customer onboarding',
+    tabPersonas: 'AI Personas',
+    tabKnowledge: 'Knowledge Base',
+    tabSettings: 'Preferences',
+    weeklyStatsTitle: 'Weekly Statistics',
+    weekRepliesLabel: 'Replies This Week',
+    weekSavedLabel: 'Time Saved',
+    weekSuccessLabel: 'Success Rate',
+    topModelLabel: 'Top Model',
+    quickGuideTitle: 'Quick Start Guide',
+    quickGuideShortcutTitle: 'Shortcut',
+    quickGuideShortcutDesc: 'Press {key} in chat to generate AI reply',
+    quickGuideShortcutPrefix: 'Press ',
+    quickGuideShortcutSuffix: ' in chat to generate AI reply',
+    quickGuideFloatTitle: 'Floating Button',
+    quickGuideFloatDesc: 'Long press 500ms to drag, short press to generate reply',
+    quickGuidePersonaTitle: 'Switch Persona',
+    quickGuidePersonaDesc: 'Select different personas in popup or settings',
+    quickGuideKBTitle: 'Knowledge Base',
+    quickGuideKBDesc: 'AI will naturally incorporate FAQ info into replies',
+    activateTitle: 'Activate Product',
+    activateDesc: 'Enter your activation code to unlock Pro',
+    activatePlaceholder: 'Enter code (e.g. PRO-XXXX-XXXX)',
+    activateBtn: 'Activate',
+    activateSuccessPrefix: 'Activated! Upgraded to ',
+    activateVerifying: 'Verifying...',
+    activateErrorEmpty: 'Please enter activation code',
+    activateErrorInvalid: 'Invalid code. Please check and try again',
+    activateFail: 'Activation failed. Please check your network',
+    activateLabel: 'Activate',
+    redirectingPayment: 'Redirecting to payment page...',
+    alipayComingSoon: 'Alipay payment coming soon!',
+    pageTitle: 'ChatGenius AI - Settings',
+    allCategories: 'All Categories',
+    catProduct: 'Product',
+    catPrice: 'Pricing',
+    catService: 'Service',
+    catOther: 'Other',
+    batchSelectAll: 'Select All',
+    batchCountPrefix: '',
+    batchCountSuffix: ' selected',
+    batchDelete: 'Delete',
+    batchMoveTo: 'Move to category...',
+    smartCategorize: 'Smart Categorize',
+    personaSearchPlaceholder: 'Search name or prompt...',
+    recentLabel: 'Recent:',
+    sendBtn: 'Send',
+    faqSearchPlaceholder: 'Search Q&A...',
+    importBtn: 'Import',
+    exportBtn: 'Export',
+    themePreview: 'Theme Preview',
+    statSuccessSuffix: '% success',
+    statStandard: 'Standard',
+    statFree: 'Free',
+    statProLifetime: 'Pro Lifetime',
+    statProYear: 'Pro Year',
+    quotaTitle: 'Daily Quota Running Low',
+    quotaInfo: 'Remaining today: {n} replies',
+    quotaTip: 'Upgrade to Pro for unlimited replies',
+    previewThinking: 'AI thinking...',
+    previewError: 'Error: ',
+    previewPlaceholder: 'Type a test message...',
+    upgradeSection: 'Upgrade',
+    proPanelDesc: 'Unlock all premium features for a better experience.',
+    activationSectionTitle: 'Activation',
+    shortcutHint: 'Alt+2 opens quick menu · Ctrl+Enter inserts reply · Ctrl+R regenerates',
+    noMatchingPersonas: 'No matching personas found',
+    noMatchingFaq: 'No matching Q&A found',
+    confirmDeletePersona: 'Are you sure you want to delete this persona?',
+    confirmDeleteFaq: 'Delete this Q&A?',
+    confirmBatchDelete: 'Are you sure you want to delete {n} selected Q&A items?',
+    deletedCount: 'Deleted {n} Q&A items',
+    categoryUpdated: 'Updated category for {n} Q&A items',
+    smartCategorizeDone: 'Smart categorization complete! Updated {n} items',
+    importSuccess: 'Imported {n} Q&A items',
+    importNoValid: 'No valid Q&A items found',
+    importInvalidFormat: 'Invalid file format',
+    importParseFail: 'Failed to parse JSON',
+    exportSuccess: 'Exported {n} Q&A items',
+    exportNone: 'No Q&A items to export',
+    templateAdded: 'Template added: {name}',
+    helpContent: '1. Configure API: Click the extension icon in the toolbar to set your AI Provider and API Key.<br><br>2. Set Persona: Define your custom persona below (e.g., Sales Manager, Tech Support) so the AI knows how to act.<br><br>3. Use in Chat: Open WhatsApp or Messenger web. A floating "AI Reply" button will appear. Click it (or use the shortcut) to generate a context-aware reply based on the recent chat history.<br><br><b>Quick Shortcuts:</b><br>· Shortcut key: Generate AI reply in chat<br>· Alt+2: Open quick menu<br>· Ctrl+Enter: Insert reply<br>· Ctrl+R: Regenerate reply',
+    faqDeleteTitle: 'Batch Delete',
+    faqSmartCatTitle: 'Smart Categorize',
+    personaNamePlaceholder: 'Persona Name',
+    statusActive: 'Active',
+    statusInactive: 'Inactive',
+    editPersona: 'Edit Persona',
+    deletePersona: 'Delete Persona',
+    personaPromptPlaceholder: 'System Prompt\n\nExample: You are a professional customer service representative...',
+    toggleActive: '✓ Active',
+    toggleSetAsActive: 'Set as Active',
+    questionLabel: 'Question',
+    answerLabel: 'Answer',
+    freeBannerTitle: 'Current: Free Version',
+    freeBannerDesc: 'Today: {used}/{limit} replies used',
+    freeBannerBtn: 'Upgrade to Pro',
+    upgradeModalTitle: 'Upgrade to ChatGenius Pro',
+    upgradeOptCodeTitle: 'I have an activation code',
+    upgradeOptCodeDesc: 'Enter activation code to upgrade',
+    upgradeOptBuyTitle: 'Purchase Online',
+    upgradeOptBuyDesc: 'Go to website to purchase activation code',
+    modalActivateBtn: 'Activate',
+    modalActivationPlaceholder: 'Enter activation code (e.g. PRO-XXXX-XXXX)',
+    modalFooter: 'Enter the activation code after purchase to complete upgrade'
   },
   zh: {
     title: 'AI 自动回复设置',
+    subtitle: '管理你的 AI 角色、知识库和偏好',
     instructionsTitle: '使用说明',
     close: '知道了',
     instructionsContent: '1. 配置 API：点击浏览器工具栏中的插件图标，设置您的 AI 提供商和 API Key。<br><br>2. 设置人设：在下方创建并选择您的专属角色（例如：销售经理、技术支持），让 AI 知道如何回复客户。<br><br>3. 在聊天中使用：打开 WhatsApp 或 Messenger 网页版。聊天窗口旁会出现一个“AI Reply”悬浮按钮。点击它（或使用快捷键）即可根据最近的聊天记录生成回复。',
@@ -110,10 +214,6 @@ const I18N = {
     themeGlass: '毛玻璃',
     themeNeon: '赛博霓虹',
     themeMinimal: '极简主义',
-    theme3D: '3D 立体',
-    themeCyberpunk: '赛博朋克',
-    themeMaterial: '质感设计',
-    themeHolographic: '全息幻彩',
     btnOpacity: '悬浮按钮透明度',
     save: '保存设置',
     saved: '保存成功！',
@@ -136,50 +236,112 @@ const I18N = {
     templateProductDesc: '知识丰富的产品推荐专家',
     templateSuccess: '客户成功经理',
     templateSuccessDesc: '专注于客户引导和服务的经理',
-    onboardingSkip: '跳过',
-    onboardingNext: '下一步',
-    onboardingFinish: '完成',
-    onboardingStep1Title: '欢迎使用 ChatGenius AI',
-    onboardingStep1Desc: '这是一个智能回复助手，可以帮助您在聊天中快速生成专业回复。让我们一起了解主要功能吧！',
-    onboardingStep2Title: '创建 AI 角色',
-    onboardingStep2Desc: '在「AI 角色」标签页中，您可以定义不同的AI人设。例如：销售经理、客服代表等。点击「模板库」可快速使用预设模板。',
-    onboardingStep3Title: '添加知识库',
-    onboardingStep3Desc: '在「知识库」标签页中，添加常见问答。AI会根据客户问题自然地融入这些信息，让回复更加专业准确。',
-    onboardingStep4Title: '设置回复偏好',
-    onboardingStep4Desc: '在「偏好设置」中，您可以调整回复语气、长度、快捷键和悬浮按钮样式，定制您的专属体验。',
-    onboardingStep5Title: '开始使用',
-    onboardingStep5Desc: '点击扩展图标配置API，然后在 WhatsApp/Messenger 网页版中点击悬浮按钮即可生成智能回复。祝您使用愉快！'
+    tabPersonas: 'AI 角色',
+    tabKnowledge: '知识库',
+    tabSettings: '偏好设置',
+    weeklyStatsTitle: '本周使用统计',
+    weekRepliesLabel: '本周回复',
+    weekSavedLabel: '节省时间',
+    weekSuccessLabel: '成功率',
+    topModelLabel: '常用模型',
+    quickGuideTitle: '快捷操作指南',
+    quickGuideShortcutTitle: '快捷键',
+    quickGuideShortcutDesc: '在聊天窗口按 {key} 快速生成 AI 回复',
+    quickGuideShortcutPrefix: '在聊天窗口按 ',
+    quickGuideShortcutSuffix: ' 快速生成 AI 回复',
+    quickGuideFloatTitle: '悬浮按钮',
+    quickGuideFloatDesc: '长按 500ms 拖动，短按点击生成回复',
+    quickGuidePersonaTitle: '切换人设',
+    quickGuidePersonaDesc: '在 popup 或设置中选择不同角色，AI 会根据角色设定回复',
+    quickGuideKBTitle: '知识库',
+    quickGuideKBDesc: '添加 FAQ 后，AI 会自动融入这些信息到回复中',
+    activateTitle: '激活产品',
+    activateDesc: '输入从官网购买的激活码来解锁 Pro 版',
+    activatePlaceholder: '输入激活码（例如：PRO-XXXX-XXXX）',
+    activateBtn: '激活',
+    activateSuccessPrefix: '激活成功！已升级到 ',
+    activateVerifying: '验证中...',
+    activateErrorEmpty: '请输入激活码',
+    activateErrorInvalid: '激活码无效，请检查后重试',
+    activateFail: '激活失败，请检查网络连接',
+    activateLabel: '激活',
+    redirectingPayment: '正在跳转至支付页面...',
+    alipayComingSoon: '即将推出支付宝付款功能，敬请期待！',
+    pageTitle: 'ChatGenius AI - 设置',
+    allCategories: '全部分类',
+    catProduct: '产品相关',
+    catPrice: '价格咨询',
+    catService: '售后服务',
+    catOther: '其他',
+    batchSelectAll: '全选',
+    batchCountPrefix: '已选 ',
+    batchCountSuffix: ' 项',
+    batchDelete: '删除',
+    batchMoveTo: '移动到分类...',
+    smartCategorize: '智能分类',
+    personaSearchPlaceholder: '搜索角色名称或提示词...',
+    recentLabel: '最近使用：',
+    sendBtn: '发送',
+    faqSearchPlaceholder: '搜索问答...',
+    importBtn: '导入',
+    exportBtn: '导出',
+    themePreview: '主题预览',
+    statSuccessSuffix: '% 成功',
+    statStandard: '标准版',
+    statFree: '免费版',
+    statProLifetime: 'Pro 永久版',
+    statProYear: 'Pro 年付版',
+    quotaTitle: '每日配额即将用完',
+    quotaInfo: '今日剩余 {n} 次回复机会',
+    quotaTip: '升级到 Pro 版享受无限制回复',
+    previewThinking: 'AI 思考中...',
+    previewError: '错误: ',
+    previewPlaceholder: '输入测试消息...',
+    upgradeSection: '升级',
+    proPanelDesc: '解锁全部高级功能，获得更好的使用体验。',
+    activationSectionTitle: '激活',
+    shortcutHint: 'Alt+2 打开快捷菜单 · Ctrl+Enter 插入回复 · Ctrl+R 重新生成',
+    noMatchingPersonas: '没有找到匹配的角色',
+    noMatchingFaq: '没有找到匹配的问答',
+    confirmDeletePersona: '确定要删除这个角色吗？',
+    confirmDeleteFaq: '确定删除此问答？',
+    confirmBatchDelete: '确定要删除选中的 {n} 条问答吗？',
+    deletedCount: '已删除 {n} 条问答',
+    categoryUpdated: '已更新 {n} 条问答的分类',
+    smartCategorizeDone: '智能分类完成！更新了 {n} 条问答',
+    importSuccess: '成功导入 {n} 条问答',
+    importNoValid: '文件中没有有效的问答数据',
+    importInvalidFormat: '文件格式不正确',
+    importParseFail: '解析JSON失败',
+    exportSuccess: '已导出 {n} 条问答',
+    exportNone: '没有可导出的问答',
+    templateAdded: '已添加模板：{name}',
+    helpContent: '1. 配置 API：点击浏览器工具栏中的插件图标，设置您的 AI 提供商和 API Key。<br><br>2. 设置人设：在下方创建并选择您的专属角色（例如：销售经理、技术支持），让 AI 知道如何回复客户。<br><br>3. 在聊天中使用：打开 WhatsApp 或 Messenger 网页版。聊天窗口旁会出现一个"AI Reply"悬浮按钮。点击它（或使用快捷键）即可根据最近的聊天记录生成回复。<br><br><b>快捷操作：</b><br>· 快捷键：在聊天窗口快速生成 AI 回复<br>· Alt+2：打开快捷菜单<br>· Ctrl+Enter：插入回复<br>· Ctrl+R：重新生成回复',
+    faqDeleteTitle: '批量删除',
+    faqSmartCatTitle: '智能分类',
+    personaNamePlaceholder: '角色名称',
+    statusActive: '当前使用',
+    statusInactive: '未激活',
+    editPersona: '编辑角色',
+    deletePersona: '删除角色',
+    personaPromptPlaceholder: '系统提示词 (Prompt)\n\n例如：你是一个专业的客服代表，负责解答客户关于产品的疑问...',
+    toggleActive: '✓ 当前激活',
+    toggleSetAsActive: '切换为当前角色',
+    questionLabel: '问题 (Question)',
+    answerLabel: '答案 (Answer)',
+    freeBannerTitle: '当前：免费版',
+    freeBannerDesc: '今日已用 {used}/{limit} 次',
+    freeBannerBtn: '✨ 升级 Pro',
+    upgradeModalTitle: '升级 ChatGenius Pro',
+    upgradeOptCodeTitle: '我有激活码',
+    upgradeOptCodeDesc: '输入激活码直接升级',
+    upgradeOptBuyTitle: '在线购买',
+    upgradeOptBuyDesc: '前往官网购买激活码',
+    modalActivateBtn: '激活',
+    modalActivationPlaceholder: '输入激活码（如: PRO-XXXX-XXXX）',
+    modalFooter: '购买后请将激活码输入上方完成升级'
   }
 };
-
-// Onboarding Tour Steps
-const ONBOARDING_STEPS = [
-  {
-    target: '.page-header',
-    titleKey: 'onboardingStep1Title',
-    descKey: 'onboardingStep1Desc'
-  },
-  {
-    target: '#tab-personas',
-    titleKey: 'onboardingStep2Title',
-    descKey: 'onboardingStep2Desc'
-  },
-  {
-    target: '#tab-knowledge',
-    titleKey: 'onboardingStep3Title',
-    descKey: 'onboardingStep3Desc'
-  },
-  {
-    target: '#tab-settings',
-    titleKey: 'onboardingStep4Title',
-    descKey: 'onboardingStep4Desc'
-  },
-  {
-    target: '.save-section',
-    titleKey: 'onboardingStep5Title',
-    descKey: 'onboardingStep5Desc'
-  }
-];
 
 // Persona Templates
 const PERSONA_TEMPLATES = [
@@ -220,7 +382,72 @@ const PERSONA_TEMPLATES = [
   }
 ];
 
+// SYNC: Daily usage limit for free tier - must match across all files (background.js, popup.js, options.js)
+const DAILY_LIMIT = 20;
+
+// Upgrade URL - landing page pricing section
+const UPGRADE_URL = 'https://chatgenius.ai/#pricing';
+
+// Chrome API compatibility layer for standalone preview
+if (typeof chrome === 'undefined' || !chrome.storage) {
+  const _mockStorage = {};
+  const _mockGet = (storage) => (keys, cb) => {
+    if (typeof keys === 'object' && !Array.isArray(keys)) {
+      // keys is a defaults object - merge stored values with defaults
+      const result = Object.assign({}, keys);
+      for (const key of Object.keys(keys)) {
+        if (key in _mockStorage) result[key] = _mockStorage[key];
+      }
+      cb && cb(result);
+    } else {
+      cb && cb(_mockStorage);
+    }
+  };
+  const _mockSet = (storage) => (data, cb) => {
+    Object.assign(_mockStorage, data);
+    cb && cb();
+  };
+  const _mockRemove = (storage) => (keys, cb) => {
+    if (Array.isArray(keys)) keys.forEach(k => delete _mockStorage[k]);
+    else delete _mockStorage[keys];
+    cb && cb();
+  };
+  window.chrome = {
+    storage: {
+      sync: {
+        get: _mockGet('sync'),
+        set: _mockSet('sync'),
+        remove: _mockRemove('sync')
+      },
+      local: {
+        get: _mockGet('local'),
+        set: _mockSet('local'),
+        remove: _mockRemove('local')
+      }
+    },
+    runtime: {
+      sendMessage: (msg, cb) => { 
+        const p = Promise.resolve({ success: false, error: 'Preview not available outside extension' });
+        if (typeof cb === 'function') p.then(cb);
+        return p;
+      },
+      onMessage: { addListener: () => {} }
+    },
+    i18n: {
+      getMessage: (key) => key,
+      getUILanguage: () => 'en'
+    }
+  };
+}
+
 document.addEventListener('DOMContentLoaded', () => {
+  // State variables - declared early to avoid TDZ issues
+  let currentLang = 'zh';
+  let currentTheme = 'dark';
+  let faqData = [];
+  let personas = [];
+  let activePersonaId = null;
+
   // Tab Navigation
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
@@ -243,6 +470,16 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
+  // Switch to pending tab (from content script upgrade CTA)
+  chrome.storage.local.get(['pendingOptionsTab'], (data) => {
+    if (data.pendingOptionsTab) {
+      const pendingTab = data.pendingOptionsTab;
+      chrome.storage.local.remove('pendingOptionsTab');
+      const targetBtn = document.querySelector(`.tab-btn[data-tab="${pendingTab}"]`);
+      if (targetBtn) targetBtn.click();
+    }
+  });
+
   const personaList = document.getElementById('personaList');
   const addPersonaBtn = document.getElementById('addPersonaBtn');
   const shortcutInput = document.getElementById('shortcut');
@@ -262,12 +499,14 @@ document.addEventListener('DOMContentLoaded', () => {
   const recentTags = document.getElementById('recentTags');
 
   // FAQ categories
-  const FAQ_CATEGORIES = {
-    product: { label: '产品相关', color: '#667eea' },
-    price: { label: '价格咨询', color: '#34c759' },
-    service: { label: '售后服务', color: '#ff9500' },
-    other: { label: '其他', color: '#86868b' }
-  };
+  function getFaqCategories() {
+    return {
+      product: { label: I18N[currentLang].catProduct || 'Product', color: '#667eea' },
+      price: { label: I18N[currentLang].catPrice || 'Pricing', color: '#34c759' },
+      service: { label: I18N[currentLang].catService || 'Service', color: '#ff9500' },
+      other: { label: I18N[currentLang].catOther || 'Other', color: '#86868b' }
+    };
+  }
 
   let faqSearchQuery = '';
   let faqCategoryQuery = 'all';
@@ -287,9 +526,6 @@ document.addEventListener('DOMContentLoaded', () => {
   const btnOpacityInput = document.getElementById('btnOpacity');
   const opacityVal = document.getElementById('opacityVal');
   const saveBtn = document.getElementById('saveBtn');
-  const themeToggle = document.getElementById('themeToggle');
-  const langToggle = document.getElementById('langToggle');
-  const helpBtn = document.getElementById('helpBtn');
   const proFeaturesContainer = document.getElementById('proFeatures');
   const previewChat = document.getElementById('previewChat');
   const previewInput = document.getElementById('previewInput');
@@ -301,7 +537,7 @@ document.addEventListener('DOMContentLoaded', () => {
   const statStatus = document.getElementById('statStatus');
   
   function updateStats() {
-    chrome.storage.sync.get({
+    chrome.storage.local.get({
       totalReplies: 0,
       totalResponseTime: 0,
       successCount: 0,
@@ -328,18 +564,95 @@ document.addEventListener('DOMContentLoaded', () => {
         const total = successCount + failedCount;
         if (total > 0) {
           const successRate = Math.round((successCount / total) * 100);
-          statStatus.textContent = successRate + '% 成功';
+          statStatus.textContent = successRate + (I18N[currentLang].statSuccessSuffix || '% success');
         } else {
-          statStatus.textContent = '标准版';
+          statStatus.textContent = I18N[currentLang].statStandard || 'Standard';
+        }
+      }
+    });
+    
+    // Show daily quota for free users
+    chrome.storage.sync.get(['licenseType'], (licenseData) => {
+      const licenseType = licenseData.licenseType || 'free';
+      
+      if (licenseType === 'free') {
+        chrome.storage.local.get(['dailyReplyCount', 'lastResetDate'], (usageData) => {
+          const today = new Date().toISOString().split('T')[0];
+          
+          // Reset if it's a new day
+          if (usageData.lastResetDate !== today) {
+            usageData.dailyReplyCount = 0;
+          }
+          
+          const dailyLimit = DAILY_LIMIT;
+          const used = usageData.dailyReplyCount || 0;
+          const remaining = Math.max(0, dailyLimit - used);
+          
+          // Update status to show quota
+          if (statStatus) {
+            statStatus.textContent = (I18N[currentLang].statFree || 'Free') + ` ${used}/${dailyLimit}`;
+          }
+          
+          // Show remaining quota notification if low
+          if (remaining <= 5) {
+            showQuotaNotification(remaining);
+          }
+        });
+      } else {
+        // Pro user - show license type
+        if (statStatus) {
+          statStatus.textContent = licenseType === 'lifetime' ? (I18N[currentLang].statProLifetime || 'Pro Lifetime') : (I18N[currentLang].statProYear || 'Pro Year');
         }
       }
     });
   }
+  
+  // Show quota notification
+  function showQuotaNotification(remaining) {
+    const existing = document.getElementById('quotaNotification');
+    if (existing) return; // Already shown
+    
+    const notification = document.createElement('div');
+    notification.id = 'quotaNotification';
+    notification.style.cssText = `
+      position: fixed;
+      top: 20px;
+      right: 20px;
+      background: linear-gradient(135deg, #f59e0b, #ef4444);
+      color: white;
+      padding: 12px 20px;
+      border-radius: 8px;
+      box-shadow: 0 4px 12px rgba(0,0,0,0.3);
+      z-index: 10000;
+      animation: slideIn 0.3s ease-out;
+    `;
+    const titleDiv = document.createElement('div');
+    titleDiv.style.cssText = 'font-weight: bold; margin-bottom: 4px;';
+    titleDiv.textContent = '⚠️ ' + (I18N[currentLang].quotaTitle || 'Daily Quota Running Low');
+    const infoDiv = document.createElement('div');
+    infoDiv.style.fontSize = '14px';
+    infoDiv.textContent = (I18N[currentLang].quotaInfo || 'Remaining: {n}').replace('{n}', remaining);
+    const tipDiv = document.createElement('div');
+    tipDiv.style.cssText = 'font-size: 12px; margin-top: 4px; opacity: 0.8;';
+    tipDiv.textContent = I18N[currentLang].quotaTip || 'Upgrade to Pro';
+    notification.appendChild(titleDiv);
+    notification.appendChild(infoDiv);
+    notification.appendChild(tipDiv);
+    
+    document.body.appendChild(notification);
+    
+    // Auto dismiss after 5 seconds
+    setTimeout(() => {
+      notification.style.animation = 'slideOut 0.3s ease-out';
+      setTimeout(() => notification.remove(), 300);
+    }, 5000);
+  }
   updateStats();
+  updateFreeUserBanner();
   
   // Weekly Statistics
   function updateWeeklyStats() {
-    chrome.storage.sync.get({
+    chrome.storage.local.get({
       weeklyReplies: 0,
       weeklyTimeSaved: 0,
       weeklySuccessCount: 0,
@@ -421,8 +734,22 @@ document.addEventListener('DOMContentLoaded', () => {
     features.forEach(f => {
       const card = document.createElement('div');
       card.className = 'pro-feature';
-      card.innerHTML = '<div class="pro-feature-icon">' + f.icon + '</div>' +
-                       '<div class="pro-feature-text"><h4>' + f.title + '</h4><p>' + f.desc + '</p></div>';
+      
+      const iconDiv = document.createElement('div');
+      iconDiv.className = 'pro-feature-icon';
+      iconDiv.textContent = f.icon;
+      
+      const textDiv = document.createElement('div');
+      textDiv.className = 'pro-feature-text';
+      const h4 = document.createElement('h4');
+      h4.textContent = f.title;
+      const p = document.createElement('p');
+      p.textContent = f.desc;
+      textDiv.appendChild(h4);
+      textDiv.appendChild(p);
+      
+      card.appendChild(iconDiv);
+      card.appendChild(textDiv);
       proFeaturesContainer.appendChild(card);
     });
   }
@@ -445,124 +772,50 @@ document.addEventListener('DOMContentLoaded', () => {
     // Show thinking indicator
     const thinkingBubble = document.createElement('div');
     thinkingBubble.className = 'chat-bubble ai';
-    thinkingBubble.innerHTML = '<span style="opacity: 0.5;">AI 思考中...</span>';
+    thinkingBubble.innerHTML = '<span style="opacity: 0.5;">' + (I18N[currentLang].previewThinking || 'AI thinking...') + '</span>';
     previewChat.appendChild(thinkingBubble);
     previewChat.scrollTop = previewChat.scrollHeight;
     
-    // Build context for preview
-    const existingMessages = [];
-    const allBubbles = previewChat.querySelectorAll('.chat-bubble');
-    allBubbles.forEach((bubble, index) => {
-      if (bubble !== thinkingBubble) {
-        existingMessages.push({
-          role: bubble.classList.contains('user') ? 'user' : 'assistant',
-          content: bubble.textContent
-        });
-      }
-    });
-    
-    // Get settings and call API
-    chrome.storage.sync.get(['apiKey', 'apiUrl', 'modelName', 'personas', 'activePersonaId', 'tone', 'replyLength', 'faqData'], async (data) => {
-      if (!data.apiKey) {
-        thinkingBubble.innerHTML = '<span style="color: var(--error);">请先配置 API Key</span>';
-        return;
-      }
+    // Build conversation history and call API via background.js (reuses tryGenerate with full provider support)
+    try {
+      const historyMessages = [];
+      const allBubbles = previewChat.querySelectorAll('.chat-bubble');
+      allBubbles.forEach((bubble) => {
+        if (bubble !== thinkingBubble) {
+          historyMessages.push({
+            role: bubble.classList.contains('user') ? 'user' : 'assistant',
+            content: bubble.textContent
+          });
+        }
+      });
       
-      try {
-        // Build system instruction
-        let systemInstruction = 'You are a helpful assistant.';
-        
-        if (data.personas && data.activePersonaId) {
-          const activePersona = data.personas.find(p => p.id === data.activePersonaId);
-          if (activePersona && activePersona.prompt) {
-            systemInstruction = activePersona.prompt;
-          }
-        }
-        
-        if (data.tone && data.tone !== 'auto') {
-          systemInstruction += '\n\nPlease reply with a ' + data.tone + ' tone.';
-        }
-        
-        systemInstruction += '\n\nCRITICAL: Detect the language of the last message and reply in that SAME language automatically.';
-        
-        if (data.replyLength && data.replyLength !== 'auto') {
-          const lengthMap = { short: '1-2 sentences', medium: '2-4 sentences', long: 'detailed' };
-          systemInstruction += '\n\nPlease provide a ' + lengthMap[data.replyLength] + ' response.';
-        }
-        
-        const messages = [
-          { role: 'system', content: systemInstruction },
-          ...existingMessages
-        ];
-        
-        let apiUrl = (data.apiUrl || 'https://api.openai.com/v1/chat/completions').replace(/\/+$/, '');
-        if (!apiUrl.endsWith('/chat/completions') && !apiUrl.endsWith('/messages')) {
-          apiUrl += '/chat/completions';
-        }
-        
-        const bodyData = {
-          model: data.modelName || 'gpt-3.5-turbo',
-          messages: messages
-        };
-        
-        if (!bodyData.model.startsWith('o1') && !bodyData.model.startsWith('o3')) {
-          bodyData.temperature = 0.7;
-        }
-        
-        const response = await fetch(apiUrl, {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-            'Authorization': `Bearer ${data.apiKey.trim()}`
-          },
-          body: JSON.stringify(bodyData)
-        });
-        
-        if (!response.ok) {
-          const errorData = await response.json().catch(() => ({}));
-          throw new Error(errorData.error?.message || `HTTP ${response.status}`);
-        }
-        
-        const result = await response.json();
-        let reply = 'No reply generated.';
-        
-        if (result.choices && result.choices.length > 0) {
-          reply = result.choices[0].message?.content || result.choices[0].text || '';
-        } else if (result.content && result.content.length > 0) {
-          reply = result.content[0].text || '';
-        } else if (result.message && result.message.content) {
-          reply = result.message.content;
-        }
-        
-        thinkingBubble.textContent = reply.trim();
+      // Delegate to background.js which has full provider support (Anthropic, fallback, retry, etc.)
+      const response = await Promise.race([
+        chrome.runtime.sendMessage({
+          action: 'previewChat',
+          messages: historyMessages
+        }),
+        new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时，请重试')), 35000))
+      ]);
+      
+      if (response.success && response.reply) {
+        thinkingBubble.textContent = response.reply;
         thinkingBubble.style.opacity = '1';
-        
-      } catch (error) {
-        thinkingBubble.innerHTML = '<span style="color: var(--error);">错误: ' + error.message + '</span>';
+      } else {
+        const errorSpan = document.createElement('span');
+        errorSpan.style.color = 'var(--error)';
+        errorSpan.textContent = (I18N[currentLang].previewError || 'Error: ') + (response.error || '');
+        thinkingBubble.textContent = '';
+        thinkingBubble.appendChild(errorSpan);
       }
-    });
+    } catch (error) {
+      const errorSpan = document.createElement('span');
+      errorSpan.style.color = 'var(--error)';
+      errorSpan.textContent = (I18N[currentLang].previewError || 'Error: ') + error.message;
+      thinkingBubble.textContent = '';
+      thinkingBubble.appendChild(errorSpan);
+    }
   });
-
-  if (helpBtn) {
-    helpBtn.addEventListener('click', () => {
-      const modal = document.getElementById('helpModal');
-      if (modal) modal.style.display = 'flex';
-    });
-  }
-  
-  const closeHelpBtn = document.getElementById('closeHelpBtn');
-  if (closeHelpBtn) {
-    closeHelpBtn.addEventListener('click', () => {
-      const modal = document.getElementById('helpModal');
-      if (modal) modal.style.display = 'none';
-    });
-  }
-
-  let currentLang = 'zh';
-  let currentTheme = 'dark';
-  let faqData = [];
-  let personas = [];
-  let activePersonaId = null;
 
   function generateId() {
     return Math.random().toString(36).substr(2, 9);
@@ -585,7 +838,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const noResults = document.createElement('div');
       noResults.className = 'persona-no-results';
       noResults.style.cssText = 'padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 14px;';
-      noResults.textContent = currentLang === 'zh' ? '没有找到匹配的角色' : 'No matching personas found';
+      noResults.textContent = I18N[currentLang].noMatchingPersonas || 'No matching personas found';
       personaList.appendChild(noResults);
       return;
     }
@@ -611,7 +864,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const nameInput = document.createElement('input');
       nameInput.type = 'text';
       nameInput.className = 'persona-name-input';
-      nameInput.placeholder = currentLang === 'zh' ? '角色名称' : 'Persona Name';
+      nameInput.placeholder = I18N[currentLang].personaNamePlaceholder || 'Persona Name';
       nameInput.value = persona.name;
       nameInput.onchange = (e) => { personas[index].name = e.target.value; };
 
@@ -620,8 +873,8 @@ document.addEventListener('DOMContentLoaded', () => {
       status.className = 'persona-status' + (persona.id === activePersonaId ? ' active' : '');
       status.innerHTML = '<span class="persona-status-dot"></span><span>' +
         (persona.id === activePersonaId
-          ? (currentLang === 'zh' ? '当前使用' : 'Active')
-          : (currentLang === 'zh' ? '未激活' : 'Inactive')) +
+          ? (I18N[currentLang].statusActive || 'Active')
+          : (I18N[currentLang].statusInactive || 'Inactive')) +
         '</span>';
 
       info.appendChild(nameInput);
@@ -635,10 +888,11 @@ document.addEventListener('DOMContentLoaded', () => {
       const editBtn = document.createElement('button');
       editBtn.className = 'persona-action-btn';
       editBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 20h9"></path><path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path></svg>';
-      editBtn.title = currentLang === 'zh' ? '编辑角色' : 'Edit Persona';
+      editBtn.title = I18N[currentLang].editPersona || 'Edit Persona';
       editBtn.onclick = () => {
         const promptInput = card.querySelector('.persona-prompt-input');
         if (promptInput) {
+          promptInput.classList.remove('persona-prompt-collapsed');
           promptInput.focus();
         }
       };
@@ -647,9 +901,9 @@ document.addEventListener('DOMContentLoaded', () => {
       const delBtn = document.createElement('button');
       delBtn.className = 'persona-action-btn delete';
       delBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
-      delBtn.title = currentLang === 'zh' ? '删除角色' : 'Delete Persona';
+      delBtn.title = I18N[currentLang].deletePersona || 'Delete Persona';
       delBtn.onclick = () => {
-        if (confirm(currentLang === 'zh' ? '确定要删除这个角色吗？' : 'Are you sure you want to delete this persona?')) {
+        if (confirm(I18N[currentLang].confirmDeletePersona || 'Delete this persona?')) {
           personas.splice(index, 1);
           if (activePersonaId === persona.id) {
             activePersonaId = personas.length > 0 ? personas[0].id : null;
@@ -665,19 +919,33 @@ document.addEventListener('DOMContentLoaded', () => {
       header.appendChild(info);
       header.appendChild(actions);
 
+      // Click header to toggle prompt collapse for non-active personas
+      header.style.cursor = 'pointer';
+      header.addEventListener('click', () => {
+        const prompt = card.querySelector('.persona-prompt-input');
+        if (prompt) {
+          prompt.classList.toggle('persona-prompt-collapsed');
+        }
+      });
+
       // Prompt textarea
       const promptInput = document.createElement('textarea');
       promptInput.className = 'persona-prompt-input';
-      promptInput.placeholder = currentLang === 'zh' ? '系统提示词 (Prompt)\n\n例如：你是一个专业的客服代表，负责解答客户关于产品的疑问...' : 'System Prompt\n\nExample: You are a professional customer service representative...';
+      promptInput.placeholder = I18N[currentLang].personaPromptPlaceholder || 'System Prompt...';
       promptInput.value = persona.prompt;
       promptInput.onchange = (e) => { personas[index].prompt = e.target.value; };
+      // Collapse prompt for non-active personas
+      const isActive = persona.id === activePersonaId;
+      if (!isActive) {
+        promptInput.classList.add('persona-prompt-collapsed');
+      }
 
       // Toggle button
       const toggleBtn = document.createElement('button');
       toggleBtn.className = 'persona-toggle-btn';
       toggleBtn.textContent = persona.id === activePersonaId
-        ? (currentLang === 'zh' ? '✓ 当前激活' : '✓ Active')
-        : (currentLang === 'zh' ? '切换为当前角色' : 'Set as Active');
+        ? (I18N[currentLang].toggleActive || '✓ Active')
+        : (I18N[currentLang].toggleSetAsActive || 'Set as Active');
       if (persona.id !== activePersonaId) {
         toggleBtn.onclick = () => {
           activePersonaId = persona.id;
@@ -697,8 +965,16 @@ document.addEventListener('DOMContentLoaded', () => {
   addPersonaBtn.addEventListener('click', () => {
     const newId = generateId();
     personas.push({ id: newId, name: '', prompt: '' });
-    if (!activePersonaId) activePersonaId = newId;
+    activePersonaId = newId; // Always auto-activate new persona
     renderPersonas();
+    // Focus on name input after render
+    setTimeout(() => {
+      const cards = personaList.querySelectorAll('.persona-card');
+      cards.forEach(c => {
+        const nameInput = c.querySelector('.persona-name-input');
+        if (nameInput && !nameInput.value) nameInput.focus();
+      });
+    }, 50);
   });
 
   // Recent Personas functionality
@@ -728,13 +1004,22 @@ document.addEventListener('DOMContentLoaded', () => {
     recentPersonas.forEach(persona => {
       const tag = document.createElement('div');
       tag.className = 'recent-tag' + (persona.id === activePersonaId ? ' active' : '');
-      tag.innerHTML = `
+      
+      // Build SVG icon safely (static trusted SVG markup)
+      const svgWrapper = document.createElement('span');
+      svgWrapper.innerHTML = `
         <svg class="recent-tag-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
           <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
           <circle cx="12" cy="7" r="4"></circle>
         </svg>
-        <span>${persona.name || '未命名角色'}</span>
       `;
+      
+      // Use textContent for user-controlled persona name to prevent XSS
+      const nameSpan = document.createElement('span');
+      nameSpan.textContent = persona.name || (I18N[currentLang].personaNamePlaceholder || 'Persona Name');
+      
+      tag.appendChild(svgWrapper);
+      tag.appendChild(nameSpan);
       tag.onclick = () => {
         activePersonaId = persona.id;
         addToRecentPersonas(persona);
@@ -811,9 +1096,7 @@ document.addEventListener('DOMContentLoaded', () => {
     // Close modal
     if (templateModal) templateModal.classList.remove('show');
 
-    showToast(currentLang === 'zh'
-      ? `已添加模板：${newPersona.name}`
-      : `Template added: ${newPersona.name}`);
+    showToast((I18N[currentLang].templateAdded || 'Template added: {name}').replace('{name}', newPersona.name));
   }
 
   if (templateLibraryBtn) {
@@ -841,20 +1124,19 @@ document.addEventListener('DOMContentLoaded', () => {
   function renderFaq() {
     faqList.innerHTML = '';
 
-    // Filter FAQ data based on search and category
-    const filteredFaq = faqData.filter((item) => {
+    // Filter FAQ data based on search and category, preserving original indices
+    const filteredFaq = [];
+    faqData.forEach((item, index) => {
       // Category filter
-      if (faqCategoryQuery !== 'all' && item.category !== faqCategoryQuery) {
-        return false;
-      }
+      if (faqCategoryQuery !== 'all' && item.category !== faqCategoryQuery) return;
       // Search filter
       if (faqSearchQuery) {
         const query = faqSearchQuery.toLowerCase();
         const qMatch = item.q.toLowerCase().includes(query);
         const aMatch = item.a.toLowerCase().includes(query);
-        return qMatch || aMatch;
+        if (!qMatch && !aMatch) return;
       }
-      return true;
+      filteredFaq.push({ item, originalIndex: index });
     });
 
     if (filteredFaq.length === 0 && faqData.length > 0) {
@@ -862,20 +1144,14 @@ document.addEventListener('DOMContentLoaded', () => {
       const noResults = document.createElement('div');
       noResults.className = 'faq-no-results';
       noResults.style.cssText = 'padding: 24px; text-align: center; color: var(--text-tertiary); font-size: 14px;';
-      noResults.textContent = currentLang === 'zh' ? '没有找到匹配的问答' : 'No matching Q&A found';
+      noResults.textContent = I18N[currentLang].noMatchingFaq || 'No matching Q&A found';
       faqList.appendChild(noResults);
+      updateBatchToolbar();
       return;
     }
 
-    // Render filtered FAQ items (use original index for data binding)
-    faqData.forEach((item, index) => {
-      // Check if this item should be displayed
-      if (faqCategoryQuery !== 'all' && item.category !== faqCategoryQuery) return;
-      if (faqSearchQuery) {
-        const query = faqSearchQuery.toLowerCase();
-        if (!item.q.toLowerCase().includes(query) && !item.a.toLowerCase().includes(query)) return;
-      }
-
+    // Render filtered FAQ items using preserved original indices
+    filteredFaq.forEach(({ item, originalIndex: index }) => {
       const div = document.createElement('div');
       div.className = 'faq-item';
       div.dataset.index = index;
@@ -900,20 +1176,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const headerRow = document.createElement('div');
       headerRow.className = 'faq-item-header';
 
-      // Category tag
-      const catTag = document.createElement('span');
-      catTag.className = 'faq-category-tag';
-      const catKey = item.category || 'other';
-      const catInfo = FAQ_CATEGORIES[catKey] || FAQ_CATEGORIES.other;
-      catTag.textContent = catInfo.label;
-      catTag.style.background = catInfo.color + '20';
-      catTag.style.color = catInfo.color;
-
       // Category selector
+      const cats = getFaqCategories();
       const catSelect = document.createElement('select');
       catSelect.className = 'faq-item-input';
-      catSelect.style.cssText = 'width: auto; min-width: 100px; margin-left: 8px; flex: 0;';
-      Object.entries(FAQ_CATEGORIES).forEach(([key, info]) => {
+      catSelect.style.cssText = 'width: auto; min-width: 100px; flex: 0;';
+      Object.entries(cats).forEach(([key, info]) => {
         const opt = document.createElement('option');
         opt.value = key;
         opt.textContent = info.label;
@@ -922,11 +1190,6 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       catSelect.onchange = (e) => {
         faqData[index].category = e.target.value;
-        // Update tag display
-        const newCatInfo = FAQ_CATEGORIES[e.target.value];
-        catTag.textContent = newCatInfo.label;
-        catTag.style.background = newCatInfo.color + '20';
-        catTag.style.color = newCatInfo.color;
       };
 
       // Delete button
@@ -934,13 +1197,12 @@ document.addEventListener('DOMContentLoaded', () => {
       delBtn.className = 'item-delete';
       delBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
       delBtn.onclick = () => {
-        if (confirm(currentLang === 'zh' ? '确定删除此问答？' : 'Delete this Q&A?')) {
+        if (confirm(I18N[currentLang].confirmDeleteFaq || 'Delete this Q&A?')) {
           faqData.splice(index, 1);
           renderFaq();
         }
       };
 
-      headerRow.appendChild(catTag);
       headerRow.appendChild(catSelect);
       headerRow.appendChild(delBtn);
       div.appendChild(headerRow);
@@ -948,7 +1210,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Question input
       const qInput = document.createElement('input');
       qInput.className = 'faq-item-input question';
-      qInput.placeholder = currentLang === 'zh' ? '问题 (Question)' : 'Question';
+      qInput.placeholder = I18N[currentLang].questionLabel || 'Question';
       qInput.value = item.q;
       qInput.style.marginBottom = '8px';
       qInput.onchange = (e) => { faqData[index].q = e.target.value; };
@@ -956,7 +1218,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // Answer textarea
       const aInput = document.createElement('textarea');
       aInput.className = 'faq-item-input';
-      aInput.placeholder = currentLang === 'zh' ? '答案 (Answer)' : 'Answer';
+      aInput.placeholder = I18N[currentLang].answerLabel || 'Answer';
       aInput.value = item.a;
       aInput.rows = 3;
       aInput.onchange = (e) => { faqData[index].a = e.target.value; };
@@ -990,7 +1252,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!faqBatchToolbar || !batchCount) return;
     
     const count = selectedFaqIndices.size;
-    batchCount.textContent = '已选 ' + count + ' 项';
+    batchCount.textContent = (I18N[currentLang].batchCountPrefix || '') + count + (I18N[currentLang].batchCountSuffix || ' selected');
     
     // Show/hide toolbar based on selection
     if (count > 0) {
@@ -1035,9 +1297,7 @@ document.addEventListener('DOMContentLoaded', () => {
       if (selectedFaqIndices.size === 0) return;
       
       const count = selectedFaqIndices.size;
-      if (confirm(currentLang === 'zh' ? 
-        '确定要删除选中的 ' + count + ' 条问答吗？' : 
-        'Are you sure you want to delete ' + count + ' selected Q&A items?')) {
+      if (confirm((I18N[currentLang].confirmBatchDelete || 'Delete {n} items?').replace('{n}', count))) {
         
         // Remove selected items (sort indices in descending order to avoid index shifting)
         const sortedIndices = Array.from(selectedFaqIndices).sort((a, b) => b - a);
@@ -1048,9 +1308,7 @@ document.addEventListener('DOMContentLoaded', () => {
         selectedFaqIndices.clear();
         renderFaq();
         updateBatchToolbar();
-        showToast(currentLang === 'zh' ? 
-          '已删除 ' + count + ' 条问答' : 
-          'Deleted ' + count + ' Q&A items');
+        showToast((I18N[currentLang].deletedCount || 'Deleted {n}').replace('{n}', count));
       }
     });
   }
@@ -1070,9 +1328,7 @@ document.addEventListener('DOMContentLoaded', () => {
       e.target.value = ''; // Reset select
       renderFaq();
       updateBatchToolbar();
-      showToast(currentLang === 'zh' ? 
-        '已更新 ' + selectedFaqIndices.size + ' 条问答的分类' : 
-        'Updated category for ' + selectedFaqIndices.size + ' Q&A items');
+      showToast((I18N[currentLang].categoryUpdated || 'Updated {n}').replace('{n}', selectedFaqIndices.size));
     });
   }
 
@@ -1086,19 +1342,19 @@ document.addEventListener('DOMContentLoaded', () => {
         const answer = item.a.toLowerCase();
         const text = question + ' ' + answer;
         
-        // Keyword-based categorization
+        // Keyword-based categorization (fixed for Chinese characters)
         let predictedCategory = 'other';
         
         // Price-related keywords
-        if (/\b(price|cost|payment|pay|cheap|expensive|discount|refund|currency|美元 | 价格 | 费用 | 付款 | 支付 | 便宜 | 贵 | 折扣 | 退款|钱)\b/i.test(text)) {
+        if (/price|cost|payment|pay|cheap|expensive|discount|refund|currency|美元|价格|费用|付款|支付|便宜|贵|折扣|退款|钱/i.test(text)) {
           predictedCategory = 'price';
         }
         // Product-related keywords
-        else if (/\b(product|item|feature|specification|size|color|material|quality|warranty|产品 | 商品 | 物品 | 功能 | 规格 | 尺寸 | 颜色 | 材质 | 质量 | 保修 | 型号)\b/i.test(text)) {
+        else if (/product|item|feature|specification|size|color|material|quality|warranty|产品|商品|物品|功能|规格|尺寸|颜色|材质|质量|保修|型号/i.test(text)) {
           predictedCategory = 'product';
         }
         // Service-related keywords
-        else if (/\b(service|support|help|return|exchange|shipping|delivery|track|warranty|repair|服务 | 支持 | 帮助 | 退货 | 换货 | 发货 | 物流 | 跟踪 | 维修 | 售后)\b/i.test(text)) {
+        else if (/service|support|help|return|exchange|shipping|delivery|track|warranty|repair|服务|支持|帮助|退货|换货|发货|物流|跟踪|维修|售后/i.test(text)) {
           predictedCategory = 'service';
         }
         
@@ -1110,9 +1366,7 @@ document.addEventListener('DOMContentLoaded', () => {
       });
       
       renderFaq();
-      showToast(currentLang === 'zh' ? 
-        '智能分类完成！更新了 ' + changedCount + ' 条问答' : 
-        'Smart categorization complete! Updated ' + changedCount + ' items');
+      showToast((I18N[currentLang].smartCategorizeDone || 'Updated {n}').replace('{n}', changedCount));
     });
   }
 
@@ -1142,17 +1396,15 @@ document.addEventListener('DOMContentLoaded', () => {
           if (validItems.length > 0) {
             faqData = [...faqData, ...validItems];
             renderFaq();
-            showToast(currentLang === 'zh' 
-              ? `成功导入 ${validItems.length} 条问答` 
-              : `Imported ${validItems.length} Q&A items`);
+            showToast((I18N[currentLang].importSuccess || 'Imported {n}').replace('{n}', validItems.length));
           } else {
-            showToast(currentLang === 'zh' ? '文件中没有有效的问答数据' : 'No valid Q&A items found', true);
+            showToast(I18N[currentLang].importNoValid || 'No valid Q&A items found', true);
           }
         } else {
-          showToast(currentLang === 'zh' ? '文件格式不正确' : 'Invalid file format', true);
+          showToast(I18N[currentLang].importInvalidFormat || 'Invalid file format', true);
         }
       } catch (err) {
-        showToast(currentLang === 'zh' ? '解析JSON失败' : 'Failed to parse JSON', true);
+        showToast(I18N[currentLang].importParseFail || 'Failed to parse JSON', true);
       }
     };
     reader.readAsText(file);
@@ -1162,7 +1414,7 @@ document.addEventListener('DOMContentLoaded', () => {
   exportFaqBtn.addEventListener('click', () => {
     const validFaq = faqData.filter(f => f.q.trim() && f.a.trim());
     if (validFaq.length === 0) {
-      showToast(currentLang === 'zh' ? '没有可导出的问答' : 'No Q&A items to export', true);
+      showToast(I18N[currentLang].exportNone || 'No Q&A items to export', true);
       return;
     }
 
@@ -1176,9 +1428,7 @@ document.addEventListener('DOMContentLoaded', () => {
     a.click();
     document.body.removeChild(a);
     URL.revokeObjectURL(url);
-    showToast(currentLang === 'zh' 
-      ? `已导出 ${validFaq.length} 条问答` 
-      : `Exported ${validFaq.length} Q&A items`);
+    showToast((I18N[currentLang].exportSuccess || 'Exported {n}').replace('{n}', validFaq.length));
   });
 
   shortcutInput.addEventListener('keydown', (e) => {
@@ -1202,14 +1452,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function applyI18n() {
     document.documentElement.lang = currentLang === 'zh' ? 'zh-CN' : 'en';
-    langToggle.textContent = currentLang === 'zh' ? 'EN' : '中';
+    document.title = I18N[currentLang].pageTitle || 'ChatGenius AI';
     
     document.querySelectorAll('[data-i18n]').forEach(el => {
       const key = el.getAttribute('data-i18n');
       if (I18N[currentLang][key]) {
         if (el.tagName === 'INPUT' || el.tagName === 'TEXTAREA') {
           el.placeholder = I18N[currentLang][key];
-        } else if (key === 'instructionsContent') {
+        } else if (key === 'instructionsContent' || key === 'helpContent') {
           el.innerHTML = I18N[currentLang][key];
         } else if (key !== 'proFeatures') {
           el.textContent = I18N[currentLang][key];
@@ -1219,6 +1469,21 @@ document.addEventListener('DOMContentLoaded', () => {
     renderPersonas();
     renderFaq();
     renderProFeatures();
+
+    // Update upgrade modal & banner i18n
+    const L = I18N[currentLang];
+    const setText = (id, val) => { const el = document.getElementById(id); if (el && val) el.textContent = val; };
+    setText('upgradeModalTitle', L.upgradeModalTitle);
+    setText('upgradeOptCodeTitle', L.upgradeOptCodeTitle);
+    setText('upgradeOptCodeDesc', L.upgradeOptCodeDesc);
+    setText('upgradeOptBuyTitle', L.upgradeOptBuyTitle);
+    setText('upgradeOptBuyDesc', L.upgradeOptBuyDesc);
+    setText('modalActivateBtn', L.modalActivateBtn);
+    setText('upgradeModalFooter', L.modalFooter);
+    setText('freeBannerUpgradeBtn', L.freeBannerBtn);
+    const modalInput = document.getElementById('modalActivationInput');
+    if (modalInput && L.modalActivationPlaceholder) modalInput.placeholder = L.modalActivationPlaceholder;
+    updateFreeUserBanner();
   }
 
   function showToast(msg, isError = false) {
@@ -1236,20 +1501,40 @@ document.addEventListener('DOMContentLoaded', () => {
 
   btnThemeSelect.addEventListener('change', (e) => {
     btnPreview.className = 'preview-btn theme-' + e.target.value;
+    updateThemePreviewMock(e.target.value);
   });
 
-  themeToggle.addEventListener('click', () => {
-    currentTheme = currentTheme === 'dark' ? 'light' : 'dark';
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    themeToggle.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
-    chrome.storage.sync.set({ theme: currentTheme });
-  });
-
-  langToggle.addEventListener('click', () => {
-    currentLang = currentLang === 'zh' ? 'en' : 'zh';
-    chrome.storage.sync.set({ lang: currentLang });
-    applyI18n();
-  });
+  // Theme live preview mock - shows how button looks in each theme
+  function updateThemePreviewMock(theme) {
+    const mock = document.getElementById('themePreviewMock');
+    if (!mock) return;
+    const themes = {
+      gradient: { bg: 'linear-gradient(135deg, rgba(102,126,234,1), rgba(118,75,162,1))', color: '#fff', border: 'none', shadow: '0 4px 16px rgba(102,126,234,0.4)' },
+      minimal: { bg: 'rgba(255,255,255,0.95)', color: '#1d1d1f', border: '1px solid rgba(0,0,0,0.08)', shadow: '0 2px 8px rgba(0,0,0,0.06)' },
+      neon: { bg: 'rgba(0,0,0,0.9)', color: '#00ffcc', border: '1px solid rgba(0,255,204,0.5)', shadow: '0 0 12px rgba(0,255,204,0.3)' },
+      glass: { bg: 'rgba(255,255,255,0.12)', color: '#fff', border: '1px solid rgba(255,255,255,0.2)', shadow: '0 4px 24px rgba(0,0,0,0.15)', blur: true }
+    };
+    const t = themes[theme] || themes.gradient;
+    const allThemes = Object.entries(themes);
+    mock.innerHTML = '';
+    allThemes.forEach(([key, val]) => {
+      const btn = document.createElement('div');
+      btn.className = 'theme-mock-btn';
+      btn.style.background = val.bg;
+      btn.style.color = val.color;
+      btn.style.border = val.border;
+      btn.style.boxShadow = val.shadow;
+      if (val.blur) btn.style.backdropFilter = 'blur(12px)';
+      if (key === theme) {
+        btn.style.outline = '2px solid #667eea';
+        btn.style.outlineOffset = '2px';
+      }
+      btn.innerHTML = '<svg viewBox="0 0 24 24" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>AI';
+      mock.appendChild(btn);
+    });
+  }
+  // Initial render
+  updateThemePreviewMock(btnThemeSelect.value || 'gradient');
 
   // Load saved settings
   chrome.storage.sync.get({
@@ -1269,7 +1554,6 @@ document.addEventListener('DOMContentLoaded', () => {
     currentTheme = data.theme;
     currentLang = data.lang;
     document.documentElement.setAttribute('data-theme', currentTheme);
-    themeToggle.textContent = currentTheme === 'dark' ? '🌙' : '☀️';
     applyI18n();
 
     personas = data.personas || [];
@@ -1304,30 +1588,19 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // Replay Onboarding functionality
-  const replayOnboardingBtn = document.getElementById('replayOnboardingBtn');
-  if (replayOnboardingBtn) {
-    replayOnboardingBtn.addEventListener('click', () => {
-      if (confirm(currentLang === 'zh' ? 
-        '确定要重新播放新手引导吗？' : 
-        'Are you sure you want to replay the onboarding tour?')) {
-        
-        // Reset onboarding flag
-        chrome.storage.sync.set({ onboardingCompleted: false }, () => {
-          // Reload page to trigger onboarding
-          location.reload();
-        });
-      }
+  // Weekly Stats Toggle
+  const weeklyStatsToggle = document.getElementById('weeklyStatsToggle');
+  const weeklyStatsContent = document.getElementById('weeklyStatsContent');
+  if (weeklyStatsToggle && weeklyStatsContent) {
+    weeklyStatsToggle.addEventListener('click', () => {
+      weeklyStatsContent.classList.toggle('show');
+      weeklyStatsToggle.classList.toggle('expanded');
     });
   }
 
   const upgradeBtn = document.getElementById('upgradeBtn');
   upgradeBtn.addEventListener('click', () => {
-    const msg = currentLang === 'zh' ? '正在跳转至支付页面...' : 'Redirecting to payment page...';
-    showToast(msg);
-    setTimeout(() => {
-      alert(currentLang === 'zh' ? '演示版：支付功能即将上线！' : 'Demo: Payment feature coming soon!');
-    }, 1000);
+    openUpgradeModal();
   });
 
   saveBtn.addEventListener('click', () => {
@@ -1369,120 +1642,285 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   });
 
-  // Onboarding Tour functionality
-  const onboardingOverlay = document.getElementById('onboardingOverlay');
-  const onboardingSpotlight = document.getElementById('onboardingSpotlight');
-  const onboardingTooltip = document.getElementById('onboardingTooltip');
-  const onboardingStepNumber = document.getElementById('onboardingStepNumber');
-  const onboardingTitle = document.getElementById('onboardingTitle');
-  const onboardingDesc = document.getElementById('onboardingDesc');
-  const onboardingProgress = document.getElementById('onboardingProgress');
-  const onboardingSkip = document.getElementById('onboardingSkip');
-  const onboardingNext = document.getElementById('onboardingNext');
-
-  let currentOnboardingStep = 0;
-
-  function startOnboarding() {
-    currentOnboardingStep = 0;
-    if (onboardingOverlay) onboardingOverlay.classList.add('show');
-    renderOnboardingStep();
-  }
-
-  function renderOnboardingStep() {
-    if (!onboardingOverlay || currentOnboardingStep >= ONBOARDING_STEPS.length) {
-      endOnboarding();
-      return;
-    }
-
-    const step = ONBOARDING_STEPS[currentOnboardingStep];
-    const targetEl = document.querySelector(step.target);
-
-    // Update tooltip content
-    if (onboardingStepNumber) onboardingStepNumber.textContent = currentOnboardingStep + 1;
-    if (onboardingTitle) onboardingTitle.textContent = I18N[currentLang][step.titleKey] || step.titleKey;
-    if (onboardingDesc) onboardingDesc.textContent = I18N[currentLang][step.descKey] || step.descKey;
-
-    // Update button text
-    if (onboardingNext) {
-      if (currentOnboardingStep === ONBOARDING_STEPS.length - 1) {
-        onboardingNext.textContent = I18N[currentLang].onboardingFinish || '完成';
-        onboardingNext.className = 'onboarding-btn onboarding-btn-finish';
-      } else {
-        onboardingNext.textContent = I18N[currentLang].onboardingNext || '下一步';
-        onboardingNext.className = 'onboarding-btn onboarding-btn-next';
-      }
-    }
-
-    // Update progress dots
-    if (onboardingProgress) {
-      onboardingProgress.innerHTML = '';
-      ONBOARDING_STEPS.forEach((_, index) => {
-        const dot = document.createElement('div');
-        dot.className = 'onboarding-dot';
-        if (index < currentOnboardingStep) dot.classList.add('completed');
-        if (index === currentOnboardingStep) dot.classList.add('active');
-        onboardingProgress.appendChild(dot);
-      });
-    }
-
-    // Position spotlight and tooltip
-    if (targetEl && onboardingSpotlight && onboardingTooltip) {
-      const rect = targetEl.getBoundingClientRect();
-      const padding = 8;
-
-      // Position spotlight
-      onboardingSpotlight.style.top = (rect.top - padding) + 'px';
-      onboardingSpotlight.style.left = (rect.left - padding) + 'px';
-      onboardingSpotlight.style.width = (rect.width + padding * 2) + 'px';
-      onboardingSpotlight.style.height = (rect.height + padding * 2) + 'px';
-
-      // Position tooltip below target
-      const tooltipWidth = 360;
-      let tooltipTop = rect.bottom + 16;
-      let tooltipLeft = rect.left + (rect.width / 2) - (tooltipWidth / 2);
-
-      // Keep tooltip within viewport
-      if (tooltipLeft < 16) tooltipLeft = 16;
-      if (tooltipLeft + tooltipWidth > window.innerWidth - 16) {
-        tooltipLeft = window.innerWidth - tooltipWidth - 16;
-      }
-      if (tooltipTop + 200 > window.innerHeight) {
-        tooltipTop = rect.top - 220;
-      }
-
-      onboardingTooltip.style.top = tooltipTop + 'px';
-      onboardingTooltip.style.left = tooltipLeft + 'px';
-    }
-  }
-
-  function endOnboarding() {
-    if (onboardingOverlay) onboardingOverlay.classList.remove('show');
-    chrome.storage.sync.set({ onboardingCompleted: true });
-  }
-
-  if (onboardingSkip) {
-    onboardingSkip.addEventListener('click', endOnboarding);
-  }
-
-  if (onboardingNext) {
-    onboardingNext.addEventListener('click', () => {
-      currentOnboardingStep++;
-      renderOnboardingStep();
-    });
-  }
-
-  // Check if onboarding should be shown
-  chrome.storage.sync.get({ onboardingCompleted: false }, (data) => {
-    if (!data.onboardingCompleted) {
-      // Delay slightly to ensure DOM is ready
-      setTimeout(startOnboarding, 500);
-    }
-  });
-
   const proBtn = document.querySelector('.pro-btn');
   if (proBtn) {
     proBtn.addEventListener('click', () => {
-      showToast(currentLang === 'zh' ? '即将推出支付宝付款功能，敬请期待！' : 'Alipay payment integration coming soon!');
+      openUpgradeModal();
     });
+  }
+  
+  // ================================
+  // Activation Code Handler
+  // ================================
+  const activationCodeInput = document.getElementById('activationCodeInput');
+  const activateBtn = document.getElementById('activateBtn');
+  const activationError = document.getElementById('activationError');
+  const activationSuccess = document.getElementById('activationSuccess');
+  const licenseTypeDisplay = document.getElementById('licenseType');
+  
+  if (activateBtn && activationCodeInput) {
+    activateBtn.addEventListener('click', async () => {
+      const code = activationCodeInput.value.trim();
+      
+      if (!code) {
+        activationError.textContent = I18N[currentLang].activateErrorEmpty || 'Please enter activation code';
+        return;
+      }
+      
+      activateBtn.disabled = true;
+      activateBtn.innerHTML = `
+        <svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="40"></circle>
+        </svg>
+        <span>${I18N[currentLang].activateVerifying || 'Verifying...'}</span>
+      `;
+      activationError.textContent = '';
+      
+      try {
+        // Server-side activation: validate + consume atomically on server
+        const normalizedCode = code.toUpperCase();
+        // SYNC: API_BASE_URL must match background.js
+        const API_BASE = I18N.API_BASE_URL;
+        
+        const response = await fetch(`${API_BASE}/api/license/activate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: normalizedCode })
+        });
+        
+        const result = await response.json();
+        
+        if (result.valid && result.type) {
+          const licenseType = result.type;
+          
+          // Save license to chrome.storage.sync (server already consumed the code)
+          await chrome.storage.sync.set({
+            licenseCode: normalizedCode,
+            licenseType: licenseType,
+            activatedAt: result.activatedAt || new Date().toISOString()
+          });
+          
+          // Show success message
+          activationSuccess.style.display = 'flex';
+          const typeNames = {
+            'lifetime': I18N[currentLang].statProLifetime || 'Pro Lifetime',
+            'year': I18N[currentLang].statProYear || 'Pro Year',
+            'free': I18N[currentLang].statFree || 'Free'
+          };
+          licenseTypeDisplay.textContent = typeNames[licenseType] || licenseType;
+          
+          activationCodeInput.value = '';
+          activationError.textContent = '';
+          
+          // Update stats display
+          updateStats();
+          
+          showToast((I18N[currentLang].activateSuccessPrefix || 'Activated! ') + (typeNames[licenseType] || licenseType));
+        } else {
+          activationError.textContent = result.error || (I18N[currentLang].activateErrorInvalid || 'Invalid code');
+        }
+      } catch (error) {
+        console.error('Activation error:', error);
+        activationError.textContent = I18N[currentLang].activateFail || 'Activation failed';
+      } finally {
+        activateBtn.disabled = false;
+        activateBtn.innerHTML = `
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+            <polyline points="22 4 12 14.01 9 11.01"></polyline>
+          </svg>
+          <span>${I18N[currentLang].activateLabel || 'Activate'}</span>
+        `;
+      }
+    });
+    
+    // Allow Enter key to activate
+    activationCodeInput.addEventListener('keypress', (e) => {
+      if (e.key === 'Enter') {
+        activateBtn.click();
+      }
+    });
+  }
+  
+  // Check and display current license on page load
+  chrome.storage.sync.get(['licenseCode', 'licenseType', 'activatedAt'], (data) => {
+    if (data.licenseCode && data.licenseType) {
+      activationSuccess.style.display = 'flex';
+      const typeNames = {
+        'lifetime': I18N[currentLang].statProLifetime || 'Pro Lifetime',
+        'year': I18N[currentLang].statProYear || 'Pro Year',
+        'free': I18N[currentLang].statFree || 'Free'
+      };
+      licenseTypeDisplay.textContent = typeNames[data.licenseType];
+    }
+  });
+
+  // ================================
+  // Free User Banner
+  // ================================
+  function updateFreeUserBanner() {
+    const banner = document.getElementById('freeUserBanner');
+    const bannerTitle = document.getElementById('freeBannerTitle');
+    const bannerDesc = document.getElementById('freeBannerDesc');
+    if (!banner) return;
+
+    chrome.storage.sync.get(['licenseType'], (syncData) => {
+      const licenseType = syncData.licenseType || 'free';
+      if (licenseType !== 'free') {
+        banner.style.display = 'none';
+        return;
+      }
+      banner.style.display = 'flex';
+
+      chrome.storage.local.get(['dailyReplyCount', 'lastResetDate'], (usageData) => {
+        const today = new Date().toISOString().split('T')[0];
+        const effectiveCount = usageData.lastResetDate === today ? (usageData.dailyReplyCount || 0) : 0;
+        const lang = currentLang;
+        bannerTitle.textContent = I18N[lang].freeBannerTitle || '当前：免费版';
+        bannerDesc.textContent = (I18N[lang].freeBannerDesc || '今日已用 {used}/{limit} 次')
+          .replace('{used}', effectiveCount)
+          .replace('{limit}', DAILY_LIMIT);
+      });
+    });
+  }
+
+  const freeBannerUpgradeBtn = document.getElementById('freeBannerUpgradeBtn');
+  if (freeBannerUpgradeBtn) {
+    freeBannerUpgradeBtn.addEventListener('click', () => {
+      openUpgradeModal();
+    });
+  }
+
+  // ================================
+  // Upgrade Modal
+  // ================================
+  const upgradeModal = document.getElementById('upgradeModal');
+  const closeUpgradeModal = document.getElementById('closeUpgradeModal');
+  const upgradeStepChoose = document.getElementById('upgradeStepChoose');
+  const upgradeStepCode = document.getElementById('upgradeStepCode');
+  const upgradeOptionCode = document.getElementById('upgradeOptionCode');
+  const upgradeOptionBuy = document.getElementById('upgradeOptionBuy');
+  const modalActivationInput = document.getElementById('modalActivationInput');
+  const modalActivationError = document.getElementById('modalActivationError');
+  const modalBackBtn = document.getElementById('modalBackBtn');
+  const modalActivateBtn = document.getElementById('modalActivateBtn');
+  const upgradeSuccessMsg = document.getElementById('upgradeSuccessMsg');
+  const upgradeSuccessText = document.getElementById('upgradeSuccessText');
+
+  function openUpgradeModal() {
+    if (!upgradeModal) return;
+    // Reset to step 1
+    upgradeStepChoose.style.display = 'block';
+    upgradeStepCode.style.display = 'none';
+    upgradeSuccessMsg.classList.remove('show');
+    if (modalActivationInput) modalActivationInput.value = '';
+    if (modalActivationError) modalActivationError.textContent = '';
+    upgradeModal.classList.add('show');
+  }
+
+  function closeUpgradeModalFn() {
+    if (upgradeModal) upgradeModal.classList.remove('show');
+  }
+
+  if (closeUpgradeModal) {
+    closeUpgradeModal.addEventListener('click', closeUpgradeModalFn);
+  }
+  if (upgradeModal) {
+    upgradeModal.addEventListener('click', (e) => {
+      if (e.target === upgradeModal) closeUpgradeModalFn();
+    });
+  }
+
+  if (upgradeOptionCode) {
+    upgradeOptionCode.addEventListener('click', () => {
+      upgradeStepChoose.style.display = 'none';
+      upgradeStepCode.style.display = 'block';
+      upgradeSuccessMsg.classList.remove('show');
+      if (modalActivationInput) modalActivationInput.focus();
+    });
+  }
+
+  if (upgradeOptionBuy) {
+    upgradeOptionBuy.addEventListener('click', () => {
+      chrome.tabs.create({ url: UPGRADE_URL });
+      closeUpgradeModalFn();
+    });
+  }
+
+  if (modalBackBtn) {
+    modalBackBtn.addEventListener('click', () => {
+      upgradeStepCode.style.display = 'none';
+      upgradeStepChoose.style.display = 'block';
+      if (modalActivationError) modalActivationError.textContent = '';
+    });
+  }
+
+  if (modalActivateBtn) {
+    modalActivateBtn.addEventListener('click', async () => {
+      const code = modalActivationInput.value.trim();
+      if (!code) {
+        modalActivationError.textContent = I18N[currentLang].activateErrorEmpty || '请输入激活码';
+        return;
+      }
+
+      modalActivateBtn.disabled = true;
+      modalActivateBtn.textContent = I18N[currentLang].activateVerifying || '验证中...';
+      modalActivationError.textContent = '';
+
+      try {
+        const normalizedCode = code.toUpperCase();
+        const API_BASE = I18N.API_BASE_URL;
+        const response = await fetch(`${API_BASE}/api/license/activate`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code: normalizedCode })
+        });
+        const result = await response.json();
+
+        if (result.valid && result.type) {
+          const licenseType = result.type;
+          await chrome.storage.sync.set({
+            licenseCode: normalizedCode,
+            licenseType: licenseType,
+            activatedAt: result.activatedAt || new Date().toISOString()
+          });
+
+          // Show success
+          upgradeStepCode.style.display = 'none';
+          upgradeStepChoose.style.display = 'block';
+          const typeNames = {
+            'lifetime': I18N[currentLang].statProLifetime || 'Pro 永久版',
+            'year': I18N[currentLang].statProYear || 'Pro 年付版'
+          };
+          upgradeSuccessText.textContent = (I18N[currentLang].activateSuccessPrefix || '激活成功！已升级到 ') + (typeNames[licenseType] || licenseType);
+          upgradeSuccessMsg.classList.add('show');
+
+          // Refresh page state
+          updateStats();
+          updateFreeUserBanner();
+
+          // Close modal after 2s
+          setTimeout(() => {
+            closeUpgradeModalFn();
+            upgradeSuccessMsg.classList.remove('show');
+          }, 2000);
+        } else {
+          modalActivationError.textContent = result.error || (I18N[currentLang].activateErrorInvalid || '激活码无效');
+        }
+      } catch (error) {
+        console.error('Modal activation error:', error);
+        modalActivationError.textContent = I18N[currentLang].activateFail || '激活失败，请检查网络连接';
+      } finally {
+        modalActivateBtn.disabled = false;
+        modalActivateBtn.textContent = I18N[currentLang].modalActivateBtn || I18N[currentLang].activateBtn || '激活';
+      }
+    });
+
+    // Enter key to activate
+    if (modalActivationInput) {
+      modalActivationInput.addEventListener('keypress', (e) => {
+        if (e.key === 'Enter') modalActivateBtn.click();
+      });
+    }
   }
 });

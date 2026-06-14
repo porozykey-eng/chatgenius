@@ -18,7 +18,23 @@ export default defineConfig({
     rollupOptions: {
       input: {
         main: resolve(__dirname, 'index.html'),
-        admin: resolve(__dirname, 'admin.html'),
+      },
+      output: {
+        // Code splitting for vendor chunks
+        manualChunks: {
+          react: ['react', 'react-dom'],
+          framer: ['framer-motion'],
+        },
+      },
+    },
+    // Enable CSS code splitting
+    cssCodeSplit: true,
+    // Optimize chunk size
+    chunkSizeWarningLimit: 1000,
+    // Experimental: optimize chunk loading
+    experimental: {
+      renderBuiltUrl: (filename, { type, hostId }) => {
+        return { relative: true }
       },
     },
   },

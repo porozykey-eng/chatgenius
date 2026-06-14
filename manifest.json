@@ -1,27 +1,43 @@
 {
   "manifest_version": 3,
-  "name": "ChatGenius AI - 智能回复助手",
-  "version": "2.0.0",
-  "description": "AI-powered auto-reply assistant for WhatsApp and Messenger with multi-model support.",
+  "name": "ChatGenius AI - Smart Auto Reply",
+  "version": "2.1.0",
+  "description": "AI-powered auto-reply assistant with multiple AI models, custom personas, and smart knowledge base integration.",
   "permissions": [
-    "storage"
+    "storage",
+    "activeTab"
   ],
   "host_permissions": [
     "https://web.whatsapp.com/*",
     "https://www.messenger.com/*",
     "https://www.facebook.com/*",
-    "https://api.deepseek.com/*",
+    "https://ark.cn-beijing.volces.com/*",
+    "https://aip.baidubce.com/*",
     "https://api.moonshot.cn/*",
     "https://dashscope.aliyuncs.com/*",
+    "https://api.hunyuan.cloud.tencent.com/*",
     "https://open.bigmodel.cn/*",
-    "https://ark.cn-beijing.volces.com/*",
+    "https://api.deepseek.com/*",
+    "https://spark-api-open.xf-yun.com/*",
+    "https://api.minimax.chat/*",
+    "https://api.stepfun.com/*",
+    "https://api.lingyiwanwu.com/*",
+    "https://api.baichuan-ai.com/*",
+    "https://api.siliconflow.cn/*",
     "https://api.openai.com/*",
-    "https://generativelanguage.googleapis.com/*"
+    "https://generativelanguage.googleapis.com/*",
+    "https://api.anthropic.com/*",
+    "https://api.x.ai/*",
+    "https://api.mistral.ai/*",
+    "https://api.cohere.ai/*",
+    "https://openrouter.ai/*",
+    "https://chat.sopie.cc/*"
   ],
+  "default_locale": "en",
   "icons": {
-    "16": "./icon16.png",
-    "48": "./icon48.png",
-    "128": "./icon128.png"
+    "16": "icons/icon16.png",
+    "48": "icons/icon48.png",
+    "128": "icons/icon128.png"
   },
   "background": {
     "service_worker": "background.js"
@@ -41,16 +57,26 @@
   "action": {
     "default_popup": "popup.html",
     "default_icon": {
-      "16": "./icon16.png",
-      "48": "./icon48.png",
-      "128": "./icon128.png"
+      "16": "icons/icon16.png",
+      "48": "icons/icon48.png",
+      "128": "icons/icon128.png"
     }
   },
-  "options_page": "options.html",
+  "options_ui": {
+    "page": "options.html",
+    "open_in_tab": true
+  },
   "web_accessible_resources": [
     {
-      "resources": ["icons/*.svg"],
-      "matches": ["<all_urls>"]
+      "resources": ["icons/*"],
+      "matches": [
+        "https://web.whatsapp.com/*",
+        "https://www.messenger.com/*",
+        "https://www.facebook.com/*"
+      ]
     }
-  ]
+  ],
+  "content_security_policy": {
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://chat.sopie.cc https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://ark.cn-beijing.volces.com https://aip.baidubce.com https://api.moonshot.cn https://dashscope.aliyuncs.com https://api.hunyuan.cloud.tencent.com https://open.bigmodel.cn https://api.deepseek.com https://spark-api-open.xf-yun.com https://api.minimax.chat https://api.stepfun.com https://api.lingyiwanwu.com https://api.baichuan-ai.com https://api.siliconflow.cn https://api.x.ai https://api.mistral.ai https://api.cohere.ai https://openrouter.ai;"
+  }
 }

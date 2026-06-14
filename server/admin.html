@@ -1,0 +1,2186 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGenius Admin</title>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <style>
+    * { margin: 0; padding: 0; box-sizing: border-box; }
+    
+    :root {
+      --primary: #4F46E5;
+      --primary-hover: #4338CA;
+      --success: #10b981;
+      --warning: #f59e0b;
+      --danger: #ef4444;
+      --gray-50: #f9fafb;
+      --gray-100: #f3f4f6;
+      --gray-200: #e5e7eb;
+      --gray-300: #d1d5db;
+      --gray-400: #9ca3af;
+      --gray-500: #6b7280;
+      --gray-600: #4b5563;
+      --gray-700: #374151;
+      --gray-800: #1f2937;
+      --gray-900: #111827;
+      --shadow-sm: 0 1px 2px rgba(0,0,0,0.05);
+      --shadow: 0 1px 3px rgba(0,0,0,0.1), 0 1px 2px rgba(0,0,0,0.06);
+      --shadow-md: 0 4px 6px rgba(0,0,0,0.07), 0 2px 4px rgba(0,0,0,0.06);
+      --radius: 8px;
+      --radius-lg: 12px;
+    }
+
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      background: var(--gray-50);
+      color: var(--gray-900);
+      min-height: 100vh;
+    }
+
+    /* Header */
+    .header {
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      color: white;
+      padding: 0 24px;
+      height: 56px;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      box-shadow: var(--shadow-md);
+    }
+
+    .header-title {
+      font-size: 18px;
+      font-weight: 600;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+    }
+
+    .header-title::before {
+      content: '🔧';
+    }
+
+    .logout-btn {
+      background: rgba(255,255,255,0.2);
+      border: none;
+      color: white;
+      padding: 8px 16px;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+      transition: background 0.2s;
+    }
+
+    .logout-btn:hover {
+      background: rgba(255,255,255,0.3);
+    }
+
+    /* Layout Container */
+    .admin-layout {
+      display: flex;
+      min-height: calc(100vh - 56px);
+    }
+
+    /* Sidebar */
+    .sidebar {
+      width: 220px;
+      background: white;
+      border-right: 1px solid var(--gray-200);
+      padding: 16px 0;
+      box-shadow: var(--shadow-sm);
+    }
+
+    .tabs {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      padding: 0 12px;
+    }
+
+    .tab {
+      padding: 12px 16px;
+      border: none;
+      background: none;
+      color: var(--gray-600);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      border-radius: var(--radius);
+      text-align: left;
+      transition: all 0.2s;
+      white-space: nowrap;
+    }
+
+    .tab:hover {
+      background: var(--gray-100);
+      color: var(--gray-900);
+    }
+
+    .tab.active {
+      background: var(--primary);
+      color: white;
+    }
+
+    /* Main Content */
+    .main-wrapper {
+      flex: 1;
+      padding: 24px;
+      overflow-x: auto;
+    }
+
+    .main {
+      max-width: 1400px;
+      margin: 0 auto;
+    }
+
+    .tab-content {
+      display: none;
+    }
+
+    .tab-content.active {
+      display: block;
+    }
+
+    /* Cards */
+    .card {
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .card-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-800);
+      margin-bottom: 16px;
+    }
+
+    /* Dashboard Stats */
+    .stats-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+      gap: 20px;
+      margin-bottom: 24px;
+    }
+
+    .stat-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 20px;
+      display: flex;
+      align-items: flex-start;
+      gap: 16px;
+    }
+
+    .stat-icon {
+      width: 48px;
+      height: 48px;
+      border-radius: var(--radius);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 24px;
+      flex-shrink: 0;
+    }
+
+    .stat-icon.revenue { background: #dcfce7; }
+    .stat-icon.activation { background: #dbeafe; }
+    .stat-icon.license { background: #f3e8ff; }
+    .stat-icon.expiring { background: #fef3c7; }
+
+    .stat-info {
+      flex: 1;
+    }
+
+    .stat-label {
+      font-size: 14px;
+      color: var(--gray-500);
+      margin-bottom: 4px;
+    }
+
+    .stat-value {
+      font-size: 24px;
+      font-weight: 700;
+      color: var(--gray-900);
+    }
+
+    /* Chart Container */
+    .chart-container {
+      background: white;
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow);
+      padding: 24px;
+      margin-bottom: 20px;
+    }
+
+    .chart-header {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      margin-bottom: 16px;
+    }
+
+    .chart-title {
+      font-size: 16px;
+      font-weight: 600;
+      color: var(--gray-800);
+    }
+
+    .chart-controls {
+      display: flex;
+      gap: 8px;
+    }
+
+    .chart-btn {
+      padding: 6px 12px;
+      border: 1px solid var(--gray-300);
+      background: white;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 13px;
+      transition: all 0.2s;
+    }
+
+    .chart-btn.active {
+      background: var(--primary);
+      color: white;
+      border-color: var(--primary);
+    }
+
+    /* Toolbar */
+    .toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+      gap: 12px;
+    }
+
+    .toolbar-left, .toolbar-right {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      flex-wrap: wrap;
+    }
+
+    /* Form Elements */
+    select, input[type="text"], input[type="number"], input[type="password"], input[type="date"], textarea {
+      padding: 8px 12px;
+      border: 1px solid var(--gray-300);
+      border-radius: var(--radius);
+      font-size: 14px;
+      color: var(--gray-700);
+      background: white;
+      outline: none;
+      transition: border-color 0.2s;
+    }
+
+    select:focus, input:focus, textarea:focus {
+      border-color: var(--primary);
+    }
+
+    select {
+      cursor: pointer;
+    }
+
+    textarea {
+      resize: vertical;
+      min-height: 80px;
+    }
+
+    /* Buttons */
+    .btn {
+      padding: 8px 16px;
+      border: none;
+      border-radius: var(--radius);
+      font-size: 14px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all 0.2s;
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+
+    .btn-primary:hover {
+      background: var(--primary-hover);
+    }
+
+    .btn-secondary {
+      background: var(--gray-100);
+      color: var(--gray-700);
+      border: 1px solid var(--gray-300);
+    }
+
+    .btn-secondary:hover {
+      background: var(--gray-200);
+    }
+
+    .btn-danger {
+      background: var(--danger);
+      color: white;
+    }
+
+    .btn-danger:hover {
+      background: #dc2626;
+    }
+
+    .btn-sm {
+      padding: 4px 10px;
+      font-size: 13px;
+    }
+
+    /* Table */
+    .table-wrapper {
+      overflow-x: auto;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+    }
+
+    th, td {
+      padding: 12px 16px;
+      text-align: left;
+      border-bottom: 1px solid var(--gray-200);
+      font-size: 14px;
+    }
+
+    th {
+      background: var(--gray-50);
+      font-weight: 600;
+      color: var(--gray-600);
+      white-space: nowrap;
+    }
+
+    tr:hover td {
+      background: var(--gray-50);
+    }
+
+    tr.highlight-warning td {
+      background: #fef3c7;
+    }
+
+    /* Badges */
+    .badge {
+      display: inline-block;
+      padding: 2px 10px;
+      border-radius: 20px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+
+    .badge-success { background: #dcfce7; color: #166534; }
+    .badge-warning { background: #fef3c7; color: #92400e; }
+    .badge-danger { background: #fee2e2; color: #991b1b; }
+    .badge-info { background: #dbeafe; color: #1e40af; }
+    .badge-purple { background: #f3e8ff; color: #6b21a8; }
+    .badge-gray { background: var(--gray-100); color: var(--gray-600); }
+
+    /* Pagination */
+    .pagination {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 8px;
+      margin-top: 20px;
+    }
+
+    .pagination button {
+      padding: 6px 12px;
+      border: 1px solid var(--gray-300);
+      background: white;
+      border-radius: var(--radius);
+      cursor: pointer;
+      font-size: 14px;
+    }
+
+    .pagination button:disabled {
+      opacity: 0.5;
+      cursor: not-allowed;
+    }
+
+    .pagination button:hover:not(:disabled) {
+      background: var(--gray-50);
+    }
+
+    .pagination span {
+      font-size: 14px;
+      color: var(--gray-600);
+    }
+
+    /* Modal */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0,0,0,0.5);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+    }
+
+    .modal-overlay.active {
+      display: flex;
+    }
+
+    .modal {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 24px;
+      width: 90%;
+      max-width: 500px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+      max-height: 90vh;
+      overflow-y: auto;
+    }
+
+    .modal-title {
+      font-size: 18px;
+      font-weight: 600;
+      margin-bottom: 16px;
+    }
+
+    .modal-body {
+      margin-bottom: 20px;
+    }
+
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 12px;
+    }
+
+    .form-group {
+      margin-bottom: 16px;
+    }
+
+    .form-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--gray-700);
+      margin-bottom: 6px;
+    }
+
+    .form-group input, .form-group select, .form-group textarea {
+      width: 100%;
+    }
+
+    /* Detail List */
+    .detail-list {
+      display: grid;
+      grid-template-columns: auto 1fr;
+      gap: 12px 16px;
+    }
+
+    .detail-list dt {
+      font-weight: 500;
+      color: var(--gray-600);
+    }
+
+    .detail-list dd {
+      color: var(--gray-900);
+    }
+
+    /* Alert */
+    .alert {
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      font-size: 14px;
+    }
+
+    .alert-warning {
+      background: #fef3c7;
+      color: #92400e;
+      border: 1px solid #fde68a;
+    }
+
+    /* Summary Bar */
+    .summary-bar {
+      background: var(--gray-50);
+      padding: 12px 16px;
+      border-radius: var(--radius);
+      margin-bottom: 16px;
+      font-size: 14px;
+      color: var(--gray-700);
+      display: flex;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+
+    .summary-item {
+      display: flex;
+      gap: 6px;
+    }
+
+    .summary-item strong {
+      color: var(--gray-900);
+    }
+
+    /* Login Page */
+    .login-container {
+      min-height: 100vh;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+    }
+
+    .login-card {
+      background: white;
+      border-radius: var(--radius-lg);
+      padding: 40px;
+      width: 90%;
+      max-width: 400px;
+      box-shadow: 0 20px 25px -5px rgba(0,0,0,0.1);
+    }
+
+    .login-title {
+      font-size: 24px;
+      font-weight: 700;
+      text-align: center;
+      margin-bottom: 8px;
+      color: var(--gray-900);
+    }
+
+    .login-subtitle {
+      font-size: 14px;
+      color: var(--gray-500);
+      text-align: center;
+      margin-bottom: 32px;
+    }
+
+    .login-card .form-group input {
+      width: 100%;
+      padding: 12px 16px;
+      font-size: 15px;
+    }
+
+    .login-card .btn {
+      width: 100%;
+      padding: 12px;
+      font-size: 15px;
+      justify-content: center;
+    }
+
+    .login-error {
+      background: #fee2e2;
+      color: #991b1b;
+      padding: 10px 14px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      margin-bottom: 16px;
+      display: none;
+    }
+
+    .login-error.show {
+      display: block;
+    }
+
+    /* Toast */
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      background: var(--gray-800);
+      color: white;
+      padding: 12px 20px;
+      border-radius: var(--radius);
+      font-size: 14px;
+      box-shadow: var(--shadow-md);
+      transform: translateY(100px);
+      opacity: 0;
+      transition: all 0.3s;
+      z-index: 2000;
+    }
+
+    .toast.show {
+      transform: translateY(0);
+      opacity: 1;
+    }
+
+    .toast.success { background: var(--success); }
+    .toast.error { background: var(--danger); }
+
+    /* Loading */
+    .loading {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray-400);
+    }
+
+    .loading::after {
+      content: '...';
+      animation: dots 1.5s steps(4, end) infinite;
+    }
+
+    @keyframes dots {
+      0%, 20% { content: ''; }
+      40% { content: '.'; }
+      60% { content: '..'; }
+      80%, 100% { content: '...'; }
+    }
+
+    /* Empty State */
+    .empty {
+      text-align: center;
+      padding: 40px;
+      color: var(--gray-400);
+    }
+
+    .empty::before {
+      content: '📭';
+      display: block;
+      font-size: 48px;
+      margin-bottom: 12px;
+    }
+
+    /* Responsive */
+    @media (max-width: 768px) {
+      .admin-layout {
+        flex-direction: column;
+      }
+      .sidebar {
+        width: 100%;
+        border-right: none;
+        border-bottom: 1px solid var(--gray-200);
+        padding: 12px 0;
+      }
+      .tabs {
+        flex-direction: row;
+        overflow-x: auto;
+        padding: 0 12px;
+      }
+      .tab {
+        white-space: nowrap;
+        padding: 10px 14px;
+        font-size: 13px;
+      }
+      .main-wrapper { padding: 16px; }
+      .stats-grid { grid-template-columns: repeat(2, 1fr); }
+      .toolbar { flex-direction: column; align-items: stretch; }
+      .toolbar-left, .toolbar-right { flex-direction: column; }
+      .table-wrapper { font-size: 13px; }
+      th, td { padding: 8px 10px; }
+      .modal { width: 95%; max-width: none; }
+      .stat-value { font-size: 20px; }
+    }
+
+    @media (max-width: 480px) {
+      .stats-grid { grid-template-columns: 1fr; }
+      .header-title { font-size: 16px; }
+    }
+  </style>
+</head>
+<body>
+  <!-- Login Page -->
+  <div id="loginPage" class="login-container">
+    <div class="login-card">
+      <h1 class="login-title">🔧 ChatGenius Admin</h1>
+      <p class="login-subtitle">请输入管理员密码登录</p>
+      <div id="loginError" class="login-error"></div>
+      <div class="form-group">
+        <input type="password" id="loginPassword" placeholder="管理员密码" autocomplete="current-password">
+      </div>
+      <button class="btn btn-primary" id="loginBtn">登录</button>
+    </div>
+  </div>
+
+  <!-- Admin Dashboard -->
+  <div id="adminPage" style="display: none;">
+    <header class="header">
+      <div class="header-title">ChatGenius Admin</div>
+      <button class="logout-btn" id="logoutBtn">退出登录</button>
+    </header>
+
+    <div class="admin-layout">
+      <aside class="sidebar">
+        <nav class="tabs">
+          <button class="tab active" data-tab="dashboard">📊 概览</button>
+          <button class="tab" data-tab="codes">🔑 激活码</button>
+          <button class="tab" data-tab="orders">📦 订单</button>
+          <button class="tab" data-tab="licenses">📋 许可证</button>
+          <button class="tab" data-tab="audit">📝 审计日志</button>
+          <button class="tab" data-tab="settings">⚙️ 系统设置</button>
+          <button class="tab" data-tab="security">🔒 安全中心</button>
+        </nav>
+      </aside>
+
+      <div class="main-wrapper">
+        <main class="main">
+      <!-- Dashboard Tab -->
+      <div id="dashboardTab" class="tab-content active">
+        <div class="stats-grid" id="statsGrid">
+          <div class="loading">加载中</div>
+        </div>
+        <div class="chart-container">
+          <div class="chart-header">
+            <div class="chart-title">收入趋势</div>
+            <div class="chart-controls">
+              <button class="chart-btn active" onclick="loadRevenueChart(7)">7天</button>
+              <button class="chart-btn" onclick="loadRevenueChart(30)">30天</button>
+              <button class="chart-btn" onclick="loadRevenueChart(90)">90天</button>
+            </div>
+          </div>
+          <canvas id="revenueChart"></canvas>
+        </div>
+        <div class="chart-container">
+          <div class="chart-header">
+            <div class="chart-title">激活趋势</div>
+            <div class="chart-controls">
+              <button class="chart-btn active" onclick="loadActivationChart(7)">7天</button>
+              <button class="chart-btn" onclick="loadActivationChart(30)">30天</button>
+            </div>
+          </div>
+          <canvas id="activationChart"></canvas>
+        </div>
+        <div class="card">
+          <div class="card-title">最近订单</div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>订单号</th>
+                  <th>套餐</th>
+                  <th>金额</th>
+                  <th>状态</th>
+                  <th>时间</th>
+                </tr>
+              </thead>
+              <tbody id="recentOrdersBody">
+                <tr><td colspan="5" class="loading">加载中</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+
+      <!-- Codes Tab -->
+      <div id="codesTab" class="tab-content">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <select id="codeStatusFilter">
+              <option value="all">全部状态</option>
+              <option value="unused">未使用</option>
+              <option value="used">已使用</option>
+            </select>
+            <select id="codeTypeFilter">
+              <option value="all">全部类型</option>
+              <option value="year">年付</option>
+              <option value="lifetime">永久</option>
+              <option value="free">免费</option>
+            </select>
+            <select id="codeBatchFilter">
+              <option value="all">全部批次</option>
+            </select>
+            <input type="text" id="codeSearch" placeholder="搜索激活码...">
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-danger" id="batchDeleteBtn">批量删除未使用</button>
+            <button class="btn btn-secondary" id="exportCodesBtn">📥 导出 CSV</button>
+            <button class="btn btn-primary" id="generateCodesBtn">+ 批量生成</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="codeSelectAll"></th>
+                  <th>激活码</th>
+                  <th>类型</th>
+                  <th>状态</th>
+                  <th>批次</th>
+                  <th>备注</th>
+                  <th>创建时间</th>
+                  <th>使用时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="codesTableBody">
+                <tr><td colspan="9" class="loading">加载中</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="codesPagination"></div>
+        </div>
+      </div>
+
+      <!-- Orders Tab -->
+      <div id="ordersTab" class="tab-content">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <select id="orderStatusFilter">
+              <option value="all">全部状态</option>
+              <option value="pending">待支付</option>
+              <option value="completed">已完成</option>
+              <option value="refunded">已退款</option>
+              <option value="cancelled">已取消</option>
+            </select>
+            <input type="date" id="orderStartDate" placeholder="开始日期">
+            <input type="date" id="orderEndDate" placeholder="结束日期">
+            <input type="number" id="orderMinPrice" placeholder="最小金额" style="width: 100px;">
+            <input type="number" id="orderMaxPrice" placeholder="最大金额" style="width: 100px;">
+            <input type="text" id="orderSearch" placeholder="订单号/邮箱">
+            <button class="btn btn-secondary" id="searchOrdersBtn">查询</button>
+            <button class="btn btn-secondary" id="resetOrdersBtn">重置</button>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-secondary" id="exportOrdersBtn">📥 导出 CSV</button>
+          </div>
+        </div>
+        <div class="summary-bar" id="ordersSummary"></div>
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>订单号</th>
+                  <th>套餐</th>
+                  <th>金额</th>
+                  <th>渠道</th>
+                  <th>用户邮箱</th>
+                  <th>状态</th>
+                  <th>创建时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="ordersTableBody">
+                <tr><td colspan="8" class="loading">加载中</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="ordersPagination"></div>
+        </div>
+      </div>
+
+      <!-- Licenses Tab -->
+      <div id="licensesTab" class="tab-content">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <input type="text" id="licenseSearch" placeholder="搜索激活码或邮箱...">
+            <select id="licenseTypeFilter">
+              <option value="all">全部类型</option>
+              <option value="year">年付</option>
+              <option value="lifetime">永久</option>
+              <option value="free">免费</option>
+            </select>
+            <select id="licenseStatusFilter">
+              <option value="all">全部状态</option>
+              <option value="true">有效</option>
+              <option value="false">已撤销</option>
+              <option value="expiring">即将到期</option>
+            </select>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-danger" id="batchRevokeBtn" style="display:none;">批量撤销</button>
+            <button class="btn btn-secondary" id="batchExtendBtn" style="display:none;">批量延期</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th><input type="checkbox" id="licenseSelectAll"></th>
+                  <th>激活码</th>
+                  <th>类型</th>
+                  <th>用户邮箱</th>
+                  <th>激活时间</th>
+                  <th>到期时间</th>
+                  <th>状态</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="licensesTableBody">
+                <tr><td colspan="8" class="loading">加载中</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="licensesPagination"></div>
+        </div>
+      </div>
+
+      <!-- Audit Logs Tab -->
+      <div id="auditTab" class="tab-content">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <select id="auditActionFilter">
+              <option value="all">全部操作</option>
+              <option value="login_success">登录成功</option>
+              <option value="login_failed">登录失败</option>
+              <option value="codes_generated">生成激活码</option>
+              <option value="order_completed">完成订单</option>
+              <option value="order_refunded">退款</option>
+              <option value="license_revoked">撤销许可证</option>
+              <option value="license_extended">延期许可证</option>
+              <option value="settings_changed">修改设置</option>
+            </select>
+            <input type="date" id="auditStartDate">
+            <input type="date" id="auditEndDate">
+            <input type="text" id="auditIPSearch" placeholder="搜索 IP...">
+            <button class="btn btn-secondary" id="searchAuditBtn">查询</button>
+          </div>
+          <div class="toolbar-right">
+            <button class="btn btn-secondary" id="exportAuditBtn">📥 导出 CSV</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>操作</th>
+                  <th>IP 地址</th>
+                  <th>User-Agent</th>
+                  <th>详情</th>
+                </tr>
+              </thead>
+              <tbody id="auditTableBody">
+                <tr><td colspan="5" class="loading">加载中</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="auditPagination"></div>
+        </div>
+      </div>
+
+      <!-- Settings Tab -->
+      <div id="settingsTab" class="tab-content">
+        <div class="card">
+          <div class="card-title">价格配置</div>
+          <div class="form-group">
+            <label>年付价格 (¥)</label>
+            <input type="number" id="settingYearPrice" step="0.01" placeholder="29.90">
+          </div>
+          <div class="form-group">
+            <label>永久价格 (¥)</label>
+            <input type="number" id="settingLifetimePrice" step="0.01" placeholder="99.90">
+          </div>
+          <button class="btn btn-primary" id="savePricingBtn">保存价格</button>
+        </div>
+        <div class="card">
+          <div class="card-title">安全设置</div>
+          <div class="form-group">
+            <label>IP 白名单（每行一个 IP，留空表示不限制）</label>
+            <textarea id="settingIPWhitelist" rows="5" placeholder="192.168.1.1&#10;10.0.0.1"></textarea>
+          </div>
+          <button class="btn btn-primary" id="saveSecurityBtn">保存安全设置</button>
+        </div>
+        <div class="card">
+          <div class="card-title">修改密码</div>
+          <div class="form-group">
+            <label>当前密码</label>
+            <input type="password" id="changeOldPassword">
+          </div>
+          <div class="form-group">
+            <label>新密码（至少 8 位）</label>
+            <input type="password" id="changeNewPassword">
+          </div>
+          <div class="form-group">
+            <label>确认新密码</label>
+            <input type="password" id="changeConfirmPassword">
+          </div>
+          <button class="btn btn-primary" id="changePasswordBtn">修改密码</button>
+        </div>
+      </div>
+
+      <!-- Security Tab -->
+      <div id="securityTab" class="tab-content">
+        <div class="card">
+          <div class="card-title">安全告警（最近 24 小时）</div>
+          <div id="securityAlerts">
+            <div class="loading">加载中</div>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">活跃会话</div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>IP 地址</th>
+                  <th>User-Agent</th>
+                  <th>登录时间</th>
+                  <th>最后活跃</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="sessionsTableBody">
+                <tr><td colspan="5" class="loading">加载中</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+        <div class="card">
+          <div class="card-title">最近登录记录</div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>时间</th>
+                  <th>IP 地址</th>
+                  <th>结果</th>
+                  <th>User-Agent</th>
+                </tr>
+              </thead>
+              <tbody id="loginHistoryBody">
+                <tr><td colspan="4" class="loading">加载中</td></tr>
+              </tbody>
+            </table>
+          </div>
+        </div>
+      </div>
+        </main>
+      </div>
+    </div>
+  </div>
+
+  <!-- Generate Codes Modal -->
+  <div class="modal-overlay" id="generateModal">
+    <div class="modal">
+      <h3 class="modal-title">批量生成激活码</h3>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>类型</label>
+          <select id="generateType">
+            <option value="year">年付 (Year)</option>
+            <option value="lifetime">永久 (Lifetime)</option>
+          </select>
+        </div>
+        <div class="form-group">
+          <label>数量 (1-100)</label>
+          <input type="number" id="generateQuantity" value="10" min="1" max="100">
+        </div>
+        <div class="form-group">
+          <label>备注（可选）</label>
+          <textarea id="generateNote" rows="2" placeholder="例如：618 活动发放"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('generateModal')">取消</button>
+        <button class="btn btn-primary" id="confirmGenerateBtn">生成</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Code Detail Modal -->
+  <div class="modal-overlay" id="codeDetailModal">
+    <div class="modal">
+      <h3 class="modal-title">激活码详情</h3>
+      <div class="modal-body" id="codeDetailBody">
+        <div class="loading">加载中</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('codeDetailModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Refund Modal -->
+  <div class="modal-overlay" id="refundModal">
+    <div class="modal">
+      <h3 class="modal-title">退款确认</h3>
+      <div class="modal-body">
+        <p>订单号: <code id="refundOrderNo"></code></p>
+        <p>金额: <strong id="refundAmount"></strong></p>
+        <div class="form-group">
+          <label>退款原因</label>
+          <textarea id="refundReason" rows="3" placeholder="请输入退款原因"></textarea>
+        </div>
+        <div class="form-group">
+          <label><input type="checkbox" id="refundRevokeLicense" checked> 同时撤销关联许可证</label>
+        </div>
+        <div class="alert alert-warning">此操作不可撤销，请确认后继续。</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('refundModal')">取消</button>
+        <button class="btn btn-danger" id="confirmRefundBtn">确认退款</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Extend License Modal -->
+  <div class="modal-overlay" id="extendModal">
+    <div class="modal">
+      <h3 class="modal-title">延期许可证</h3>
+      <div class="modal-body">
+        <div class="form-group">
+          <label>延期天数</label>
+          <input type="number" id="extendDays" value="30" min="1">
+        </div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('extendModal')">取消</button>
+        <button class="btn btn-primary" id="confirmExtendBtn">确认延期</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Batch Operation Modal -->
+  <div class="modal-overlay" id="batchOperationModal">
+    <div class="modal">
+      <h3 class="modal-title" id="batchOpTitle">批量操作确认</h3>
+      <div class="modal-body">
+        <p>已选择 <strong id="batchCount">0</strong> 个许可证</p>
+        <p>操作: <span id="batchAction"></span></p>
+        <div id="batchExtendGroup" style="display:none">
+          <div class="form-group">
+            <label>延期天数</label>
+            <input type="number" id="batchExtendDays" value="30" min="1">
+          </div>
+        </div>
+        <div class="alert alert-warning">此操作不可撤销，请确认后继续。</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('batchOperationModal')">取消</button>
+        <button class="btn btn-danger" id="confirmBatchOpBtn">确认执行</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast"></div>
+
+  <script>
+    // State
+    let token = localStorage.getItem('admin_token');
+    let refreshToken = localStorage.getItem('admin_refresh_token');
+    let currentTab = 'dashboard';
+    let codesPage = 1, ordersPage = 1, licensesPage = 1, auditPage = 1;
+    let currentLicenseId = null;
+    let currentOrderNo = null;
+    let revenueChart = null;
+    let activationChart = null;
+
+    // API helper
+    async function api(path, options = {}) {
+      const res = await fetch('/api/admin' + path, {
+        ...options,
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + token,
+          ...options.headers
+        }
+      });
+      if (res.status === 401) {
+        // Try refresh token
+        if (refreshToken && !path.includes('refresh-token')) {
+          const refreshed = await tryRefreshToken();
+          if (refreshed) {
+            return api(path, options);
+          }
+        }
+        logout();
+        throw new Error('未授权');
+      }
+      return res;
+    }
+
+    async function tryRefreshToken() {
+      try {
+        const res = await fetch('/api/admin/refresh-token', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ refreshToken })
+        });
+        if (res.ok) {
+          const data = await res.json();
+          token = data.accessToken;
+          localStorage.setItem('admin_token', token);
+          return true;
+        }
+      } catch (err) {}
+      return false;
+    }
+
+    // Toast
+    function showToast(msg, type = '') {
+      const toast = document.getElementById('toast');
+      toast.textContent = msg;
+      toast.className = 'toast show ' + type;
+      setTimeout(() => toast.className = 'toast', 3000);
+    }
+
+    // Modal
+    function openModal(id) {
+      document.getElementById(id).classList.add('active');
+    }
+    function closeModal(id) {
+      document.getElementById(id).classList.remove('active');
+    }
+
+    // Click overlay to close modal
+    document.querySelectorAll('.modal-overlay').forEach(overlay => {
+      overlay.addEventListener('click', (e) => {
+        if (e.target === overlay) {
+          overlay.classList.remove('active');
+        }
+      });
+    });
+
+    // ESC key to close modal
+    document.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') {
+        document.querySelectorAll('.modal-overlay.active').forEach(m => {
+          m.classList.remove('active');
+        });
+      }
+    });
+
+    // Login
+    async function login() {
+      const password = document.getElementById('loginPassword').value;
+      const errorEl = document.getElementById('loginError');
+      
+      try {
+        const res = await fetch('/api/admin/login', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ password })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          token = data.accessToken;
+          refreshToken = data.refreshToken;
+          localStorage.setItem('admin_token', token);
+          localStorage.setItem('admin_refresh_token', refreshToken);
+          showAdmin();
+        } else {
+          errorEl.textContent = data.error || '登录失败';
+          errorEl.classList.add('show');
+        }
+      } catch (err) {
+        errorEl.textContent = '网络错误';
+        errorEl.classList.add('show');
+      }
+    }
+
+    function logout() {
+      if (token) {
+        fetch('/api/admin/logout', {
+          method: 'POST',
+          headers: { 'Authorization': 'Bearer ' + token }
+        }).catch(() => {});
+      }
+      token = null;
+      refreshToken = null;
+      localStorage.removeItem('admin_token');
+      localStorage.removeItem('admin_refresh_token');
+      document.getElementById('adminPage').style.display = 'none';
+      document.getElementById('loginPage').style.display = 'flex';
+    }
+
+    async function checkAuth() {
+      if (!token) {
+        document.getElementById('loginPage').style.display = 'flex';
+        return;
+      }
+      try {
+        const res = await api('/me');
+        if (res.ok) {
+          showAdmin();
+        } else {
+          logout();
+        }
+      } catch {
+        logout();
+      }
+    }
+
+    function showAdmin() {
+      document.getElementById('loginPage').style.display = 'none';
+      document.getElementById('adminPage').style.display = 'block';
+      loadDashboard();
+    }
+
+    // Tab switching
+    document.querySelectorAll('.tab').forEach(tab => {
+      tab.addEventListener('click', () => {
+        document.querySelectorAll('.tab').forEach(t => t.classList.remove('active'));
+        document.querySelectorAll('.tab-content').forEach(c => c.classList.remove('active'));
+        tab.classList.add('active');
+        const tabName = tab.dataset.tab;
+        document.getElementById(tabName + 'Tab').classList.add('active');
+        currentTab = tabName;
+        
+        if (tabName === 'dashboard') loadDashboard();
+        else if (tabName === 'codes') loadCodes();
+        else if (tabName === 'orders') loadOrders();
+        else if (tabName === 'licenses') loadLicenses();
+        else if (tabName === 'audit') loadAuditLogs();
+        else if (tabName === 'settings') loadSettings();
+        else if (tabName === 'security') loadSecurity();
+      });
+    });
+
+    // Format helpers
+    function formatDate(d) {
+      if (!d) return '-';
+      return new Date(d).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
+    }
+
+    function typeBadge(type) {
+      const map = { year: ['年付', 'info'], lifetime: ['永久', 'purple'], free: ['免费', 'warning'] };
+      const [label, cls] = map[type] || [type, 'gray'];
+      return `<span class="badge badge-${cls}">${label}</span>`;
+    }
+
+    function statusBadge(status) {
+      const map = { unused: ['未使用', 'success'], used: ['已使用', 'gray'], pending: ['待支付', 'warning'], completed: ['已完成', 'success'], refunded: ['已退款', 'danger'], cancelled: ['已取消', 'danger'] };
+      const [label, cls] = map[status] || [status, 'gray'];
+      return `<span class="badge badge-${cls}">${label}</span>`;
+    }
+
+    function paginationHtml(total, page, limit) {
+      const pages = Math.ceil(total / limit);
+      if (pages <= 1) return '';
+      return `
+        <button ${page <= 1 ? 'disabled' : ''} onclick="goPage(${page - 1})">上一页</button>
+        <span>${page} / ${pages}</span>
+        <button ${page >= pages ? 'disabled' : ''} onclick="goPage(${page + 1})">下一页</button>
+      `;
+    }
+
+    function goPage(p) {
+      if (currentTab === 'codes') { codesPage = p; loadCodes(); }
+      else if (currentTab === 'orders') { ordersPage = p; loadOrders(); }
+      else if (currentTab === 'licenses') { licensesPage = p; loadLicenses(); }
+      else if (currentTab === 'audit') { auditPage = p; loadAuditLogs(); }
+    }
+
+    // Dashboard
+    async function loadDashboard() {
+      const grid = document.getElementById('statsGrid');
+      grid.innerHTML = '<div class="loading">加载中</div>';
+      
+      try {
+        const res = await api('/dashboard');
+        if (!res.ok) {
+          grid.innerHTML = '<div class="empty">加载失败</div>';
+          return;
+        }
+        const data = await res.json();
+        
+        grid.innerHTML = `
+          <div class="stat-card">
+            <div class="stat-icon revenue">💰</div>
+            <div class="stat-info">
+              <div class="stat-label">今日收入</div>
+              <div class="stat-value">¥${data.todayRevenue}</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon revenue">💵</div>
+            <div class="stat-info">
+              <div class="stat-label">本周收入</div>
+              <div class="stat-value">¥${data.weekRevenue}</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon revenue">💳</div>
+            <div class="stat-info">
+              <div class="stat-label">本月收入</div>
+              <div class="stat-value">¥${data.monthRevenue}</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon revenue">💎</div>
+            <div class="stat-info">
+              <div class="stat-label">总收入</div>
+              <div class="stat-value">¥${data.totalRevenue}</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon activation">🎯</div>
+            <div class="stat-info">
+              <div class="stat-label">今日激活</div>
+              <div class="stat-value">${data.todayActivations}</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon activation">📈</div>
+            <div class="stat-info">
+              <div class="stat-label">本周激活</div>
+              <div class="stat-value">${data.weekActivations}</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon license">📋</div>
+            <div class="stat-info">
+              <div class="stat-label">有效许可证</div>
+              <div class="stat-value">${data.activeLicenses}</div>
+            </div>
+          </div>
+          <div class="stat-card">
+            <div class="stat-icon expiring">⚠️</div>
+            <div class="stat-info">
+              <div class="stat-label">即将到期</div>
+              <div class="stat-value">${data.expiringSoon}</div>
+            </div>
+          </div>
+        `;
+
+        // Recent orders
+        const recentBody = document.getElementById('recentOrdersBody');
+        if (data.recentOrders && data.recentOrders.length > 0) {
+          recentBody.innerHTML = data.recentOrders.map(o => `
+            <tr>
+              <td><code>${o.orderNo}</code></td>
+              <td>${o.plan || '-'}</td>
+              <td>¥${o.price || '0'}</td>
+              <td>${statusBadge(o.status)}</td>
+              <td>${formatDate(o.createdAt)}</td>
+            </tr>
+          `).join('');
+        } else {
+          recentBody.innerHTML = '<tr><td colspan="5" class="empty">暂无订单</td></tr>';
+        }
+
+        // Load charts
+        loadRevenueChart(7);
+        loadActivationChart(7);
+      } catch (err) {
+        grid.innerHTML = '<div class="empty">加载失败</div>';
+      }
+    }
+
+    async function loadRevenueChart(days) {
+      try {
+        const res = await api(`/dashboard/trends?metric=revenue&days=${days}`);
+        const data = await res.json();
+        
+        const ctx = document.getElementById('revenueChart').getContext('2d');
+        if (revenueChart) revenueChart.destroy();
+        revenueChart = new Chart(ctx, {
+          type: 'line',
+          data: {
+            labels: data.labels,
+            datasets: [{
+              label: '收入 (¥)',
+              data: data.values,
+              borderColor: '#4F46E5',
+              backgroundColor: 'rgba(79, 70, 229, 0.1)',
+              fill: true,
+              tension: 0.4
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      } catch (err) {
+        console.error('Load revenue chart error:', err);
+      }
+    }
+
+    async function loadActivationChart(days) {
+      try {
+        const res = await api(`/dashboard/trends?metric=activations&days=${days}`);
+        const data = await res.json();
+        
+        const ctx = document.getElementById('activationChart').getContext('2d');
+        if (activationChart) activationChart.destroy();
+        activationChart = new Chart(ctx, {
+          type: 'bar',
+          data: {
+            labels: data.labels,
+            datasets: [{
+              label: '激活数',
+              data: data.values,
+              backgroundColor: '#10b981'
+            }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } },
+            scales: { y: { beginAtZero: true } }
+          }
+        });
+      } catch (err) {
+        console.error('Load activation chart error:', err);
+      }
+    }
+
+    // Codes
+    async function loadCodes() {
+      const tbody = document.getElementById('codesTableBody');
+      tbody.innerHTML = '<tr><td colspan="9" class="loading">加载中</td></tr>';
+      
+      const status = document.getElementById('codeStatusFilter').value;
+      const type = document.getElementById('codeTypeFilter').value;
+      const batchId = document.getElementById('codeBatchFilter').value;
+      const search = document.getElementById('codeSearch').value;
+      
+      try {
+        const res = await api(`/codes?status=${status}&type=${type}&batchId=${batchId}&search=${encodeURIComponent(search)}&page=${codesPage}&limit=50`);
+        if (!res.ok) {
+          tbody.innerHTML = '<tr><td colspan="9" class="empty">加载失败</td></tr>';
+          return;
+        }
+        const data = await res.json();
+        
+        if (data.items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无数据</td></tr>';
+        } else {
+          tbody.innerHTML = data.items.map(c => `
+            <tr>
+              <td><input type="checkbox" class="code-checkbox" value="${c.id}"></td>
+              <td><code>${c.code}</code></td>
+              <td>${typeBadge(c.type)}</td>
+              <td>${statusBadge(c.status)}</td>
+              <td>${c.batchId || '-'}</td>
+              <td>${c.note || '-'}</td>
+              <td>${formatDate(c.createdAt)}</td>
+              <td>${formatDate(c.usedAt)}</td>
+              <td><button class="btn btn-sm btn-secondary" onclick="viewCodeDetail('${c.id}')">详情</button></td>
+            </tr>
+          `).join('');
+        }
+        
+        document.getElementById('codesPagination').innerHTML = paginationHtml(data.total, codesPage, 50);
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty">加载失败</td></tr>';
+      }
+    }
+
+    async function viewCodeDetail(id) {
+      openModal('codeDetailModal');
+      const body = document.getElementById('codeDetailBody');
+      body.innerHTML = '<div class="loading">加载中</div>';
+      
+      try {
+        const res = await api(`/codes?search=&page=1&limit=1000`);
+        const data = await res.json();
+        const code = data.items.find(c => c.id === id);
+        
+        if (code) {
+          body.innerHTML = `
+            <dl class="detail-list">
+              <dt>激活码</dt><dd><code>${code.code}</code></dd>
+              <dt>类型</dt><dd>${typeBadge(code.type)}</dd>
+              <dt>状态</dt><dd>${statusBadge(code.status)}</dd>
+              <dt>批次</dt><dd>${code.batchId || '-'}</dd>
+              <dt>创建时间</dt><dd>${formatDate(code.createdAt)}</dd>
+              <dt>使用时间</dt><dd>${formatDate(code.usedAt)}</dd>
+              <dt>备注</dt><dd>${code.note || '-'}</dd>
+            </dl>
+          `;
+        } else {
+          body.innerHTML = '<div class="empty">未找到</div>';
+        }
+      } catch (err) {
+        body.innerHTML = '<div class="empty">加载失败</div>';
+      }
+    }
+
+    // Orders
+    async function loadOrders() {
+      const tbody = document.getElementById('ordersTableBody');
+      tbody.innerHTML = '<tr><td colspan="8" class="loading">加载中</td></tr>';
+      
+      const status = document.getElementById('orderStatusFilter').value;
+      const startDate = document.getElementById('orderStartDate').value;
+      const endDate = document.getElementById('orderEndDate').value;
+      const minPrice = document.getElementById('orderMinPrice').value;
+      const maxPrice = document.getElementById('orderMaxPrice').value;
+      const search = document.getElementById('orderSearch').value;
+      
+      try {
+        const params = new URLSearchParams({
+          status, page: ordersPage, limit: 50
+        });
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (minPrice) params.append('minPrice', minPrice);
+        if (maxPrice) params.append('maxPrice', maxPrice);
+        if (search) params.append('search', search);
+        
+        const res = await api(`/orders?${params}`);
+        if (!res.ok) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>';
+          return;
+        }
+        const data = await res.json();
+        
+        // Summary
+        const summary = document.getElementById('ordersSummary');
+        summary.innerHTML = `
+          <div class="summary-item">共 <strong>${data.total}</strong> 笔</div>
+          <div class="summary-item">总金额 <strong>¥${data.summary?.amount || '0'}</strong></div>
+        `;
+        
+        if (data.items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无数据</td></tr>';
+        } else {
+          tbody.innerHTML = data.items.map(o => `
+            <tr>
+              <td><code>${o.orderNo}</code></td>
+              <td>${o.plan || '-'}</td>
+              <td>¥${o.price || '0'}</td>
+              <td>${o.channel || '-'}</td>
+              <td>${o.userEmail || '-'}</td>
+              <td>${statusBadge(o.status)}</td>
+              <td>${formatDate(o.createdAt)}</td>
+              <td>
+                ${o.status === 'pending' ? `<button class="btn btn-sm btn-primary" onclick="completeOrder('${o.orderNo}')">标记完成</button>` : ''}
+                ${o.status === 'completed' ? `<button class="btn btn-sm btn-danger" onclick="openRefund('${o.orderNo}', '${o.price}')">退款</button>` : ''}
+              </td>
+            </tr>
+          `).join('');
+        }
+        
+        document.getElementById('ordersPagination').innerHTML = paginationHtml(data.total, ordersPage, 50);
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>';
+      }
+    }
+
+    function openRefund(orderNo, amount) {
+      currentOrderNo = orderNo;
+      document.getElementById('refundOrderNo').textContent = orderNo;
+      document.getElementById('refundAmount').textContent = '¥' + amount;
+      openModal('refundModal');
+    }
+
+    async function completeOrder(orderNo) {
+      if (!confirm(`确认将订单 ${orderNo} 标记为已完成？`)) return;
+      
+      try {
+        const res = await api(`/orders/${orderNo}/complete`, { method: 'POST' });
+        const data = await res.json();
+        
+        if (res.ok) {
+          showToast(`订单已完成，激活码: ${data.activationCode}`, 'success');
+          loadOrders();
+        } else {
+          showToast(data.error || '操作失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    }
+
+    // Licenses
+    async function loadLicenses() {
+      const tbody = document.getElementById('licensesTableBody');
+      tbody.innerHTML = '<tr><td colspan="8" class="loading">加载中</td></tr>';
+      
+      const search = document.getElementById('licenseSearch').value;
+      const type = document.getElementById('licenseTypeFilter').value;
+      const status = document.getElementById('licenseStatusFilter').value;
+      
+      try {
+        let params = `search=${encodeURIComponent(search)}&type=${type}&page=${licensesPage}&limit=50`;
+        if (status === 'true' || status === 'false') {
+          params += `&isActive=${status}`;
+        } else if (status === 'expiring') {
+          const thirtyDaysLater = new Date();
+          thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
+          params += `&expiringBefore=${thirtyDaysLater.toISOString().slice(0, 10)}`;
+        }
+        
+        const res = await api(`/licenses?${params}`);
+        if (!res.ok) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>';
+          return;
+        }
+        const data = await res.json();
+        
+        if (data.items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无数据</td></tr>';
+        } else {
+          tbody.innerHTML = data.items.map(l => {
+            const isExpiring = l.expiresAt && new Date(l.expiresAt) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            return `
+              <tr class="${isExpiring && l.isActive ? 'highlight-warning' : ''}">
+                <td><input type="checkbox" class="license-checkbox" value="${l.id}"></td>
+                <td><code>${l.activationCode}</code></td>
+                <td>${typeBadge(l.type)}</td>
+                <td>${l.userEmail || '-'}</td>
+                <td>${formatDate(l.activatedAt)}</td>
+                <td>${l.type === 'lifetime' ? '永久' : formatDate(l.expiresAt)}</td>
+                <td>${l.isActive ? '<span class="badge badge-success">有效</span>' : '<span class="badge badge-danger">已撤销</span>'}</td>
+                <td>
+                  ${l.isActive ? `
+                    ${l.type !== 'lifetime' ? `<button class="btn btn-sm btn-secondary" onclick="openExtend('${l.id}')">延期</button>` : ''}
+                    <button class="btn btn-sm btn-danger" onclick="revokeLicense('${l.id}')">撤销</button>
+                  ` : `<button class="btn btn-sm btn-primary" onclick="reactivateLicense('${l.id}')">重新激活</button>`}
+                </td>
+              </tr>
+            `;
+          }).join('');
+        }
+        
+        document.getElementById('licensesPagination').innerHTML = paginationHtml(data.total, licensesPage, 50);
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>';
+      }
+    }
+
+    function openExtend(id) {
+      currentLicenseId = id;
+      openModal('extendModal');
+    }
+
+    async function revokeLicense(id) {
+      if (!confirm('确认撤销此许可证？')) return;
+      
+      try {
+        const res = await api(`/licenses/${id}/revoke`, { method: 'POST' });
+        if (res.ok) {
+          showToast('许可证已撤销', 'success');
+          loadLicenses();
+        } else {
+          const data = await res.json();
+          showToast(data.error || '操作失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    }
+
+    async function reactivateLicense(id) {
+      if (!confirm('确认重新激活此许可证？')) return;
+      
+      try {
+        const res = await api(`/licenses/${id}/reactivate`, { method: 'POST' });
+        if (res.ok) {
+          showToast('许可证已重新激活', 'success');
+          loadLicenses();
+        } else {
+          const data = await res.json();
+          showToast(data.error || '操作失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    }
+
+    // Audit Logs
+    async function loadAuditLogs() {
+      const tbody = document.getElementById('auditTableBody');
+      tbody.innerHTML = '<tr><td colspan="5" class="loading">加载中</td></tr>';
+      
+      const action = document.getElementById('auditActionFilter').value;
+      const startDate = document.getElementById('auditStartDate').value;
+      const endDate = document.getElementById('auditEndDate').value;
+      const ip = document.getElementById('auditIPSearch').value;
+      
+      try {
+        const params = new URLSearchParams({
+          action, page: auditPage, limit: 50
+        });
+        if (startDate) params.append('startDate', startDate);
+        if (endDate) params.append('endDate', endDate);
+        if (ip) params.append('ip', ip);
+        
+        const res = await api(`/audit-logs?${params}`);
+        if (!res.ok) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty">加载失败</td></tr>';
+          return;
+        }
+        const data = await res.json();
+        
+        if (data.items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无数据</td></tr>';
+        } else {
+          tbody.innerHTML = data.items.map(log => {
+            const isSecurity = log.action.startsWith('security_') || log.action === 'login_failed';
+            return `
+              <tr class="${isSecurity ? 'highlight-warning' : ''}">
+                <td>${formatDate(log.createdAt)}</td>
+                <td>${log.action}</td>
+                <td>${log.adminIP || '-'}</td>
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${log.userAgent || '-'}</td>
+                <td>${log.details || '-'}</td>
+              </tr>
+            `;
+          }).join('');
+        }
+        
+        document.getElementById('auditPagination').innerHTML = paginationHtml(data.total, auditPage, 50);
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="5" class="empty">加载失败</td></tr>';
+      }
+    }
+
+    // Settings
+    async function loadSettings() {
+      try {
+        const res = await api('/settings');
+        const data = await res.json();
+        
+        document.getElementById('settingYearPrice').value = data['pricing.year'] || '';
+        document.getElementById('settingLifetimePrice').value = data['pricing.lifetime'] || '';
+        document.getElementById('settingIPWhitelist').value = (data['security.ipWhitelist'] || []).join('\n');
+      } catch (err) {
+        console.error('Load settings error:', err);
+      }
+    }
+
+    // Security
+    async function loadSecurity() {
+      // Load sessions
+      try {
+        const res = await api('/sessions');
+        const data = await res.json();
+        
+        const tbody = document.getElementById('sessionsTableBody');
+        if (data.sessions && data.sessions.length > 0) {
+          tbody.innerHTML = data.sessions.map(s => `
+            <tr>
+              <td>${s.ip}</td>
+              <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${s.userAgent}</td>
+              <td>${formatDate(s.createdAt)}</td>
+              <td>${formatDate(s.lastActiveAt)}</td>
+              <td>
+                ${s.current ? '<span class="badge badge-success">当前</span>' : `<button class="btn btn-sm btn-danger" onclick="revokeSession('${s.sessionId}')">强制下线</button>`}
+              </td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="5" class="empty">暂无会话</td></tr>';
+        }
+      } catch (err) {
+        console.error('Load sessions error:', err);
+      }
+
+      // Load security alerts
+      try {
+        const res = await api('/audit-logs?action=security_brute_force&startDate=' + new Date(Date.now() - 24 * 60 * 60 * 1000).toISOString().slice(0, 10));
+        const data = await res.json();
+        
+        const alertsDiv = document.getElementById('securityAlerts');
+        if (data.items && data.items.length > 0) {
+          alertsDiv.innerHTML = `
+            <div class="alert alert-warning">
+              发现 ${data.items.length} 个安全告警
+            </div>
+            <table>
+              <thead><tr><th>时间</th><th>IP</th><th>详情</th></tr></thead>
+              <tbody>
+                ${data.items.map(log => `
+                  <tr>
+                    <td>${formatDate(log.createdAt)}</td>
+                    <td>${log.adminIP}</td>
+                    <td>${log.details}</td>
+                  </tr>
+                `).join('')}
+              </tbody>
+            </table>
+          `;
+        } else {
+          alertsDiv.innerHTML = '<div class="empty">暂无告警</div>';
+        }
+      } catch (err) {
+        console.error('Load security alerts error:', err);
+      }
+
+      // Load login history
+      try {
+        const res = await api('/audit-logs?action=login_success&page=1&limit=20');
+        const data = await res.json();
+        
+        const tbody = document.getElementById('loginHistoryBody');
+        if (data.items && data.items.length > 0) {
+          tbody.innerHTML = data.items.map(log => `
+            <tr>
+              <td>${formatDate(log.createdAt)}</td>
+              <td>${log.adminIP}</td>
+              <td><span class="badge badge-success">成功</span></td>
+              <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${log.userAgent || '-'}</td>
+            </tr>
+          `).join('');
+        } else {
+          tbody.innerHTML = '<tr><td colspan="4" class="empty">暂无记录</td></tr>';
+        }
+      } catch (err) {
+        console.error('Load login history error:', err);
+      }
+    }
+
+    async function revokeSession(sessionId) {
+      if (!confirm('确认强制下线此会话？')) return;
+      
+      try {
+        const res = await api(`/sessions/${sessionId}`, { method: 'DELETE' });
+        if (res.ok) {
+          showToast('会话已下线', 'success');
+          loadSecurity();
+        } else {
+          showToast('操作失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    }
+
+    // Event listeners
+    document.getElementById('loginBtn').addEventListener('click', login);
+    document.getElementById('loginPassword').addEventListener('keypress', e => { if (e.key === 'Enter') login(); });
+    document.getElementById('logoutBtn').addEventListener('click', logout);
+
+    // Generate codes
+    document.getElementById('generateCodesBtn').addEventListener('click', () => openModal('generateModal'));
+    document.getElementById('confirmGenerateBtn').addEventListener('click', async () => {
+      const type = document.getElementById('generateType').value;
+      const quantity = parseInt(document.getElementById('generateQuantity').value);
+      const note = document.getElementById('generateNote').value;
+      
+      try {
+        const res = await api('/codes/generate', {
+          method: 'POST',
+          body: JSON.stringify({ type, quantity, note })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          showToast(`成功生成 ${data.count} 个激活码，批次: ${data.batchId}`, 'success');
+          closeModal('generateModal');
+          loadCodes();
+          loadBatchFilter();
+        } else {
+          showToast(data.error || '生成失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    });
+
+    document.getElementById('exportCodesBtn').addEventListener('click', async () => {
+      const status = document.getElementById('codeStatusFilter').value;
+      const type = document.getElementById('codeTypeFilter').value;
+      const batchId = document.getElementById('codeBatchFilter').value;
+      window.open(`/api/admin/codes/export?status=${status}&type=${type}&batchId=${batchId}`, '_blank');
+    });
+
+    document.getElementById('batchDeleteBtn').addEventListener('click', async () => {
+      const checked = document.querySelectorAll('.code-checkbox:checked');
+      if (checked.length === 0) {
+        if (!confirm('确认删除所有未使用的激活码？')) return;
+        try {
+          const res = await api('/codes/batch-delete', {
+            method: 'POST',
+            body: JSON.stringify({ filter: { status: 'unused' } })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            showToast(`已删除 ${data.deletedCount} 个激活码`, 'success');
+            loadCodes();
+          }
+        } catch (err) {
+          showToast('网络错误', 'error');
+        }
+      } else {
+        if (!confirm(`确认删除选中的 ${checked.length} 个激活码？`)) return;
+        const ids = Array.from(checked).map(cb => cb.value);
+        try {
+          const res = await api('/codes/batch-delete', {
+            method: 'POST',
+            body: JSON.stringify({ ids })
+          });
+          const data = await res.json();
+          if (res.ok) {
+            showToast(`已删除 ${data.deletedCount} 个激活码`, 'success');
+            loadCodes();
+          }
+        } catch (err) {
+          showToast('网络错误', 'error');
+        }
+      }
+    });
+
+    // Extend license
+    document.getElementById('confirmExtendBtn').addEventListener('click', async () => {
+      const days = parseInt(document.getElementById('extendDays').value);
+      
+      try {
+        const res = await api(`/licenses/${currentLicenseId}/extend`, {
+          method: 'POST',
+          body: JSON.stringify({ days })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          showToast(`已延期 ${days} 天`, 'success');
+          closeModal('extendModal');
+          loadLicenses();
+        } else {
+          showToast(data.error || '延期失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    });
+
+    // Refund order
+    document.getElementById('confirmRefundBtn').addEventListener('click', async () => {
+      const reason = document.getElementById('refundReason').value;
+      const revokeLicense = document.getElementById('refundRevokeLicense').checked;
+      
+      try {
+        const res = await api(`/orders/${currentOrderNo}/refund`, {
+          method: 'POST',
+          body: JSON.stringify({ reason, revokeLicense })
+        });
+        
+        if (res.ok) {
+          showToast('退款成功', 'success');
+          closeModal('refundModal');
+          loadOrders();
+        } else {
+          const data = await res.json();
+          showToast(data.error || '退款失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    });
+
+    // Filters
+    document.getElementById('codeStatusFilter').addEventListener('change', () => { codesPage = 1; loadCodes(); });
+    document.getElementById('codeTypeFilter').addEventListener('change', () => { codesPage = 1; loadCodes(); });
+    document.getElementById('codeBatchFilter').addEventListener('change', () => { codesPage = 1; loadCodes(); });
+    
+    let codeSearchTimeout;
+    document.getElementById('codeSearch').addEventListener('input', () => {
+      clearTimeout(codeSearchTimeout);
+      codeSearchTimeout = setTimeout(() => { codesPage = 1; loadCodes(); }, 300);
+    });
+
+    document.getElementById('orderStatusFilter').addEventListener('change', () => { ordersPage = 1; loadOrders(); });
+    document.getElementById('searchOrdersBtn').addEventListener('click', () => { ordersPage = 1; loadOrders(); });
+    document.getElementById('resetOrdersBtn').addEventListener('click', () => {
+      document.getElementById('orderStartDate').value = '';
+      document.getElementById('orderEndDate').value = '';
+      document.getElementById('orderMinPrice').value = '';
+      document.getElementById('orderMaxPrice').value = '';
+      document.getElementById('orderSearch').value = '';
+      document.getElementById('orderStatusFilter').value = 'all';
+      ordersPage = 1;
+      loadOrders();
+    });
+
+    document.getElementById('licenseTypeFilter').addEventListener('change', () => { licensesPage = 1; loadLicenses(); });
+    document.getElementById('licenseStatusFilter').addEventListener('change', () => { licensesPage = 1; loadLicenses(); });
+    
+    let licenseSearchTimeout;
+    document.getElementById('licenseSearch').addEventListener('input', () => {
+      clearTimeout(licenseSearchTimeout);
+      licenseSearchTimeout = setTimeout(() => { licensesPage = 1; loadLicenses(); }, 300);
+    });
+
+    document.getElementById('searchAuditBtn').addEventListener('click', () => { auditPage = 1; loadAuditLogs(); });
+    document.getElementById('exportAuditBtn').addEventListener('click', () => {
+      const startDate = document.getElementById('auditStartDate').value;
+      const endDate = document.getElementById('auditEndDate').value;
+      window.open(`/api/admin/audit-logs/export?startDate=${startDate}&endDate=${endDate}`, '_blank');
+    });
+
+    // Settings
+    document.getElementById('savePricingBtn').addEventListener('click', async () => {
+      const yearPrice = document.getElementById('settingYearPrice').value;
+      const lifetimePrice = document.getElementById('settingLifetimePrice').value;
+      
+      try {
+        await api('/settings', {
+          method: 'PUT',
+          body: JSON.stringify({ key: 'pricing.year', value: yearPrice })
+        });
+        await api('/settings', {
+          method: 'PUT',
+          body: JSON.stringify({ key: 'pricing.lifetime', value: lifetimePrice })
+        });
+        showToast('价格已保存', 'success');
+      } catch (err) {
+        showToast('保存失败', 'error');
+      }
+    });
+
+    document.getElementById('saveSecurityBtn').addEventListener('click', async () => {
+      const whitelist = document.getElementById('settingIPWhitelist').value.split('\n').map(ip => ip.trim()).filter(Boolean);
+      
+      try {
+        await api('/settings', {
+          method: 'PUT',
+          body: JSON.stringify({ key: 'security.ipWhitelist', value: whitelist })
+        });
+        showToast('安全设置已保存', 'success');
+      } catch (err) {
+        showToast('保存失败', 'error');
+      }
+    });
+
+    document.getElementById('changePasswordBtn').addEventListener('click', async () => {
+      const oldPassword = document.getElementById('changeOldPassword').value;
+      const newPassword = document.getElementById('changeNewPassword').value;
+      const confirmPassword = document.getElementById('changeConfirmPassword').value;
+      
+      if (newPassword !== confirmPassword) {
+        showToast('两次密码输入不一致', 'error');
+        return;
+      }
+      
+      if (newPassword.length < 8) {
+        showToast('新密码长度至少 8 位', 'error');
+        return;
+      }
+      
+      try {
+        const res = await api('/change-password', {
+          method: 'POST',
+          body: JSON.stringify({ oldPassword, newPassword })
+        });
+        const data = await res.json();
+        
+        if (res.ok) {
+          showToast('密码修改成功，请更新 .env 文件', 'success');
+          alert(`新密码哈希值（请复制到 .env）：\n\n${data.newHash}`);
+        } else {
+          showToast(data.error || '修改失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    });
+
+    // Load batch filter
+    async function loadBatchFilter() {
+      try {
+        const res = await api('/codes/batches');
+        const data = await res.json();
+        const select = document.getElementById('codeBatchFilter');
+        select.innerHTML = '<option value="all">全部批次</option>';
+        data.batches.forEach(b => {
+          select.innerHTML += `<option value="${b.batchId}">${b.batchId} (${b.count})</option>`;
+        });
+      } catch (err) {
+        console.error('Load batch filter error:', err);
+      }
+    }
+
+    // Init
+    checkAuth();
+    loadBatchFilter();
+  </script>
+</body>
+</html>

@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "ChatGenius AI - Auto Reply Assistant",
+    "description": "Name of the extension"
+  },
+  "extDesc": {
+    "message": "AI-powered auto-reply assistant for WhatsApp, Messenger, Telegram, Slack and Discord with multi-model support.",
+    "description": "Description of the extension"
+  }
+}

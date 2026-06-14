@@ -1,0 +1,44 @@
+# OS generated files
+.DS_Store
+.DS_Store?
+._*
+.Spotlight-V100
+.Trashes
+ehthumbs.db
+Thumbs.db
+desktop.ini
+
+# Python files
+*.py[cod]
+*$py.class
+__pycache__/
+
+# Output and backup files
+*.zip
+*.log
+localhost-*.png
+
+# Temporary or local configuration files
+.env
+.env.local
+**/.env
+**/.env.local
+**/.env.*.local
+
+# IDE files
+.vscode/
+.idea/
+
+# Node modules
+node_modules/
+
+# Build outputs
+dist/
+build/
+
+# TypeScript build info
+**/*.tsbuildinfo
+
+# Zip files (except in node_modules)
+*.zip
+!node_modules/**

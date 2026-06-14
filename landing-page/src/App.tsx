@@ -4,13 +4,14 @@ import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { 
   MessageSquare, Zap, Users, Shield, Settings, Database,
-  ChevronDown, Play, Download, Star, Check, ArrowRight,
-  Twitter, Github, MessageCircle, Bot, Sparkles, ArrowUp,
+  ChevronDown, Play, Download, Check, ArrowRight,
+  MessageCircle, Bot, Sparkles, ArrowUp,
   Globe, TrendingUp, Send,
   Crown, Rocket, Target, MessageCircleQuestion, Clock,
   ShieldCheck, Award, X, Key, CreditCard, AlertCircle, CheckCircle,
-  Plane, HeadsetIcon, Handshake
+  Plane, HeadsetIcon, Handshake, Star, Twitter, Facebook, Linkedin, Github
 } from 'lucide-react'
+import { activationService } from './services/activationService'
 
 // ==================== Animation Variants ====================
 const fadeInUp = {
@@ -79,7 +80,7 @@ function BackToTop() {
           animate={{ opacity: 1, scale: 1, y: 0 }}
           exit={{ opacity: 0, scale: 0.8, y: 20 }}
           onClick={() => window.scrollTo({ top: 0, behavior: 'smooth' })}
-          className="fixed bottom-8 right-8 z-50 w-14 h-14 bg-gradient-to-br from-violet-600 to-purple-600 rounded-2xl flex items-center justify-center shadow-glow-lg hover:shadow-glow transition-all group"
+          className="fixed bottom-24 right-4 sm:bottom-8 sm:right-8 z-50 w-10 h-10 sm:w-14 sm:h-14 bg-gradient-to-br from-violet-600 to-purple-600 rounded-xl sm:rounded-2xl flex items-center justify-center shadow-glow-lg hover:shadow-glow transition-all group"
         >
           <ArrowUp className="w-6 h-6 text-white group-hover:-translate-y-1 transition-transform" />
         </motion.button>
@@ -147,84 +148,69 @@ function PaymentModal({
   const [paymentChannel, setPaymentChannel] = useState<'alipay' | 'wechat' | 'paypal' | null>(null)
   const [orderNo, setOrderNo] = useState('')
 
-  // Generate order number
-  const generateOrderNo = () => {
-    const timestamp = Date.now().toString(36).toUpperCase()
-    const random = Math.random().toString(36).substring(2, 6).toUpperCase()
-    return `CG${timestamp}${random}`
-  }
-
-  // Check activation code
-  const handleActivate = () => {
+  // Check activation code using Supabase service
+  const handleActivate = async () => {
     if (!activationCode.trim()) {
       setCodeError('请输入激活码')
       return
     }
     
     setLoading(true)
-    // Simulate API call
-    setTimeout(() => {
-      const validPrefixes = ['PRO-', 'YEAR-', 'FREE-']
-      const isValid = validPrefixes.some(p => activationCode.toUpperCase().startsWith(p)) && activationCode.length >= 10
+    try {
+      const result = await activationService.validateCode(activationCode)
       
-      if (isValid) {
+      if (result.valid) {
         setStep('success')
         setCodeError('')
       } else {
-        setCodeError('激活码无效或已使用')
+        setCodeError(result.error || '激活码无效')
       }
+    } catch (err) {
+      setCodeError('验证失败，请检查网络连接')
+    } finally {
       setLoading(false)
-    }, 1000)
+    }
   }
 
-  // Handle payment channel selection
-  const handlePayment = (channel: 'alipay' | 'wechat' | 'paypal') => {
+  // Handle payment channel selection - create order in Supabase
+  const handlePayment = async (channel: 'alipay' | 'wechat' | 'paypal') => {
     setPaymentChannel(channel)
-    const newOrderNo = generateOrderNo()
-    setOrderNo(newOrderNo)
     
-    // Save order to localStorage for tracking
-    const order = {
-      orderNo: newOrderNo,
-      plan: plan?.name,
-      price: plan?.price,
-      type: plan?.type,
-      channel,
-      status: 'pending',
-      createdAt: new Date().toISOString()
+    // Create order via Supabase
+    const result = await activationService.createOrder(
+      plan?.name || '', 
+      plan?.price || '', 
+      plan?.type || 'lifetime', 
+      channel
+    )
+    
+    if (result.success && result.order) {
+      setOrderNo(result.order.order_no)
+      setStep('qrcode')
+    } else {
+      setCodeError(result.error || '创建订单失败')
     }
-    const orders = JSON.parse(localStorage.getItem('chatgenius_orders') || '[]')
-    orders.unshift(order)
-    localStorage.setItem('chatgenius_orders', JSON.stringify(orders))
-
-    // Open payment in new window
-    if (channel === 'alipay') {
-      // Alipay payment URL (replace with actual payment URL)
-      const payUrl = `https://qr.alipay.com/bax00${newOrderNo.toLowerCase()}`
-      window.open(payUrl, '_blank')
-    } else if (channel === 'wechat') {
-      // WeChat Pay URL (replace with actual payment URL)
-      const payUrl = `weixin://wxpay/bizpayurl?pr=${newOrderNo.toLowerCase()}`
-      window.open(payUrl, '_blank')
-    } else if (channel === 'paypal') {
-      // PayPal payment URL (replace with actual payment URL)
-      const payUrl = `https://www.paypal.com/cgi-bin/webscr?cmd=_xclick&business=sales@chatgenius.ai&item_name=${encodeURIComponent(plan?.name || '')}&amount=${plan?.price?.replace('$', '')}`
-      window.open(payUrl, '_blank')
-    }
-
-    setStep('qrcode')
   }
 
-  // Simulate payment confirmation
-  const confirmPayment = () => {
+  // Confirm payment and generate activation code
+  const confirmPayment = async () => {
+    if (!orderNo) return
+    
     setLoading(true)
-    setTimeout(() => {
+    try {
+      const result = await activationService.completePayment(orderNo)
+      
+      if (result.success && result.activationCode) {
+        setActivationCode(result.activationCode)
+        setStep('success')
+      } else {
+        setCodeError(result.error || '支付失败')
+      }
+    } catch (err) {
+      setCodeError('支付处理失败，请检查网络连接')
+    } finally {
       setLoading(false)
-      setActivationCode(paymentChannel === 'wechat' ? 'WX-' + Math.random().toString(36).substring(2, 10).toUpperCase() :
-                        paymentChannel === 'alipay' ? 'ALI-' + Math.random().toString(36).substring(2, 10).toUpperCase() :
-                        'PP-' + Math.random().toString(36).substring(2, 10).toUpperCase())
-      setStep('success')
-    }, 1000)
+    }
   }
 
   const resetModal = () => {
@@ -288,7 +274,7 @@ function PaymentModal({
                         <div className="text-white font-semibold">我有激活码</div>
                         <div className="text-sm text-white/50">输入激活码直接升级</div>
                       </div>
-                      <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
                     </div>
                   </button>
 
@@ -304,12 +290,12 @@ function PaymentModal({
                         <div className="text-white font-semibold">在线购买</div>
                         <div className="text-sm text-white/50">支持支付宝、微信、PayPal</div>
                       </div>
-                      <ArrowRight className="w-5 h-5 text-white/40 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                      <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
                     </div>
                   </button>
 
                   <div className="pt-4 border-t border-white/10">
-                    <p className="text-xs text-white/40 text-center">
+                    <p className="text-xs text-white/60 text-center">
                       购买后激活码将发送至您的邮箱
                     </p>
                   </div>
@@ -339,6 +325,11 @@ function PaymentModal({
                         <AlertCircle className="w-4 h-4" />
                         {codeError}
                       </motion.div>
+                    )}
+                    {!codeError && activationCode && (
+                      <p className="text-xs text-white/50 mt-2">
+                        格式：PRO-XXXXXXXX（8位字符）
+                      </p>
                     )}
                   </div>
 
@@ -393,7 +384,7 @@ function PaymentModal({
                         <div className="text-white font-semibold">支付宝</div>
                         <div className="text-xs text-white/50">推荐中国大陆用户使用</div>
                       </div>
-                      <ArrowRight className="w-5 h-5 text-white/40" />
+                      <ArrowRight className="w-5 h-5 text-white/60" />
                     </button>
                     <button
                       onClick={() => handlePayment('wechat')}
@@ -406,7 +397,7 @@ function PaymentModal({
                         <div className="text-white font-semibold">微信支付</div>
                         <div className="text-xs text-white/50">微信扫码支付</div>
                       </div>
-                      <ArrowRight className="w-5 h-5 text-white/40" />
+                      <ArrowRight className="w-5 h-5 text-white/60" />
                     </button>
                     <button
                       onClick={() => handlePayment('paypal')}
@@ -419,7 +410,7 @@ function PaymentModal({
                         <div className="text-white font-semibold">PayPal</div>
                         <div className="text-xs text-white/50">国际信用卡支付</div>
                       </div>
-                      <ArrowRight className="w-5 h-5 text-white/40" />
+                      <ArrowRight className="w-5 h-5 text-white/60" />
                     </button>
                   </div>
 
@@ -447,13 +438,20 @@ function PaymentModal({
                     <p className="text-white/50 text-sm mb-3">
                       支付金额: <span className="text-white font-bold">{plan.price}</span>
                     </p>
-                    <p className="text-xs text-white/40">
+                    <p className="text-xs text-white/60">
                       订单号: {orderNo}
                     </p>
                   </div>
                   
-                  <p className="text-xs text-white/50">
-                    支付页面已在新窗口打开，完成支付后点击下方按钮
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-4">
+                    <p className="text-sm text-blue-300 font-medium mb-1">🔔 演示模式</p>
+                    <p className="text-xs text-white/60">
+                      当前为演示环境。点击"我已支付"按钮即可模拟完成支付并获取激活码。
+                    </p>
+                  </div>
+                  
+                  <p className="text-xs text-white/50 mb-4">
+                    订单号: <span className="font-mono text-white/70">{orderNo}</span>
                   </p>
 
                   <div className="flex gap-3">
@@ -493,11 +491,28 @@ function PaymentModal({
                   <h3 className="text-xl font-bold text-white mb-2">激活成功！</h3>
                   <p className="text-white/60 mb-4">您已成功升级到 {plan.name}</p>
                   {activationCode && (
-                    <div className="bg-white/5 rounded-xl p-3 mb-4">
-                      <p className="text-xs text-white/40 mb-1">您的激活码</p>
-                      <p className="text-lg font-mono text-white">{activationCode}</p>
+                    <div className="bg-white/5 rounded-xl p-4 mb-4">
+                      <p className="text-xs text-white/60 mb-2">您的激活码（请复制并在扩展中输入）</p>
+                      <p className="text-lg font-mono text-white mb-3">{activationCode}</p>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(activationCode);
+                        }}
+                        className="px-3 py-1 bg-violet-600 hover:bg-violet-700 text-white text-sm rounded-lg transition-colors"
+                      >
+                        复制激活码
+                      </button>
                     </div>
                   )}
+                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4 text-left">
+                    <p className="text-sm text-blue-300 mb-2 font-semibold">📌 下一步：在浏览器扩展中激活</p>
+                    <ol className="text-xs text-white/70 space-y-1 list-decimal list-inside">
+                      <li>点击浏览器工具栏的 ChatGenius 扩展图标</li>
+                      <li>选择"设置"或"Options"</li>
+                      <li>在页面底部找到"激活产品"区域</li>
+                      <li>粘贴激活码并点击"激活"</li>
+                    </ol>
+                  </div>
                   <button
                     onClick={() => { resetModal(); onClose() }}
                     className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
@@ -511,7 +526,7 @@ function PaymentModal({
             {/* Footer */}
             {step !== 'success' && step !== 'qrcode' && (
               <div className="px-6 py-4 bg-white/5 border-t border-white/10">
-                <div className="flex items-center justify-center gap-4 text-xs text-white/40">
+                <div className="flex items-center justify-center gap-4 text-xs text-white/60">
                   <span className="flex items-center gap-1">
                     <ShieldCheck className="w-4 h-4" />
                     安全支付
@@ -527,6 +542,104 @@ function PaymentModal({
                 </div>
               </div>
             )}
+          </motion.div>
+        </motion.div>
+      )}
+    </AnimatePresence>
+  )
+}
+
+// ==================== Demo Modal ====================
+function DemoModal({ isOpen, onClose }: { isOpen: boolean; onClose: () => void }) {
+  const [currentStep, setCurrentStep] = useState(0)
+  
+  const demoSteps = [
+    { title: '安装扩展', desc: '一键安装到 Chrome 浏览器' },
+    { title: '配置 API', desc: '输入您的 AI 服务商 API Key' },
+    { title: '打开 WhatsApp', desc: '访问 WhatsApp Web 或 Messenger' },
+    { title: '点击生成', desc: '点击悬浮按钮，AI 自动生成回复' },
+  ]
+  
+  useEffect(() => {
+    if (!isOpen) return
+    setCurrentStep(0)
+    const interval = setInterval(() => {
+      setCurrentStep((prev) => (prev + 1) % demoSteps.length)
+    }, 2000)
+    return () => clearInterval(interval)
+  }, [isOpen])
+  
+  return (
+    <AnimatePresence>
+      {isOpen && (
+        <motion.div
+          initial={{ opacity: 0 }}
+          animate={{ opacity: 1 }}
+          exit={{ opacity: 0 }}
+          className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-black/70 backdrop-blur-sm"
+          onClick={onClose}
+        >
+          <motion.div
+            initial={{ scale: 0.9, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            exit={{ scale: 0.9, opacity: 0 }}
+            onClick={(e) => e.stopPropagation()}
+            className="w-full max-w-4xl bg-gradient-to-br from-slate-900 via-slate-800 to-slate-900 rounded-3xl border border-white/10 shadow-2xl overflow-hidden"
+          >
+            <div className="px-6 py-4 border-b border-white/10 flex items-center justify-between">
+              <h2 className="text-2xl font-bold text-white">30 秒产品演示</h2>
+              <button onClick={onClose} className="w-8 h-8 rounded-lg bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-colors">
+                <X className="w-5 h-5" />
+              </button>
+            </div>
+            
+            <div className="p-8">
+              <div className="grid md:grid-cols-2 gap-8">
+                <div className="space-y-4">
+                  {demoSteps.map((step, i) => (
+                    <motion.div
+                      key={i}
+                      className={`p-4 rounded-xl border transition-all ${
+                        i === currentStep 
+                          ? 'bg-violet-600/20 border-violet-500/50' 
+                          : 'bg-white/5 border-white/10'
+                      }`}
+                      animate={i === currentStep ? { scale: 1.05 } : { scale: 1 }}
+                    >
+                      <div className="flex items-center gap-3">
+                        <div className={`w-8 h-8 rounded-full flex items-center justify-center ${
+                          i === currentStep ? 'bg-violet-600' : 'bg-white/10'
+                        }`}>
+                          <span className="text-white font-bold">{i + 1}</span>
+                        </div>
+                        <div>
+                          <div className="text-white font-semibold">{step.title}</div>
+                          <div className="text-sm text-white/50">{step.desc}</div>
+                        </div>
+                      </div>
+                    </motion.div>
+                  ))}
+                </div>
+                
+                <div className="bg-white/5 rounded-2xl p-6 border border-white/10">
+                  <div className="text-center mb-4">
+                    <div className="text-6xl mb-2">💬</div>
+                    <p className="text-white font-medium">WhatsApp Web 演示</p>
+                  </div>
+                  <div className="space-y-3">
+                    <div className="bg-white/10 rounded-lg p-3">
+                      <p className="text-white/90 text-sm">Hi, I'm interested in your products...</p>
+                    </div>
+                    <motion.div 
+                      className="bg-gradient-to-r from-violet-600 to-purple-600 rounded-lg p-3"
+                      animate={{ opacity: currentStep === 3 ? 1 : 0.5 }}
+                    >
+                      <p className="text-white text-sm">Hello! Thank you for your interest...</p>
+                    </motion.div>
+                  </div>
+                </div>
+              </div>
+            </div>
           </motion.div>
         </motion.div>
       )}
@@ -563,19 +676,18 @@ function Navigation({ onDownload, isDownloading }: { onDownload: () => void, isD
             <a href="#features" className="text-white/60 hover:text-white transition-colors font-medium">功能</a>
             <a href="#models" className="text-white/60 hover:text-white transition-colors font-medium">模型</a>
             <a href="#pricing" className="text-white/60 hover:text-white transition-colors font-medium">定价</a>
-            <a href="#testimonials" className="text-white/60 hover:text-white transition-colors font-medium">评价</a>
             
-            {/* 滚动后显示免费安装按钮 */}
+            {/* 滚动后显示免费安装按钮 - 带 pulse 动画 */}
             {scrolled && (
               <motion.button
-                initial={{ opacity: 0, x: 20 }}
-                animate={{ opacity: 1, x: 0 }}
+                initial={{ opacity: 0, x: 20, scale: 0.9 }}
+                animate={{ opacity: 1, x: 0, scale: 1 }}
                 onClick={onDownload}
                 disabled={isDownloading}
-                className={`flex items-center gap-2 px-4 py-2 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-lg font-medium text-sm transition-all ${
+                className={`flex items-center gap-2 px-5 py-2.5 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold text-sm transition-all shadow-lg hover:shadow-xl hover:scale-105 ${
                   isDownloading 
                     ? 'opacity-50 cursor-not-allowed' 
-                    : 'hover:opacity-90'
+                    : 'hover:opacity-90 animate-pulse'
                 }`}
               >
                 {isDownloading ? (
@@ -589,7 +701,7 @@ function Navigation({ onDownload, isDownloading }: { onDownload: () => void, isD
                 ) : (
                   <>
                     <Download className="w-4 h-4" />
-                    <span>免费安装扩展</span>
+                    <span>添加到 Chrome - 免费</span>
                   </>
                 )}
               </motion.button>
@@ -633,7 +745,6 @@ function Navigation({ onDownload, isDownloading }: { onDownload: () => void, isD
                 <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2">功能</a>
                 <a href="#models" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2">模型</a>
                 <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2">定价</a>
-                <a href="#testimonials" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2">评价</a>
                 <Button 
                   onClick={() => { setShowQRCode(true); setMobileMenuOpen(false); }}
                   className="bg-gradient-to-r from-violet-600 to-purple-600 hover:opacity-90 shadow-glow w-full"
@@ -699,6 +810,7 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
   const [inputText, setInputText] = useState('')
   const [isTyping, setIsTyping] = useState(false)
   const [showUserMessage, setShowUserMessage] = useState(false)
+  const [showDemoModal, setShowDemoModal] = useState(false)
   
   const customerMessage = "Hi, I'm interested in your products. Can you send me the catalog and price list?"
   const aiReplyText = "Hello! Thank you for your interest. I'd be happy to send you our latest catalog. Could you please provide your email? We also offer 10% discount for first-time customers!"
@@ -742,36 +854,28 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
   const opacity = useTransform(scrollY, [0, 300], [1, 0])
   
   return (
-    <section className="relative min-h-screen flex items-center justify-center overflow-hidden pt-20 noise" style={{ backgroundColor: 'hsl(220 20% 6%)' }}>
+    <section className="relative min-h-screen lg:min-h-[90vh] flex items-center justify-center overflow-hidden pt-20 pb-10 lg:pt-20 lg:pb-0 noise" style={{ backgroundColor: 'hsl(220 20% 6%)' }}>
       {/* Animated Background */}
       <div className="absolute inset-0 -z-10">
         <div className="absolute inset-0 bg-gradient-hero" style={{ background: 'radial-gradient(ellipse 80% 50% at 50% -20%, hsl(262 95% 65% / 0.15), hsl(220 20% 6%))' }} />
         <div className="absolute inset-0 bg-gradient-to-b from-transparent via-transparent to-transparent" />
         
         <FloatElement delay={0} duration={8}>
-          <div className="absolute top-20 right-10 w-[600px] h-[600px] bg-gradient-to-br from-violet-600/20 to-purple-600/10 rounded-full blur-3xl" />
-        </FloatElement>
-        <FloatElement delay={2} duration={10}>
-          <div className="absolute bottom-20 left-10 w-[500px] h-[500px] bg-gradient-to-br from-cyan-600/15 to-blue-600/10 rounded-full blur-3xl" />
-        </FloatElement>
-        <FloatElement delay={1} duration={12}>
-          <div className="absolute top-1/2 left-1/2 -translate-x-1/2 -translate-y-1/2 w-[800px] h-[800px] bg-gradient-to-br from-fuchsia-600/10 to-pink-600/5 rounded-full blur-3xl" />
+          <div className="absolute top-20 right-10 w-[300px] h-[300px] lg:w-[600px] lg:h-[600px] bg-gradient-to-br from-violet-600/20 to-purple-600/10 rounded-full blur-3xl" />
         </FloatElement>
         
         <div className="absolute inset-0 bg-[linear-gradient(rgba(139,92,246,0.03)_1px,transparent_1px),linear-gradient(90deg,rgba(139,92,246,0.03)_1px,transparent_1px)] bg-[size:80px_80px]" />
         
         <div className="absolute top-1/4 left-1/4 w-2 h-2 bg-violet-500 rounded-full animate-pulse shadow-glow" />
-        <div className="absolute top-3/4 right-1/4 w-3 h-3 bg-cyan-500 rounded-full animate-pulse shadow-glow-cyan" style={{ animationDelay: '1s' }} />
-        <div className="absolute top-1/3 right-1/3 w-2 h-2 bg-fuchsia-500 rounded-full animate-pulse" style={{ animationDelay: '2s' }} />
       </div>
       
-      <motion.div style={{ y, opacity }} className="container max-w-7xl mx-auto px-6">
-        <div className="grid lg:grid-cols-2 gap-16 items-center">
+      <motion.div style={{ y, opacity }} className="container max-w-7xl mx-auto px-4 sm:px-6">
+        <div className="grid lg:grid-cols-2 gap-8 lg:gap-16 items-center">
           <motion.div 
             initial="hidden" 
             animate="visible" 
             variants={stagger}
-            className="text-center lg:text-left"
+            className="text-center lg:text-left order-2 lg:order-1"
           >
             <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 glass rounded-full px-5 py-2 mb-8 border border-white/10">
               <span className="relative flex h-2 w-2">
@@ -781,40 +885,40 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
               <span className="text-sm font-medium text-white/80">支持 DeepSeek V3 / GPT-4.5 / Kimi K2.5</span>
             </motion.div>
             
-            <motion.h1 variants={fadeInUp} className="text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.1]">
+            <motion.h1 variants={fadeInUp} className="text-4xl sm:text-5xl md:text-6xl lg:text-7xl font-black tracking-tight mb-6 leading-[1.1]">
               <span className="text-white">让 AI 帮你</span>
               <br />
               <span className="text-gradient">秒回消息</span>
             </motion.h1>
             
-            <motion.p variants={fadeInUp} className="text-lg md:text-xl text-white/60 mb-6 max-w-lg mx-auto lg:mx-0 leading-relaxed">
+            <motion.p variants={fadeInUp} className="text-base sm:text-lg md:text-xl text-white/60 mb-6 max-w-lg mx-auto lg:mx-0 leading-relaxed">
               支持 40+ 主流 AI 模型，一键生成专业回复。适用于 WhatsApp Web 和 Messenger Web，外贸、客服、销售的必备神器。
             </motion.p>
             
             {/* Support badges */}
             <motion.div variants={fadeInUp} className="flex flex-wrap gap-3 justify-center lg:justify-start mb-10">
               <a href="https://web.whatsapp.com/" target="_blank" rel="nofollow" className="flex items-center gap-2 px-4 py-2 rounded-full bg-green-500/10 border border-green-500/20 hover:bg-green-500/20 transition-colors">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" className="w-5 h-5" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/6/6b/WhatsApp.svg" alt="WhatsApp" className="w-5 h-5" loading="lazy" decoding="async" />
                 <span className="text-sm text-green-400 font-medium">WhatsApp Web</span>
               </a>
               <a href="https://www.messenger.com/" target="_blank" rel="nofollow" className="flex items-center gap-2 px-4 py-2 rounded-full bg-blue-500/10 border border-blue-500/20 hover:bg-blue-500/20 transition-colors">
-                <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Facebook_Messenger_logo_2020.svg" alt="Messenger" className="w-5 h-5" />
+                <img src="https://upload.wikimedia.org/wikipedia/commons/b/be/Facebook_Messenger_logo_2020.svg" alt="Messenger" className="w-5 h-5" loading="lazy" decoding="async" />
                 <span className="text-sm text-blue-400 font-medium">Messenger Web</span>
               </a>
             </motion.div>
             
-            <motion.div variants={fadeInUp} className="flex flex-wrap gap-4 justify-center lg:justify-start mb-12">
+            <motion.div variants={fadeInUp} className="flex flex-wrap gap-3 sm:gap-4 justify-center lg:justify-start mb-8 sm:mb-12">
               <Button 
                 onClick={onDownload}
                 disabled={isDownloading}
-                className={`bg-gradient-to-r from-violet-600 to-purple-600 hover:opacity-90 shadow-glow-lg hover:shadow-glow text-white px-8 py-7 text-lg rounded-2xl group shimmer cursor-pointer transition-all ${
+                className={`bg-gradient-to-r from-violet-600 to-purple-600 hover:opacity-90 shadow-glow-lg hover:shadow-glow text-white px-6 py-4 sm:px-8 sm:py-7 text-base sm:text-lg rounded-xl sm:rounded-2xl group shimmer cursor-pointer transition-all ${
                   isDownloading ? 'opacity-50 cursor-not-allowed' : ''
                 }`} 
                 size="xl"
               >
                 {isDownloading ? (
                   <>
-                    <svg className="animate-spin w-5 h-5 mr-2" fill="none" viewBox="0 0 24 24">
+                    <svg className="animate-spin w-4 h-4 sm:w-5 sm:h-5 mr-2" fill="none" viewBox="0 0 24 24">
                       <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"/>
                       <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"/>
                     </svg>
@@ -822,19 +926,24 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
                   </>
                 ) : (
                   <>
-                    <Download className="w-5 h-5 mr-2" />
-                    <span>免费安装扩展</span>
-                    <ArrowRight className="w-5 h-5 ml-2 group-hover:translate-x-1 transition-transform" />
+                    <Download className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                    <span>添加到 Chrome - 免费</span>
+                    <ArrowRight className="w-4 h-4 sm:w-5 sm:h-5 ml-2 group-hover:translate-x-1 transition-transform" />
                   </>
                 )}
               </Button>
-              <Button variant="outline" className="px-8 py-7 text-lg rounded-2xl border-white/20 text-white hover:bg-white/10" size="xl">
-                <Play className="w-5 h-5 mr-2" />
-                观看演示
+              <Button 
+                variant="outline" 
+                onClick={() => setShowDemoModal(true)}
+                className="px-6 py-4 sm:px-8 sm:py-7 text-base sm:text-lg rounded-xl sm:rounded-2xl border-white/20 text-white hover:bg-white/10" 
+                size="xl"
+              >
+                <Play className="w-4 h-4 sm:w-5 sm:h-5 mr-2" />
+                30 秒演示
               </Button>
             </motion.div>
             
-            <motion.div variants={fadeInUp} className="grid grid-cols-3 gap-8">
+            <motion.div variants={fadeInUp} className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {[
                 { value: 40, suffix: '+', label: 'AI 模型' },
                 { value: 8000, suffix: '+', label: '活跃用户' },
@@ -844,22 +953,9 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
                   <div className="text-3xl md:text-4xl font-black text-gradient">
                     <AnimatedCounter end={stat.value} suffix={stat.suffix} />
                   </div>
-                  <div className="text-sm text-white/40 mt-1">{stat.label}</div>
+                  <div className="text-sm text-white/60 mt-1">{stat.label}</div>
                 </div>
               ))}
-            </motion.div>
-            
-            {/* Chrome Store Rating */}
-            <motion.div variants={fadeInUp} className="flex items-center gap-4 mt-8 justify-center lg:justify-start">
-              <div className="flex items-center gap-2 px-4 py-2 rounded-full bg-yellow-500/10 border border-yellow-500/20">
-                <div className="flex">
-                  {[1,2,3,4,5].map((_, i) => (
-                    <Star key={i} className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                  ))}
-                </div>
-                <span className="text-sm text-yellow-400 font-semibold">4.9</span>
-                <span className="text-xs text-white/40">(2,847 条评价)</span>
-              </div>
             </motion.div>
           </motion.div>
           
@@ -868,23 +964,23 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
             initial={{ opacity: 0, x: 50, rotateY: -10 }}
             animate={{ opacity: 1, x: 0, rotateY: 0 }}
             transition={{ duration: 1, delay: 0.3 }}
-            className="relative"
+            className="relative order-1 lg:order-2 mb-8 lg:mb-0"
           >
             <FloatElement duration={5}>
               <div className="relative">
-                <div className="absolute -inset-4 bg-gradient-to-br from-violet-600/30 to-purple-600/20 rounded-3xl blur-2xl" />
+                <div className="absolute -inset-4 lg:-inset-8 bg-gradient-to-br from-violet-600/30 to-purple-600/20 rounded-3xl blur-2xl" />
                 
-                <div className="relative glass rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
-                  <div className="bg-white/5 px-6 py-4 flex items-center gap-3 border-b border-white/5">
+                <div className="relative glass rounded-2xl sm:rounded-3xl border border-white/10 overflow-hidden shadow-2xl">
+                  <div className="bg-white/5 px-4 sm:px-6 py-3 sm:py-4 flex items-center gap-3 border-b border-white/5">
                     <div className="flex gap-2">
-                      <div className="w-3 h-3 rounded-full bg-red-500" />
-                      <div className="w-3 h-3 rounded-full bg-yellow-500" />
-                      <div className="w-3 h-3 rounded-full bg-green-500" />
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-red-500" />
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-yellow-500" />
+                      <div className="w-2.5 h-2.5 sm:w-3 sm:h-3 rounded-full bg-green-500" />
                     </div>
-                    <span className="text-sm text-white/50 flex-1 text-center font-medium">WhatsApp Web</span>
+                    <span className="text-xs sm:text-sm text-white/50 flex-1 text-center font-medium">WhatsApp Web</span>
                   </div>
                   
-                  <div className="p-6 space-y-4 bg-gradient-to-b from-white/5 to-transparent min-h-[320px]">
+                  <div className="p-4 sm:p-6 space-y-4 bg-gradient-to-b from-white/5 to-transparent min-h-[280px] sm:min-h-[320px]">
                     {/* Customer message (left side) */}
                     <div className="flex justify-start">
                       <div className="bg-white/10 backdrop-blur px-5 py-3 rounded-2xl rounded-bl-md max-w-[85%] border border-white/5">
@@ -911,7 +1007,7 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
                         {inputText ? (
                           <span className="text-white">{inputText}<span className="animate-pulse">|</span></span>
                         ) : (
-                          <span className="text-white/30">输入消息...</span>
+                          <span className="text-white/50">输入消息...</span>
                         )}
                         {isTyping && inputText && (
                           <div className="absolute -top-2 right-3 bg-gradient-to-r from-cyan-500 to-blue-500 text-white text-[10px] font-bold px-2 py-0.5 rounded-full shadow-glow-cyan animate-pulse">
@@ -930,6 +1026,9 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
           </motion.div>
         </div>
       </motion.div>
+      
+      {/* Demo Modal */}
+      <DemoModal isOpen={showDemoModal} onClose={() => setShowDemoModal(false)} />
     </section>
   )
 }
@@ -937,11 +1036,11 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
 // ==================== Browser Marquee ====================
 function BrowserMarquee() {
   const browsers = [
-    { name: 'Chrome', logo: '/icons/chrome.svg' },
-    { name: 'Edge', logo: '/icons/edge.svg' },
-    { name: 'Brave', logo: '/icons/brave.svg' },
-    { name: 'Opera', logo: '/icons/opera.svg' },
-    { name: 'Vivaldi', logo: '/icons/vivaldi.svg' },
+    { name: 'Chrome', logo: './icons/chrome.svg' },
+    { name: 'Edge', logo: './icons/Edge.svg' },
+    { name: 'Brave', logo: './icons/Brave.svg' },
+    { name: 'Opera', logo: './icons/Opera.svg' },
+    { name: 'Vivaldi', logo: './icons/vivaldi.svg' },
   ]
 
   return (
@@ -961,6 +1060,8 @@ function BrowserMarquee() {
                     alt={browser.name}
                     className="w-12 h-12"
                     style={{ objectFit: 'contain' }}
+                    loading="lazy"
+                    decoding="async"
                     onError={(e) => {
                       const target = e.target as HTMLImageElement
                       const fallbackUrl = `https://www.google.com/s2/favicons?domain=${browser.name.toLowerCase()}.com&sz=64`
@@ -1005,7 +1106,7 @@ function TrustBadgesSection() {
               </div>
               <div>
                 <div className="text-white font-bold">{badge.label}</div>
-                <div className="text-xs text-white/40">{badge.desc}</div>
+                <div className="text-xs text-white/60">{badge.desc}</div>
               </div>
             </div>
           ))}
@@ -1125,7 +1226,7 @@ function FeaturesSection() {
                       <div className={`text-3xl font-black bg-gradient-to-br ${feature.gradient} bg-clip-text text-transparent`}>
                         {feature.stat}
                       </div>
-                      <div className="text-xs text-white/40 mt-1">{feature.highlight}</div>
+                      <div className="text-xs text-white/60 mt-1">{feature.highlight}</div>
                     </div>
                   </div>
                   <CardTitle className="text-xl mb-2 text-white group-hover:text-gradient transition-all duration-300">{feature.title}</CardTitle>
@@ -1145,14 +1246,14 @@ function FeaturesSection() {
 // ==================== Models Section ====================
 function ModelsSection() {
   const models = [
-    { nameCn: 'DeepSeek', nameEn: '深度求索 · 性价比之王', logo: '/icons/deepseek.png' },
-    { nameCn: 'OpenAI', nameEn: 'GPT-4.5 · 行业标杆', logo: '/icons/openai.svg' },
-    { nameCn: 'Kimi', nameEn: '月之暗面 · 超长上下文', logo: '/icons/kimi.png' },
-    { nameCn: 'Qwen', nameEn: '通义千问 · 阿里出品', logo: '/icons/qwen.png' },
-    { nameCn: 'GLM', nameEn: '智谱清言 · 中文优化', logo: '/icons/zhipu.png' },
-    { nameCn: 'Doubao', nameEn: '豆包 · 字节跳动', logo: '/icons/doubao.png' },
-    { nameCn: 'Gemini', nameEn: '谷歌双子 · 多模态', logo: '/icons/gemini.png' },
-    { nameCn: 'Custom', nameEn: '自定义API · 灵活接入', logo: null },
+    { nameCn: 'DeepSeek', nameEn: '深度求索 · 性价比之王', logo: './icons/deepseek.svg', color: 'from-blue-600 to-blue-800', bgColor: 'bg-blue-600/25', borderColor: 'border-blue-500/50', hoverBg: 'hover:bg-blue-600/30' },
+    { nameCn: 'OpenAI', nameEn: 'GPT-4.5 · 行业标杆', logo: './icons/openai.svg', color: 'from-emerald-500 to-green-500', bgColor: 'bg-emerald-500/20', borderColor: 'border-emerald-400/40', hoverBg: 'hover:bg-emerald-500/25' },
+    { nameCn: 'Kimi', nameEn: '月之暗面 · 超长上下文', logo: './icons/kimi.svg', color: 'from-purple-500 to-pink-500', bgColor: 'bg-purple-500/20', borderColor: 'border-purple-400/40', hoverBg: 'hover:bg-purple-500/25' },
+    { nameCn: 'Qwen', nameEn: '通义千问 · 阿里出品', logo: './icons/qwen.svg', color: 'from-orange-500 to-amber-500', bgColor: 'bg-orange-500/20', borderColor: 'border-orange-400/40', hoverBg: 'hover:bg-orange-500/25' },
+    { nameCn: 'GLM', nameEn: '智谱清言 · 中文优化', logo: './icons/ZHIPU.svg', color: 'from-violet-500 to-indigo-500', bgColor: 'bg-violet-500/20', borderColor: 'border-violet-400/40', hoverBg: 'hover:bg-violet-500/25' },
+    { nameCn: 'Doubao', nameEn: '豆包 · 字节跳动', logo: './icons/doubao.svg', color: 'from-cyan-500 to-teal-500', bgColor: 'bg-cyan-500/20', borderColor: 'border-cyan-400/40', hoverBg: 'hover:bg-cyan-500/25' },
+    { nameCn: 'Gemini', nameEn: '谷歌双子 · 多模态', logo: './icons/gemini.svg', color: 'from-blue-600 to-indigo-600', bgColor: 'bg-blue-600/20', borderColor: 'border-blue-500/40', hoverBg: 'hover:bg-blue-600/25' },
+    { nameCn: 'Claude', nameEn: 'Anthropic · 安全AI', logo: './icons/Claude.svg', color: 'from-red-600 to-red-800', bgColor: 'bg-red-600/25', borderColor: 'border-red-500/50', hoverBg: 'hover:bg-red-600/30' },
   ]
 
   return (
@@ -1192,31 +1293,43 @@ function ModelsSection() {
           whileInView="visible" 
           viewport={{ once: true }}
           variants={stagger}
-          className="grid grid-cols-2 md:grid-cols-4 gap-5"
+          className="grid grid-cols-2 sm:grid-cols-3 md:grid-cols-4 gap-4 sm:gap-6"
         >
           {models.map((model, i) => (
             <motion.div
               key={i}
               variants={scaleIn}
-              whileHover={{ y: -8, scale: 1.02 }}
+              whileHover={{ y: -8, scale: 1.03 }}
               className="group cursor-pointer"
             >
-              <div className="text-center p-6 transition-all h-full">
-                <div className="w-20 h-20 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all rounded-2xl bg-white/5 p-3">
-                  {model.logo ? (
-                    <img 
-                      src={model.logo} 
-                      alt={model.nameCn} 
-                      className="w-full h-full"
-                      style={{ objectFit: 'contain' }}
-                      loading="lazy"
-                    />
-                  ) : (
-                    <Globe className="w-10 h-10 text-white/60" />
-                  )}
+              <div className={`relative overflow-hidden rounded-2xl border ${model.borderColor} ${model.bgColor} ${model.hoverBg} transition-all duration-300 h-full p-6 backdrop-blur-sm`}>
+                {/* Background gradient */}
+                <div className={`absolute inset-0 bg-gradient-to-br ${model.color} opacity-10 group-hover:opacity-20 transition-opacity duration-300`} />
+                
+                {/* Top accent line */}
+                <div className={`absolute top-0 left-0 right-0 h-1 bg-gradient-to-r ${model.color} opacity-80 group-hover:opacity-100 transition-opacity`} />
+                
+                <div className="relative z-10 text-center">
+                  <div className={`w-16 h-16 flex items-center justify-center mx-auto mb-4 group-hover:scale-110 transition-all duration-300 rounded-xl ${
+                    model.nameCn === 'DeepSeek' || model.nameCn === 'Claude' 
+                      ? 'bg-white/90 shadow-lg' 
+                      : `bg-gradient-to-br ${model.color} shadow-lg`
+                  } p-2.5`}>
+                    {model.logo ? (
+                      <img 
+                        src={model.logo} 
+                        alt={model.nameCn} 
+                        className="w-full h-full"
+                        style={{ objectFit: 'contain' }}
+                        loading="lazy"
+                      />
+                    ) : (
+                      <Globe className="w-8 h-8 text-white" />
+                    )}
+                  </div>
+                  <h3 className="font-bold text-xl text-white mb-1">{model.nameCn}</h3>
+                  <p className="text-xs text-white/50 leading-relaxed">{model.nameEn}</p>
                 </div>
-                <h3 className="font-bold text-lg text-white mb-0.5">{model.nameCn}</h3>
-                <p className="text-sm text-white/40">{model.nameEn}</p>
               </div>
             </motion.div>
           ))}
@@ -1336,6 +1449,104 @@ function UseCasesSection() {
   )
 }
 
+// ==================== User Testimonials Section ====================
+function TestimonialsSection() {
+  const testimonials = [
+    {
+      name: '李明',
+      role: '外贸业务员',
+      avatar: '👨‍💼',
+      rating: 5,
+      content: '使用 ChatGenius 3 个月，回复效率提升了 300%！AI 生成的英文邮件非常专业，客户反馈很好。',
+      metric: '效率提升 300%'
+    },
+    {
+      name: '王芳',
+      role: '客服主管',
+      avatar: '👩‍💻',
+      rating: 5,
+      content: '团队 10 人都在用，培训成本降低了 60%。新员工上手更快，回复质量统一。',
+      metric: '培训成本降低 60%'
+    },
+    {
+      name: '张伟',
+      role: '销售经理',
+      avatar: '👨‍💼',
+      rating: 5,
+      content: '成交率提升了 45%，AI 能根据客户画像生成个性化话术，非常智能。',
+      metric: '成交率提升 45%'
+    },
+    {
+      name: '刘洋',
+      role: '跨境电商 CEO',
+      avatar: '👩‍💼',
+      rating: 5,
+      content: '这是我们团队必备的工具，每天节省至少 2 小时，ROI 非常高。',
+      metric: '每天节省 2 小时'
+    },
+  ]
+  
+  return (
+    <section className="py-32 relative overflow-hidden bg-background">
+      <div className="container max-w-7xl mx-auto px-6">
+        <motion.div 
+          initial="hidden" 
+          whileInView="visible" 
+          viewport={{ once: true }}
+          variants={stagger}
+          className="text-center mb-20"
+        >
+          <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6 border border-white/10">
+            <Star className="w-4 h-4 text-yellow-400" />
+            <span className="text-sm font-medium text-yellow-300">用户评价</span>
+          </motion.div>
+          <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl lg:text-6xl font-black mb-6">
+            <span className="text-white">深受</span>
+            <span className="text-gradient">用户信赖</span>
+          </motion.h2>
+          <motion.p variants={fadeInUp} className="text-white/50 text-lg max-w-2xl mx-auto">
+            8000+ 活跃用户的共同选择，看看他们怎么说
+          </motion.p>
+        </motion.div>
+        
+        <motion.div 
+          initial="hidden" 
+          whileInView="visible" 
+          viewport={{ once: true }}
+          variants={stagger}
+          className="grid md:grid-cols-2 lg:grid-cols-4 gap-6"
+        >
+          {testimonials.map((testimonial, i) => (
+            <motion.div key={i} variants={fadeInUp}>
+              <div className="glass rounded-2xl p-6 border border-white/5 hover:border-white/15 transition-all h-full">
+                <div className="flex items-center gap-3 mb-4">
+                  <div className="text-4xl">{testimonial.avatar}</div>
+                  <div>
+                    <div className="text-white font-semibold">{testimonial.name}</div>
+                    <div className="text-sm text-white/50">{testimonial.role}</div>
+                  </div>
+                </div>
+                
+                <div className="flex gap-1 mb-3">
+                  {[...Array(testimonial.rating)].map((_, j) => (
+                    <Star key={j} className="w-4 h-4 text-yellow-400 fill-yellow-400" />
+                  ))}
+                </div>
+                
+                <p className="text-white/70 text-sm mb-4 leading-relaxed">{testimonial.content}</p>
+                
+                <div className="pt-4 border-t border-white/10">
+                  <div className="text-gradient font-bold">{testimonial.metric}</div>
+                </div>
+              </div>
+            </motion.div>
+          ))}
+        </motion.div>
+      </div>
+    </section>
+  )
+}
+
 // ==================== Pricing Section ====================
 function PricingSection({ onDownload }: { onDownload: () => void }) {
   const [modalOpen, setModalOpen] = useState(false)
@@ -1407,7 +1618,7 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
         '一次投入，终身受益'
       ],
       limitations: [],
-      cta: '立即订阅',
+      cta: '立即购买',
       popular: true,
       hot: true,
       type: 'lifetime' as const,
@@ -1504,7 +1715,7 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
                     {plan.limitations.length > 0 && (
                       <div className="pt-4 mb-4 border-t border-white/10">
                         {plan.limitations.map((limit, j) => (
-                          <p key={j} className="text-xs text-white/40">• {limit}</p>
+                          <p key={j} className="text-xs text-white/60">• {limit}</p>
                         ))}
                       </div>
                     )}
@@ -1523,28 +1734,8 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
               </motion.div>
             ))}
           </motion.div>
-        
-        <motion.div 
-          initial={{ opacity: 0 }} 
-          whileInView={{ opacity: 1 }}
-          viewport={{ once: true }}
-          className="flex flex-wrap justify-center gap-8 mt-12 text-white/40 text-sm"
-        >
-          <div className="flex items-center gap-2">
-            <ShieldCheck className="w-5 h-5 text-emerald-500" />
-            <span>安全支付</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Clock className="w-5 h-5 text-cyan-500" />
-            <span>即时开通</span>
-          </div>
-          <div className="flex items-center gap-2">
-            <Award className="w-5 h-5 text-yellow-500" />
-            <span>终身更新</span>
-          </div>
-        </motion.div>
-      </div>
-    </section>
+        </div>
+      </section>
 
       <PaymentModal 
         isOpen={modalOpen} 
@@ -1555,139 +1746,124 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
   )
 }
 
-// ==================== Testimonials Section ====================
-function TestimonialsSection() {
-  const testimonials = [
-    { 
-      name: '李明', role: '外贸业务员 · 深圳', 
-      text: '每天要回复几十个海外客户询盘，有了这个工具效率提升太多了！AI 生成的回复非常专业。',
-      avatar: 'https://images.unsplash.com/photo-1507003211169-0a1dd7228f2d?w=150&h=150&fit=crop&crop=face', rating: 5, gender: 'male',
-      time: '2 天前'
-    },
-    { 
-      name: '王芳', role: '电商客服主管 · 杭州', 
-      text: '团队客服都在用，配合知识库功能，新员工也能快速上手。强烈推荐！',
-      avatar: 'https://images.unsplash.com/photo-1494790108377-be9c29b29330?w=150&h=150&fit=crop&crop=face', rating: 4.5, gender: 'female',
-      time: '3 天前'
-    },
-    { 
-      name: '张伟', role: '独立开发者 · 北京', 
-      text: '支持 DeepSeek 模型太棒了！成本低效果好，自定义角色功能非常实用。',
-      avatar: 'https://images.unsplash.com/photo-1472099645785-5658abf4ff4e?w=150&h=150&fit=crop&crop=face', rating: 5, gender: 'male',
-      time: '5 天前'
-    },
-    { 
-      name: '陈思', role: '销售经理 · 上海', 
-      text: '跟进客户变得轻松多了，AI 生成的回复既专业又有针对性，成交率明显提升。',
-      avatar: 'https://images.unsplash.com/photo-1438761681033-6461ffad8d80?w=150&h=150&fit=crop&crop=face', rating: 4.5, gender: 'female',
-      time: '1 周前'
-    },
-    { 
-      name: '刘洋', role: '跨境电商 · 广州', 
-      text: '多语言支持太实用了，再也不用担心语言障碍，回复速度和准确性都大幅提升。',
-      avatar: 'https://images.unsplash.com/photo-1500648767791-00dcc994a43e?w=150&h=150&fit=crop&crop=face', rating: 5, gender: 'male',
-      time: '1 周前'
-    },
-    { 
-      name: '赵静', role: '运营总监 · 成都', 
-      text: '团队协作效率提升了50%，知识库功能让所有人都保持一致的回复风格。',
-      avatar: 'https://images.unsplash.com/photo-1487412720507-e7ab37603c6f?w=150&h=150&fit=crop&crop=face', rating: 5, gender: 'female',
-      time: '2 周前'
-    },
-  ]
-
-  return (
-    <section id="testimonials" className="py-32 relative overflow-hidden bg-gradient-to-b from-background via-violet-950/10 to-background">
-      <div className="container max-w-7xl mx-auto px-6">
-        <motion.div 
-          initial="hidden" 
-          whileInView="visible" 
-          viewport={{ once: true }}
-          variants={stagger}
-          className="text-center mb-20"
-        >
-          <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6 border border-white/10">
-            <Star className="w-4 h-4 text-yellow-400 fill-yellow-400" />
-            <span className="text-sm font-medium text-yellow-300">用户评价</span>
-          </motion.div>
-          <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl lg:text-6xl font-black mb-6">
-            <span className="text-white">用户</span>
-            <span className="text-gradient-gold">怎么说</span>
-          </motion.h2>
-          <motion.p variants={fadeInUp} className="text-white/50 text-lg">
-            超过 <AnimatedCounter end={8000} suffix="+" /> 用户的选择
-          </motion.p>
-        </motion.div>
-        
-        <motion.div 
-          initial="hidden" 
-          whileInView="visible" 
-          viewport={{ once: true }}
-          variants={stagger}
-          className="grid md:grid-cols-2 lg:grid-cols-3 gap-6"
-        >
-          {testimonials.map((t, i) => (
-            <motion.div key={i} variants={fadeInUp} whileHover={{ y: -5 }}>
-              <Card className="h-full glass hover:border-white/20 border-white/5 transition-all overflow-hidden group">
-                <CardContent className="p-6">
-                  <div className="flex items-center gap-4 mb-4">
-                    <div className="w-14 h-14 rounded-full overflow-hidden shadow-lg group-hover:scale-110 transition-transform">
-                      <img 
-                        src={t.avatar} 
-                        alt={t.name}
-                        className="w-full h-full object-cover"
-                        onError={(e) => {
-                          const target = e.target as HTMLImageElement
-                          target.src = `https://ui-avatars.com/api/?name=${encodeURIComponent(t.name)}&background=6366f1&color=fff&size=128`
-                        }}
-                      />
-                    </div>
-                    <div className="flex-1">
-                      <CardTitle className="text-base text-white">{t.name}</CardTitle>
-                      <CardDescription className="text-xs text-white/50">{t.role}</CardDescription>
-                    </div>
-                    <span className="text-xs text-white/30">{(t as any).time}</span>
-                  </div>
-                  <div className="flex gap-0.5 mb-3 items-center">
-                    {[1,2,3,4,5].map((star) => (
-                      <span key={star} className="relative">
-                        {star <= Math.floor(t.rating) ? (
-                          <Star className="w-4 h-4 fill-yellow-400 text-yellow-400" />
-                        ) : star - 0.5 === t.rating ? (
-                          <span className="relative">
-                            <Star className="w-4 h-4 text-yellow-400" />
-                            <Star className="w-4 h-4 fill-yellow-400 text-yellow-400 absolute top-0 left-0 overflow-hidden" style={{ clipPath: 'inset(0 50% 0 0)' }} />
-                          </span>
-                        ) : (
-                          <Star className="w-4 h-4 text-yellow-400" />
-                        )}
-                      </span>
-                    ))}
-                    <span className="text-xs text-white/50 ml-1">{t.rating}</span>
-                  </div>
-                  <p className="text-white/60 text-sm leading-relaxed">{t.text}</p>
-                </CardContent>
-              </Card>
-            </motion.div>
-          ))}
-        </motion.div>
-      </div>
-    </section>
-  )
-}
-
 // ==================== FAQ Section ====================
 function FAQSection() {
   const [openIndex, setOpenIndex] = useState<number | null>(null)
   
   const faqs = [
-    { q: 'Pro 版真的是永久使用吗？', a: '是的，一次付费 $9.9，终身使用，所有未来功能更新完全免费，无需任何额外费用。' },
-    { q: '支持哪些支付方式？', a: '我们支持支付宝、微信支付、PayPal、信用卡等多种支付方式，支付过程安全便捷。' },
-    { q: '购买后可以退款吗？', a: '支持 7 天无理由退款。如果您对产品不满意，联系客服即可办理全额退款。' },
-    { q: '免费版有什么限制？', a: '免费版每天回复 20 次，仅支持 1 个自定义角色和 5 条 FAQ。适合轻度用户尝鲜体验。' },
-    { q: '如何获取 API Key？', a: '根据您选择的 AI 服务商，前往对应官网注册即可获取。大多数平台提供免费额度供新用户试用。' },
-    { q: '我的 API Key 会被上传到服务器吗？', a: '不会。您的 API Key 仅存储在浏览器本地，所有 API 请求都直接发送到 AI 服务商，我们不经过任何中间服务器。' },
-    { q: '支持哪些浏览器？', a: '目前支持 Chrome、Edge、Brave、Arc 等基于 Chromium 内核的浏览器。Firefox 和 Safari 支持正在开发中。' },
+    { 
+      q: '如何安装 Chrome 扩展？', 
+      a: `安装步骤非常简单：
+
+1. 点击页面上的"免费下载"按钮下载扩展文件
+2. 解压下载的 ZIP 文件
+3. 打开 Chrome 浏览器，访问 chrome://extensions/
+4. 开启右上角的"开发者模式"
+5. 点击"加载已解压的扩展程序"，选择解压后的文件夹
+
+完成以上步骤即可开始使用！整个过程只需 1-2 分钟。`
+    },
+    { 
+      q: 'Pro 版真的是永久使用吗？', 
+      a: `是的，完全真实！
+
+✅ 一次付费 $9.9，终身使用
+✅ 所有未来功能更新完全免费
+✅ 无需任何额外费用
+✅ 永久技术支持
+
+购买后您将收到激活码，在扩展设置中输入即可解锁 Pro 功能。`
+    },
+    { 
+      q: '支持哪些支付方式？', 
+      a: `我们支持多种支付方式：
+
+💳 支付宝 - 推荐中国大陆用户使用
+💚 微信支付 - 扫码支付便捷
+🅿️ PayPal - 国际用户首选
+💳 信用卡 - Visa/Mastercard 支持
+
+所有支付过程安全加密，您的信息安全有保障。`
+    },
+    { 
+      q: '购买后可以退款吗？', 
+      a: `当然可以！
+
+🔄 支持 7 天无理由退款
+💯 如果您对产品不满意
+📞 联系客服即可办理全额退款
+
+我们承诺：无任何隐藏条款，退款流程简单快捷。`
+    },
+    { 
+      q: '免费版有什么限制？', 
+      a: `免费版功能已经非常实用：
+
+✉️ 每天回复 20 次
+👤 1 个自定义角色
+📚 5 条 FAQ 知识库
+🎯 支持 40+ AI 模型
+
+适合轻度用户尝鲜体验。如需无限制使用，建议升级到 Pro 版。`
+    },
+    { 
+      q: '如何获取 API Key？', 
+      a: `根据您选择的 AI 服务商获取：
+
+🔑 DeepSeek: platform.deepseek.com
+🔑 OpenAI: platform.openai.com
+🔑 Kimi: platform.moonshot.cn
+🔑 通义千问: dashscope.console.aliyun.com
+
+大多数平台提供免费额度，新用户注册即可使用。`
+    },
+    { 
+      q: '我的 API Key 会被上传到服务器吗？', 
+      a: `绝对不会！
+
+🔒 API Key 仅存储在浏览器本地
+🛡️ 所有 API 请求直接发送到 AI 服务商
+❌ 我们不经过任何中间服务器
+✅ 数据加密传输，安全可靠
+
+您的隐私和数据安全是我们的首要考虑。`
+    },
+    { 
+      q: '支持哪些浏览器？', 
+      a: `目前支持的浏览器：
+
+✅ Chrome（推荐）
+✅ Edge
+✅ Brave
+✅ Arc
+✅ 其他 Chromium 内核浏览器
+
+🚧 Firefox 和 Safari 支持正在开发中，敬请期待！`
+    },
+    {
+      q: '使用 ChatGenius 需要额外付费吗？',
+      a: `产品本身免费，但使用 AI 功能需要：
+
+📦 免费版：每天 20 次免费回复
+🔑 Pro 版：$9.9 解锁无限回复
+💰 API 费用：由 AI 服务商收取
+
+大多数平台提供免费额度，轻度使用基本免费。
+大量使用建议选择 Pro 版 + 付费 API 额度。`
+    },
+    {
+      q: '与其他 AI 回复工具相比有什么优势？',
+      a: `ChatGenius 的核心优势：
+
+🎯 支持 40+ 主流 AI 模型（竞品通常仅 1-2 个）
+🔒 100% 本地存储，无中间服务器
+⚡ 3 秒极速响应
+👥 自定义角色 + 知识库
+💰 价格仅为竞品 1/3
+🌐 支持 WhatsApp 和 Messenger
+
+我们是功能最全面、最安全的 AI 回复工具。`
+    },
   ]
 
   return (
@@ -1704,7 +1880,10 @@ function FAQSection() {
             <MessageCircleQuestion className="w-4 h-4 text-cyan-400" />
             <span className="text-sm font-medium text-cyan-300">常见问题</span>
           </motion.div>
-          <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-black text-white">FAQ</motion.h2>
+          <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl font-black text-white mb-4">FAQ</motion.h2>
+          <motion.p variants={fadeInUp} className="text-white/50 text-lg">
+            找不到答案？<button className="text-violet-400 hover:text-violet-300 underline">联系客服</button>
+          </motion.p>
         </motion.div>
         
         <motion.div 
@@ -1722,7 +1901,7 @@ function FAQSection() {
               >
                 <div className="flex items-center justify-between">
                   <span className="font-semibold text-lg text-white pr-4">{faq.q}</span>
-                  <div className={`w-8 h-8 rounded-full flex items-center justify-center transition-all ${
+                  <div className={`min-w-[44px] min-h-[44px] w-8 h-8 rounded-full flex items-center justify-center transition-all active:scale-95 ${
                     openIndex === i ? 'bg-violet-600 rotate-180' : 'bg-white/10 group-hover:bg-white/20'
                   }`}>
                     <ChevronDown className={`w-5 h-5 transition-colors ${openIndex === i ? 'text-white' : 'text-white/60'}`} />
@@ -1737,7 +1916,17 @@ function FAQSection() {
                       transition={{ duration: 0.3 }}
                       className="overflow-hidden"
                     >
-                      <p className="text-white/60 pt-4 leading-relaxed">{faq.a}</p>
+                      <div className="pt-6 text-white/60 whitespace-pre-line leading-relaxed space-y-3">
+                        {faq.a.split('\n').map((line, idx) => (
+                          <div key={idx}>
+                            {line.trim() ? (
+                              <p className="text-base">{line}</p>
+                            ) : (
+                              <div className="h-3" />
+                            )}
+                          </div>
+                        ))}
+                      </div>
                     </motion.div>
                   )}
                 </AnimatePresence>
@@ -1820,7 +2009,7 @@ function Footer() {
   return (
     <footer className="border-t border-white/5 py-16">
       <div className="container max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-5 gap-12 mb-12">
+        <div className="grid md:grid-cols-4 gap-12 mb-12">
           <div className="md:col-span-2">
             <a href="#" className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-glow">
@@ -1828,7 +2017,7 @@ function Footer() {
               </div>
               <span className="text-xl font-bold text-white">ChatGenius AI</span>
             </a>
-            <p className="text-white/40 text-sm leading-relaxed max-w-xs">
+            <p className="text-white/60 text-sm leading-relaxed max-w-xs">
               让 AI 成为您的聊天助手，提升沟通效率，释放更多时间专注于真正重要的事情。
             </p>
           </div>
@@ -1836,17 +2025,10 @@ function Footer() {
             { title: '产品', links: [
               { name: '功能特性', href: '#features' },
               { name: '支持模型', href: '#models' },
-              { name: '定价方案', href: '#pricing' },
-              { name: '免费 API 推荐', href: 'http://127.0.0.1:1680/free-api.html', target: '_blank' }
+              { name: '定价方案', href: '#pricing' }
             ]},
             { title: '资源', links: [
-              { name: '使用文档', href: '#' },
-              { name: '常见问题', href: '#faq' },
-              { name: 'GitHub', href: 'https://github.com/porozykey-eng/airepeat-home', target: '_blank' }
-            ]},
-            { title: '联系', links: [
-              { name: '关于我们', href: '#about' },
-              { name: '隐私政策', href: '#privacy' }
+              { name: '常见问题', href: '#faq' }
             ]},
           ].map((col, i) => (
             <div key={i}>
@@ -1854,27 +2036,37 @@ function Footer() {
               <ul className="space-y-3">
                 {col.links.map((link, j) => (
                   <li key={j}>
-                    <a href={link.href} target={link.target || '_self'} className="text-white/40 hover:text-white text-sm transition-colors">{link.name}</a>
+                    <a href={link.href} className="text-white/60 hover:text-white text-sm transition-colors">{link.name}</a>
                   </li>
                 ))}
               </ul>
             </div>
           ))}
         </div>
-        
-        <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row justify-between items-center gap-4">
-          <p className="text-white/30 text-sm">© 2025 ChatGenius AI. All rights reserved.</p>
-          <div className="flex gap-3">
-            {[
-              { Icon: Twitter, label: 'Twitter' },
-              { Icon: MessageCircle, label: 'Discord' },
-              { Icon: Github, label: 'GitHub' },
-            ].map(({ Icon, label }, i) => (
-              <a key={i} href="#" title={label} className="w-10 h-10 rounded-xl bg-white/5 hover:bg-violet-600 flex items-center justify-center transition-all group">
-                <Icon className="w-5 h-5 text-white/40 group-hover:text-white transition-colors" />
-              </a>
-            ))}
+
+        <div className="border-t border-white/5 pt-8 flex flex-col md:flex-row items-center justify-between gap-6">
+          {/* 社交媒体链接 */}
+          <div className="flex items-center gap-4">
+            <span className="text-white/50 text-sm">关注我们：</span>
+            <a href="https://twitter.com" target="_blank" rel="noopener noreferrer" 
+               className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all hover:scale-110">
+              <Twitter className="w-5 h-5" />
+            </a>
+            <a href="https://facebook.com" target="_blank" rel="noopener noreferrer"
+               className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all hover:scale-110">
+              <Facebook className="w-5 h-5" />
+            </a>
+            <a href="https://linkedin.com" target="_blank" rel="noopener noreferrer"
+               className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all hover:scale-110">
+              <Linkedin className="w-5 h-5" />
+            </a>
+            <a href="https://github.com" target="_blank" rel="noopener noreferrer"
+               className="w-10 h-10 rounded-xl bg-white/5 hover:bg-white/10 flex items-center justify-center text-white/60 hover:text-white transition-all hover:scale-110">
+              <Github className="w-5 h-5" />
+            </a>
           </div>
+          
+          <p className="text-white/50 text-sm">© 2026 ChatGenius AI. All rights reserved.</p>
         </div>
       </div>
     </footer>
@@ -1888,10 +2080,9 @@ function App() {
   const DOWNLOAD_COOLDOWN = 5000 // 5 秒冷却时间
   const MAX_DOWNLOADS_PER_SESSION = 3 // 每会话最多下载 3 次
 
-  const handleDownload = () => {
+  const handleDownload = async () => {
     // 1. 防重复点击检查
     if (isDownloading) {
-      console.log('下载正在进行中，请勿重复点击')
       return
     }
     
@@ -1918,32 +2109,24 @@ function App() {
     localStorage.setItem('lastDownloadTime', Date.now().toString())
     
     try {
-      // 5. 执行下载
+      // 5. 使用 fetch 下载文件
+      const response = await fetch('/extension.zip')
+      if (!response.ok) throw new Error('下载失败')
+      
+      const blob = await response.blob()
+      const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = '/chatgenius-extension.zip'
+      link.href = url
       link.download = 'ChatGenius-AI-Extension.zip'
-      link.target = '_blank'
-      
-      // 6. 添加下载完成/失败处理
-      link.onload = () => {
-        setIsDownloading(false)
-      }
-      
-      link.onerror = () => {
-        alert('下载失败，请稍后重试')
-        setIsDownloading(false)
-      }
-      
+      document.body.appendChild(link)
       link.click()
-      
-      // 7. 重置下载状态（延迟后）
-      setTimeout(() => {
-        setIsDownloading(false)
-      }, 2000)
+      document.body.removeChild(link)
+      window.URL.revokeObjectURL(url)
       
     } catch (error) {
-      console.error('下载出错:', error)
       alert('下载失败，请重试')
+    } finally {
+      // 6. 重置下载状态
       setIsDownloading(false)
     }
   }
@@ -1957,9 +2140,9 @@ function App() {
         <FeaturesSection />
         <ModelsSection />
         <UseCasesSection />
+        <TestimonialsSection />
         <PricingSection onDownload={handleDownload} />
         <TrustBadgesSection />
-        <TestimonialsSection />
         <FAQSection />
         <CTASection onDownload={handleDownload} isDownloading={isDownloading} />
       </main>

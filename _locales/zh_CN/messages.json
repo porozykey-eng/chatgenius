@@ -1,0 +1,10 @@
+{
+  "extName": {
+    "message": "ChatGenius AI - 智能回复助手",
+    "description": "Name of the extension"
+  },
+  "extDesc": {
+    "message": "为您在 WhatsApp, Messenger, Telegram 等聊天应用中提供 AI 智能自动回复支持。",
+    "description": "Description of the extension"
+  }
+}

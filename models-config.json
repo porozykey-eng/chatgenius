@@ -1,0 +1,164 @@
+{
+  "version": "2026-04-07",
+  "providers": [
+    {
+      "id": "zhipu",
+      "name": "智谱清言 (GLM)",
+      "icon": "🟤",
+      "url": "https://open.bigmodel.cn/api/paas/v4/chat/completions",
+      "getKey": "https://open.bigmodel.cn/",
+      "models": [
+        { "id": "glm-5-plus", "name": "GLM-5 Plus (最新旗舰)", "recommended": true },
+        { "id": "glm-5-flash", "name": "GLM-5 Flash (快速)", "recommended": true },
+        { "id": "glm-4-plus", "name": "GLM-4 Plus", "recommended": false },
+        { "id": "glm-4-flash", "name": "GLM-4 Flash (免费)", "recommended": true }
+      ]
+    },
+    {
+      "id": "deepseek",
+      "name": "DeepSeek (深度求索)",
+      "icon": "🟠",
+      "url": "https://api.deepseek.com/v1/chat/completions",
+      "getKey": "https://platform.deepseek.com/",
+      "models": [
+        { "id": "deepseek-chat", "name": "DeepSeek V3 (最新)", "recommended": true },
+        { "id": "deepseek-reasoner", "name": "DeepSeek R1 (推理)", "recommended": true }
+      ]
+    },
+    {
+      "id": "qwen",
+      "name": "通义千问 (阿里)",
+      "icon": "🟡",
+      "url": "https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions",
+      "getKey": "https://dashscope.console.aliyun.com/",
+      "models": [
+        { "id": "qwen-max", "name": "Qwen Max (旗舰)", "recommended": true },
+        { "id": "qwen-plus", "name": "Qwen Plus", "recommended": true },
+        { "id": "qwen-turbo", "name": "Qwen Turbo (快速)", "recommended": false },
+        { "id": "qwen-vl-max", "name": "Qwen VL Max (多模态)", "recommended": false }
+      ]
+    },
+    {
+      "id": "doubao",
+      "name": "豆包 (字节跳动)",
+      "icon": "🔴",
+      "url": "https://ark.cn-beijing.volces.com/api/v3/chat/completions",
+      "getKey": "https://console.volcengine.com/ark",
+      "models": [
+        { "id": "doubao-pro-256k", "name": "豆包 Pro 256K (最新)", "recommended": true },
+        { "id": "doubao-pro-32k", "name": "豆包 Pro 32K", "recommended": true },
+        { "id": "doubao-lite-32k", "name": "豆包 Lite 32K", "recommended": false }
+      ]
+    },
+    {
+      "id": "moonshot",
+      "name": "Moonshot (Kimi)",
+      "icon": "🌙",
+      "url": "https://api.moonshot.cn/v1/chat/completions",
+      "getKey": "https://platform.moonshot.cn/",
+      "models": [
+        { "id": "kimi-latest", "name": "Kimi Latest (最新)", "recommended": true },
+        { "id": "moonshot-v1-128k", "name": "Moonshot V1 128K (长文)", "recommended": true },
+        { "id": "moonshot-v1-32k", "name": "Moonshot V1 32K", "recommended": false }
+      ]
+    },
+    {
+      "id": "baichuan",
+      "name": "百川大模型",
+      "icon": "🔷",
+      "url": "https://api.baichuan-ai.com/v1/chat/completions",
+      "getKey": "https://platform.baichuan-ai.com/",
+      "models": [
+        { "id": "Baichuan4", "name": "Baichuan 4 (最新旗舰)", "recommended": true },
+        { "id": "Baichuan3-Turbo", "name": "Baichuan 3 Turbo", "recommended": false }
+      ]
+    },
+    {
+      "id": "yi",
+      "name": "零一万物 (Yi)",
+      "icon": "💠",
+      "url": "https://api.lingyiwanwu.com/v1/chat/completions",
+      "getKey": "https://platform.lingyiwanwu.com/",
+      "models": [
+        { "id": "yi-lightning", "name": "Yi Lightning (最新)", "recommended": true },
+        { "id": "yi-large", "name": "Yi Large", "recommended": false }
+      ]
+    },
+    {
+      "id": "minimax",
+      "name": "MiniMax",
+      "icon": "🟣",
+      "url": "https://api.minimax.chat/v1/chat/completions",
+      "getKey": "https://www.minimaxi.com/",
+      "models": [
+        { "id": "abab6.5-chat", "name": "ABAB 6.5 (最新)", "recommended": true },
+        { "id": "abab5.5-chat", "name": "ABAB 5.5", "recommended": false }
+      ]
+    },
+    {
+      "id": "stepfun",
+      "name": "阶跃星辰",
+      "icon": "⭐",
+      "url": "https://api.stepfun.com/v1/chat/completions",
+      "getKey": "https://platform.stepfun.com/",
+      "models": [
+        { "id": "step-2-16k", "name": "Step 2 16K (最新)", "recommended": true },
+        { "id": "step-1-8k", "name": "Step 1 8K", "recommended": false }
+      ]
+    },
+    {
+      "id": "openai",
+      "name": "OpenAI",
+      "icon": "🟢",
+      "url": "https://api.openai.com/v1/chat/completions",
+      "getKey": "https://platform.openai.com/api-keys",
+      "models": [
+        { "id": "gpt-4o", "name": "GPT-4o (旗舰)", "recommended": true },
+        { "id": "gpt-4o-mini", "name": "GPT-4o Mini (轻量)", "recommended": true },
+        { "id": "o3-mini", "name": "O3 Mini (推理)", "recommended": true }
+      ]
+    },
+    {
+      "id": "anthropic",
+      "name": "Anthropic (Claude)",
+      "icon": "🟣",
+      "url": "https://api.anthropic.com/v1/messages",
+      "getKey": "https://console.anthropic.com/",
+      "models": [
+        { "id": "claude-3-7-sonnet-20250219", "name": "Claude 3.7 Sonnet (最新)", "recommended": true },
+        { "id": "claude-3-5-sonnet-20241022", "name": "Claude 3.5 Sonnet", "recommended": false },
+        { "id": "claude-3-opus-20240229", "name": "Claude 3 Opus", "recommended": false }
+      ]
+    },
+    {
+      "id": "google",
+      "name": "Google (Gemini)",
+      "icon": "🔵",
+      "url": "https://generativelanguage.googleapis.com/v1beta/openai/chat/completions",
+      "getKey": "https://aistudio.google.com/apikey",
+      "models": [
+        { "id": "gemini-2.5-pro-preview", "name": "Gemini 2.5 Pro (最新)", "recommended": true },
+        { "id": "gemini-2.0-flash", "name": "Gemini 2.0 Flash", "recommended": true },
+        { "id": "gemini-1.5-pro", "name": "Gemini 1.5 Pro", "recommended": false }
+      ]
+    },
+    {
+      "id": "openrouter",
+      "name": "OpenRouter (聚合)",
+      "icon": "🚀",
+      "url": "https://openrouter.ai/api/v1/chat/completions",
+      "getKey": "https://openrouter.ai/keys",
+      "dynamic": true
+    },
+    {
+      "id": "custom",
+      "name": "自定义服务商",
+      "icon": "⚙️",
+      "url": "",
+      "getKey": null,
+      "models": [
+        { "id": "custom", "name": "自定义模型", "recommended": false }
+      ]
+    }
+  ]
+}
