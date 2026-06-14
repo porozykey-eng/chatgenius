@@ -36,17 +36,18 @@ app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 
 // CORS with whitelist
 const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').filter(Boolean);
-const isProd = process.env.NODE_ENV === 'production';
 app.use(cors({
   origin: function (origin, callback) {
-    // In production, reject requests with no origin to prevent CSRF
+    // Allow requests without Origin header (curl, server-to-server, direct navigation)
     if (!origin) {
-      if (!isProd || allowedOrigins.length === 0) {
-        return callback(null, true);
-      }
-      return callback(new Error('Not allowed by CORS'));
+      return callback(null, true);
     }
-    if (allowedOrigins.length === 0 || allowedOrigins.includes(origin)) {
+    // If no whitelist configured, allow all origins
+    if (allowedOrigins.length === 0) {
+      return callback(null, true);
+    }
+    // Check against whitelist
+    if (allowedOrigins.includes(origin)) {
       return callback(null, true);
     }
     return callback(new Error('Not allowed by CORS'));
@@ -102,6 +103,7 @@ app.get('/health', (req, res) => {
 app.use((err, req, res, next) => {
   console.error('Unhandled error:', err);
   const statusCode = err.status || 500;
+  const isProd = process.env.NODE_ENV === 'production';
   res.status(statusCode).json({ 
     error: isProd ? '服务器内部错误' : (err.message || '服务器内部错误') 
   });
