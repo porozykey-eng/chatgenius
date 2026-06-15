@@ -1,1 +1,10 @@
-<?xml version="1.0" standalone="no"?><!DOCTYPE svg PUBLIC "-//W3C//DTD SVG 1.1//EN" "http://www.w3.org/Graphics/SVG/1.1/DTD/svg11.dtd"><svg t="1775993324923" class="icon" viewBox="0 0 1024 1024" version="1.1" xmlns="http://www.w3.org/2000/svg" p-id="13780" xmlns:xlink="http://www.w3.org/1999/xlink" width="200" height="200"><path d="M0 512C0 229.250612 229.250612 0 512 0s512 229.250612 512 512-229.250612 512-512 512S0 794.749388 0 512z m522.44898 376.163265c150.047347 0 271.673469-168.437551 271.673469-376.163265S672.496327 135.836735 522.44898 135.836735 250.77551 304.274286 250.77551 512s121.626122 376.163265 271.67347 376.163265z" fill="#F74444" p-id="13781"></path><path d="M0 512C0 229.250612 229.250612 0 512 0s512 229.250612 512 512C1024 269.583673 850.860408 73.142857 637.387755 73.142857S250.77551 269.583673 250.77551 512s173.139592 438.857143 386.612245 438.857143 386.612245-196.440816 386.612245-438.857143c0 282.749388-229.250612 512-512 512S0 794.749388 0 512z" fill="#E21124" p-id="13782"></path></svg>
+<svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 48 48" fill="none">
+  <defs>
+    <linearGradient id="operaGrad" x1="8" y1="4" x2="40" y2="44" gradientUnits="userSpaceOnUse">
+      <stop stop-color="#FF1B2D"/>
+      <stop offset="1" stop-color="#A70015"/>
+    </linearGradient>
+  </defs>
+  <circle cx="24" cy="24" r="20" fill="url(#operaGrad)"/>
+  <ellipse cx="24" cy="24" rx="10" ry="16" fill="#fff"/>
+</svg>

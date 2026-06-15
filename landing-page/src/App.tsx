@@ -1564,7 +1564,7 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
   const plans = [
     {
       name: '免费版',
-      price: '$0',
+      price: '¥0',
       period: '/ 永久',
       desc: '适合轻度用户尝鲜体验',
       features: [
@@ -1583,7 +1583,7 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
     },
     {
       name: 'Pro 年付',
-      price: '$9.9',
+      price: '¥68',
       originalPrice: null,
       period: '/ 年',
       desc: '按年订阅，每年续费',
@@ -1606,10 +1606,10 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
     },
     {
       name: 'Pro 永久版',
-      price: '$9.9',
-      originalPrice: '$19.9',
+      price: '¥98',
+      originalPrice: '¥198',
       period: '/ 永久',
-      desc: '一次付费，终身使用',
+      desc: '一次付费，终身使用，仅比年付多 ¥30',
       features: [
         '年付版所有功能',
         '终身免费更新',
@@ -1652,7 +1652,7 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
             <motion.p variants={fadeInUp} className="text-lg">
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/20 border border-amber-500/30">
                 <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
-                <span className="font-bold text-gradient-gold animate-pulse">Pro 版限时特惠，永久版仅需 $9.9</span>
+                <span className="font-bold text-gradient-gold animate-pulse">Pro 版限时特惠，永久版仅需 ¥98</span>
                 <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
               </span>
             </motion.p>
@@ -1767,7 +1767,7 @@ function FAQSection() {
       q: 'Pro 版真的是永久使用吗？', 
       a: `是的，完全真实！
 
-✅ 一次付费 $9.9，终身使用
+✅ 一次付费 ¥98，终身使用
 ✅ 所有未来功能更新完全免费
 ✅ 无需任何额外费用
 ✅ 永久技术支持
@@ -1845,7 +1845,7 @@ function FAQSection() {
       a: `产品本身免费，但使用 AI 功能需要：
 
 📦 免费版：每天 20 次免费回复
-🔑 Pro 版：$9.9 解锁无限回复
+🔑 Pro 版：¥98 解锁无限回复
 💰 API 费用：由 AI 服务商收取
 
 大多数平台提供免费额度，轻度使用基本免费。
@@ -1962,7 +1962,7 @@ function CTASection({ onDownload, isDownloading }: { onDownload: () => void, isD
             准备好提升聊天效率了吗？
           </motion.h2>
           <motion.p variants={fadeInUp} className="text-white/60 text-xl mb-10 max-w-2xl mx-auto">
-            免费安装，立即体验 AI 智能回复的魅力。Pro 版仅需 $9.9，终身使用。
+            免费安装，立即体验 AI 智能回复的魅力。Pro 版仅需 ¥98，终身使用。
           </motion.p>
           <motion.div variants={fadeInUp} className="flex flex-wrap gap-4 justify-center">
             <Button 
