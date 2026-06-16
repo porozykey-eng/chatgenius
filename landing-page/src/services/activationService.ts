@@ -43,10 +43,11 @@ export const activationService = {
       const orderNo = `CG${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       const subject = `ChatGenius AI Pro ${type === 'year' ? '年付' : '永久版'}`;
 
+      const cleanPrice = price.replace(/[^0-9.]/g, '');
       const res = await fetch(`${API_BASE}/alipay/create-order`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderNo, amount: price, subject }),
+        body: JSON.stringify({ orderNo, amount: cleanPrice, subject }),
       });
 
       const data = await res.json();
