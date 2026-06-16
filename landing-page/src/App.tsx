@@ -1,5 +1,6 @@
 import { useState, useEffect, useRef } from 'react'
 import { motion, AnimatePresence, useScroll, useTransform, useInView } from 'framer-motion'
+import { QRCodeSVG } from 'qrcode.react'
 import { Button } from '@/components/ui/button'
 import { Card, CardContent, CardHeader, CardTitle, CardDescription } from '@/components/ui/card'
 import { 
@@ -147,6 +148,8 @@ function PaymentModal({
   const [loading, setLoading] = useState(false)
   const [paymentChannel, setPaymentChannel] = useState<'alipay' | 'wechat' | 'paypal' | null>(null)
   const [orderNo, setOrderNo] = useState('')
+  const [qrCode, setQrCode] = useState('')
+  const [pollingTimer, setPollingTimer] = useState<ReturnType<typeof setInterval> | null>(null)
 
   // Check activation code using Supabase service
   const handleActivate = async () => {
@@ -172,11 +175,12 @@ function PaymentModal({
     }
   }
 
-  // Handle payment channel selection - create order in Supabase
+  // Handle payment channel selection - create order via server API
   const handlePayment = async (channel: 'alipay' | 'wechat' | 'paypal') => {
     setPaymentChannel(channel)
+    setLoading(true)
+    setCodeError('')
     
-    // Create order via Supabase
     const result = await activationService.createOrder(
       plan?.name || '', 
       plan?.price || '', 
@@ -184,34 +188,35 @@ function PaymentModal({
       channel
     )
     
-    if (result.success && result.order) {
-      setOrderNo(result.order.order_no)
+    setLoading(false)
+    
+    if (result.success && result.qrCode) {
+      setQrCode(result.qrCode)
+      setOrderNo(result.orderNo || '')
       setStep('qrcode')
+      
+      // Start polling for payment status
+      const timer = setInterval(async () => {
+        if (!result.orderNo) return
+        const status = await activationService.queryPaymentStatus(result.orderNo)
+        if (status.paid) {
+          clearInterval(timer)
+          setPollingTimer(null)
+          setStep('success')
+        }
+      }, 3000)
+      setPollingTimer(timer)
     } else {
       setCodeError(result.error || '创建订单失败')
     }
   }
 
-  // Confirm payment and generate activation code
-  const confirmPayment = async () => {
-    if (!orderNo) return
-    
-    setLoading(true)
-    try {
-      const result = await activationService.completePayment(orderNo)
-      
-      if (result.success && result.activationCode) {
-        setActivationCode(result.activationCode)
-        setStep('success')
-      } else {
-        setCodeError(result.error || '支付失败')
-      }
-    } catch (err) {
-      setCodeError('支付处理失败，请检查网络连接')
-    } finally {
-      setLoading(false)
+  // Cleanup polling on unmount
+  useEffect(() => {
+    return () => {
+      if (pollingTimer) clearInterval(pollingTimer)
     }
-  }
+  }, [pollingTimer])
 
   const resetModal = () => {
     setStep('select')
@@ -219,6 +224,11 @@ function PaymentModal({
     setCodeError('')
     setPaymentChannel(null)
     setOrderNo('')
+    setQrCode('')
+    if (pollingTimer) {
+      clearInterval(pollingTimer)
+      setPollingTimer(null)
+    }
   }
 
   if (!plan) return null
@@ -426,11 +436,15 @@ function PaymentModal({
               {step === 'qrcode' && (
                 <div className="space-y-4 text-center">
                   <div className="bg-white/5 rounded-xl p-6 border border-white/10">
-                    <div className="w-32 h-32 bg-white rounded-xl mx-auto mb-4 flex items-center justify-center">
-                      <div className="text-6xl">
-                        {paymentChannel === 'alipay' ? '💳' : paymentChannel === 'wechat' ? '💚' : '🅿️'}
+                    {qrCode ? (
+                      <div className="bg-white rounded-xl p-4 mx-auto mb-4 inline-block">
+                        <QRCodeSVG value={qrCode} size={180} level="M" />
                       </div>
-                    </div>
+                    ) : (
+                      <div className="w-32 h-32 bg-white rounded-xl mx-auto mb-4 flex items-center justify-center">
+                        <div className="text-6xl">💳</div>
+                      </div>
+                    )}
                     <p className="text-white font-medium mb-2">
                       {paymentChannel === 'alipay' ? '支付宝扫码支付' : 
                        paymentChannel === 'wechat' ? '微信扫码支付' : 'PayPal 支付'}
@@ -443,37 +457,29 @@ function PaymentModal({
                     </p>
                   </div>
                   
-                  <div className="bg-blue-500/10 border border-blue-500/20 rounded-xl p-4 mb-4">
-                    <p className="text-sm text-blue-300 font-medium mb-1">🔔 演示模式</p>
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                    <p className="text-sm text-amber-300 font-medium mb-1">⏳ 等待支付</p>
                     <p className="text-xs text-white/60">
-                      当前为演示环境。点击"我已支付"按钮即可模拟完成支付并获取激活码。
+                      请使用{paymentChannel === 'alipay' ? '支付宝' : paymentChannel === 'wechat' ? '微信' : 'PayPal'}扫描二维码完成支付，支付成功后将自动跳转。
                     </p>
                   </div>
-                  
-                  <p className="text-xs text-white/50 mb-4">
-                    订单号: <span className="font-mono text-white/70">{orderNo}</span>
-                  </p>
 
                   <div className="flex gap-3">
                     <button
-                      onClick={() => setStep('payment')}
+                      onClick={() => { if (pollingTimer) clearInterval(pollingTimer); setStep('payment') }}
                       className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-colors"
                     >
                       重新选择
                     </button>
                     <button
-                      onClick={confirmPayment}
-                      disabled={loading}
-                      className="flex-1 py-3 bg-gradient-to-r from-green-500 to-emerald-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                      onClick={() => {
+                        if (navigator.clipboard && qrCode) {
+                          navigator.clipboard.writeText(qrCode)
+                        }
+                      }}
+                      className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-colors"
                     >
-                      {loading ? (
-                        <motion.div
-                          animate={{ rotate: 360 }}
-                          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                        >
-                          <Sparkles className="w-5 h-5" />
-                        </motion.div>
-                      ) : '我已支付'}
+                      复制二维码链接
                     </button>
                   </div>
                 </div>
