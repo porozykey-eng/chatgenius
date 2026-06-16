@@ -22,7 +22,7 @@ app.use(helmet({
       styleSrc: ["'self'", "'unsafe-inline'", "https://fonts.googleapis.com"],
       fontSrc: ["'self'", "https://fonts.gstatic.com"],
       imgSrc: ["'self'", "data: https:"],
-      connectSrc: ["'self'", "https://*.leancloud.cn"],
+      connectSrc: ["'self'"],
     },
   },
 }));

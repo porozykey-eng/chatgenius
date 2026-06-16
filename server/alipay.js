@@ -1,7 +1,7 @@
-// ChatGenius AI Backend - 支付宝支付服务
+// ChatGenius AI Backend - 支付宝支付服务 (MySQL)
 const express = require('express');
 const AlipaySDK = require('alipay-sdk').default;
-const { AV } = require('./config');
+const { pool } = require('./config');
 
 const router = express.Router();
 
@@ -21,29 +21,23 @@ router.post('/create-order', async (req, res) => {
     return res.status(400).json({ success: false, error: '参数不完整' });
   }
   
-  // Validate amount is a positive number within reasonable range
   const numAmount = Number(amount);
   if (isNaN(numAmount) || numAmount <= 0 || numAmount > 10000) {
     return res.status(400).json({ success: false, error: '金额无效' });
   }
   
-  // Validate orderNo format (alphanumeric and dashes only, max 64 chars)
   if (!/^[a-zA-Z0-9\-]{1,64}$/.test(orderNo)) {
     return res.status(400).json({ success: false, error: '订单号格式无效' });
   }
   
-  // Validate subject length
   if (typeof subject !== 'string' || subject.length > 256) {
     return res.status(400).json({ success: false, error: '订单描述过长' });
   }
 
   try {
-    // Idempotency check: reject duplicate orderNo
-    const Order = AV.Object.extend('Order');
-    const existingQuery = new AV.Query(Order);
-    existingQuery.equalTo('orderNo', orderNo);
-    const existing = await existingQuery.first();
-    if (existing) {
+    // Idempotency check
+    const [existing] = await pool.query('SELECT id FROM orders WHERE order_no = ?', [orderNo]);
+    if (existing.length > 0) {
       return res.status(400).json({ success: false, error: '订单号已存在' });
     }
 
@@ -105,7 +99,6 @@ router.get('/query-order/:orderNo', async (req, res) => {
 
 // 支付回调（支付宝异步通知）
 router.post('/notify', async (req, res) => {
-  // Parse raw body (set by express.raw middleware in index.js)
   let params;
   try {
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
@@ -113,7 +106,6 @@ router.post('/notify', async (req, res) => {
       console.warn('Alipay notify: empty body');
       return res.send('fail');
     }
-    // Parse URL-encoded form data into object
     params = Object.fromEntries(new URLSearchParams(rawBody));
   } catch (parseError) {
     console.error('Alipay notify body parse error:', parseError);
@@ -122,13 +114,12 @@ router.post('/notify', async (req, res) => {
   
   const { out_trade_no, trade_status, trade_no, total_amount, app_id } = params;
   
-  // Verify app_id matches our application
   if (app_id && app_id !== process.env.ALIPAY_APP_ID) {
     console.warn('Alipay notify: app_id mismatch:', { received: app_id, expected: process.env.ALIPAY_APP_ID });
     return res.send('fail');
   }
   
-  // 验证支付宝签名，防止伪造请求
+  // 验证支付宝签名
   let signValid = false;
   try {
     signValid = alipaySdk.checkNotifySign(params);
@@ -144,47 +135,57 @@ router.post('/notify', async (req, res) => {
   console.log('Alipay notify received (verified):', { out_trade_no, trade_status });
 
   if (trade_status === 'TRADE_SUCCESS') {
+    let conn;
     try {
+      conn = await pool.getConnection();
+      await conn.beginTransaction();
+
       // 查询订单并验证金额
-      const Order = AV.Object.extend('Order');
-      const query = new AV.Query(Order);
-      query.equalTo('orderNo', out_trade_no);
-      const order = await query.first();
+      const [rows] = await conn.query(
+        'SELECT id, status, price FROM orders WHERE order_no = ? FOR UPDATE',
+        [out_trade_no]
+      );
       
-      if (!order) {
+      if (rows.length === 0) {
         console.warn('Alipay notify: order not found:', out_trade_no);
+        await conn.rollback();
         return res.send('success');
       }
       
-      if (order.get('status') === 'completed') {
-        // Already processed (idempotent)
+      const order = rows[0];
+      
+      if (order.status === 'completed') {
+        await conn.rollback();
         return res.send('success');
       }
       
-      // Verify total_amount matches order price
-      const orderPrice = order.get('price');
-      if (orderPrice && total_amount && String(total_amount) !== String(orderPrice)) {
+      // Verify amount
+      if (order.price && total_amount && String(total_amount) !== String(order.price)) {
         console.error('Alipay notify: amount mismatch!', { 
           orderNo: out_trade_no, 
-          expected: orderPrice, 
+          expected: order.price, 
           received: total_amount 
         });
-        // Still return success to Alipay to stop retries, but flag the issue
+        await conn.rollback();
         return res.send('success');
       }
       
-      order.set('status', 'completed');
-      order.set('completedAt', new Date());
-      order.set('alipayTradeNo', trade_no);
-      await order.save();
+      // 更新订单状态
+      await conn.query(
+        'UPDATE orders SET status = ?, completed_at = ?, alipay_trade_no = ? WHERE id = ?',
+        ['completed', new Date(), trade_no, order.id]
+      );
       
+      await conn.commit();
       console.log('Order updated:', out_trade_no);
     } catch (error) {
+      if (conn) await conn.rollback();
       console.error('Update order error:', error);
+    } finally {
+      if (conn) conn.release();
     }
   }
   
-  // 返回 success 给支付宝
   res.send('success');
 });
 

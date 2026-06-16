@@ -1,21 +1,21 @@
-// ChatGenius AI Backend - Admin Dashboard API (Enhanced)
+// ChatGenius AI Backend - Admin Dashboard API (MySQL)
 const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
-const { AV } = require('./config');
+const { pool } = require('./config');
 
 const router = express.Router();
 
 // Configuration
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD; // Now stores bcrypt hash
+const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD;
 const JWT_SECRET = process.env.JWT_SECRET || 'chatgenius-jwt-secret-key-2026';
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '7d';
 
 // ==================== Login Rate Limiter ====================
 const loginAttempts = new Map();
-const LOGIN_WINDOW_MS = 5 * 60 * 1000; // 5 minutes
+const LOGIN_WINDOW_MS = 5 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS = 5;
 
 function checkLoginLimit(ip) {
@@ -43,7 +43,6 @@ function recordLoginAttempt(ip) {
   }
 }
 
-// Periodic cleanup of expired entries (every 10 minutes)
 setInterval(() => {
   const now = Date.now();
   for (const [ip, record] of loginAttempts) {
@@ -53,22 +52,24 @@ setInterval(() => {
   }
 }, 10 * 60 * 1000);
 
-// ==================== Enhanced Audit Log ====================
+// ==================== Audit Log ====================
 async function auditLog(action, req, details, extra = {}) {
   try {
-    const AuditLog = AV.Object.extend('AuditLog');
-    const log = new AuditLog();
-    log.set('action', action);
-    log.set('adminIP', req.ip || req.connection.remoteAddress);
-    log.set('userAgent', req.get('User-Agent'));
-    log.set('method', req.method);
-    log.set('path', req.path);
-    log.set('details', details);
-    if (extra.targetId) log.set('targetId', extra.targetId);
-    if (extra.targetType) log.set('targetType', extra.targetType);
-    if (extra.beforeState) log.set('beforeState', JSON.stringify(extra.beforeState));
-    if (extra.afterState) log.set('afterState', JSON.stringify(extra.afterState));
-    await log.save();
+    await pool.query(
+      'INSERT INTO audit_logs (action, admin_ip, user_agent, method, path, details, target_id, target_type, before_state, after_state) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [
+        action,
+        req.ip || req.connection.remoteAddress,
+        req.get('User-Agent'),
+        req.method,
+        req.path,
+        details,
+        extra.targetId || null,
+        extra.targetType || null,
+        extra.beforeState ? JSON.stringify(extra.beforeState) : null,
+        extra.afterState ? JSON.stringify(extra.afterState) : null,
+      ]
+    );
   } catch (err) {
     console.error('Audit log error:', err.message);
   }
@@ -97,42 +98,29 @@ function generateBatchId() {
 // ==================== Session Management ====================
 async function createSession(ip, userAgent) {
   const sessionId = crypto.randomBytes(16).toString('hex');
-  const AdminSession = AV.Object.extend('AdminSession');
-  const session = new AdminSession();
-  session.set('sessionId', sessionId);
-  session.set('ip', ip);
-  session.set('userAgent', userAgent);
-  session.set('createdAt', new Date());
-  session.set('lastActiveAt', new Date());
-  session.set('revoked', false);
-  await session.save();
+  await pool.query(
+    'INSERT INTO admin_sessions (session_id, ip, user_agent, created_at, last_active_at, revoked) VALUES (?, ?, ?, ?, ?, ?)',
+    [sessionId, ip, userAgent, new Date(), new Date(), false]
+  );
   return sessionId;
 }
 
 async function updateSessionActivity(sessionId) {
   try {
-    const AdminSession = AV.Object.extend('AdminSession');
-    const query = new AV.Query(AdminSession);
-    query.equalTo('sessionId', sessionId);
-    const session = await query.first();
-    if (session && !session.get('revoked')) {
-      session.set('lastActiveAt', new Date());
-      await session.save();
-    }
+    await pool.query(
+      'UPDATE admin_sessions SET last_active_at = ? WHERE session_id = ? AND revoked = FALSE',
+      [new Date(), sessionId]
+    );
   } catch (err) {
-    // Silent fail for activity updates
+    // Silent fail
   }
 }
 
 async function revokeSession(sessionId) {
-  const AdminSession = AV.Object.extend('AdminSession');
-  const query = new AV.Query(AdminSession);
-  query.equalTo('sessionId', sessionId);
-  const session = await query.first();
-  if (session) {
-    session.set('revoked', true);
-    await session.save();
-  }
+  await pool.query(
+    'UPDATE admin_sessions SET revoked = TRUE WHERE session_id = ?',
+    [sessionId]
+  );
 }
 
 // Authentication middleware
@@ -145,12 +133,9 @@ function requireAdmin(req, res, next) {
   const token = authHeader.substring(7);
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
-    
-    // Check if session is revoked
     if (decoded.sessionId) {
       updateSessionActivity(decoded.sessionId);
     }
-    
     req.adminSession = decoded;
     next();
   } catch (err) {
@@ -158,15 +143,8 @@ function requireAdmin(req, res, next) {
   }
 }
 
-// IP Whitelist middleware (optional)
-function checkIPWhitelist(req, res, next) {
-  // This will be implemented with SystemSetting in Task 9
-  next();
-}
-
 // ==================== Authentication ====================
 
-// POST /api/admin/login - Admin login
 router.post('/login', async (req, res) => {
   const { password } = req.body;
   const clientIP = req.ip || req.connection.remoteAddress;
@@ -176,7 +154,6 @@ router.post('/login', async (req, res) => {
     return res.status(400).json({ error: '请输入密码' });
   }
 
-  // Check rate limit
   const limitCheck = checkLoginLimit(clientIP);
   if (!limitCheck.allowed) {
     await auditLog('login_rate_limited', req, '登录频率限制触发');
@@ -185,14 +162,12 @@ router.post('/login', async (req, res) => {
     });
   }
 
-  // Check if ADMIN_PASSWORD_HASH is a bcrypt hash (starts with $2a$ or $2b$)
   const isHashed = ADMIN_PASSWORD_HASH && (ADMIN_PASSWORD_HASH.startsWith('$2a$') || ADMIN_PASSWORD_HASH.startsWith('$2b$'));
   
   let passwordValid = false;
   if (isHashed) {
     passwordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
   } else {
-    // Fallback for plain text (migration period)
     passwordValid = password === ADMIN_PASSWORD_HASH;
   }
 
@@ -200,7 +175,6 @@ router.post('/login', async (req, res) => {
     recordLoginAttempt(clientIP);
     await auditLog('login_failed', req, '密码错误');
     
-    // Check for brute force
     const record = loginAttempts.get(clientIP);
     if (record && record.count >= 3) {
       await auditLog('security_brute_force', req, `连续登录失败 ${record.count} 次`);
@@ -209,13 +183,9 @@ router.post('/login', async (req, res) => {
     return res.status(401).json({ error: '密码错误' });
   }
 
-  // Clear login attempts on success
   loginAttempts.delete(clientIP);
-  
-  // Create session
   const sessionId = await createSession(clientIP, userAgent);
   
-  // Generate tokens
   const accessToken = jwt.sign(
     { role: 'admin', sessionId },
     JWT_SECRET,
@@ -236,7 +206,6 @@ router.post('/login', async (req, res) => {
   });
 });
 
-// POST /api/admin/refresh-token - Refresh access token
 router.post('/refresh-token', async (req, res) => {
   const { refreshToken } = req.body;
   
@@ -246,62 +215,49 @@ router.post('/refresh-token', async (req, res) => {
 
   try {
     const decoded = jwt.verify(refreshToken, JWT_SECRET);
-    
     if (decoded.type !== 'refresh') {
       return res.status(401).json({ error: '无效的 refresh token' });
     }
 
-    // Generate new access token
     const accessToken = jwt.sign(
       { role: 'admin', sessionId: decoded.sessionId },
       JWT_SECRET,
       { expiresIn: ACCESS_TOKEN_EXPIRY }
     );
     
-    res.json({
-      accessToken,
-      accessExpiresIn: ACCESS_TOKEN_EXPIRY
-    });
+    res.json({ accessToken, accessExpiresIn: ACCESS_TOKEN_EXPIRY });
   } catch (err) {
     return res.status(401).json({ error: 'Refresh token 无效或已过期' });
   }
 });
 
-// POST /api/admin/logout - Logout
 router.post('/logout', requireAdmin, async (req, res) => {
   const sessionId = req.adminSession.sessionId;
-  
   if (sessionId) {
     await revokeSession(sessionId);
     await auditLog('logout', req, '管理员退出登录');
   }
-  
   res.json({ success: true });
 });
 
-// GET /api/admin/me - Verify token validity
 router.get('/me', requireAdmin, (req, res) => {
   res.json({ loggedIn: true });
 });
 
-// GET /api/admin/sessions - List active sessions
 router.get('/sessions', requireAdmin, async (req, res) => {
   try {
-    const AdminSession = AV.Object.extend('AdminSession');
-    const query = new AV.Query(AdminSession);
-    query.equalTo('revoked', false);
-    query.descending('lastActiveAt');
-    query.limit(50);
-    const sessions = await query.find();
+    const [rows] = await pool.query(
+      'SELECT session_id, ip, user_agent, created_at, last_active_at FROM admin_sessions WHERE revoked = FALSE ORDER BY last_active_at DESC LIMIT 50'
+    );
     
     res.json({
-      sessions: sessions.map(s => ({
-        sessionId: s.get('sessionId'),
-        ip: s.get('ip'),
-        userAgent: s.get('userAgent'),
-        createdAt: s.get('createdAt'),
-        lastActiveAt: s.get('lastActiveAt'),
-        current: s.get('sessionId') === req.adminSession.sessionId
+      sessions: rows.map(s => ({
+        sessionId: s.session_id,
+        ip: s.ip,
+        userAgent: s.user_agent,
+        createdAt: s.created_at,
+        lastActiveAt: s.last_active_at,
+        current: s.session_id === req.adminSession.sessionId
       }))
     });
   } catch (err) {
@@ -310,10 +266,8 @@ router.get('/sessions', requireAdmin, async (req, res) => {
   }
 });
 
-// DELETE /api/admin/sessions/:sessionId - Revoke specific session
 router.delete('/sessions/:sessionId', requireAdmin, async (req, res) => {
   const { sessionId } = req.params;
-  
   try {
     await revokeSession(sessionId);
     await auditLog('session_revoked', req, `强制下线会话 ${sessionId.substring(0, 8)}...`);
@@ -324,7 +278,6 @@ router.delete('/sessions/:sessionId', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/change-password - Change admin password
 router.post('/change-password', requireAdmin, async (req, res) => {
   const { oldPassword, newPassword } = req.body;
   
@@ -336,7 +289,6 @@ router.post('/change-password', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: '新密码长度至少 8 位' });
   }
 
-  // Verify old password
   const isHashed = ADMIN_PASSWORD_HASH && (ADMIN_PASSWORD_HASH.startsWith('$2a$') || ADMIN_PASSWORD_HASH.startsWith('$2b$'));
   let oldPasswordValid = false;
   
@@ -351,11 +303,7 @@ router.post('/change-password', requireAdmin, async (req, res) => {
     return res.status(401).json({ error: '旧密码错误' });
   }
 
-  // Hash new password
   const newHash = await bcrypt.hash(newPassword, 12);
-  
-  // Note: In production, this should update the .env file or database
-  // For now, we'll just return the hash and log the action
   await auditLog('password_change_requested', req, '密码修改请求（需手动更新 .env）');
   
   res.json({
@@ -367,88 +315,74 @@ router.post('/change-password', requireAdmin, async (req, res) => {
 
 // ==================== Dashboard ====================
 
-// GET /api/admin/dashboard - Enhanced overview statistics
 router.get('/dashboard', requireAdmin, async (req, res) => {
   try {
     const today = new Date();
     today.setHours(0, 0, 0, 0);
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
-
-    // Week start (Monday)
     const weekStart = new Date(today);
     weekStart.setDate(today.getDate() - today.getDay() + 1);
-
-    // Month start
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
     // Today's revenue
-    const Order = AV.Object.extend('Order');
-    const todayOrderQuery = new AV.Query(Order);
-    todayOrderQuery.equalTo('status', 'completed');
-    todayOrderQuery.greaterThanOrEqualTo('completedAt', today);
-    todayOrderQuery.lessThan('completedAt', tomorrow);
-    const todayOrders = await todayOrderQuery.find();
-    const todayRevenue = todayOrders.reduce((sum, order) => sum + (parseFloat(order.get('price')) || 0), 0);
+    const [todayOrders] = await pool.query(
+      'SELECT price FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
+      ['completed', today, tomorrow]
+    );
+    const todayRevenue = todayOrders.reduce((sum, o) => sum + (parseFloat(o.price) || 0), 0);
 
     // Week revenue
-    const weekOrderQuery = new AV.Query(Order);
-    weekOrderQuery.equalTo('status', 'completed');
-    weekOrderQuery.greaterThanOrEqualTo('completedAt', weekStart);
-    weekOrderQuery.lessThan('completedAt', tomorrow);
-    const weekOrders = await weekOrderQuery.find();
-    const weekRevenue = weekOrders.reduce((sum, order) => sum + (parseFloat(order.get('price')) || 0), 0);
+    const [weekOrders] = await pool.query(
+      'SELECT price FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
+      ['completed', weekStart, tomorrow]
+    );
+    const weekRevenue = weekOrders.reduce((sum, o) => sum + (parseFloat(o.price) || 0), 0);
 
     // Month revenue
-    const monthOrderQuery = new AV.Query(Order);
-    monthOrderQuery.equalTo('status', 'completed');
-    monthOrderQuery.greaterThanOrEqualTo('completedAt', monthStart);
-    monthOrderQuery.lessThan('completedAt', tomorrow);
-    const monthOrders = await monthOrderQuery.find();
-    const monthRevenue = monthOrders.reduce((sum, order) => sum + (parseFloat(order.get('price')) || 0), 0);
+    const [monthOrders] = await pool.query(
+      'SELECT price FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
+      ['completed', monthStart, tomorrow]
+    );
+    const monthRevenue = monthOrders.reduce((sum, o) => sum + (parseFloat(o.price) || 0), 0);
 
     // Total revenue
-    const totalOrderQuery = new AV.Query(Order);
-    totalOrderQuery.equalTo('status', 'completed');
-    const allOrders = await totalOrderQuery.find();
-    const totalRevenue = allOrders.reduce((sum, order) => sum + (parseFloat(order.get('price')) || 0), 0);
+    const [allOrders] = await pool.query('SELECT price FROM orders WHERE status = ?', ['completed']);
+    const totalRevenue = allOrders.reduce((sum, o) => sum + (parseFloat(o.price) || 0), 0);
 
     // Today's activations
-    const ActivationCode = AV.Object.extend('ActivationCode');
-    const todayActivationQuery = new AV.Query(ActivationCode);
-    todayActivationQuery.equalTo('status', 'used');
-    todayActivationQuery.greaterThanOrEqualTo('usedAt', today);
-    todayActivationQuery.lessThan('usedAt', tomorrow);
-    const todayActivations = await todayActivationQuery.count();
+    const [todayActs] = await pool.query(
+      'SELECT COUNT(*) as cnt FROM activation_codes WHERE status = ? AND used_at >= ? AND used_at < ?',
+      ['used', today, tomorrow]
+    );
+    const todayActivations = todayActs[0].cnt;
 
     // Week activations
-    const weekActivationQuery = new AV.Query(ActivationCode);
-    weekActivationQuery.equalTo('status', 'used');
-    weekActivationQuery.greaterThanOrEqualTo('usedAt', weekStart);
-    weekActivationQuery.lessThan('usedAt', tomorrow);
-    const weekActivations = await weekActivationQuery.count();
+    const [weekActs] = await pool.query(
+      'SELECT COUNT(*) as cnt FROM activation_codes WHERE status = ? AND used_at >= ? AND used_at < ?',
+      ['used', weekStart, tomorrow]
+    );
+    const weekActivations = weekActs[0].cnt;
 
     // Active licenses
-    const License = AV.Object.extend('License');
-    const activeQuery = new AV.Query(License);
-    activeQuery.equalTo('isActive', true);
-    const activeLicenses = await activeQuery.count();
+    const [activeLic] = await pool.query(
+      'SELECT COUNT(*) as cnt FROM licenses WHERE is_active = TRUE'
+    );
+    const activeLicenses = activeLic[0].cnt;
 
     // Expiring soon (within 30 days)
     const thirtyDaysLater = new Date();
     thirtyDaysLater.setDate(thirtyDaysLater.getDate() + 30);
-    const expiringQuery = new AV.Query(License);
-    expiringQuery.equalTo('isActive', true);
-    expiringQuery.exists('expiresAt');
-    expiringQuery.lessThanOrEqualTo('expiresAt', thirtyDaysLater);
-    expiringQuery.greaterThan('expiresAt', new Date());
-    const expiringSoon = await expiringQuery.count();
+    const [expiringLic] = await pool.query(
+      'SELECT COUNT(*) as cnt FROM licenses WHERE is_active = TRUE AND expires_at IS NOT NULL AND expires_at <= ? AND expires_at > ?',
+      [thirtyDaysLater, new Date()]
+    );
+    const expiringSoon = expiringLic[0].cnt;
 
     // Recent orders
-    const recentOrderQuery = new AV.Query(Order);
-    recentOrderQuery.descending('createdAt');
-    recentOrderQuery.limit(5);
-    const recentOrders = await recentOrderQuery.find();
+    const [recentOrders] = await pool.query(
+      'SELECT order_no, plan, price, status, created_at FROM orders ORDER BY created_at DESC LIMIT 5'
+    );
 
     res.json({
       todayRevenue: todayRevenue.toFixed(2),
@@ -460,11 +394,11 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
       activeLicenses,
       expiringSoon,
       recentOrders: recentOrders.map(o => ({
-        orderNo: o.get('orderNo'),
-        plan: o.get('plan'),
-        price: o.get('price'),
-        status: o.get('status'),
-        createdAt: o.createdAt
+        orderNo: o.order_no,
+        plan: o.plan,
+        price: o.price,
+        status: o.status,
+        createdAt: o.created_at
       }))
     });
   } catch (err) {
@@ -473,7 +407,6 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/dashboard/trends - Trend data for charts
 router.get('/dashboard/trends', requireAdmin, async (req, res) => {
   const { metric = 'revenue', days = 7 } = req.query;
   const numDays = parseInt(days);
@@ -499,33 +432,30 @@ router.get('/dashboard/trends', requireAdmin, async (req, res) => {
       const nextDate = new Date(date);
       nextDate.setDate(date.getDate() + 1);
       
-      labels.push(date.toISOString().slice(5, 10)); // MM-DD
+      labels.push(date.toISOString().slice(5, 10));
 
       if (metric === 'revenue') {
-        const Order = AV.Object.extend('Order');
-        const query = new AV.Query(Order);
-        query.equalTo('status', 'completed');
-        query.greaterThanOrEqualTo('completedAt', date);
-        query.lessThan('completedAt', nextDate);
-        const orders = await query.find();
-        const dayTotal = orders.reduce((sum, o) => sum + (parseFloat(o.get('price')) || 0), 0);
+        const [orders] = await pool.query(
+          'SELECT price FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
+          ['completed', date, nextDate]
+        );
+        const dayTotal = orders.reduce((sum, o) => sum + (parseFloat(o.price) || 0), 0);
         values.push(dayTotal.toFixed(2));
         total += dayTotal;
       } else if (metric === 'activations') {
-        const ActivationCode = AV.Object.extend('ActivationCode');
-        const query = new AV.Query(ActivationCode);
-        query.equalTo('status', 'used');
-        query.greaterThanOrEqualTo('usedAt', date);
-        query.lessThan('usedAt', nextDate);
-        const count = await query.count();
+        const [rows] = await pool.query(
+          'SELECT COUNT(*) as cnt FROM activation_codes WHERE status = ? AND used_at >= ? AND used_at < ?',
+          ['used', date, nextDate]
+        );
+        const count = rows[0].cnt;
         values.push(count);
         total += count;
       } else if (metric === 'orders') {
-        const Order = AV.Object.extend('Order');
-        const query = new AV.Query(Order);
-        query.greaterThanOrEqualTo('createdAt', date);
-        query.lessThan('createdAt', nextDate);
-        const count = await query.count();
+        const [rows] = await pool.query(
+          'SELECT COUNT(*) as cnt FROM orders WHERE created_at >= ? AND created_at < ?',
+          [date, nextDate]
+        );
+        const count = rows[0].cnt;
         values.push(count);
         total += count;
       }
@@ -540,47 +470,43 @@ router.get('/dashboard/trends', requireAdmin, async (req, res) => {
 
 // ==================== Audit Logs ====================
 
-// GET /api/admin/audit-logs - List audit logs
 router.get('/audit-logs', requireAdmin, async (req, res) => {
   const { action, startDate, endDate, ip, page = 1, limit = 50 } = req.query;
   const pageNum = parseInt(page);
   const limitNum = parseInt(limit);
 
   try {
-    const AuditLog = AV.Object.extend('AuditLog');
-    const query = new AV.Query(AuditLog);
+    let whereClause = '1=1';
+    const params = [];
 
-    if (action && action !== 'all') {
-      query.equalTo('action', action);
-    }
-    if (startDate) {
-      query.greaterThanOrEqualTo('createdAt', new Date(startDate));
-    }
+    if (action && action !== 'all') { whereClause += ' AND action = ?'; params.push(action); }
+    if (startDate) { whereClause += ' AND created_at >= ?'; params.push(new Date(startDate)); }
     if (endDate) {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
-      query.lessThanOrEqualTo('createdAt', end);
+      whereClause += ' AND created_at <= ?';
+      params.push(end);
     }
-    if (ip) {
-      query.contains('adminIP', ip);
-    }
+    if (ip) { whereClause += ' AND admin_ip LIKE ?'; params.push(`%${ip}%`); }
 
-    const total = await query.count();
-    query.descending('createdAt');
-    query.skip((pageNum - 1) * limitNum);
-    query.limit(limitNum);
-    const logs = await query.find();
+    const [countRows] = await pool.query(`SELECT COUNT(*) as cnt FROM audit_logs WHERE ${whereClause}`, params);
+    const total = countRows[0].cnt;
+
+    const [logs] = await pool.query(
+      `SELECT id, action, admin_ip, user_agent, method, path, details, created_at FROM audit_logs WHERE ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limitNum, (pageNum - 1) * limitNum]
+    );
 
     res.json({
       items: logs.map(log => ({
         id: log.id,
-        action: log.get('action'),
-        adminIP: log.get('adminIP'),
-        userAgent: log.get('userAgent'),
-        method: log.get('method'),
-        path: log.get('path'),
-        details: log.get('details'),
-        createdAt: log.createdAt
+        action: log.action,
+        adminIP: log.admin_ip,
+        userAgent: log.user_agent,
+        method: log.method,
+        path: log.path,
+        details: log.details,
+        createdAt: log.created_at
       })),
       total,
       page: pageNum,
@@ -592,30 +518,31 @@ router.get('/audit-logs', requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/audit-logs/export - Export audit logs
 router.get('/audit-logs/export', requireAdmin, async (req, res) => {
   const { startDate, endDate } = req.query;
 
   try {
-    const AuditLog = AV.Object.extend('AuditLog');
-    const query = new AV.Query(AuditLog);
+    let whereClause = '1=1';
+    const params = [];
 
-    if (startDate) query.greaterThanOrEqualTo('createdAt', new Date(startDate));
+    if (startDate) { whereClause += ' AND created_at >= ?'; params.push(new Date(startDate)); }
     if (endDate) {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
-      query.lessThanOrEqualTo('createdAt', end);
+      whereClause += ' AND created_at <= ?';
+      params.push(end);
     }
 
-    query.descending('createdAt');
-    query.limit(10000);
-    const logs = await query.find();
+    const [logs] = await pool.query(
+      `SELECT action, admin_ip, user_agent, method, path, details, created_at FROM audit_logs WHERE ${whereClause} ORDER BY created_at DESC LIMIT 10000`,
+      params
+    );
 
     const BOM = '\uFEFF';
     const header = '时间,操作,IP,User-Agent,方法,路径,详情\n';
     const rows = logs.map(log => {
-      const time = log.createdAt ? new Date(log.createdAt).toLocaleString('zh-CN') : '';
-      return `"${time}","${log.get('action')}","${log.get('adminIP')}","${log.get('userAgent') || ''}","${log.get('method') || ''}","${log.get('path') || ''}","${log.get('details') || ''}"`;
+      const time = log.created_at ? new Date(log.created_at).toLocaleString('zh-CN') : '';
+      return `"${time}","${log.action}","${log.admin_ip}","${log.user_agent || ''}","${log.method || ''}","${log.path || ''}","${log.details || ''}"`;
     }).join('\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -629,7 +556,6 @@ router.get('/audit-logs/export', requireAdmin, async (req, res) => {
 
 // ==================== Activation Codes ====================
 
-// POST /api/admin/codes/generate - Batch generate with batch ID
 router.post('/codes/generate', requireAdmin, async (req, res) => {
   const { type, quantity, note } = req.body;
   
@@ -651,15 +577,10 @@ router.post('/codes/generate', requireAdmin, async (req, res) => {
 
     for (let i = 0; i < qty; i++) {
       const code = generateSecureCode(prefix);
-
-      const ActivationCode = AV.Object.extend('ActivationCode');
-      const activationCode = new ActivationCode();
-      activationCode.set('code', code);
-      activationCode.set('type', type);
-      activationCode.set('status', 'unused');
-      activationCode.set('batchId', batchId);
-      if (note) activationCode.set('note', note);
-      await activationCode.save();
+      await pool.query(
+        'INSERT INTO activation_codes (code, type, status, batch_id, note) VALUES (?, ?, ?, ?, ?)',
+        [code, type, 'unused', batchId, note || null]
+      );
       codes.push(code);
     }
 
@@ -671,33 +592,28 @@ router.post('/codes/generate', requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/codes/batches - List batches
 router.get('/codes/batches', requireAdmin, async (req, res) => {
   try {
-    const ActivationCode = AV.Object.extend('ActivationCode');
-    const query = new AV.Query(ActivationCode);
-    query.exists('batchId');
-    query.descending('createdAt');
-    query.limit(1000);
-    const codes = await query.find();
+    const [codes] = await pool.query(
+      'SELECT code, type, status, batch_id, note, created_at FROM activation_codes WHERE batch_id IS NOT NULL ORDER BY created_at DESC LIMIT 1000'
+    );
 
-    // Group by batchId
     const batchMap = new Map();
     codes.forEach(code => {
-      const batchId = code.get('batchId');
+      const batchId = code.batch_id;
       if (!batchMap.has(batchId)) {
         batchMap.set(batchId, {
           batchId,
-          type: code.get('type'),
+          type: code.type,
           count: 0,
           usedCount: 0,
-          createdAt: code.createdAt,
-          note: code.get('note') || ''
+          createdAt: code.created_at,
+          note: code.note || ''
         });
       }
       const batch = batchMap.get(batchId);
       batch.count++;
-      if (code.get('status') === 'used') batch.usedCount++;
+      if (code.status === 'used') batch.usedCount++;
     });
 
     res.json({ batches: Array.from(batchMap.values()) });
@@ -707,28 +623,28 @@ router.get('/codes/batches', requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/codes/export - Export codes
 router.get('/codes/export', requireAdmin, async (req, res) => {
   const { status, type, batchId } = req.query;
 
   try {
-    const ActivationCode = AV.Object.extend('ActivationCode');
-    const query = new AV.Query(ActivationCode);
+    let whereClause = '1=1';
+    const params = [];
 
-    if (status && status !== 'all') query.equalTo('status', status);
-    if (type && type !== 'all') query.equalTo('type', type);
-    if (batchId && batchId !== 'all') query.equalTo('batchId', batchId);
+    if (status && status !== 'all') { whereClause += ' AND status = ?'; params.push(status); }
+    if (type && type !== 'all') { whereClause += ' AND type = ?'; params.push(type); }
+    if (batchId && batchId !== 'all') { whereClause += ' AND batch_id = ?'; params.push(batchId); }
 
-    query.descending('createdAt');
-    query.limit(10000);
-    const codes = await query.find();
+    const [codes] = await pool.query(
+      `SELECT code, type, status, batch_id, note, created_at, used_at FROM activation_codes WHERE ${whereClause} ORDER BY created_at DESC LIMIT 10000`,
+      params
+    );
 
     const BOM = '\uFEFF';
     const header = '激活码,类型,状态,批次,备注,创建时间,使用时间\n';
+    const typeMap = { year: '年付', lifetime: '永久', free: '免费' };
+    const statusMap = { unused: '未使用', used: '已使用' };
     const rows = codes.map(code => {
-      const typeMap = { year: '年付', lifetime: '永久', free: '免费' };
-      const statusMap = { unused: '未使用', used: '已使用' };
-      return `"${code.get('code')}","${typeMap[code.get('type')] || code.get('type')}","${statusMap[code.get('status')] || code.get('status')}","${code.get('batchId') || ''}","${code.get('note') || ''}","${code.createdAt ? new Date(code.createdAt).toLocaleString('zh-CN') : ''}","${code.get('usedAt') ? new Date(code.get('usedAt')).toLocaleString('zh-CN') : ''}"`;
+      return `"${code.code}","${typeMap[code.type] || code.type}","${statusMap[code.status] || code.status}","${code.batch_id || ''}","${code.note || ''}","${code.created_at ? new Date(code.created_at).toLocaleString('zh-CN') : ''}","${code.used_at ? new Date(code.used_at).toLocaleString('zh-CN') : ''}"`;
     }).join('\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -740,43 +656,45 @@ router.get('/codes/export', requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/codes - List codes
 router.get('/codes', requireAdmin, async (req, res) => {
   const { status, type, batchId, search, createdAfter, createdBefore, page = 1, limit = 50 } = req.query;
   const pageNum = parseInt(page);
   const limitNum = parseInt(limit);
 
   try {
-    const ActivationCode = AV.Object.extend('ActivationCode');
-    const query = new AV.Query(ActivationCode);
+    let whereClause = '1=1';
+    const params = [];
 
-    if (status && status !== 'all') query.equalTo('status', status);
-    if (type && type !== 'all') query.equalTo('type', type);
-    if (batchId && batchId !== 'all') query.equalTo('batchId', batchId);
-    if (search) query.contains('code', search.toUpperCase());
-    if (createdAfter) query.greaterThanOrEqualTo('createdAt', new Date(createdAfter));
+    if (status && status !== 'all') { whereClause += ' AND status = ?'; params.push(status); }
+    if (type && type !== 'all') { whereClause += ' AND type = ?'; params.push(type); }
+    if (batchId && batchId !== 'all') { whereClause += ' AND batch_id = ?'; params.push(batchId); }
+    if (search) { whereClause += ' AND code LIKE ?'; params.push(`%${search.toUpperCase()}%`); }
+    if (createdAfter) { whereClause += ' AND created_at >= ?'; params.push(new Date(createdAfter)); }
     if (createdBefore) {
       const before = new Date(createdBefore);
       before.setHours(23, 59, 59, 999);
-      query.lessThanOrEqualTo('createdAt', before);
+      whereClause += ' AND created_at <= ?';
+      params.push(before);
     }
 
-    const total = await query.count();
-    query.descending('createdAt');
-    query.skip((pageNum - 1) * limitNum);
-    query.limit(limitNum);
-    const codes = await query.find();
+    const [countRows] = await pool.query(`SELECT COUNT(*) as cnt FROM activation_codes WHERE ${whereClause}`, params);
+    const total = countRows[0].cnt;
+
+    const [codes] = await pool.query(
+      `SELECT id, code, type, status, batch_id, note, created_at, used_at FROM activation_codes WHERE ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limitNum, (pageNum - 1) * limitNum]
+    );
 
     res.json({
       items: codes.map(code => ({
         id: code.id,
-        code: code.get('code'),
-        type: code.get('type'),
-        status: code.get('status'),
-        batchId: code.get('batchId'),
-        note: code.get('note'),
-        createdAt: code.createdAt,
-        usedAt: code.get('usedAt')
+        code: code.code,
+        type: code.type,
+        status: code.status,
+        batchId: code.batch_id,
+        note: code.note,
+        createdAt: code.created_at,
+        usedAt: code.used_at
       })),
       total,
       page: pageNum,
@@ -788,37 +706,34 @@ router.get('/codes', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/codes/batch-delete - Batch delete unused codes
 router.post('/codes/batch-delete', requireAdmin, async (req, res) => {
   const { ids, filter } = req.body;
 
   try {
-    const ActivationCode = AV.Object.extend('ActivationCode');
-    let toDelete = [];
+    let deletedCount = 0;
 
     if (ids && Array.isArray(ids) && ids.length > 0) {
       if (ids.length > 500) {
         return res.status(400).json({ error: '单次最多删除 500 条' });
       }
       for (const id of ids) {
-        const code = await new AV.Query(ActivationCode).get(id);
-        if (code.get('status') === 'unused') {
-          toDelete.push(code);
+        const [rows] = await pool.query('SELECT status FROM activation_codes WHERE id = ?', [id]);
+        if (rows.length > 0 && rows[0].status === 'unused') {
+          await pool.query('DELETE FROM activation_codes WHERE id = ?', [id]);
+          deletedCount++;
         }
       }
     } else if (filter) {
-      const query = new AV.Query(ActivationCode);
-      query.equalTo('status', 'unused');
-      if (filter.type) query.equalTo('type', filter.type);
-      if (filter.batchId) query.equalTo('batchId', filter.batchId);
-      query.limit(500);
-      toDelete = await query.find();
-    }
-
-    let deletedCount = 0;
-    for (const code of toDelete) {
-      await code.destroy();
-      deletedCount++;
+      let whereClause = 'status = ?';
+      const params = ['unused'];
+      if (filter.type) { whereClause += ' AND type = ?'; params.push(filter.type); }
+      if (filter.batchId) { whereClause += ' AND batch_id = ?'; params.push(filter.batchId); }
+      
+      const [rows] = await pool.query(`SELECT id FROM activation_codes WHERE ${whereClause} LIMIT 500`, params);
+      for (const row of rows) {
+        await pool.query('DELETE FROM activation_codes WHERE id = ?', [row.id]);
+        deletedCount++;
+      }
     }
 
     await auditLog('codes_batch_deleted', req, `批量删除 ${deletedCount} 个未使用激活码`);
@@ -829,18 +744,13 @@ router.post('/codes/batch-delete', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/codes/:id/note - Add note to code
 router.post('/codes/:id/note', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { note } = req.body;
 
   try {
-    const ActivationCode = AV.Object.extend('ActivationCode');
-    const code = await new AV.Query(ActivationCode).get(id);
-    code.set('note', note);
-    await code.save();
-
-    await auditLog('code_note_updated', req, `更新激活码 ${code.get('code')} 备注`);
+    await pool.query('UPDATE activation_codes SET note = ? WHERE id = ?', [note, id]);
+    await auditLog('code_note_updated', req, `更新激活码备注 ID:${id}`);
     res.json({ success: true });
   } catch (err) {
     console.error('Update note error:', err);
@@ -850,17 +760,12 @@ router.post('/codes/:id/note', requireAdmin, async (req, res) => {
 
 // ==================== Orders ====================
 
-// GET /api/admin/orders/statistics - Order statistics
 router.get('/orders/statistics', requireAdmin, async (req, res) => {
   const { period = 'month' } = req.query;
 
   try {
-    const Order = AV.Object.extend('Order');
-    const query = new AV.Query(Order);
-    query.equalTo('status', 'completed');
-
-    let startDate;
     const now = new Date();
+    let startDate;
     if (period === 'week') {
       startDate = new Date(now);
       startDate.setDate(now.getDate() - 7);
@@ -874,18 +779,19 @@ router.get('/orders/statistics', requireAdmin, async (req, res) => {
       startDate = new Date(0);
     }
 
-    query.greaterThanOrEqualTo('completedAt', startDate);
-    const orders = await query.find();
+    const [orders] = await pool.query(
+      'SELECT type, channel, price FROM orders WHERE status = ? AND completed_at >= ?',
+      ['completed', startDate]
+    );
 
-    // Group by type
     const typeBreakdown = {};
     const channelBreakdown = {};
     let totalAmount = 0;
 
     orders.forEach(order => {
-      const type = order.get('type') || 'year';
-      const channel = order.get('channel') || 'unknown';
-      const price = parseFloat(order.get('price')) || 0;
+      const type = order.type || 'year';
+      const channel = order.channel || 'unknown';
+      const price = parseFloat(order.price) || 0;
 
       typeBreakdown[type] = (typeBreakdown[type] || 0) + price;
       channelBreakdown[channel] = (channelBreakdown[channel] || 0) + price;
@@ -904,52 +810,53 @@ router.get('/orders/statistics', requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/orders - Enhanced list with filters
 router.get('/orders', requireAdmin, async (req, res) => {
   const { status, startDate, endDate, minPrice, maxPrice, userEmail, orderNo, page = 1, limit = 50 } = req.query;
   const pageNum = parseInt(page);
   const limitNum = parseInt(limit);
 
   try {
-    const Order = AV.Object.extend('Order');
-    const query = new AV.Query(Order);
+    let whereClause = '1=1';
+    const params = [];
 
-    if (status && status !== 'all') query.equalTo('status', status);
-    if (startDate) query.greaterThanOrEqualTo('createdAt', new Date(startDate));
+    if (status && status !== 'all') { whereClause += ' AND status = ?'; params.push(status); }
+    if (startDate) { whereClause += ' AND created_at >= ?'; params.push(new Date(startDate)); }
     if (endDate) {
       const end = new Date(endDate);
       end.setHours(23, 59, 59, 999);
-      query.lessThanOrEqualTo('createdAt', end);
+      whereClause += ' AND created_at <= ?';
+      params.push(end);
     }
-    if (minPrice) query.greaterThanOrEqualTo('price', minPrice);
-    if (maxPrice) query.lessThanOrEqualTo('price', maxPrice);
-    if (userEmail) query.contains('userEmail', userEmail);
-    if (orderNo) query.contains('orderNo', orderNo);
+    if (minPrice) { whereClause += ' AND CAST(price AS DECIMAL) >= ?'; params.push(parseFloat(minPrice)); }
+    if (maxPrice) { whereClause += ' AND CAST(price AS DECIMAL) <= ?'; params.push(parseFloat(maxPrice)); }
+    if (userEmail) { whereClause += ' AND user_email LIKE ?'; params.push(`%${userEmail}%`); }
+    if (orderNo) { whereClause += ' AND order_no LIKE ?'; params.push(`%${orderNo}%`); }
 
-    const total = await query.count();
-    query.descending('createdAt');
-    query.skip((pageNum - 1) * limitNum);
-    query.limit(limitNum);
-    const orders = await query.find();
+    const [countRows] = await pool.query(`SELECT COUNT(*) as cnt FROM orders WHERE ${whereClause}`, params);
+    const total = countRows[0].cnt;
 
-    // Calculate summary
+    const [orders] = await pool.query(
+      `SELECT id, order_no, plan, price, type, channel, status, created_at, completed_at, activation_code, user_email, alipay_trade_no FROM orders WHERE ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limitNum, (pageNum - 1) * limitNum]
+    );
+
     let summaryAmount = 0;
-    orders.forEach(o => summaryAmount += parseFloat(o.get('price')) || 0);
+    orders.forEach(o => summaryAmount += parseFloat(o.price) || 0);
 
     res.json({
       items: orders.map(order => ({
         id: order.id,
-        orderNo: order.get('orderNo'),
-        plan: order.get('plan'),
-        price: order.get('price'),
-        type: order.get('type'),
-        channel: order.get('channel'),
-        status: order.get('status'),
-        createdAt: order.createdAt,
-        completedAt: order.get('completedAt'),
-        activationCode: order.get('activationCode'),
-        userEmail: order.get('userEmail'),
-        alipayTradeNo: order.get('alipayTradeNo')
+        orderNo: order.order_no,
+        plan: order.plan,
+        price: order.price,
+        type: order.type,
+        channel: order.channel,
+        status: order.status,
+        createdAt: order.created_at,
+        completedAt: order.completed_at,
+        activationCode: order.activation_code,
+        userEmail: order.user_email,
+        alipayTradeNo: order.alipay_trade_no
       })),
       total,
       page: pageNum,
@@ -965,33 +872,33 @@ router.get('/orders', requireAdmin, async (req, res) => {
   }
 });
 
-// GET /api/admin/orders/:orderNo - Get order details
 router.get('/orders/:orderNo', requireAdmin, async (req, res) => {
   const { orderNo } = req.params;
 
   try {
-    const Order = AV.Object.extend('Order');
-    const query = new AV.Query(Order);
-    query.equalTo('orderNo', orderNo);
-    const order = await query.first();
+    const [rows] = await pool.query(
+      'SELECT id, order_no, plan, price, type, channel, status, created_at, completed_at, activation_code, user_email, alipay_trade_no FROM orders WHERE order_no = ?',
+      [orderNo]
+    );
 
-    if (!order) {
+    if (rows.length === 0) {
       return res.status(404).json({ error: '订单不存在' });
     }
 
+    const order = rows[0];
     res.json({
       id: order.id,
-      orderNo: order.get('orderNo'),
-      plan: order.get('plan'),
-      price: order.get('price'),
-      type: order.get('type'),
-      channel: order.get('channel'),
-      status: order.get('status'),
-      createdAt: order.createdAt,
-      completedAt: order.get('completedAt'),
-      activationCode: order.get('activationCode'),
-      userEmail: order.get('userEmail'),
-      alipayTradeNo: order.get('alipayTradeNo')
+      orderNo: order.order_no,
+      plan: order.plan,
+      price: order.price,
+      type: order.type,
+      channel: order.channel,
+      status: order.status,
+      createdAt: order.created_at,
+      completedAt: order.completed_at,
+      activationCode: order.activation_code,
+      userEmail: order.user_email,
+      alipayTradeNo: order.alipay_trade_no
     });
   } catch (err) {
     console.error('Get order error:', err);
@@ -999,41 +906,35 @@ router.get('/orders/:orderNo', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/orders/:orderNo/complete - Manually complete order
 router.post('/orders/:orderNo/complete', requireAdmin, async (req, res) => {
   const { orderNo } = req.params;
 
   try {
-    const Order = AV.Object.extend('Order');
-    const query = new AV.Query(Order);
-    query.equalTo('orderNo', orderNo);
-    const order = await query.first();
+    const [rows] = await pool.query('SELECT id, status, type FROM orders WHERE order_no = ?', [orderNo]);
 
-    if (!order) {
+    if (rows.length === 0) {
       return res.status(404).json({ error: '订单不存在' });
     }
 
-    if (order.get('status') === 'completed') {
+    const order = rows[0];
+    if (order.status === 'completed') {
       return res.status(400).json({ error: '订单已完成' });
     }
 
-    const type = order.get('type') || 'year';
+    const type = order.type || 'year';
     const prefixMap = { year: 'YEAR', lifetime: 'PRO' };
     const prefix = prefixMap[type] || 'YEAR';
     const code = generateSecureCode(prefix);
 
-    const ActivationCode = AV.Object.extend('ActivationCode');
-    const activationCode = new ActivationCode();
-    activationCode.set('code', code);
-    activationCode.set('type', type);
-    activationCode.set('status', 'unused');
-    activationCode.set('batchId', generateBatchId());
-    await activationCode.save();
+    await pool.query(
+      'INSERT INTO activation_codes (code, type, status, batch_id) VALUES (?, ?, ?, ?)',
+      [code, type, 'unused', generateBatchId()]
+    );
 
-    order.set('status', 'completed');
-    order.set('completedAt', new Date());
-    order.set('activationCode', code);
-    await order.save();
+    await pool.query(
+      'UPDATE orders SET status = ?, completed_at = ?, activation_code = ? WHERE id = ?',
+      ['completed', new Date(), code, order.id]
+    );
 
     await auditLog('order_completed', req, `手动完成订单 ${orderNo}，生成激活码 ${code}`);
     res.json({ success: true, activationCode: code });
@@ -1043,46 +944,32 @@ router.post('/orders/:orderNo/complete', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/orders/:orderNo/refund - Refund order
 router.post('/orders/:orderNo/refund', requireAdmin, async (req, res) => {
   const { orderNo } = req.params;
   const { reason, revokeLicense = true } = req.body;
 
   try {
-    const Order = AV.Object.extend('Order');
-    const query = new AV.Query(Order);
-    query.equalTo('orderNo', orderNo);
-    const order = await query.first();
+    const [rows] = await pool.query('SELECT id, status, activation_code FROM orders WHERE order_no = ?', [orderNo]);
 
-    if (!order) {
+    if (rows.length === 0) {
       return res.status(404).json({ error: '订单不存在' });
     }
 
-    if (order.get('status') !== 'completed') {
+    const order = rows[0];
+    if (order.status !== 'completed') {
       return res.status(400).json({ error: '只能退款已完成的订单' });
     }
 
-    // Mark as refunded
-    order.set('status', 'refunded');
-    order.set('refundReason', reason || '管理员手动退款');
-    order.set('refundedAt', new Date());
-    await order.save();
+    await pool.query(
+      'UPDATE orders SET status = ?, refund_reason = ?, refunded_at = ? WHERE id = ?',
+      ['refunded', reason || '管理员手动退款', new Date(), order.id]
+    );
 
-    // Revoke associated license if requested
-    if (revokeLicense) {
-      const activationCode = order.get('activationCode');
-      if (activationCode) {
-        const License = AV.Object.extend('License');
-        const licenseQuery = new AV.Query(License);
-        licenseQuery.equalTo('activationCode', activationCode);
-        licenseQuery.equalTo('isActive', true);
-        const license = await licenseQuery.first();
-        
-        if (license) {
-          license.set('isActive', false);
-          await license.save();
-        }
-      }
+    if (revokeLicense && order.activation_code) {
+      await pool.query(
+        'UPDATE licenses SET is_active = FALSE WHERE activation_code = ? AND is_active = TRUE',
+        [order.activation_code]
+      );
     }
 
     await auditLog('order_refunded', req, `退款订单 ${orderNo}，原因: ${reason || '未提供'}`);
@@ -1095,54 +982,50 @@ router.post('/orders/:orderNo/refund', requireAdmin, async (req, res) => {
 
 // ==================== Licenses ====================
 
-// GET /api/admin/licenses - Enhanced list
 router.get('/licenses', requireAdmin, async (req, res) => {
   const { type, isActive, search, activatedAfter, activatedBefore, expiringBefore, page = 1, limit = 50 } = req.query;
   const pageNum = parseInt(page);
   const limitNum = parseInt(limit);
 
   try {
-    const License = AV.Object.extend('License');
-    
-    let query;
-    if (search) {
-      const q1 = new AV.Query(License);
-      q1.contains('activationCode', search);
-      const q2 = new AV.Query(License);
-      q2.contains('userEmail', search);
-      query = AV.Query.or(q1, q2);
-    } else {
-      query = new AV.Query(License);
-    }
+    let whereClause = '1=1';
+    const params = [];
 
-    if (type && type !== 'all') query.equalTo('type', type);
-    if (isActive !== undefined && isActive !== 'all') query.equalTo('isActive', isActive === 'true');
-    if (activatedAfter) query.greaterThanOrEqualTo('activatedAt', new Date(activatedAfter));
+    if (type && type !== 'all') { whereClause += ' AND type = ?'; params.push(type); }
+    if (isActive !== undefined && isActive !== 'all') { whereClause += ' AND is_active = ?'; params.push(isActive === 'true'); }
+    if (activatedAfter) { whereClause += ' AND activated_at >= ?'; params.push(new Date(activatedAfter)); }
     if (activatedBefore) {
       const before = new Date(activatedBefore);
       before.setHours(23, 59, 59, 999);
-      query.lessThanOrEqualTo('activatedAt', before);
+      whereClause += ' AND activated_at <= ?';
+      params.push(before);
     }
     if (expiringBefore) {
-      query.lessThanOrEqualTo('expiresAt', new Date(expiringBefore));
-      query.greaterThan('expiresAt', new Date());
+      whereClause += ' AND expires_at <= ? AND expires_at > ?';
+      params.push(new Date(expiringBefore), new Date());
+    }
+    if (search) {
+      whereClause += ' AND (activation_code LIKE ? OR user_email LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
     }
 
-    const total = await query.count();
-    query.descending('activatedAt');
-    query.skip((pageNum - 1) * limitNum);
-    query.limit(limitNum);
-    const licenses = await query.find();
+    const [countRows] = await pool.query(`SELECT COUNT(*) as cnt FROM licenses WHERE ${whereClause}`, params);
+    const total = countRows[0].cnt;
+
+    const [licenses] = await pool.query(
+      `SELECT id, activation_code, type, user_email, activated_at, expires_at, is_active FROM licenses WHERE ${whereClause} ORDER BY activated_at DESC LIMIT ? OFFSET ?`,
+      [...params, limitNum, (pageNum - 1) * limitNum]
+    );
 
     res.json({
       items: licenses.map(license => ({
         id: license.id,
-        activationCode: license.get('activationCode'),
-        type: license.get('type'),
-        userEmail: license.get('userEmail'),
-        activatedAt: license.get('activatedAt'),
-        expiresAt: license.get('expiresAt'),
-        isActive: license.get('isActive')
+        activationCode: license.activation_code,
+        type: license.type,
+        userEmail: license.user_email,
+        activatedAt: license.activated_at,
+        expiresAt: license.expires_at,
+        isActive: license.is_active
       })),
       total,
       page: pageNum,
@@ -1154,23 +1037,19 @@ router.get('/licenses', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/licenses/:id/revoke - Revoke license
 router.post('/licenses/:id/revoke', requireAdmin, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const License = AV.Object.extend('License');
-    const query = new AV.Query(License);
-    const license = await query.get(id);
+    const [rows] = await pool.query('SELECT activation_code, is_active FROM licenses WHERE id = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: '许可证不存在' });
 
-    if (!license.get('isActive')) {
+    if (!rows[0].is_active) {
       return res.status(400).json({ error: '许可证已撤销' });
     }
 
-    license.set('isActive', false);
-    await license.save();
-
-    await auditLog('license_revoked', req, `撤销许可证 ${license.get('activationCode')}`);
+    await pool.query('UPDATE licenses SET is_active = FALSE WHERE id = ?', [id]);
+    await auditLog('license_revoked', req, `撤销许可证 ${rows[0].activation_code}`);
     res.json({ success: true });
   } catch (err) {
     console.error('Revoke license error:', err);
@@ -1178,31 +1057,29 @@ router.post('/licenses/:id/revoke', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/licenses/:id/reactivate - Reactivate license
 router.post('/licenses/:id/reactivate', requireAdmin, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const License = AV.Object.extend('License');
-    const query = new AV.Query(License);
-    const license = await query.get(id);
+    const [rows] = await pool.query('SELECT activation_code, is_active, type FROM licenses WHERE id = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: '许可证不存在' });
 
-    if (license.get('isActive')) {
+    if (rows[0].is_active) {
       return res.status(400).json({ error: '许可证已有效' });
     }
 
-    license.set('isActive', true);
-    
-    // Reset expiration for year licenses
-    if (license.get('type') === 'year') {
+    let updateSQL = 'UPDATE licenses SET is_active = TRUE WHERE id = ?';
+    const updateParams = [id];
+
+    if (rows[0].type === 'year') {
       const expiresAt = new Date();
       expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-      license.set('expiresAt', expiresAt);
+      updateSQL = 'UPDATE licenses SET is_active = TRUE, expires_at = ? WHERE id = ?';
+      updateParams.unshift(expiresAt);
     }
-    
-    await license.save();
 
-    await auditLog('license_reactivated', req, `重新激活许可证 ${license.get('activationCode')}`);
+    await pool.query(updateSQL, updateParams);
+    await auditLog('license_reactivated', req, `重新激活许可证 ${rows[0].activation_code}`);
     res.json({ success: true });
   } catch (err) {
     console.error('Reactivate license error:', err);
@@ -1210,7 +1087,6 @@ router.post('/licenses/:id/reactivate', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/licenses/:id/extend - Extend license
 router.post('/licenses/:id/extend', requireAdmin, async (req, res) => {
   const { id } = req.params;
   const { days } = req.body;
@@ -1221,25 +1097,23 @@ router.post('/licenses/:id/extend', requireAdmin, async (req, res) => {
   }
 
   try {
-    const License = AV.Object.extend('License');
-    const query = new AV.Query(License);
-    const license = await query.get(id);
+    const [rows] = await pool.query('SELECT activation_code, type, is_active, expires_at FROM licenses WHERE id = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: '许可证不存在' });
 
-    if (license.get('type') === 'lifetime') {
+    const license = rows[0];
+    if (license.type === 'lifetime') {
       return res.status(400).json({ error: '永久许可证无需延期' });
     }
-
-    if (!license.get('isActive')) {
+    if (!license.is_active) {
       return res.status(400).json({ error: '许可证已撤销' });
     }
 
-    const currentExpiry = license.get('expiresAt') || new Date();
+    const currentExpiry = license.expires_at || new Date();
     const newExpiry = new Date(currentExpiry);
     newExpiry.setDate(newExpiry.getDate() + daysNum);
-    license.set('expiresAt', newExpiry);
-    await license.save();
 
-    await auditLog('license_extended', req, `许可证 ${license.get('activationCode')} 延期 ${daysNum} 天`);
+    await pool.query('UPDATE licenses SET expires_at = ? WHERE id = ?', [newExpiry, id]);
+    await auditLog('license_extended', req, `许可证 ${license.activation_code} 延期 ${daysNum} 天`);
     res.json({ success: true, newExpiresAt: newExpiry });
   } catch (err) {
     console.error('Extend license error:', err);
@@ -1247,7 +1121,6 @@ router.post('/licenses/:id/extend', requireAdmin, async (req, res) => {
   }
 });
 
-// POST /api/admin/licenses/batch-operation - Batch operations
 router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
   const { action, ids, params } = req.body;
 
@@ -1260,39 +1133,39 @@ router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
   }
 
   try {
-    const License = AV.Object.extend('License');
     let successCount = 0;
     let failCount = 0;
 
     for (const id of ids) {
       try {
-        const license = await new AV.Query(License).get(id);
+        const [rows] = await pool.query('SELECT is_active, type, expires_at FROM licenses WHERE id = ?', [id]);
+        if (rows.length === 0) { failCount++; continue; }
+
+        const license = rows[0];
 
         if (action === 'revoke') {
-          if (license.get('isActive')) {
-            license.set('isActive', false);
-            await license.save();
+          if (license.is_active) {
+            await pool.query('UPDATE licenses SET is_active = FALSE WHERE id = ?', [id]);
             successCount++;
           }
         } else if (action === 'reactivate') {
-          if (!license.get('isActive')) {
-            license.set('isActive', true);
-            if (license.get('type') === 'year') {
+          if (!license.is_active) {
+            if (license.type === 'year') {
               const expiresAt = new Date();
               expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-              license.set('expiresAt', expiresAt);
+              await pool.query('UPDATE licenses SET is_active = TRUE, expires_at = ? WHERE id = ?', [expiresAt, id]);
+            } else {
+              await pool.query('UPDATE licenses SET is_active = TRUE WHERE id = ?', [id]);
             }
-            await license.save();
             successCount++;
           }
         } else if (action === 'extend') {
           const days = parseInt(params?.days);
-          if (days > 0 && license.get('type') !== 'lifetime' && license.get('isActive')) {
-            const currentExpiry = license.get('expiresAt') || new Date();
+          if (days > 0 && license.type !== 'lifetime' && license.is_active) {
+            const currentExpiry = license.expires_at || new Date();
             const newExpiry = new Date(currentExpiry);
             newExpiry.setDate(newExpiry.getDate() + days);
-            license.set('expiresAt', newExpiry);
-            await license.save();
+            await pool.query('UPDATE licenses SET expires_at = ? WHERE id = ?', [newExpiry, id]);
             successCount++;
           }
         }
@@ -1311,19 +1184,11 @@ router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
 
 // ==================== System Settings ====================
 
-// GET /api/admin/settings - Get all settings
 router.get('/settings', requireAdmin, async (req, res) => {
   try {
-    const SystemSetting = AV.Object.extend('SystemSetting');
-    const query = new AV.Query(SystemSetting);
-    query.limit(1000);
-    const settings = await query.find();
-
+    const [rows] = await pool.query('SELECT setting_key, setting_value FROM system_settings LIMIT 1000');
     const result = {};
-    settings.forEach(s => {
-      result[s.get('key')] = s.get('value');
-    });
-
+    rows.forEach(s => { result[s.setting_key] = s.setting_value; });
     res.json(result);
   } catch (err) {
     console.error('Get settings error:', err);
@@ -1331,7 +1196,6 @@ router.get('/settings', requireAdmin, async (req, res) => {
   }
 });
 
-// PUT /api/admin/settings - Update setting
 router.put('/settings', requireAdmin, async (req, res) => {
   const { key, value } = req.body;
 
@@ -1340,19 +1204,13 @@ router.put('/settings', requireAdmin, async (req, res) => {
   }
 
   try {
-    const SystemSetting = AV.Object.extend('SystemSetting');
-    const query = new AV.Query(SystemSetting);
-    query.equalTo('key', key);
-    let setting = await query.first();
+    const [existing] = await pool.query('SELECT id FROM system_settings WHERE setting_key = ?', [key]);
 
-    if (!setting) {
-      setting = new SystemSetting();
-      setting.set('key', key);
+    if (existing.length > 0) {
+      await pool.query('UPDATE system_settings SET setting_value = ?, updated_at = ? WHERE setting_key = ?', [value, new Date(), key]);
+    } else {
+      await pool.query('INSERT INTO system_settings (setting_key, setting_value, updated_at) VALUES (?, ?, ?)', [key, value, new Date()]);
     }
-
-    setting.set('value', value);
-    setting.set('updatedAt', new Date());
-    await setting.save();
 
     await auditLog('settings_changed', req, `更新设置 ${key}`);
     res.json({ success: true });
