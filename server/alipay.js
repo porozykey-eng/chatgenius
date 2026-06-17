@@ -7,16 +7,23 @@ const { pool } = require('./config');
 
 const router = express.Router();
 
-// 读取密钥：支持文件路径或直接内容
-function readKey(envValue, defaultFilePath) {
+// 读取密钥：支持文件路径、直接内容、或纯base64
+function readKey(envValue) {
   if (!envValue) return '';
+  let key = envValue;
   // 如果是文件路径，读取文件内容
-  if (envValue.startsWith('/') || envValue.startsWith('./')) {
-    const filePath = path.resolve(__dirname, envValue);
-    return fs.readFileSync(filePath, 'utf8').trim();
+  if (key.startsWith('/') || key.startsWith('./')) {
+    const filePath = path.resolve(__dirname, key);
+    key = fs.readFileSync(filePath, 'utf8').trim();
+  } else {
+    key = key.replace(/\\n/g, '\n');
   }
-  // 否则直接返回（支持 \n 转义）
-  return envValue.replace(/\\n/g, '\n');
+  // 如果没有 PEM 头，自动添加（纯 base64 密钥）
+  if (!key.includes('-----BEGIN')) {
+    const wrapped = key.match(/.{1,64}/g).join('\n');
+    key = '-----BEGIN RSA PRIVATE KEY-----\n' + wrapped + '\n-----END RSA PRIVATE KEY-----';
+  }
+  return key;
 }
 
 // 初始化支付宝 SDK
