@@ -23,7 +23,29 @@ function readKey(envValue) {
     const wrapped = key.match(/.{1,64}/g).join('\n');
     key = '-----BEGIN RSA PRIVATE KEY-----\n' + wrapped + '\n-----END RSA PRIVATE KEY-----';
   }
+  // Node.js 17+ (OpenSSL 3.0) 不支持 PKCS#1 格式，需要转为 PKCS#8
+  if (key.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+    try {
+      const lines = key.split('\n').filter(l => !l.includes('-----'));
+      const der = Buffer.from(lines.join(''), 'base64');
+      // PKCS#8 = SEQUENCE { version(0), AlgorithmIdentifier(RSA), OCTET STRING(pkcs1) }
+      const algId = Buffer.from('300d06092a864886f70d0101010500', 'hex'); // SEQUENCE { OID rsaEncryption, NULL }
+      const pkOctet = Buffer.concat([Buffer.from([0x04]), encodeLength(der.length), der]);
+      const inner = Buffer.concat([Buffer.from([0x02, 0x01, 0x00]), algId, pkOctet]);
+      const pkcs8 = Buffer.concat([Buffer.from([0x30]), encodeLength(inner.length), inner]);
+      const b64 = pkcs8.toString('base64').match(/.{1,64}/g).join('\n');
+      key = '-----BEGIN PRIVATE KEY-----\n' + b64 + '\n-----END PRIVATE KEY-----';
+    } catch (e) {
+      console.error('PKCS#1 to PKCS#8 conversion failed:', e.message);
+    }
+  }
   return key;
+}
+
+function encodeLength(len) {
+  if (len < 0x80) return Buffer.from([len]);
+  if (len < 0x100) return Buffer.from([0x81, len]);
+  return Buffer.from([0x82, (len >> 8) & 0xff, len & 0xff]);
 }
 
 // 初始化支付宝 SDK
