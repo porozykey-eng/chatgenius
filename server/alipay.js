@@ -1,15 +1,29 @@
 // ChatGenius AI Backend - 支付宝支付服务 (MySQL)
 const express = require('express');
+const fs = require('fs');
+const path = require('path');
 const AlipaySDK = require('alipay-sdk').default;
 const { pool } = require('./config');
 
 const router = express.Router();
 
+// 读取密钥：支持文件路径或直接内容
+function readKey(envValue, defaultFilePath) {
+  if (!envValue) return '';
+  // 如果是文件路径，读取文件内容
+  if (envValue.startsWith('/') || envValue.startsWith('./')) {
+    const filePath = path.resolve(__dirname, envValue);
+    return fs.readFileSync(filePath, 'utf8').trim();
+  }
+  // 否则直接返回（支持 \n 转义）
+  return envValue.replace(/\\n/g, '\n');
+}
+
 // 初始化支付宝 SDK
 const alipaySdk = new AlipaySDK({
   appId: process.env.ALIPAY_APP_ID,
-  privateKey: process.env.ALIPAY_PRIVATE_KEY,
-  alipayPublicKey: process.env.ALIPAY_PUBLIC_KEY,
+  privateKey: readKey(process.env.ALIPAY_PRIVATE_KEY),
+  alipayPublicKey: readKey(process.env.ALIPAY_PUBLIC_KEY),
   gateway: process.env.ALIPAY_GATEWAY || 'https://openapi.alipay.com/gateway.do',
 });
 
