@@ -2,6 +2,7 @@
 const express = require('express');
 const fs = require('fs');
 const path = require('path');
+const crypto = require('crypto');
 const AlipaySDK = require('alipay-sdk').default;
 const { pool } = require('./config');
 
@@ -23,36 +24,60 @@ function readKey(envValue) {
     const wrapped = key.match(/.{1,64}/g).join('\n');
     key = '-----BEGIN RSA PRIVATE KEY-----\n' + wrapped + '\n-----END RSA PRIVATE KEY-----';
   }
-  // Node.js 17+ (OpenSSL 3.0) 不支持 PKCS#1 格式，需要转为 PKCS#8
-  if (key.includes('-----BEGIN RSA PRIVATE KEY-----')) {
-    try {
-      const lines = key.split('\n').filter(l => !l.includes('-----'));
-      const der = Buffer.from(lines.join(''), 'base64');
-      // PKCS#8 = SEQUENCE { version(0), AlgorithmIdentifier(RSA), OCTET STRING(pkcs1) }
-      const algId = Buffer.from('300d06092a864886f70d0101010500', 'hex'); // SEQUENCE { OID rsaEncryption, NULL }
-      const pkOctet = Buffer.concat([Buffer.from([0x04]), encodeLength(der.length), der]);
-      const inner = Buffer.concat([Buffer.from([0x02, 0x01, 0x00]), algId, pkOctet]);
-      const pkcs8 = Buffer.concat([Buffer.from([0x30]), encodeLength(inner.length), inner]);
-      const b64 = pkcs8.toString('base64').match(/.{1,64}/g).join('\n');
-      key = '-----BEGIN PRIVATE KEY-----\n' + b64 + '\n-----END PRIVATE KEY-----';
-    } catch (e) {
-      console.error('PKCS#1 to PKCS#8 conversion failed:', e.message);
-    }
-  }
   return key;
 }
 
-function encodeLength(len) {
-  if (len < 0x80) return Buffer.from([len]);
-  if (len < 0x100) return Buffer.from([0x81, len]);
-  return Buffer.from([0x82, (len >> 8) & 0xff, len & 0xff]);
+// 将 PKCS#1 私钥转换为 PKCS#8（兼容 Node.js 17+ / OpenSSL 3.0）
+function convertPrivateKeyToPKCS8(key) {
+  if (!key.includes('-----BEGIN RSA PRIVATE KEY-----')) return key;
+  try {
+    // 使用 Node.js crypto 模块自动转换
+    const privateKeyObj = crypto.createPrivateKey({ key, format: 'pem', type: 'pkcs1' });
+    const pkcs8 = privateKeyObj.export({ format: 'pem', type: 'pkcs8' });
+    console.log('✅ Private key converted from PKCS#1 to PKCS#8 successfully');
+    return pkcs8;
+  } catch (e) {
+    console.error('❌ PKCS#1 to PKCS#8 conversion failed:', e.message);
+    return key; // 返回原始密钥，让 SDK 尝试处理
+  }
+}
+
+// 将 PKCS#1 公钥转换为 PKCS/X.509 SubjectPublicKeyInfo 格式
+function convertPublicKey(key) {
+  if (!key.includes('-----BEGIN RSA PUBLIC KEY-----')) return key;
+  try {
+    const publicKeyObj = crypto.createPublicKey({ key, format: 'pem', type: 'pkcs1' });
+    const spki = publicKeyObj.export({ format: 'pem', type: 'spki' });
+    console.log('✅ Public key converted to SPKI format successfully');
+    return spki;
+  } catch (e) {
+    console.error('❌ Public key conversion failed:', e.message);
+    return key;
+  }
+}
+
+// 读取并转换密钥
+const rawPrivateKey = readKey(process.env.ALIPAY_PRIVATE_KEY);
+const rawPublicKey = readKey(process.env.ALIPAY_PUBLIC_KEY);
+const privateKey = convertPrivateKeyToPKCS8(rawPrivateKey);
+const alipayPublicKey = convertPublicKey(rawPublicKey);
+
+// 验证密钥是否已配置
+if (!process.env.ALIPAY_APP_ID) {
+  console.error('❌ ALIPAY_APP_ID 未配置！支付功能将无法使用');
+}
+if (!rawPrivateKey) {
+  console.error('❌ ALIPAY_PRIVATE_KEY 未配置！支付功能将无法使用');
+}
+if (!rawPublicKey) {
+  console.error('❌ ALIPAY_PUBLIC_KEY 未配置！支付功能将无法使用');
 }
 
 // 初始化支付宝 SDK
 const alipaySdk = new AlipaySDK({
   appId: process.env.ALIPAY_APP_ID,
-  privateKey: readKey(process.env.ALIPAY_PRIVATE_KEY),
-  alipayPublicKey: readKey(process.env.ALIPAY_PUBLIC_KEY),
+  privateKey: privateKey,
+  alipayPublicKey: alipayPublicKey,
   gateway: process.env.ALIPAY_GATEWAY || 'https://openapi.alipay.com/gateway.do',
 });
 
@@ -84,6 +109,8 @@ router.post('/create-order', async (req, res) => {
       return res.status(400).json({ success: false, error: '订单号已存在' });
     }
 
+    console.log('Creating Alipay precreate order:', { orderNo, amount, subject });
+
     // 调用支付宝当面付 API
     const result = await alipaySdk.exec(
       'alipay.trade.precreate',
@@ -96,20 +123,25 @@ router.post('/create-order', async (req, res) => {
       }
     );
 
+    console.log('Alipay SDK response:', JSON.stringify(result, null, 2));
+
     if (result.code === '10000') {
+      console.log('Order created successfully, qr_code:', result.qr_code);
       res.json({ 
         success: true, 
         qrCode: result.qr_code 
       });
     } else {
+      console.error('Alipay API error:', { code: result.code, msg: result.msg, subMsg: result.subMsg });
       res.json({ 
         success: false, 
-        error: result.msg || result.subMsg 
+        error: result.subMsg || result.msg || '支付宝接口调用失败'
       });
     }
   } catch (error) {
-    console.error('Alipay create order error:', error);
-    res.status(500).json({ success: false, error: '创建支付订单失败' });
+    console.error('Alipay create order error:', error.message);
+    console.error('Error stack:', error.stack);
+    res.status(500).json({ success: false, error: '创建支付订单失败: ' + error.message });
   }
 });
 
