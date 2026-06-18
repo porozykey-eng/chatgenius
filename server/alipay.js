@@ -19,58 +19,134 @@ function readKey(envValue) {
   } else {
     key = key.replace(/\\n/g, '\n');
   }
-  // 如果没有 PEM 头，自动添加（纯 base64 密钥）
-  if (!key.includes('-----BEGIN')) {
-    const wrapped = key.match(/.{1,64}/g).join('\n');
-    key = '-----BEGIN RSA PRIVATE KEY-----\n' + wrapped + '\n-----END RSA PRIVATE KEY-----';
+  return key.trim();
+}
+
+// 智能处理私钥格式，兼容 OpenSSL 3.0
+function processPrivateKey(key) {
+  if (!key) return key;
+
+  // 如果已经有正确的 PKCS#8 头，直接返回
+  if (key.includes('-----BEGIN PRIVATE KEY-----')) {
+    console.log('✅ Private key is already PKCS#8 format');
+    return key;
   }
+
+  // 如果是 PKCS#1 格式，尝试转换
+  if (key.includes('-----BEGIN RSA PRIVATE KEY-----')) {
+    try {
+      const obj = crypto.createPrivateKey({ key, format: 'pem', type: 'pkcs1' });
+      const pkcs8 = obj.export({ format: 'pem', type: 'pkcs8' });
+      console.log('✅ Private key converted from PKCS#1 to PKCS#8');
+      return pkcs8;
+    } catch (e) {
+      console.error('❌ PKCS#1 parse failed:', e.message);
+    }
+  }
+
+  // 纯 base64 密钥（无 PEM 头），尝试 PKCS#8 和 PKCS#1
+  if (!key.includes('-----BEGIN')) {
+    const wrapped = key.match(/.{1,64}/g)?.join('\n') || key;
+
+    // 先尝试作为 PKCS#8
+    try {
+      const pkcs8Key = '-----BEGIN PRIVATE KEY-----\n' + wrapped + '\n-----END PRIVATE KEY-----';
+      const obj = crypto.createPrivateKey({ key: pkcs8Key, format: 'pem', type: 'pkcs8' });
+      const exported = obj.export({ format: 'pem', type: 'pkcs8' });
+      console.log('✅ Raw base64 key detected as PKCS#8');
+      return exported;
+    } catch (e1) {
+      // 再尝试作为 PKCS#1
+      try {
+        const pkcs1Key = '-----BEGIN RSA PRIVATE KEY-----\n' + wrapped + '\n-----END RSA PRIVATE KEY-----';
+        const obj = crypto.createPrivateKey({ key: pkcs1Key, format: 'pem', type: 'pkcs1' });
+        const exported = obj.export({ format: 'pem', type: 'pkcs8' });
+        console.log('✅ Raw base64 key detected as PKCS#1, converted to PKCS#8');
+        return exported;
+      } catch (e2) {
+        console.error('❌ Cannot parse private key as PKCS#8 or PKCS#1');
+        console.error('  PKCS#8 error:', e1.message);
+        console.error('  PKCS#1 error:', e2.message);
+      }
+    }
+    return key;
+  }
+
   return key;
 }
 
-// 将 PKCS#1 私钥转换为 PKCS#8（兼容 Node.js 17+ / OpenSSL 3.0）
-function convertPrivateKeyToPKCS8(key) {
-  if (!key.includes('-----BEGIN RSA PRIVATE KEY-----')) return key;
-  try {
-    // 使用 Node.js crypto 模块自动转换
-    const privateKeyObj = crypto.createPrivateKey({ key, format: 'pem', type: 'pkcs1' });
-    const pkcs8 = privateKeyObj.export({ format: 'pem', type: 'pkcs8' });
-    console.log('✅ Private key converted from PKCS#1 to PKCS#8 successfully');
-    return pkcs8;
-  } catch (e) {
-    console.error('❌ PKCS#1 to PKCS#8 conversion failed:', e.message);
-    return key; // 返回原始密钥，让 SDK 尝试处理
-  }
-}
+// 智能处理公钥格式
+function processPublicKey(key) {
+  if (!key) return key;
 
-// 将 PKCS#1 公钥转换为 PKCS/X.509 SubjectPublicKeyInfo 格式
-function convertPublicKey(key) {
-  if (!key.includes('-----BEGIN RSA PUBLIC KEY-----')) return key;
-  try {
-    const publicKeyObj = crypto.createPublicKey({ key, format: 'pem', type: 'pkcs1' });
-    const spki = publicKeyObj.export({ format: 'pem', type: 'spki' });
-    console.log('✅ Public key converted to SPKI format successfully');
-    return spki;
-  } catch (e) {
-    console.error('❌ Public key conversion failed:', e.message);
+  // 已经是 SPKI 格式
+  if (key.includes('-----BEGIN PUBLIC KEY-----')) {
+    console.log('✅ Public key is already SPKI format');
     return key;
   }
+
+  // PKCS#1 公钥格式
+  if (key.includes('-----BEGIN RSA PUBLIC KEY-----')) {
+    try {
+      const obj = crypto.createPublicKey({ key, format: 'pem', type: 'pkcs1' });
+      const spki = obj.export({ format: 'pem', type: 'spki' });
+      console.log('✅ Public key converted from PKCS#1 to SPKI');
+      return spki;
+    } catch (e) {
+      console.error('❌ Public key PKCS#1 parse failed:', e.message);
+    }
+  }
+
+  // 纯 base64 公钥
+  if (!key.includes('-----BEGIN')) {
+    const wrapped = key.match(/.{1,64}/g)?.join('\n') || key;
+
+    // 先尝试 SPKI
+    try {
+      const spkiKey = '-----BEGIN PUBLIC KEY-----\n' + wrapped + '\n-----END PUBLIC KEY-----';
+      const obj = crypto.createPublicKey({ key: spkiKey, format: 'pem', type: 'spki' });
+      console.log('✅ Raw base64 public key detected as SPKI');
+      return obj.export({ format: 'pem', type: 'spki' });
+    } catch (e1) {
+      // 再尝试 PKCS#1
+      try {
+        const pkcs1Key = '-----BEGIN RSA PUBLIC KEY-----\n' + wrapped + '\n-----END RSA PUBLIC KEY-----';
+        const obj = crypto.createPublicKey({ key: pkcs1Key, format: 'pem', type: 'pkcs1' });
+        console.log('✅ Raw base64 public key detected as PKCS#1, converted to SPKI');
+        return obj.export({ format: 'pem', type: 'spki' });
+      } catch (e2) {
+        console.error('❌ Cannot parse public key');
+        console.error('  SPKI error:', e1.message);
+        console.error('  PKCS#1 error:', e2.message);
+      }
+    }
+    return key;
+  }
+
+  return key;
 }
 
-// 读取并转换密钥
+// 读取并处理密钥
 const rawPrivateKey = readKey(process.env.ALIPAY_PRIVATE_KEY);
 const rawPublicKey = readKey(process.env.ALIPAY_PUBLIC_KEY);
-const privateKey = convertPrivateKeyToPKCS8(rawPrivateKey);
-const alipayPublicKey = convertPublicKey(rawPublicKey);
+const privateKey = processPrivateKey(rawPrivateKey);
+const alipayPublicKey = processPublicKey(rawPublicKey);
 
 // 验证密钥是否已配置
 if (!process.env.ALIPAY_APP_ID) {
   console.error('❌ ALIPAY_APP_ID 未配置！支付功能将无法使用');
+} else {
+  console.log('✅ ALIPAY_APP_ID:', process.env.ALIPAY_APP_ID);
 }
 if (!rawPrivateKey) {
-  console.error('❌ ALIPAY_PRIVATE_KEY 未配置！支付功能将无法使用');
+  console.error('❌ ALIPAY_PRIVATE_KEY 未配置！');
+} else {
+  console.log('✅ ALIPAY_PRIVATE_KEY loaded, length:', rawPrivateKey.length);
 }
 if (!rawPublicKey) {
-  console.error('❌ ALIPAY_PUBLIC_KEY 未配置！支付功能将无法使用');
+  console.error('❌ ALIPAY_PUBLIC_KEY 未配置！');
+} else {
+  console.log('✅ ALIPAY_PUBLIC_KEY loaded, length:', rawPublicKey.length);
 }
 
 // 初始化支付宝 SDK
