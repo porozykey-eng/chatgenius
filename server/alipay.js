@@ -15,11 +15,21 @@ function readKey(envValue) {
   // 如果是文件路径，读取文件内容
   if (key.startsWith('/') || key.startsWith('./')) {
     const filePath = path.resolve(__dirname, key);
-    key = fs.readFileSync(filePath, 'utf8').trim();
+    // 读取为 buffer 以处理可能的 BOM 和编码问题
+    const buffer = fs.readFileSync(filePath);
+    // 移除 UTF-8 BOM (EF BB BF)
+    const start = (buffer[0] === 0xEF && buffer[1] === 0xBB && buffer[2] === 0xBF) ? 3 : 0;
+    key = buffer.slice(start).toString('utf8');
   } else {
     key = key.replace(/\\n/g, '\n');
   }
-  return key.trim();
+  // 清理：移除 BOM、CRLF 转 LF、首尾空白
+  key = key
+    .replace(/^\uFEFF/, '')  // 移除 BOM
+    .replace(/\r\n/g, '\n')  // CRLF -> LF
+    .replace(/\r/g, '\n')    // CR -> LF
+    .trim();
+  return key;
 }
 
 // 智能处理私钥格式，兼容 OpenSSL 3.0
@@ -155,7 +165,28 @@ const alipaySdk = new AlipaySDK({
   privateKey: privateKey,
   alipayPublicKey: alipayPublicKey,
   gateway: process.env.ALIPAY_GATEWAY || 'https://openapi.alipay.com/gateway.do',
+  signType: 'RSA2',
 });
+
+// 启动时验证密钥是否可用
+try {
+  const testSign = crypto.createSign('RSA-SHA256');
+  testSign.update('test');
+  const signature = testSign.sign(privateKey, 'base64');
+  console.log('✅ Private key signing test PASSED (RSA-SHA256)');
+} catch (e) {
+  console.error('❌ Private key signing test FAILED:', e.message);
+  console.error('   Key first line:', privateKey.split('\n')[0]);
+  console.error('   Key length:', privateKey.length, 'chars');
+  // 尝试用 PKCS#1 类型解析
+  try {
+    const obj = crypto.createPrivateKey(privateKey);
+    const exported = obj.export({ format: 'pem', type: 'pkcs8' });
+    console.log('   crypto.createPrivateKey (auto) succeeded, re-exported PKCS#8');
+  } catch (e2) {
+    console.error('   crypto.createPrivateKey (auto) also failed:', e2.message);
+  }
+}
 
 // 创建预支付订单（当面付 - 生成二维码）
 router.post('/create-order', async (req, res) => {
