@@ -166,6 +166,7 @@ const alipaySdk = new AlipaySDK({
   alipayPublicKey: alipayPublicKey,
   gateway: process.env.ALIPAY_GATEWAY || 'https://openapi.alipay.com/gateway.do',
   signType: 'RSA2',
+  keyType: 'PKCS8',  // 明确指定私钥格式为 PKCS#8
 });
 
 // 启动时验证密钥是否可用
