@@ -38,7 +38,7 @@ export const activationService = {
     type: 'year' | 'lifetime',
     _channel: 'alipay' | 'wechat' | 'paypal',
     _userEmail?: string
-  ): Promise<{ success: boolean; payUrl?: string; orderNo?: string; error?: string }> {
+  ): Promise<{ success: boolean; payForm?: string; orderNo?: string; error?: string }> {
     try {
       const orderNo = `CG${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       const subject = `ChatGenius AI Pro ${type === 'year' ? '年付' : '永久版'}`;
@@ -52,8 +52,8 @@ export const activationService = {
 
       const data = await res.json();
 
-      if (data.success && data.payUrl) {
-        return { success: true, payUrl: data.payUrl, orderNo };
+      if (data.success && data.payForm) {
+        return { success: true, payForm: data.payForm, orderNo };
       }
 
       return { success: false, error: data.error || '创建订单失败' };

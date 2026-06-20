@@ -220,9 +220,8 @@ router.post('/create-order', async (req, res) => {
 
     console.log('Creating Alipay page pay order:', { orderNo, amount, subject });
 
-    // 支付宝电脑网站支付：返回一个支付页面 URL（HTML form 自动提交）
-    // 注意：alipay-sdk v4 的 exec 方法通过 method 字段指定接口名
-    const result = await alipaySdk.exec(
+    // 支付宝电脑网站支付：使用 pageExecute 生成支付表单 HTML
+    const result = await alipaySdk.pageExecute(
       'alipay.trade.page.pay',
       {
         bizContent: {
@@ -231,20 +230,18 @@ router.post('/create-order', async (req, res) => {
           subject: subject,
           product_code: 'FAST_INSTANT_TRADE_PAY',
         },
-        // 返回支付页面 URL，而不是直接执行 HTTP 请求
         returnUrl: process.env.ALIPAY_RETURN_URL || 'https://chat.sopie.cc/payment-return',
         notifyUrl: process.env.ALIPAY_NOTIFY_URL || 'https://chat.sopie.cc/api/alipay/notify',
       },
-      // 让 SDK 只生成 URL，不发送请求
-      { validateSign: true, formData: true }
+      'GET'
     );
 
-    console.log('Alipay page pay URL generated successfully');
+    console.log('Alipay page pay form generated, length:', result ? result.length : 'null');
 
-    // result 是一个可跳转的支付页面 URL（或 HTML 字符串）
+    // result 是一个完整的 HTML form 字符串，前端直接用 document.write 提交
     res.json({
       success: true,
-      payUrl: result, // 前端用 window.location.href 跳转
+      payForm: result,
     });
   } catch (error) {
     console.error('Alipay create order error:', error.message);

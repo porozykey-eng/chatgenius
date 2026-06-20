@@ -190,16 +190,22 @@ function PaymentModal({
 
     setLoading(false)
 
-    if (result.success && result.payUrl) {
-      // 电脑网站支付：跳转到支付宝支付页面
-      // 支付完成后，支付宝会跳回 returnUrl，前端在 returnUrl 页面轮询订单状态
+    if (result.success && result.payForm) {
+      // 电脑网站支付：用 document.write 提交支付宝表单
+      // 支付完成后，支付宝会跳回 returnUrl
       setOrderNo(result.orderNo || '')
-      // 把订单号存到 sessionStorage，支付返回后用于轮询
       if (result.orderNo) {
         sessionStorage.setItem('chatgenius_pending_order', result.orderNo)
       }
-      // 跳转到支付宝支付页面
-      window.location.href = result.payUrl
+      // 用 document.write 写入表单并自动提交
+      const newWindow = window.open('', '_blank')
+      if (newWindow) {
+        newWindow.document.write(result.payForm)
+        newWindow.document.close()
+      } else {
+        // 弹窗被拦截，直接在当前页面提交
+        document.write(result.payForm)
+      }
     } else {
       setCodeError(result.error || '创建订单失败')
     }
