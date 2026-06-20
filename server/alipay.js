@@ -220,8 +220,8 @@ router.post('/create-order', async (req, res) => {
 
     console.log('Creating Alipay page pay order:', { orderNo, amount, subject });
 
-    // 支付宝电脑网站支付：使用 pageExecute 生成支付表单 HTML
-    const result = await alipaySdk.pageExecute(
+    // 支付宝电脑网站支付：使用 pageExec 生成支付表单 HTML（v3 SDK）
+    const result = await alipaySdk.pageExec(
       'alipay.trade.page.pay',
       {
         bizContent: {
