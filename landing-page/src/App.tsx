@@ -190,21 +190,25 @@ function PaymentModal({
 
     setLoading(false)
 
-    if (result.success && result.payForm) {
-      // 电脑网站支付：用 document.write 提交支付宝表单
-      // 支付完成后，支付宝会跳回 returnUrl
+    if (result.success) {
       setOrderNo(result.orderNo || '')
       if (result.orderNo) {
         sessionStorage.setItem('chatgenius_pending_order', result.orderNo)
       }
-      // 用 document.write 写入表单并自动提交
-      const newWindow = window.open('', '_blank')
-      if (newWindow) {
-        newWindow.document.write(result.payForm)
-        newWindow.document.close()
-      } else {
-        // 弹窗被拦截，直接在当前页面提交
-        document.write(result.payForm)
+
+      if (channel === 'wechat' && result.codeUrl) {
+        // 微信支付：显示二维码
+        setQrCode(result.codeUrl)
+        setStep('qrcode')
+      } else if (result.payForm) {
+        // 支付宝：用 document.write 提交表单
+        const newWindow = window.open('', '_blank')
+        if (newWindow) {
+          newWindow.document.write(result.payForm)
+          newWindow.document.close()
+        } else {
+          document.write(result.payForm)
+        }
       }
     } else {
       setCodeError(result.error || '创建订单失败')

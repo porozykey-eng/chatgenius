@@ -192,7 +192,7 @@ try {
 // 创建支付订单（电脑网站支付 - alipay.trade.page.pay）
 // 返回支付宝支付页面 URL，前端跳转过去完成支付
 router.post('/create-order', async (req, res) => {
-  const { orderNo, amount, subject } = req.body;
+  const { orderNo, amount, subject, type } = req.body;
 
   if (!orderNo || !amount || !subject) {
     return res.status(400).json({ success: false, error: '参数不完整' });
@@ -219,6 +219,12 @@ router.post('/create-order', async (req, res) => {
     }
 
     console.log('Creating Alipay page pay order:', { orderNo, amount, subject });
+
+    // 保存订单到数据库
+    await pool.query(
+      'INSERT INTO orders (order_no, plan, price, type, channel, status) VALUES (?, ?, ?, ?, ?, ?)',
+      [orderNo, subject, numAmount, type || 'lifetime', 'alipay', 'pending']
+    );
 
     // 支付宝电脑网站支付：使用 pageExec 生成支付表单 HTML（v3 SDK）
     const result = await alipaySdk.pageExec(

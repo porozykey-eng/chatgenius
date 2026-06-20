@@ -31,29 +31,38 @@ export const activationService = {
     }
   },
 
-  // 创建支付订单（调用服务器支付宝 API - 电脑网站支付）
+  // 创建支付订单（调用服务器支付 API）
   async createOrder(
     _plan: string,
     price: string,
     type: 'year' | 'lifetime',
-    _channel: 'alipay' | 'wechat' | 'paypal',
+    channel: 'alipay' | 'wechat' | 'paypal',
     _userEmail?: string
-  ): Promise<{ success: boolean; payForm?: string; orderNo?: string; error?: string }> {
+  ): Promise<{ success: boolean; payForm?: string; codeUrl?: string; orderNo?: string; error?: string }> {
     try {
       const orderNo = `CG${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       const subject = `ChatGenius AI Pro ${type === 'year' ? '年付' : '永久版'}`;
 
       const cleanPrice = price.replace(/[^0-9.]/g, '');
-      const res = await fetch(`${API_BASE}/alipay/create-order`, {
+
+      // 根据渠道调用不同的 API
+      const apiPath = channel === 'wechat' ? '/wechat/create-order' : '/alipay/create-order';
+      const res = await fetch(`${API_BASE}${apiPath}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderNo, amount: cleanPrice, subject }),
+        body: JSON.stringify({ orderNo, amount: cleanPrice, subject, type }),
       });
 
       const data = await res.json();
 
-      if (data.success && data.payForm) {
-        return { success: true, payForm: data.payForm, orderNo };
+      if (data.success) {
+        if (data.codeUrl) {
+          // 微信支付返回二维码链接
+          return { success: true, codeUrl: data.codeUrl, orderNo };
+        } else if (data.payForm) {
+          // 支付宝返回表单 HTML
+          return { success: true, payForm: data.payForm, orderNo };
+        }
       }
 
       return { success: false, error: data.error || '创建订单失败' };

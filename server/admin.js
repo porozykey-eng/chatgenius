@@ -384,6 +384,11 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
       'SELECT order_no, plan, price, status, created_at FROM orders ORDER BY created_at DESC LIMIT 5'
     );
 
+    // Channel stats
+    const [channelStats] = await pool.query(
+      "SELECT channel, COUNT(*) as cnt, SUM(CAST(price AS DECIMAL)) as total FROM orders WHERE status = 'completed' GROUP BY channel"
+    );
+
     res.json({
       todayRevenue: todayRevenue.toFixed(2),
       weekRevenue: weekRevenue.toFixed(2),
@@ -399,6 +404,11 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
         price: o.price,
         status: o.status,
         createdAt: o.created_at
+      })),
+      channelStats: channelStats.map(c => ({
+        channel: c.channel,
+        count: parseInt(c.cnt),
+        total: parseFloat(c.total).toFixed(2)
       }))
     });
   } catch (err) {
@@ -836,7 +846,7 @@ router.get('/orders', requireAdmin, async (req, res) => {
     const total = countRows[0].cnt;
 
     const [orders] = await pool.query(
-      `SELECT id, order_no, plan, price, type, channel, status, created_at, completed_at, activation_code, user_email, alipay_trade_no FROM orders WHERE ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
+      `SELECT id, order_no, plan, price, type, channel, status, created_at, completed_at, activation_code, user_email, alipay_trade_no, wechat_trade_no, refund_reason, refunded_at FROM orders WHERE ${whereClause} ORDER BY created_at DESC LIMIT ? OFFSET ?`,
       [...params, limitNum, (pageNum - 1) * limitNum]
     );
 
@@ -856,7 +866,10 @@ router.get('/orders', requireAdmin, async (req, res) => {
         completedAt: order.completed_at,
         activationCode: order.activation_code,
         userEmail: order.user_email,
-        alipayTradeNo: order.alipay_trade_no
+        alipayTradeNo: order.alipay_trade_no,
+        wechatTradeNo: order.wechat_trade_no,
+        refundReason: order.refund_reason,
+        refundedAt: order.refunded_at
       })),
       total,
       page: pageNum,
@@ -877,7 +890,7 @@ router.get('/orders/:orderNo', requireAdmin, async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT id, order_no, plan, price, type, channel, status, created_at, completed_at, activation_code, user_email, alipay_trade_no FROM orders WHERE order_no = ?',
+      'SELECT id, order_no, plan, price, type, channel, status, created_at, completed_at, activation_code, user_email, alipay_trade_no, wechat_trade_no, refund_reason, refunded_at FROM orders WHERE order_no = ?',
       [orderNo]
     );
 
@@ -898,7 +911,10 @@ router.get('/orders/:orderNo', requireAdmin, async (req, res) => {
       completedAt: order.completed_at,
       activationCode: order.activation_code,
       userEmail: order.user_email,
-      alipayTradeNo: order.alipay_trade_no
+      alipayTradeNo: order.alipay_trade_no,
+      wechatTradeNo: order.wechat_trade_no,
+      refundReason: order.refund_reason,
+      refundedAt: order.refunded_at
     });
   } catch (err) {
     console.error('Get order error:', err);

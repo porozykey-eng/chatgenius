@@ -748,6 +748,14 @@
           </div>
           <canvas id="activationChart"></canvas>
         </div>
+        <div class="chart-container">
+          <div class="chart-header">
+            <div class="chart-title">渠道收入分布</div>
+          </div>
+          <div style="max-width: 400px; margin: 0 auto;">
+            <canvas id="channelChart"></canvas>
+          </div>
+        </div>
         <div class="card">
           <div class="card-title">最近订单</div>
           <div class="table-wrapper">
@@ -853,14 +861,15 @@
                   <th>套餐</th>
                   <th>金额</th>
                   <th>渠道</th>
-                  <th>用户邮箱</th>
+                  <th>支付流水号</th>
                   <th>状态</th>
                   <th>创建时间</th>
+                  <th>完成时间</th>
                   <th>操作</th>
                 </tr>
               </thead>
               <tbody id="ordersTableBody">
-                <tr><td colspan="8" class="loading">加载中</td></tr>
+                <tr><td colspan="9" class="loading">加载中</td></tr>
               </tbody>
             </table>
           </div>
@@ -1132,6 +1141,19 @@
     </div>
   </div>
 
+  <!-- Order Detail Modal -->
+  <div class="modal-overlay" id="orderDetailModal">
+    <div class="modal">
+      <h3 class="modal-title">订单详情</h3>
+      <div class="modal-body" id="orderDetailBody">
+        <div class="loading">加载中</div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" onclick="closeModal('orderDetailModal')">关闭</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Batch Operation Modal -->
   <div class="modal-overlay" id="batchOperationModal">
     <div class="modal">
@@ -1167,6 +1189,7 @@
     let currentOrderNo = null;
     let revenueChart = null;
     let activationChart = null;
+    let channelChart = null;
 
     // API helper
     async function api(path, options = {}) {
@@ -1456,6 +1479,7 @@
         // Load charts
         loadRevenueChart(7);
         loadActivationChart(7);
+        loadChannelChart(data.channelStats);
       } catch (err) {
         grid.innerHTML = '<div class="empty">加载失败</div>';
       }
@@ -1518,6 +1542,63 @@
       } catch (err) {
         console.error('Load activation chart error:', err);
       }
+    }
+
+    async function loadChannelChart(channelStats) {
+      const ctx = document.getElementById('channelChart').getContext('2d');
+      if (channelChart) channelChart.destroy();
+
+      if (!channelStats || channelStats.length === 0) {
+        channelChart = new Chart(ctx, {
+          type: 'doughnut',
+          data: {
+            labels: ['暂无数据'],
+            datasets: [{ data: [1], backgroundColor: ['#e5e7eb'] }]
+          },
+          options: {
+            responsive: true,
+            plugins: { legend: { display: false } }
+          }
+        });
+        return;
+      }
+
+      const channelNames = { alipay: '支付宝', wechat: '微信支付', paypal: 'PayPal' };
+      const channelColors = { alipay: '#1677FF', wechat: '#07C160', paypal: '#003087' };
+      const labels = channelStats.map(c => channelNames[c.channel] || c.channel);
+      const values = channelStats.map(c => parseFloat(c.total));
+      const colors = channelStats.map(c => channelColors[c.channel] || '#9ca3af');
+
+      channelChart = new Chart(ctx, {
+        type: 'doughnut',
+        data: {
+          labels: labels,
+          datasets: [{
+            data: values,
+            backgroundColor: colors,
+            borderWidth: 2,
+            borderColor: '#fff'
+          }]
+        },
+        options: {
+          responsive: true,
+          plugins: {
+            legend: {
+              position: 'bottom',
+              labels: { padding: 16, usePointStyle: true }
+            },
+            tooltip: {
+              callbacks: {
+                label: function(context) {
+                  const total = context.dataset.data.reduce((a, b) => a + b, 0);
+                  const pct = ((context.parsed / total) * 100).toFixed(1);
+                  return `${context.label}: ¥${context.parsed.toFixed(2)} (${pct}%)`;
+                }
+              }
+            }
+          }
+        }
+      });
     }
 
     // Codes
@@ -1629,23 +1710,27 @@
         `;
         
         if (data.items.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无数据</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无数据</td></tr>';
         } else {
-          tbody.innerHTML = data.items.map(o => `
+          tbody.innerHTML = data.items.map(o => {
+            const tradeNo = o.channel === 'alipay' ? o.alipayTradeNo : (o.channel === 'wechat' ? o.wechatTradeNo : '-');
+            return `
             <tr>
-              <td><code>${o.orderNo}</code></td>
+              <td><code style="cursor:pointer" onclick="viewOrderDetail('${o.orderNo}')">${o.orderNo}</code></td>
               <td>${o.plan || '-'}</td>
               <td>¥${o.price || '0'}</td>
               <td>${o.channel || '-'}</td>
-              <td>${o.userEmail || '-'}</td>
+              <td>${tradeNo ? `<code>${tradeNo}</code>` : '-'}</td>
               <td>${statusBadge(o.status)}</td>
               <td>${formatDate(o.createdAt)}</td>
+              <td>${formatDate(o.completedAt)}</td>
               <td>
                 ${o.status === 'pending' ? `<button class="btn btn-sm btn-primary" onclick="completeOrder('${o.orderNo}')">标记完成</button>` : ''}
                 ${o.status === 'completed' ? `<button class="btn btn-sm btn-danger" onclick="openRefund('${o.orderNo}', '${o.price}')">退款</button>` : ''}
               </td>
             </tr>
-          `).join('');
+            `;
+          }).join('');
         }
         
         document.getElementById('ordersPagination').innerHTML = paginationHtml(data.total, ordersPage, 50);
@@ -1659,6 +1744,46 @@
       document.getElementById('refundOrderNo').textContent = orderNo;
       document.getElementById('refundAmount').textContent = '¥' + amount;
       openModal('refundModal');
+    }
+
+    async function viewOrderDetail(orderNo) {
+      openModal('orderDetailModal');
+      const body = document.getElementById('orderDetailBody');
+      body.innerHTML = '<div class="loading">加载中</div>';
+
+      try {
+        const res = await api(`/orders/${orderNo}`);
+        const data = await res.json();
+
+        if (res.ok) {
+          const channelNames = { alipay: '支付宝', wechat: '微信支付', paypal: 'PayPal' };
+          const statusNames = { pending: '待支付', completed: '已完成', refunded: '已退款', cancelled: '已取消' };
+          const typeNames = { year: '年付', lifetime: '永久' };
+          const tradeNo = data.channel === 'alipay' ? data.alipayTradeNo : (data.channel === 'wechat' ? data.wechatTradeNo : '-');
+
+          body.innerHTML = `
+            <dl class="detail-list">
+              <dt>订单号</dt><dd><code>${data.orderNo}</code></dd>
+              <dt>套餐</dt><dd>${data.plan || '-'}</dd>
+              <dt>金额</dt><dd>¥${data.price || '0'}</dd>
+              <dt>类型</dt><dd>${typeNames[data.type] || data.type || '-'}</dd>
+              <dt>渠道</dt><dd>${channelNames[data.channel] || data.channel || '-'}</dd>
+              <dt>状态</dt><dd>${statusBadge(data.status)}</dd>
+              <dt>支付流水号</dt><dd>${tradeNo ? `<code>${tradeNo}</code>` : '-'}</dd>
+              <dt>用户邮箱</dt><dd>${data.userEmail || '-'}</dd>
+              <dt>创建时间</dt><dd>${formatDate(data.createdAt)}</dd>
+              <dt>完成时间</dt><dd>${formatDate(data.completedAt)}</dd>
+              <dt>激活码</dt><dd>${data.activationCode ? `<code>${data.activationCode}</code>` : '-'}</dd>
+              ${data.refundReason ? `<dt>退款原因</dt><dd>${data.refundReason}</dd>` : ''}
+              ${data.refundedAt ? `<dt>退款时间</dt><dd>${formatDate(data.refundedAt)}</dd>` : ''}
+            </dl>
+          `;
+        } else {
+          body.innerHTML = '<div class="empty">' + (data.error || '加载失败') + '</div>';
+        }
+      } catch (err) {
+        body.innerHTML = '<div class="empty">加载失败</div>';
+      }
     }
 
     async function completeOrder(orderNo) {

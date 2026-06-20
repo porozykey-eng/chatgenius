@@ -7,6 +7,7 @@ const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
 
 const alipayRouter = require('./alipay');
+const wechatRouter = require('./wechat');
 const licenseRouter = require('./license');
 const adminRouter = require('./admin');
 
@@ -54,8 +55,9 @@ app.use(cors({
   }
 }));
 
-// Preserve raw body for Alipay notify signature verification
+// Preserve raw body for payment notify signature verification
 app.use('/api/alipay/notify', express.raw({ type: 'application/x-www-form-urlencoded' }));
+app.use('/api/wechat/notify', express.raw({ type: 'application/json' }));
 
 // Rate limiting
 const licenseLimiter = rateLimit({
@@ -74,6 +76,14 @@ const alipayLimiter = rateLimit({
   message: { error: '请求过于频繁，请稍后再试' }
 });
 
+const wechatLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: '请求过于频繁，请稍后再试' }
+});
+
 const adminLimiter = rateLimit({
   windowMs: 60 * 1000, // 1 minute
   max: 30, // 30 requests per minute
@@ -84,6 +94,7 @@ const adminLimiter = rateLimit({
 
 // Routes with rate limiting
 app.use('/api/alipay', alipayLimiter, alipayRouter);
+app.use('/api/wechat', wechatLimiter, wechatRouter);
 app.use('/api/license', licenseLimiter, licenseRouter);
 
 // Admin dashboard
