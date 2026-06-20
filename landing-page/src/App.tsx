@@ -180,32 +180,26 @@ function PaymentModal({
     setPaymentChannel(channel)
     setLoading(true)
     setCodeError('')
-    
+
     const result = await activationService.createOrder(
-      plan?.name || '', 
-      plan?.price || '', 
-      plan?.type || 'lifetime', 
+      plan?.name || '',
+      plan?.price || '',
+      plan?.type || 'lifetime',
       channel
     )
-    
+
     setLoading(false)
-    
-    if (result.success && result.qrCode) {
-      setQrCode(result.qrCode)
+
+    if (result.success && result.payUrl) {
+      // 电脑网站支付：跳转到支付宝支付页面
+      // 支付完成后，支付宝会跳回 returnUrl，前端在 returnUrl 页面轮询订单状态
       setOrderNo(result.orderNo || '')
-      setStep('qrcode')
-      
-      // Start polling for payment status
-      const timer = setInterval(async () => {
-        if (!result.orderNo) return
-        const status = await activationService.queryPaymentStatus(result.orderNo)
-        if (status.paid) {
-          clearInterval(timer)
-          setPollingTimer(null)
-          setStep('success')
-        }
-      }, 3000)
-      setPollingTimer(timer)
+      // 把订单号存到 sessionStorage，支付返回后用于轮询
+      if (result.orderNo) {
+        sessionStorage.setItem('chatgenius_pending_order', result.orderNo)
+      }
+      // 跳转到支付宝支付页面
+      window.location.href = result.payUrl
     } else {
       setCodeError(result.error || '创建订单失败')
     }
@@ -2083,8 +2077,54 @@ function Footer() {
 function App() {
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadCount, setDownloadCount] = useState(0)
+  const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed' | null>(null)
+  const [paymentOrderNo, setPaymentOrderNo] = useState('')
   const DOWNLOAD_COOLDOWN = 5000 // 5 秒冷却时间
   const MAX_DOWNLOADS_PER_SESSION = 3 // 每会话最多下载 3 次
+
+  // 检测支付返回
+  useEffect(() => {
+    const pendingOrder = sessionStorage.getItem('chatgenius_pending_order')
+    if (pendingOrder) {
+      setPaymentOrderNo(pendingOrder)
+      setPaymentStatus('pending')
+      sessionStorage.removeItem('chatgenius_pending_order')
+
+      // 轮询订单状态
+      const checkPayment = async () => {
+        let attempts = 0
+        const maxAttempts = 20 // 最多轮询 20 次（约 1 分钟）
+
+        const poll = async () => {
+          try {
+            const status = await activationService.queryPaymentStatus(pendingOrder)
+            if (status.paid) {
+              setPaymentStatus('success')
+              return
+            }
+            attempts++
+            if (attempts < maxAttempts) {
+              setTimeout(poll, 3000) // 每 3 秒轮询一次
+            } else {
+              setPaymentStatus('failed')
+            }
+          } catch (error) {
+            console.error('Payment status check error:', error)
+            attempts++
+            if (attempts < maxAttempts) {
+              setTimeout(poll, 3000)
+            } else {
+              setPaymentStatus('failed')
+            }
+          }
+        }
+
+        poll()
+      }
+
+      checkPayment()
+    }
+  }, [])
 
   const handleDownload = async () => {
     // 1. 防重复点击检查
@@ -2139,6 +2179,51 @@ function App() {
 
   return (
     <div className="min-h-screen bg-background text-foreground">
+      {/* 支付状态提示 */}
+      {paymentStatus && (
+        <div className="fixed top-20 left-1/2 -translate-x-1/2 z-50 animate-in fade-in slide-in-from-top-4 duration-500">
+          <div className={`px-6 py-4 rounded-xl shadow-2xl border backdrop-blur-xl ${
+            paymentStatus === 'success' 
+              ? 'bg-green-500/10 border-green-500/30 text-green-400' 
+              : paymentStatus === 'failed'
+              ? 'bg-red-500/10 border-red-500/30 text-red-400'
+              : 'bg-blue-500/10 border-blue-500/30 text-blue-400'
+          }`}>
+            <div className="flex items-center gap-3">
+              {paymentStatus === 'success' && <CheckCircle className="w-5 h-5" />}
+              {paymentStatus === 'failed' && <AlertCircle className="w-5 h-5" />}
+              {paymentStatus === 'pending' && <Clock className="w-5 h-5 animate-pulse" />}
+              <div>
+                {paymentStatus === 'success' && (
+                  <div>
+                    <p className="font-semibold">支付成功！</p>
+                    <p className="text-sm text-white/60">订单号：{paymentOrderNo}</p>
+                  </div>
+                )}
+                {paymentStatus === 'failed' && (
+                  <div>
+                    <p className="font-semibold">支付未完成</p>
+                    <p className="text-sm text-white/60">订单号：{paymentOrderNo}</p>
+                  </div>
+                )}
+                {paymentStatus === 'pending' && (
+                  <div>
+                    <p className="font-semibold">正在确认支付状态...</p>
+                    <p className="text-sm text-white/60">订单号：{paymentOrderNo}</p>
+                  </div>
+                )}
+              </div>
+              <button 
+                onClick={() => setPaymentStatus(null)}
+                className="ml-2 text-white/40 hover:text-white/80 transition-colors"
+              >
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+      
       <Navigation onDownload={handleDownload} isDownloading={isDownloading} />
       <main>
         <HeroSection onDownload={handleDownload} isDownloading={isDownloading} />

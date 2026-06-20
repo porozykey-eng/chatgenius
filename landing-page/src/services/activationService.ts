@@ -31,14 +31,14 @@ export const activationService = {
     }
   },
 
-  // 创建支付订单（调用服务器支付宝 API）
+  // 创建支付订单（调用服务器支付宝 API - 电脑网站支付）
   async createOrder(
     _plan: string,
     price: string,
     type: 'year' | 'lifetime',
     _channel: 'alipay' | 'wechat' | 'paypal',
     _userEmail?: string
-  ): Promise<{ success: boolean; qrCode?: string; orderNo?: string; error?: string }> {
+  ): Promise<{ success: boolean; payUrl?: string; orderNo?: string; error?: string }> {
     try {
       const orderNo = `CG${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
       const subject = `ChatGenius AI Pro ${type === 'year' ? '年付' : '永久版'}`;
@@ -52,8 +52,8 @@ export const activationService = {
 
       const data = await res.json();
 
-      if (data.success && data.qrCode) {
-        return { success: true, qrCode: data.qrCode, orderNo };
+      if (data.success && data.payUrl) {
+        return { success: true, payUrl: data.payUrl, orderNo };
       }
 
       return { success: false, error: data.error || '创建订单失败' };

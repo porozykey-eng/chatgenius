@@ -189,23 +189,24 @@ try {
   }
 }
 
-// 创建预支付订单（当面付 - 生成二维码）
+// 创建支付订单（电脑网站支付 - alipay.trade.page.pay）
+// 返回支付宝支付页面 URL，前端跳转过去完成支付
 router.post('/create-order', async (req, res) => {
   const { orderNo, amount, subject } = req.body;
-  
+
   if (!orderNo || !amount || !subject) {
     return res.status(400).json({ success: false, error: '参数不完整' });
   }
-  
+
   const numAmount = Number(amount);
   if (isNaN(numAmount) || numAmount <= 0 || numAmount > 10000) {
     return res.status(400).json({ success: false, error: '金额无效' });
   }
-  
+
   if (!/^[a-zA-Z0-9\-]{1,64}$/.test(orderNo)) {
     return res.status(400).json({ success: false, error: '订单号格式无效' });
   }
-  
+
   if (typeof subject !== 'string' || subject.length > 256) {
     return res.status(400).json({ success: false, error: '订单描述过长' });
   }
@@ -217,35 +218,34 @@ router.post('/create-order', async (req, res) => {
       return res.status(400).json({ success: false, error: '订单号已存在' });
     }
 
-    console.log('Creating Alipay precreate order:', { orderNo, amount, subject });
+    console.log('Creating Alipay page pay order:', { orderNo, amount, subject });
 
-    // 调用支付宝当面付 API
+    // 支付宝电脑网站支付：返回一个支付页面 URL（HTML form 自动提交）
+    // 注意：alipay-sdk v4 的 exec 方法通过 method 字段指定接口名
     const result = await alipaySdk.exec(
-      'alipay.trade.precreate',
+      'alipay.trade.page.pay',
       {
         bizContent: {
           out_trade_no: orderNo,
           total_amount: amount,
           subject: subject,
+          product_code: 'FAST_INSTANT_TRADE_PAY',
         },
-      }
+        // 返回支付页面 URL，而不是直接执行 HTTP 请求
+        returnUrl: process.env.ALIPAY_RETURN_URL || 'https://chat.sopie.cc/payment-return',
+        notifyUrl: process.env.ALIPAY_NOTIFY_URL || 'https://chat.sopie.cc/api/alipay/notify',
+      },
+      // 让 SDK 只生成 URL，不发送请求
+      { validateSign: true, formData: true }
     );
 
-    console.log('Alipay SDK response:', JSON.stringify(result, null, 2));
+    console.log('Alipay page pay URL generated successfully');
 
-    if (result.code === '10000') {
-      console.log('Order created successfully, qr_code:', result.qr_code);
-      res.json({ 
-        success: true, 
-        qrCode: result.qr_code 
-      });
-    } else {
-      console.error('Alipay API error:', { code: result.code, msg: result.msg, subMsg: result.subMsg });
-      res.json({ 
-        success: false, 
-        error: result.subMsg || result.msg || '支付宝接口调用失败'
-      });
-    }
+    // result 是一个可跳转的支付页面 URL（或 HTML 字符串）
+    res.json({
+      success: true,
+      payUrl: result, // 前端用 window.location.href 跳转
+    });
   } catch (error) {
     console.error('Alipay create order error:', error.message);
     console.error('Error stack:', error.stack);
