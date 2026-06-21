@@ -45,6 +45,12 @@ foreach ($dir in $Dirs) {
 Write-Host "Creating zip package..."
 Compress-Archive -Path "$BuildDir\*" -DestinationPath $ZipFile -Force
 
+# Copy to landing-page public directory for deployment
+$PublicDir = Join-Path $ScriptDir "landing-page\public"
+if (-not (Test-Path $PublicDir)) { New-Item -ItemType Directory -Path $PublicDir | Out-Null }
+Copy-Item $ZipFile (Join-Path $PublicDir "extension.zip") -Force
+Write-Host "ZIP copied to landing-page/public/extension.zip"
+
 Write-Host "Cleaning up build directory..."
 Remove-Item -Recurse -Force $BuildDir
 

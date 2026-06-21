@@ -3,13 +3,19 @@ const express = require('express');
 const jwt = require('jsonwebtoken');
 const bcrypt = require('bcryptjs');
 const crypto = require('crypto');
+const fs = require('fs');
+const path = require('path');
 const { pool } = require('./config');
 
 const router = express.Router();
 
 // Configuration
-const ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD;
-const JWT_SECRET = process.env.JWT_SECRET || 'chatgenius-jwt-secret-key-2026';
+let ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD;
+const JWT_SECRET = process.env.JWT_SECRET;
+if (!JWT_SECRET || JWT_SECRET.length < 32) {
+  console.error('❌ JWT_SECRET 必须配置且长度 >= 32 字符！');
+  process.exit(1);
+}
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '7d';
 
@@ -124,7 +130,7 @@ async function revokeSession(sessionId) {
 }
 
 // Authentication middleware
-function requireAdmin(req, res, next) {
+async function requireAdmin(req, res, next) {
   const authHeader = req.headers.authorization;
   if (!authHeader || !authHeader.startsWith('Bearer ')) {
     return res.status(401).json({ error: '未授权访问' });
@@ -134,6 +140,13 @@ function requireAdmin(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.sessionId) {
+      const [sessions] = await pool.query(
+        'SELECT revoked FROM admin_sessions WHERE session_id = ?',
+        [decoded.sessionId]
+      );
+      if (sessions.length === 0 || sessions[0].revoked) {
+        return res.status(401).json({ error: '会话已失效，请重新登录' });
+      }
       updateSessionActivity(decoded.sessionId);
     }
     req.adminSession = decoded;
@@ -162,14 +175,7 @@ router.post('/login', async (req, res) => {
     });
   }
 
-  const isHashed = ADMIN_PASSWORD_HASH && (ADMIN_PASSWORD_HASH.startsWith('$2a$') || ADMIN_PASSWORD_HASH.startsWith('$2b$'));
-  
-  let passwordValid = false;
-  if (isHashed) {
-    passwordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
-  } else {
-    passwordValid = password === ADMIN_PASSWORD_HASH;
-  }
+  const passwordValid = await bcrypt.compare(password, ADMIN_PASSWORD_HASH);
 
   if (!passwordValid) {
     recordLoginAttempt(clientIP);
@@ -217,6 +223,16 @@ router.post('/refresh-token', async (req, res) => {
     const decoded = jwt.verify(refreshToken, JWT_SECRET);
     if (decoded.type !== 'refresh') {
       return res.status(401).json({ error: '无效的 refresh token' });
+    }
+
+    if (decoded.sessionId) {
+      const [sessions] = await pool.query(
+        'SELECT revoked FROM admin_sessions WHERE session_id = ?',
+        [decoded.sessionId]
+      );
+      if (sessions.length === 0 || sessions[0].revoked) {
+        return res.status(401).json({ error: '会话已失效，请重新登录' });
+      }
     }
 
     const accessToken = jwt.sign(
@@ -289,14 +305,7 @@ router.post('/change-password', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: '新密码长度至少 8 位' });
   }
 
-  const isHashed = ADMIN_PASSWORD_HASH && (ADMIN_PASSWORD_HASH.startsWith('$2a$') || ADMIN_PASSWORD_HASH.startsWith('$2b$'));
-  let oldPasswordValid = false;
-  
-  if (isHashed) {
-    oldPasswordValid = await bcrypt.compare(oldPassword, ADMIN_PASSWORD_HASH);
-  } else {
-    oldPasswordValid = oldPassword === ADMIN_PASSWORD_HASH;
-  }
+  const oldPasswordValid = await bcrypt.compare(oldPassword, ADMIN_PASSWORD_HASH);
 
   if (!oldPasswordValid) {
     await auditLog('password_change_failed', req, '旧密码验证失败');
@@ -304,12 +313,25 @@ router.post('/change-password', requireAdmin, async (req, res) => {
   }
 
   const newHash = await bcrypt.hash(newPassword, 12);
-  await auditLog('password_change_requested', req, '密码修改请求（需手动更新 .env）');
-  
+
+  // Update .env file
+  const envPath = path.resolve(__dirname, '.env');
+  let envContent = fs.readFileSync(envPath, 'utf8');
+  if (envContent.includes('ADMIN_PASSWORD=')) {
+    envContent = envContent.replace(/ADMIN_PASSWORD=.*/, `ADMIN_PASSWORD=${newHash}`);
+  } else {
+    envContent += `\nADMIN_PASSWORD=${newHash}\n`;
+  }
+  fs.writeFileSync(envPath, envContent);
+
+  // Update in-memory variable so current session works immediately
+  ADMIN_PASSWORD_HASH = newHash;
+
+  await auditLog('password_changed', req, '密码已修改');
+
   res.json({
     success: true,
-    message: '密码哈希已生成，请更新 .env 文件中的 ADMIN_PASSWORD',
-    newHash
+    message: '密码已修改成功，无需重启服务'
   });
 });
 
@@ -322,33 +344,34 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
     const tomorrow = new Date(today);
     tomorrow.setDate(tomorrow.getDate() + 1);
     const weekStart = new Date(today);
-    weekStart.setDate(today.getDate() - today.getDay() + 1);
+    const dayOfWeek = today.getDay();
+    weekStart.setDate(today.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
     const monthStart = new Date(today.getFullYear(), today.getMonth(), 1);
 
     // Today's revenue
-    const [todayOrders] = await pool.query(
-      'SELECT price FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
+    const [todayRows] = await pool.query(
+      'SELECT COALESCE(SUM(CAST(price AS DECIMAL)), 0) as total FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
       ['completed', today, tomorrow]
     );
-    const todayRevenue = todayOrders.reduce((sum, o) => sum + (parseFloat(o.price) || 0), 0);
+    const todayRevenue = parseFloat(todayRows[0].total) || 0;
 
     // Week revenue
-    const [weekOrders] = await pool.query(
-      'SELECT price FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
+    const [weekRows] = await pool.query(
+      'SELECT COALESCE(SUM(CAST(price AS DECIMAL)), 0) as total FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
       ['completed', weekStart, tomorrow]
     );
-    const weekRevenue = weekOrders.reduce((sum, o) => sum + (parseFloat(o.price) || 0), 0);
+    const weekRevenue = parseFloat(weekRows[0].total) || 0;
 
     // Month revenue
-    const [monthOrders] = await pool.query(
-      'SELECT price FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
+    const [monthRows] = await pool.query(
+      'SELECT COALESCE(SUM(CAST(price AS DECIMAL)), 0) as total FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
       ['completed', monthStart, tomorrow]
     );
-    const monthRevenue = monthOrders.reduce((sum, o) => sum + (parseFloat(o.price) || 0), 0);
+    const monthRevenue = parseFloat(monthRows[0].total) || 0;
 
     // Total revenue
-    const [allOrders] = await pool.query('SELECT price FROM orders WHERE status = ?', ['completed']);
-    const totalRevenue = allOrders.reduce((sum, o) => sum + (parseFloat(o.price) || 0), 0);
+    const [totalRows] = await pool.query('SELECT COALESCE(SUM(CAST(price AS DECIMAL)), 0) as total FROM orders WHERE status = ?', ['completed']);
+    const totalRevenue = parseFloat(totalRows[0].total) || 0;
 
     // Today's activations
     const [todayActs] = await pool.query(
@@ -420,7 +443,7 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
 router.get('/dashboard/trends', requireAdmin, async (req, res) => {
   const { metric = 'revenue', days = 7 } = req.query;
   const numDays = parseInt(days);
-  
+
   if (isNaN(numDays) || numDays < 1 || numDays > 365) {
     return res.status(400).json({ error: '天数必须在 1-365 之间' });
   }
@@ -432,6 +455,29 @@ router.get('/dashboard/trends', requireAdmin, async (req, res) => {
     startDate.setDate(endDate.getDate() - numDays + 1);
     startDate.setHours(0, 0, 0, 0);
 
+    let sql, params;
+    if (metric === 'revenue') {
+      sql = "SELECT DATE(completed_at) as day, COALESCE(SUM(CAST(price AS DECIMAL)), 0) as total FROM orders WHERE status = 'completed' AND completed_at >= ? AND completed_at < ? GROUP BY DATE(completed_at)";
+      params = [startDate, endDate];
+    } else if (metric === 'activations') {
+      sql = "SELECT DATE(used_at) as day, COUNT(*) as cnt FROM activation_codes WHERE status = 'used' AND used_at >= ? AND used_at < ? GROUP BY DATE(used_at)";
+      params = [startDate, endDate];
+    } else if (metric === 'orders') {
+      sql = "SELECT DATE(created_at) as day, COUNT(*) as cnt FROM orders WHERE created_at >= ? AND created_at < ? GROUP BY DATE(created_at)";
+      params = [startDate, endDate];
+    } else {
+      return res.status(400).json({ error: '无效的指标类型' });
+    }
+
+    const [rows] = await pool.query(sql, params);
+
+    const valueMap = new Map();
+    rows.forEach(row => {
+      const d = new Date(row.day);
+      const key = `${(d.getMonth() + 1).toString().padStart(2, '0')}-${d.getDate().toString().padStart(2, '0')}`;
+      valueMap.set(key, metric === 'revenue' ? parseFloat(row.total) : parseInt(row.cnt));
+    });
+
     const labels = [];
     const values = [];
     let total = 0;
@@ -439,36 +485,13 @@ router.get('/dashboard/trends', requireAdmin, async (req, res) => {
     for (let i = 0; i < numDays; i++) {
       const date = new Date(startDate);
       date.setDate(startDate.getDate() + i);
-      const nextDate = new Date(date);
-      nextDate.setDate(date.getDate() + 1);
-      
-      labels.push(date.toISOString().slice(5, 10));
+      const mm = (date.getMonth() + 1).toString().padStart(2, '0');
+      const dd = date.getDate().toString().padStart(2, '0');
+      labels.push(`${mm}-${dd}`);
 
-      if (metric === 'revenue') {
-        const [orders] = await pool.query(
-          'SELECT price FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
-          ['completed', date, nextDate]
-        );
-        const dayTotal = orders.reduce((sum, o) => sum + (parseFloat(o.price) || 0), 0);
-        values.push(dayTotal.toFixed(2));
-        total += dayTotal;
-      } else if (metric === 'activations') {
-        const [rows] = await pool.query(
-          'SELECT COUNT(*) as cnt FROM activation_codes WHERE status = ? AND used_at >= ? AND used_at < ?',
-          ['used', date, nextDate]
-        );
-        const count = rows[0].cnt;
-        values.push(count);
-        total += count;
-      } else if (metric === 'orders') {
-        const [rows] = await pool.query(
-          'SELECT COUNT(*) as cnt FROM orders WHERE created_at >= ? AND created_at < ?',
-          [date, nextDate]
-        );
-        const count = rows[0].cnt;
-        values.push(count);
-        total += count;
-      }
+      const val = valueMap.get(`${mm}-${dd}`) || 0;
+      values.push(metric === 'revenue' ? val.toFixed(2) : val);
+      total += val;
     }
 
     res.json({ labels, values, total: metric === 'revenue' ? total.toFixed(2) : total });
@@ -483,7 +506,8 @@ router.get('/dashboard/trends', requireAdmin, async (req, res) => {
 router.get('/audit-logs', requireAdmin, async (req, res) => {
   const { action, startDate, endDate, ip, page = 1, limit = 50 } = req.query;
   const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  let limitNum = parseInt(limit);
+  if (limitNum > 200) limitNum = 200;
 
   try {
     let whereClause = '1=1';
@@ -669,7 +693,8 @@ router.get('/codes/export', requireAdmin, async (req, res) => {
 router.get('/codes', requireAdmin, async (req, res) => {
   const { status, type, batchId, search, createdAfter, createdBefore, page = 1, limit = 50 } = req.query;
   const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  let limitNum = parseInt(limit);
+  if (limitNum > 200) limitNum = 200;
 
   try {
     let whereClause = '1=1';
@@ -778,10 +803,11 @@ router.get('/orders/statistics', requireAdmin, async (req, res) => {
     let startDate;
     if (period === 'week') {
       startDate = new Date(now);
-      startDate.setDate(now.getDate() - 7);
+      startDate.setHours(0, 0, 0, 0);
+      const dayOfWeek = startDate.getDay();
+      startDate.setDate(startDate.getDate() - (dayOfWeek === 0 ? 6 : dayOfWeek - 1));
     } else if (period === 'month') {
-      startDate = new Date(now);
-      startDate.setMonth(now.getMonth() - 1);
+      startDate = new Date(now.getFullYear(), now.getMonth(), 1);
     } else if (period === 'year') {
       startDate = new Date(now);
       startDate.setFullYear(now.getFullYear() - 1);
@@ -821,9 +847,10 @@ router.get('/orders/statistics', requireAdmin, async (req, res) => {
 });
 
 router.get('/orders', requireAdmin, async (req, res) => {
-  const { status, startDate, endDate, minPrice, maxPrice, userEmail, orderNo, page = 1, limit = 50 } = req.query;
+  const { status, startDate, endDate, minPrice, maxPrice, userEmail, orderNo, search, page = 1, limit = 50 } = req.query;
   const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  let limitNum = parseInt(limit);
+  if (limitNum > 200) limitNum = 200;
 
   try {
     let whereClause = '1=1';
@@ -841,6 +868,10 @@ router.get('/orders', requireAdmin, async (req, res) => {
     if (maxPrice) { whereClause += ' AND CAST(price AS DECIMAL) <= ?'; params.push(parseFloat(maxPrice)); }
     if (userEmail) { whereClause += ' AND user_email LIKE ?'; params.push(`%${userEmail}%`); }
     if (orderNo) { whereClause += ' AND order_no LIKE ?'; params.push(`%${orderNo}%`); }
+    if (search) {
+      whereClause += ' AND (order_no LIKE ? OR user_email LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`);
+    }
 
     const [countRows] = await pool.query(`SELECT COUNT(*) as cnt FROM orders WHERE ${whereClause}`, params);
     const total = countRows[0].cnt;
@@ -850,8 +881,12 @@ router.get('/orders', requireAdmin, async (req, res) => {
       [...params, limitNum, (pageNum - 1) * limitNum]
     );
 
-    let summaryAmount = 0;
-    orders.forEach(o => summaryAmount += parseFloat(o.price) || 0);
+    const [summaryRows] = await pool.query(
+      `SELECT COUNT(*) as cnt, COALESCE(SUM(CAST(price AS DECIMAL)), 0) as total FROM orders WHERE ${whereClause}`,
+      params
+    );
+    const summaryAmount = summaryRows[0].total;
+    const summaryCount = summaryRows[0].cnt;
 
     res.json({
       items: orders.map(order => ({
@@ -875,8 +910,8 @@ router.get('/orders', requireAdmin, async (req, res) => {
       page: pageNum,
       limit: limitNum,
       summary: {
-        count: orders.length,
-        amount: summaryAmount.toFixed(2)
+        count: summaryCount,
+        amount: parseFloat(summaryAmount).toFixed(2)
       }
     });
   } catch (err) {
@@ -919,6 +954,46 @@ router.get('/orders/:orderNo', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('Get order error:', err);
     res.status(500).json({ error: '获取订单详情失败' });
+  }
+});
+
+router.get('/orders/export', requireAdmin, async (req, res) => {
+  const { status, startDate, endDate } = req.query;
+
+  try {
+    let whereClause = '1=1';
+    const params = [];
+
+    if (status && status !== 'all') { whereClause += ' AND status = ?'; params.push(status); }
+    if (startDate) { whereClause += ' AND created_at >= ?'; params.push(new Date(startDate)); }
+    if (endDate) {
+      const end = new Date(endDate);
+      end.setHours(23, 59, 59, 999);
+      whereClause += ' AND created_at <= ?';
+      params.push(end);
+    }
+
+    const [orders] = await pool.query(
+      `SELECT order_no, plan, price, type, channel, status, created_at, completed_at, user_email, alipay_trade_no, wechat_trade_no FROM orders WHERE ${whereClause} ORDER BY created_at DESC LIMIT 10000`,
+      params
+    );
+
+    const BOM = '\uFEFF';
+    const header = '订单号,套餐,金额,类型,渠道,状态,创建时间,完成时间,邮箱,支付宝流水号,微信流水号\n';
+    const channelNames = { alipay: '支付宝', wechat: '微信', paypal: 'PayPal' };
+    const typeNames = { year: '年付', lifetime: '永久' };
+    const statusNames = { pending: '待支付', completed: '已完成', refunded: '已退款', cancelled: '已取消' };
+    const formatDate = (d) => d ? new Date(d).toLocaleString('zh-CN') : '';
+    const rows = orders.map(o => {
+      return `"${o.order_no}","${o.plan || ''}","${o.price || ''}","${typeNames[o.type] || o.type}","${channelNames[o.channel] || o.channel}","${statusNames[o.status] || o.status}","${formatDate(o.created_at)}","${formatDate(o.completed_at)}","${o.user_email || ''}","${o.alipay_trade_no || ''}","${o.wechat_trade_no || ''}"`;
+    }).join('\n');
+
+    res.setHeader('Content-Type', 'text/csv; charset=utf-8');
+    res.setHeader('Content-Disposition', `attachment; filename="orders_${Date.now()}.csv"`);
+    res.send(BOM + header + rows);
+  } catch (err) {
+    console.error('Export orders error:', err);
+    res.status(500).json({ error: '导出失败' });
   }
 });
 
@@ -1001,7 +1076,8 @@ router.post('/orders/:orderNo/refund', requireAdmin, async (req, res) => {
 router.get('/licenses', requireAdmin, async (req, res) => {
   const { type, isActive, search, activatedAfter, activatedBefore, expiringBefore, page = 1, limit = 50 } = req.query;
   const pageNum = parseInt(page);
-  const limitNum = parseInt(limit);
+  let limitNum = parseInt(limit);
+  if (limitNum > 200) limitNum = 200;
 
   try {
     let whereClause = '1=1';

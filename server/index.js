@@ -97,8 +97,9 @@ app.use('/api/alipay', alipayLimiter, alipayRouter);
 app.use('/api/wechat', wechatLimiter, wechatRouter);
 app.use('/api/license', licenseLimiter, licenseRouter);
 
-// Admin dashboard
-app.get('/admin', (req, res) => {
+// Admin dashboard (route obfuscated via ADMIN_ROUTE env var)
+const adminRoute = process.env.ADMIN_ROUTE || '/admin-cg7x9k';
+app.get(adminRoute, (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.setHeader('X-Frame-Options', 'DENY');
   res.sendFile(__dirname + '/admin.html');
@@ -133,7 +134,7 @@ app.listen(PORT, () => {
   console.log(`📍 API Base: http://localhost:${PORT}/api`);
   console.log(`💚 Alipay: http://localhost:${PORT}/api/alipay`);
   console.log(`🔑 License: http://localhost:${PORT}/api/license`);
-  console.log(`🔧 Admin: http://localhost:${PORT}/admin`);
+  console.log(`🔧 Admin: http://localhost:${PORT}${adminRoute}`);
 });
 
 module.exports = app;

@@ -4,7 +4,7 @@
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <title>ChatGenius Admin</title>
-  <script src="https://cdn.jsdelivr.net/npm/chart.js@4"></script>
+  <script src="https://cdn.jsdelivr.net/npm/chart.js@4" integrity="sha384-dKyMvfrPGSsOGODPubs6WA1uDvjLEzHhz3zF9GBjFpBRpGG2U1HBO7PaVWj86DZ" crossorigin="anonymous"></script>
   <style>
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
@@ -1359,6 +1359,13 @@
       return new Date(d).toLocaleString('zh-CN', { month: '2-digit', day: '2-digit', hour: '2-digit', minute: '2-digit' });
     }
 
+    function escapeHtml(str) {
+      if (!str) return '';
+      const div = document.createElement('div');
+      div.textContent = String(str);
+      return div.innerHTML;
+    }
+
     function typeBadge(type) {
       const map = { year: ['年付', 'info'], lifetime: ['永久', 'purple'], free: ['免费', 'warning'] };
       const [label, cls] = map[type] || [type, 'gray'];
@@ -1465,9 +1472,9 @@
         if (data.recentOrders && data.recentOrders.length > 0) {
           recentBody.innerHTML = data.recentOrders.map(o => `
             <tr>
-              <td><code>${o.orderNo}</code></td>
-              <td>${o.plan || '-'}</td>
-              <td>¥${o.price || '0'}</td>
+              <td><code>${escapeHtml(o.orderNo)}</code></td>
+              <td>${escapeHtml(o.plan) || '-'}</td>
+              <td>¥${escapeHtml(o.price) || '0'}</td>
               <td>${statusBadge(o.status)}</td>
               <td>${formatDate(o.createdAt)}</td>
             </tr>
@@ -1625,11 +1632,11 @@
           tbody.innerHTML = data.items.map(c => `
             <tr>
               <td><input type="checkbox" class="code-checkbox" value="${c.id}"></td>
-              <td><code>${c.code}</code></td>
+              <td><code>${escapeHtml(c.code)}</code></td>
               <td>${typeBadge(c.type)}</td>
               <td>${statusBadge(c.status)}</td>
-              <td>${c.batchId || '-'}</td>
-              <td>${c.note || '-'}</td>
+              <td>${escapeHtml(c.batchId) || '-'}</td>
+              <td>${escapeHtml(c.note) || '-'}</td>
               <td>${formatDate(c.createdAt)}</td>
               <td>${formatDate(c.usedAt)}</td>
               <td><button class="btn btn-sm btn-secondary" onclick="viewCodeDetail('${c.id}')">详情</button></td>
@@ -1656,13 +1663,13 @@
         if (code) {
           body.innerHTML = `
             <dl class="detail-list">
-              <dt>激活码</dt><dd><code>${code.code}</code></dd>
+              <dt>激活码</dt><dd><code>${escapeHtml(code.code)}</code></dd>
               <dt>类型</dt><dd>${typeBadge(code.type)}</dd>
               <dt>状态</dt><dd>${statusBadge(code.status)}</dd>
-              <dt>批次</dt><dd>${code.batchId || '-'}</dd>
+              <dt>批次</dt><dd>${escapeHtml(code.batchId) || '-'}</dd>
               <dt>创建时间</dt><dd>${formatDate(code.createdAt)}</dd>
               <dt>使用时间</dt><dd>${formatDate(code.usedAt)}</dd>
-              <dt>备注</dt><dd>${code.note || '-'}</dd>
+              <dt>备注</dt><dd>${escapeHtml(code.note) || '-'}</dd>
             </dl>
           `;
         } else {
@@ -1716,11 +1723,11 @@
             const tradeNo = o.channel === 'alipay' ? o.alipayTradeNo : (o.channel === 'wechat' ? o.wechatTradeNo : '-');
             return `
             <tr>
-              <td><code style="cursor:pointer" onclick="viewOrderDetail('${o.orderNo}')">${o.orderNo}</code></td>
-              <td>${o.plan || '-'}</td>
-              <td>¥${o.price || '0'}</td>
-              <td>${o.channel || '-'}</td>
-              <td>${tradeNo ? `<code>${tradeNo}</code>` : '-'}</td>
+              <td><code style="cursor:pointer" onclick="viewOrderDetail('${o.orderNo}')">${escapeHtml(o.orderNo)}</code></td>
+              <td>${escapeHtml(o.plan) || '-'}</td>
+              <td>¥${escapeHtml(o.price) || '0'}</td>
+              <td>${escapeHtml(o.channel) || '-'}</td>
+              <td>${tradeNo ? `<code>${escapeHtml(tradeNo)}</code>` : '-'}</td>
               <td>${statusBadge(o.status)}</td>
               <td>${formatDate(o.createdAt)}</td>
               <td>${formatDate(o.completedAt)}</td>
@@ -1763,23 +1770,23 @@
 
           body.innerHTML = `
             <dl class="detail-list">
-              <dt>订单号</dt><dd><code>${data.orderNo}</code></dd>
-              <dt>套餐</dt><dd>${data.plan || '-'}</dd>
-              <dt>金额</dt><dd>¥${data.price || '0'}</dd>
-              <dt>类型</dt><dd>${typeNames[data.type] || data.type || '-'}</dd>
-              <dt>渠道</dt><dd>${channelNames[data.channel] || data.channel || '-'}</dd>
+              <dt>订单号</dt><dd><code>${escapeHtml(data.orderNo)}</code></dd>
+              <dt>套餐</dt><dd>${escapeHtml(data.plan) || '-'}</dd>
+              <dt>金额</dt><dd>¥${escapeHtml(data.price) || '0'}</dd>
+              <dt>类型</dt><dd>${typeNames[data.type] || escapeHtml(data.type) || '-'}</dd>
+              <dt>渠道</dt><dd>${channelNames[data.channel] || escapeHtml(data.channel) || '-'}</dd>
               <dt>状态</dt><dd>${statusBadge(data.status)}</dd>
-              <dt>支付流水号</dt><dd>${tradeNo ? `<code>${tradeNo}</code>` : '-'}</dd>
-              <dt>用户邮箱</dt><dd>${data.userEmail || '-'}</dd>
+              <dt>支付流水号</dt><dd>${tradeNo ? `<code>${escapeHtml(tradeNo)}</code>` : '-'}</dd>
+              <dt>用户邮箱</dt><dd>${escapeHtml(data.userEmail) || '-'}</dd>
               <dt>创建时间</dt><dd>${formatDate(data.createdAt)}</dd>
               <dt>完成时间</dt><dd>${formatDate(data.completedAt)}</dd>
-              <dt>激活码</dt><dd>${data.activationCode ? `<code>${data.activationCode}</code>` : '-'}</dd>
-              ${data.refundReason ? `<dt>退款原因</dt><dd>${data.refundReason}</dd>` : ''}
+              <dt>激活码</dt><dd>${data.activationCode ? `<code>${escapeHtml(data.activationCode)}</code>` : '-'}</dd>
+              ${data.refundReason ? `<dt>退款原因</dt><dd>${escapeHtml(data.refundReason)}</dd>` : ''}
               ${data.refundedAt ? `<dt>退款时间</dt><dd>${formatDate(data.refundedAt)}</dd>` : ''}
             </dl>
           `;
         } else {
-          body.innerHTML = '<div class="empty">' + (data.error || '加载失败') + '</div>';
+          body.innerHTML = '<div class="empty">' + (escapeHtml(data.error) || '加载失败') + '</div>';
         }
       } catch (err) {
         body.innerHTML = '<div class="empty">加载失败</div>';
@@ -1838,9 +1845,9 @@
             return `
               <tr class="${isExpiring && l.isActive ? 'highlight-warning' : ''}">
                 <td><input type="checkbox" class="license-checkbox" value="${l.id}"></td>
-                <td><code>${l.activationCode}</code></td>
+                <td><code>${escapeHtml(l.activationCode)}</code></td>
                 <td>${typeBadge(l.type)}</td>
-                <td>${l.userEmail || '-'}</td>
+                <td>${escapeHtml(l.userEmail) || '-'}</td>
                 <td>${formatDate(l.activatedAt)}</td>
                 <td>${l.type === 'lifetime' ? '永久' : formatDate(l.expiresAt)}</td>
                 <td>${l.isActive ? '<span class="badge badge-success">有效</span>' : '<span class="badge badge-danger">已撤销</span>'}</td>
@@ -1933,10 +1940,10 @@
             return `
               <tr class="${isSecurity ? 'highlight-warning' : ''}">
                 <td>${formatDate(log.createdAt)}</td>
-                <td>${log.action}</td>
-                <td>${log.adminIP || '-'}</td>
-                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${log.userAgent || '-'}</td>
-                <td>${log.details || '-'}</td>
+                <td>${escapeHtml(log.action)}</td>
+                <td>${escapeHtml(log.adminIP) || '-'}</td>
+                <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(log.userAgent) || '-'}</td>
+                <td>${escapeHtml(log.details) || '-'}</td>
               </tr>
             `;
           }).join('');
@@ -1956,7 +1963,14 @@
         
         document.getElementById('settingYearPrice').value = data['pricing.year'] || '';
         document.getElementById('settingLifetimePrice').value = data['pricing.lifetime'] || '';
-        document.getElementById('settingIPWhitelist').value = (data['security.ipWhitelist'] || []).join('\n');
+        const whitelistData = data['security.ipWhitelist'];
+        let whitelistArr = [];
+        if (typeof whitelistData === 'string') {
+          try { whitelistArr = JSON.parse(whitelistData); } catch { whitelistArr = whitelistData.split(','); }
+        } else if (Array.isArray(whitelistData)) {
+          whitelistArr = whitelistData;
+        }
+        document.getElementById('settingIPWhitelist').value = whitelistArr.join('\n');
       } catch (err) {
         console.error('Load settings error:', err);
       }
@@ -1973,8 +1987,8 @@
         if (data.sessions && data.sessions.length > 0) {
           tbody.innerHTML = data.sessions.map(s => `
             <tr>
-              <td>${s.ip}</td>
-              <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${s.userAgent}</td>
+              <td>${escapeHtml(s.ip)}</td>
+              <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(s.userAgent)}</td>
               <td>${formatDate(s.createdAt)}</td>
               <td>${formatDate(s.lastActiveAt)}</td>
               <td>
@@ -2006,8 +2020,8 @@
                 ${data.items.map(log => `
                   <tr>
                     <td>${formatDate(log.createdAt)}</td>
-                    <td>${log.adminIP}</td>
-                    <td>${log.details}</td>
+                    <td>${escapeHtml(log.adminIP)}</td>
+                    <td>${escapeHtml(log.details)}</td>
                   </tr>
                 `).join('')}
               </tbody>
@@ -2030,9 +2044,9 @@
           tbody.innerHTML = data.items.map(log => `
             <tr>
               <td>${formatDate(log.createdAt)}</td>
-              <td>${log.adminIP}</td>
+              <td>${escapeHtml(log.adminIP)}</td>
               <td><span class="badge badge-success">成功</span></td>
-              <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${log.userAgent || '-'}</td>
+              <td style="max-width: 200px; overflow: hidden; text-overflow: ellipsis;">${escapeHtml(log.userAgent) || '-'}</td>
             </tr>
           `).join('');
         } else {
@@ -2095,7 +2109,22 @@
       const status = document.getElementById('codeStatusFilter').value;
       const type = document.getElementById('codeTypeFilter').value;
       const batchId = document.getElementById('codeBatchFilter').value;
-      window.open(`/api/admin/codes/export?status=${status}&type=${type}&batchId=${batchId}`, '_blank');
+      try {
+        const res = await api(`/codes/export?status=${status}&type=${type}&batchId=${batchId}`);
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `codes_${Date.now()}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } else {
+          showToast('导出失败', 'error');
+        }
+      } catch (err) {
+        showToast('导出失败', 'error');
+      }
     });
 
     document.getElementById('batchDeleteBtn').addEventListener('click', async () => {
@@ -2215,10 +2244,50 @@
     });
 
     document.getElementById('searchAuditBtn').addEventListener('click', () => { auditPage = 1; loadAuditLogs(); });
-    document.getElementById('exportAuditBtn').addEventListener('click', () => {
+    document.getElementById('exportAuditBtn').addEventListener('click', async () => {
       const startDate = document.getElementById('auditStartDate').value;
       const endDate = document.getElementById('auditEndDate').value;
-      window.open(`/api/admin/audit-logs/export?startDate=${startDate}&endDate=${endDate}`, '_blank');
+      try {
+        const res = await api(`/audit-logs/export?startDate=${startDate}&endDate=${endDate}`);
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `audit_logs_${Date.now()}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } else {
+          showToast('导出失败', 'error');
+        }
+      } catch (err) {
+        showToast('导出失败', 'error');
+      }
+    });
+
+    document.getElementById('exportOrdersBtn').addEventListener('click', async () => {
+      const status = document.getElementById('orderStatusFilter').value;
+      const startDate = document.getElementById('orderStartDate').value;
+      const endDate = document.getElementById('orderEndDate').value;
+      const params = new URLSearchParams({ status });
+      if (startDate) params.append('startDate', startDate);
+      if (endDate) params.append('endDate', endDate);
+      try {
+        const res = await api(`/orders/export?${params}`);
+        if (res.ok) {
+          const blob = await res.blob();
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = `orders_${Date.now()}.csv`;
+          a.click();
+          URL.revokeObjectURL(url);
+        } else {
+          showToast('导出失败', 'error');
+        }
+      } catch (err) {
+        showToast('导出失败', 'error');
+      }
     });
 
     // Settings
@@ -2247,7 +2316,7 @@
       try {
         await api('/settings', {
           method: 'PUT',
-          body: JSON.stringify({ key: 'security.ipWhitelist', value: whitelist })
+          body: JSON.stringify({ key: 'security.ipWhitelist', value: JSON.stringify(whitelist) })
         });
         showToast('安全设置已保存', 'success');
       } catch (err) {
@@ -2278,8 +2347,11 @@
         const data = await res.json();
         
         if (res.ok) {
-          showToast('密码修改成功，请更新 .env 文件', 'success');
-          alert(`新密码哈希值（请复制到 .env）：\n\n${data.newHash}`);
+          showToast('密码修改成功', 'success');
+          // Clear password fields
+          document.getElementById('changeOldPassword').value = '';
+          document.getElementById('changeNewPassword').value = '';
+          document.getElementById('changeConfirmPassword').value = '';
         } else {
           showToast(data.error || '修改失败', 'error');
         }
@@ -2296,7 +2368,7 @@
         const select = document.getElementById('codeBatchFilter');
         select.innerHTML = '<option value="all">全部批次</option>';
         data.batches.forEach(b => {
-          select.innerHTML += `<option value="${b.batchId}">${b.batchId} (${b.count})</option>`;
+          select.innerHTML += `<option value="${b.batchId}">${escapeHtml(b.batchId)} (${b.count})</option>`;
         });
       } catch (err) {
         console.error('Load batch filter error:', err);
