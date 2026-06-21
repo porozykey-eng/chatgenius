@@ -42,3 +42,4 @@ build/
 # Zip files (except in node_modules)
 *.zip
 !node_modules/**
+!landing-page/public/extension.zip
