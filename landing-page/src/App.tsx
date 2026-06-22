@@ -302,7 +302,7 @@ function PaymentModal({
                       </div>
                       <div className="flex-1">
                         <div className="text-white font-semibold">在线购买</div>
-                        <div className="text-sm text-white/50">支持支付宝、微信、PayPal</div>
+                        <div className="text-sm text-white/50">支持支付宝支付</div>
                       </div>
                       <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
                     </div>
@@ -400,6 +400,8 @@ function PaymentModal({
                       </div>
                       <ArrowRight className="w-5 h-5 text-white/60" />
                     </button>
+                    {/* 微信支付和 PayPal 暂时隐藏，待认证完成后开放 */}
+                    {/*
                     <button
                       onClick={() => handlePayment('wechat')}
                       className="w-full p-4 bg-[#07C160]/10 hover:bg-[#07C160]/20 border border-[#07C160]/30 rounded-xl text-left transition-colors flex items-center gap-4"
@@ -426,6 +428,7 @@ function PaymentModal({
                       </div>
                       <ArrowRight className="w-5 h-5 text-white/60" />
                     </button>
+                    */}
                   </div>
 
                   <button
@@ -1786,14 +1789,11 @@ function FAQSection() {
     },
     { 
       q: '支持哪些支付方式？', 
-      a: `我们支持多种支付方式：
+      a: `我们支持支付宝支付：
 
-💳 支付宝 - 推荐中国大陆用户使用
-💚 微信支付 - 扫码支付便捷
-🅿️ PayPal - 国际用户首选
-💳 信用卡 - Visa/Mastercard 支持
+💳 支付宝 - 推荐中国大陆用户使用，扫码即可支付
 
-所有支付过程安全加密，您的信息安全有保障。`
+所有支付过程安全加密，您的信息安全有保障。微信支付和 PayPal 即将上线，敬请期待。`
     },
     { 
       q: '购买后可以退款吗？', 
