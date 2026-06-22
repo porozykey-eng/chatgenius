@@ -142,7 +142,8 @@ function PaymentModal({
   onClose: () => void; 
   plan: { name: string; price: string; type: 'year' | 'lifetime' } | null 
 }) {
-  const [step, setStep] = useState<'payment' | 'qrcode' | 'success'>('payment')
+  const [step, setStep] = useState<'select' | 'code' | 'payment' | 'qrcode' | 'success'>('select')
+  const [activationCode, setActivationCode] = useState('')
   const [codeError, setCodeError] = useState('')
   const [loading, setLoading] = useState(false)
   const [paymentChannel, setPaymentChannel] = useState<'alipay' | 'wechat' | 'paypal' | null>(null)
@@ -150,7 +151,31 @@ function PaymentModal({
   const [qrCode, setQrCode] = useState('')
   const [pollingTimer, setPollingTimer] = useState<ReturnType<typeof setInterval> | null>(null)
 
-  // Handle payment - create order via server API
+  // Check activation code using Supabase service
+  const handleActivate = async () => {
+    if (!activationCode.trim()) {
+      setCodeError('请输入激活码')
+      return
+    }
+    
+    setLoading(true)
+    try {
+      const result = await activationService.validateCode(activationCode)
+      
+      if (result.valid) {
+        setStep('success')
+        setCodeError('')
+      } else {
+        setCodeError(result.error || '激活码无效')
+      }
+    } catch (err) {
+      setCodeError('验证失败，请检查网络连接')
+    } finally {
+      setLoading(false)
+    }
+  }
+
+  // Handle payment channel selection - create order via server API
   const handlePayment = async (channel: 'alipay' | 'wechat' | 'paypal') => {
     setPaymentChannel(channel)
     setLoading(true)
@@ -171,7 +196,7 @@ function PaymentModal({
         sessionStorage.setItem('chatgenius_pending_order', result.orderNo)
       }
 
-      if (result.codeUrl) {
+      if (channel === 'wechat' && result.codeUrl) {
         setQrCode(result.codeUrl)
         setStep('qrcode')
       } else if (result.payForm) {
@@ -196,7 +221,8 @@ function PaymentModal({
   }, [pollingTimer])
 
   const resetModal = () => {
-    setStep('payment')
+    setStep('select')
+    setActivationCode('')
     setCodeError('')
     setPaymentChannel(null)
     setOrderNo('')
@@ -246,6 +272,104 @@ function PaymentModal({
 
             {/* Content */}
             <div className="p-6">
+              {step === 'select' && (
+                <div className="space-y-4">
+                  <button
+                    onClick={() => setStep('code')}
+                    className="w-full p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-colors group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center">
+                        <Key className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-semibold">我有激活码</div>
+                        <div className="text-sm text-white/50">输入激活码直接升级</div>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </button>
+
+                  <button
+                    onClick={() => setStep('payment')}
+                    className="w-full p-4 bg-white/5 hover:bg-white/10 border border-white/10 rounded-xl text-left transition-colors group"
+                  >
+                    <div className="flex items-center gap-4">
+                      <div className="w-12 h-12 rounded-xl bg-gradient-to-br from-green-500 to-emerald-600 flex items-center justify-center">
+                        <CreditCard className="w-6 h-6 text-white" />
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-semibold">在线购买</div>
+                        <div className="text-sm text-white/50">支持支付宝、微信、PayPal</div>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-white/60 group-hover:text-white group-hover:translate-x-1 transition-all" />
+                    </div>
+                  </button>
+
+                  <div className="pt-4 border-t border-white/10">
+                    <p className="text-xs text-white/60 text-center">
+                      购买后激活码将发送至您的邮箱
+                    </p>
+                  </div>
+                </div>
+              )}
+
+              {step === 'code' && (
+                <div className="space-y-4">
+                  <div>
+                    <label className="text-sm text-white/60 mb-2 block">激活码</label>
+                    <input
+                      type="text"
+                      value={activationCode}
+                      onChange={(e) => {
+                        setActivationCode(e.target.value.toUpperCase())
+                        setCodeError('')
+                      }}
+                      placeholder="请输入激活码 (如: PRO-XXXXXXXX)"
+                      className="w-full px-4 py-3 bg-white/5 border border-white/10 rounded-xl text-white placeholder-white/30 focus:outline-none focus:border-violet-500 font-mono tracking-wider"
+                    />
+                    {codeError && (
+                      <motion.div
+                        initial={{ opacity: 0, y: -5 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        className="flex items-center gap-2 mt-2 text-red-400 text-sm"
+                      >
+                        <AlertCircle className="w-4 h-4" />
+                        {codeError}
+                      </motion.div>
+                    )}
+                    {!codeError && activationCode && (
+                      <p className="text-xs text-white/50 mt-2">
+                        格式：PRO-XXXXXXXX（8位字符）
+                      </p>
+                    )}
+                  </div>
+
+                  <div className="flex gap-3">
+                    <button
+                      onClick={() => setStep('select')}
+                      className="flex-1 py-3 bg-white/5 hover:bg-white/10 text-white rounded-xl font-medium transition-colors"
+                    >
+                      返回
+                    </button>
+                    <button
+                      onClick={handleActivate}
+                      disabled={loading}
+                      className="flex-1 py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-medium hover:opacity-90 transition-opacity disabled:opacity-50 flex items-center justify-center gap-2"
+                    >
+                      {loading ? (
+                        <motion.div
+                          animate={{ rotate: 360 }}
+                          transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
+                        >
+                          <Sparkles className="w-5 h-5" />
+                        </motion.div>
+                      ) : '激活'}
+                    </button>
+                  </div>
+                </div>
+              )}
+
               {step === 'payment' && (
                 <div className="space-y-4">
                   <div className="bg-white/5 rounded-xl p-4 border border-white/10">
@@ -259,46 +383,55 @@ function PaymentModal({
                     </div>
                   </div>
 
-                  <button
-                    onClick={() => handlePayment('alipay')}
-                    disabled={loading}
-                    className="w-full p-4 bg-[#1677FF]/10 hover:bg-[#1677FF]/20 border border-[#1677FF]/30 rounded-xl transition-colors flex items-center gap-4 disabled:opacity-50"
-                  >
-                    <div className="w-12 h-12 bg-[#1677FF] rounded-xl flex items-center justify-center">
-                      <span className="text-white font-bold text-xl">支</span>
-                    </div>
-                    <div className="flex-1 text-left">
-                      <div className="text-white font-semibold text-lg">支付宝支付</div>
-                      <div className="text-sm text-white/50">扫码完成支付</div>
-                    </div>
-                    {loading ? (
-                      <motion.div
-                        animate={{ rotate: 360 }}
-                        transition={{ repeat: Infinity, duration: 1, ease: 'linear' }}
-                      >
-                        <Sparkles className="w-6 h-6 text-[#1677FF]" />
-                      </motion.div>
-                    ) : (
-                      <ArrowRight className="w-6 h-6 text-white/60" />
-                    )}
-                  </button>
-
-                  {codeError && (
-                    <motion.div
-                      initial={{ opacity: 0, y: -5 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      className="flex items-center gap-2 text-red-400 text-sm"
+                  <div className="space-y-3">
+                    <p className="text-sm text-white/60">选择支付方式</p>
+                    <button
+                      onClick={() => handlePayment('alipay')}
+                      className="w-full p-4 bg-[#1677FF]/10 hover:bg-[#1677FF]/20 border border-[#1677FF]/30 rounded-xl text-left transition-colors flex items-center gap-4"
                     >
-                      <AlertCircle className="w-4 h-4" />
-                      {codeError}
-                    </motion.div>
-                  )}
-
-                  <div className="pt-4 border-t border-white/10">
-                    <p className="text-xs text-white/60 text-center">
-                      微信支付和 PayPal 即将上线
-                    </p>
+                      <div className="w-10 h-10 bg-[#1677FF] rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">支</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-semibold">支付宝</div>
+                        <div className="text-xs text-white/50">推荐中国大陆用户使用</div>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-white/60" />
+                    </button>
+                    <button
+                      onClick={() => handlePayment('wechat')}
+                      className="w-full p-4 bg-[#07C160]/10 hover:bg-[#07C160]/20 border border-[#07C160]/30 rounded-xl text-left transition-colors flex items-center gap-4"
+                    >
+                      <div className="w-10 h-10 bg-[#07C160] rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">微</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-semibold">微信支付</div>
+                        <div className="text-xs text-white/50">微信扫码支付</div>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-white/60" />
+                    </button>
+                    <button
+                      onClick={() => handlePayment('paypal')}
+                      className="w-full p-4 bg-[#003087]/10 hover:bg-[#003087]/20 border border-[#003087]/30 rounded-xl text-left transition-colors flex items-center gap-4"
+                    >
+                      <div className="w-10 h-10 bg-[#003087] rounded-lg flex items-center justify-center">
+                        <span className="text-white font-bold text-lg">P</span>
+                      </div>
+                      <div className="flex-1">
+                        <div className="text-white font-semibold">PayPal</div>
+                        <div className="text-xs text-white/50">国际信用卡支付</div>
+                      </div>
+                      <ArrowRight className="w-5 h-5 text-white/60" />
+                    </button>
                   </div>
+
+                  <button
+                    onClick={() => setStep('select')}
+                    className="w-full py-2 text-white/50 hover:text-white text-sm transition-colors"
+                  >
+                    返回选择
+                  </button>
                 </div>
               )}
 
@@ -363,8 +496,22 @@ function PaymentModal({
                   >
                     <CheckCircle className="w-10 h-10 text-white" />
                   </motion.div>
-                  <h3 className="text-xl font-bold text-white mb-2">支付成功！</h3>
+                  <h3 className="text-xl font-bold text-white mb-2">激活成功！</h3>
                   <p className="text-white/60 mb-4">您已成功升级到 {plan.name}</p>
+                  {activationCode && (
+                    <div className="bg-white/5 rounded-xl p-4 mb-4">
+                      <p className="text-xs text-white/60 mb-2">您的激活码（请复制并在扩展中输入）</p>
+                      <p className="text-lg font-mono text-white mb-3">{activationCode}</p>
+                      <button
+                        onClick={() => {
+                          navigator.clipboard.writeText(activationCode);
+                        }}
+                        className="px-3 py-1 bg-violet-600 hover:bg-violet-700 text-white text-sm rounded-lg transition-colors"
+                      >
+                        复制激活码
+                      </button>
+                    </div>
+                  )}
                   <div className="bg-blue-500/10 border border-blue-500/20 rounded-lg p-3 mb-4 text-left">
                     <p className="text-sm text-blue-300 mb-2 font-semibold">📌 下一步：在浏览器扩展中激活</p>
                     <ol className="text-xs text-white/70 space-y-1 list-decimal list-inside">
@@ -1637,11 +1784,14 @@ function FAQSection() {
     },
     { 
       q: '支持哪些支付方式？', 
-      a: `我们支持支付宝支付：
+      a: `我们支持多种支付方式：
 
-💳 支付宝 - 推荐中国大陆用户使用，扫码即可支付
+💳 支付宝 - 推荐中国大陆用户使用
+💚 微信支付 - 扫码支付便捷
+🅿️ PayPal - 国际用户首选
+💳 信用卡 - Visa/Mastercard 支持
 
-所有支付过程安全加密，您的信息安全有保障。微信支付和 PayPal 即将上线，敬请期待。`
+所有支付过程安全加密，您的信息安全有保障。`
     },
     { 
       q: '购买后可以退款吗？', 
