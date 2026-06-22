@@ -9,7 +9,7 @@ import {
   MessageCircle, Bot, Sparkles, ArrowUp,
   Globe, TrendingUp, Send,
   Crown, Rocket, Target, MessageCircleQuestion, Clock,
-  ShieldCheck, Award, X, AlertCircle, CheckCircle,
+  ShieldCheck, Award, X, Key, CreditCard, AlertCircle, CheckCircle,
   Plane, HeadsetIcon, Handshake, Star, Twitter, Facebook, Linkedin, Github
 } from 'lucide-react'
 import { activationService } from './services/activationService'
