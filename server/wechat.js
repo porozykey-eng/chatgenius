@@ -117,9 +117,8 @@ router.post('/create-order', async (req, res) => {
     // 金额转为分
     const totalFee = Math.round(numAmount * 100);
 
-    // 请求体
+    // 请求体（Native 支付不需要 appid）
     const body = JSON.stringify({
-      appid: process.env.WECHAT_APPID || '',
       mchid: WECHAT_MCHID,
       description: subject,
       out_trade_no: orderNo,
