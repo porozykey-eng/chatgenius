@@ -21,6 +21,7 @@ function readKeyFile(filename) {
 }
 
 // 微信支付配置
+const WECHAT_APPID = process.env.WECHAT_APPID;
 const WECHAT_MCHID = process.env.WECHAT_MCHID;
 const WECHAT_API_V3_KEY = process.env.WECHAT_API_V3_KEY;
 const WECHAT_SERIAL_NO = process.env.WECHAT_SERIAL_NO;
@@ -30,6 +31,11 @@ const merchantPrivateKey = readKeyFile('wechat_key.pem');
 const merchantCertificate = readKeyFile('wechat_cert.pem');
 
 // 验证配置
+if (!WECHAT_APPID) {
+  console.error('❌ WECHAT_APPID 未配置！微信支付将无法使用');
+} else {
+  console.log('✅ WECHAT_APPID:', WECHAT_APPID);
+}
 if (!WECHAT_MCHID) {
   console.error('❌ WECHAT_MCHID 未配置！微信支付将无法使用');
 } else {
@@ -117,8 +123,9 @@ router.post('/create-order', async (req, res) => {
     // 金额转为分
     const totalFee = Math.round(numAmount * 100);
 
-    // 请求体（Native 支付不需要 appid）
+    // 请求体
     const body = JSON.stringify({
+      appid: WECHAT_APPID,
       mchid: WECHAT_MCHID,
       description: subject,
       out_trade_no: orderNo,
