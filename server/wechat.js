@@ -287,4 +287,59 @@ router.post('/notify', async (req, res) => {
   }
 });
 
+// ================================
+// 临时接口：获取您的 OpenID（获取后可删除此段）
+// ================================
+const WECHAT_APP_SECRET = process.env.WECHAT_APP_SECRET;
+
+// 一个接口处理两种情况：无 code 时跳转授权，有 code 时换取 openid
+router.get('/get-openid', async (req, res) => {
+  const { code } = req.query;
+
+  // 情况1：没有 code，跳转到微信授权页
+  if (!code) {
+    if (!WECHAT_APPID || !WECHAT_APP_SECRET) {
+      return res.send('<h2>请先在 .env 配置 WECHAT_APPID 和 WECHAT_APP_SECRET</h2>');
+    }
+    const redirectUri = encodeURIComponent('https://chat.sopie.cc/api/wechat/get-openid');
+    const scope = 'snsapi_userinfo';
+    const state = 'chatgenius';
+    const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${WECHAT_APPID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}#wechat_redirect`;
+    return res.redirect(authUrl);
+  }
+
+  // 情况2：有 code，用 code 换取 openid
+  try {
+    const tokenUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${WECHAT_APPID}&secret=${WECHAT_APP_SECRET}&code=${code}&grant_type=authorization_code`;
+    const fetch = (await import('node-fetch')).default;
+    const resp = await fetch(tokenUrl);
+    const data = await resp.json();
+
+    if (data.errcode) {
+      return res.send(`<h2>获取失败：${data.errmsg}（错误码：${data.errcode}）</h2>`);
+    }
+
+    const { openid } = data;
+    res.send(`
+      <!DOCTYPE html>
+      <html>
+      <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+      <body style="font-family:-apple-system,sans-serif;padding:40px;background:#fafafa;">
+        <div style="max-width:500px;margin:0 auto;background:#fff;padding:32px;border-radius:8px;border:1px solid #e5e7eb;">
+          <h2 style="margin:0 0 16px;color:#111827;">✅ 获取成功</h2>
+          <p style="color:#6b7280;font-size:14px;margin-bottom:24px;">您的 OpenID 已获取，请复制下方内容：</p>
+          <div style="background:#f5f5f5;padding:16px;border-radius:4px;border:1px solid #e5e7eb;margin-bottom:16px;">
+            <p style="margin:0 0 8px;font-size:12px;color:#9ca3af;">OpenID:</p>
+            <p style="margin:0;font-family:monospace;font-size:14px;color:#111827;word-break:break-all;">${openid}</p>
+          </div>
+          <button onclick="navigator.clipboard.writeText('${openid}');alert('已复制到剪贴板')" style="width:100%;padding:10px;background:#111827;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;">复制 OpenID</button>
+        </div>
+      </body>
+      </html>
+    `);
+  } catch (error) {
+    res.send(`<h2>错误：${error.message}</h2>`);
+  }
+});
+
 module.exports = router;
