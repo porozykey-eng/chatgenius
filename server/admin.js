@@ -1123,7 +1123,7 @@ router.get('/licenses', requireAdmin, async (req, res) => {
     const total = countRows[0].cnt;
 
     const [licenses] = await pool.query(
-      `SELECT id, activation_code, type, user_email, activated_at, expires_at, is_active FROM licenses WHERE ${whereClause} ORDER BY activated_at DESC LIMIT ? OFFSET ?`,
+      `SELECT id, activation_code, type, user_email, activated_at, expires_at, is_active, device_fingerprint, last_heartbeat, unbind_count, license_status FROM licenses WHERE ${whereClause} ORDER BY activated_at DESC LIMIT ? OFFSET ?`,
       [...params, limitNum, (pageNum - 1) * limitNum]
     );
 
@@ -1135,7 +1135,11 @@ router.get('/licenses', requireAdmin, async (req, res) => {
         userEmail: license.user_email,
         activatedAt: license.activated_at,
         expiresAt: license.expires_at,
-        isActive: license.is_active
+        isActive: license.is_active,
+        deviceFingerprint: license.device_fingerprint,
+        lastHeartbeat: license.last_heartbeat,
+        unbindCount: license.unbind_count,
+        licenseStatus: license.license_status,
       })),
       total,
       page: pageNum,
@@ -1158,12 +1162,34 @@ router.post('/licenses/:id/revoke', requireAdmin, async (req, res) => {
       return res.status(400).json({ error: '许可证已撤销' });
     }
 
-    await pool.query('UPDATE licenses SET is_active = FALSE WHERE id = ?', [id]);
+    await pool.query('UPDATE licenses SET is_active = FALSE, device_fingerprint = NULL WHERE id = ?', [id]);
     await auditLog('license_revoked', req, `撤销许可证 ${rows[0].activation_code}`);
     res.json({ success: true });
   } catch (err) {
     console.error('Revoke license error:', err);
     res.status(500).json({ error: '撤销许可证失败' });
+  }
+});
+
+router.post('/licenses/:id/unbind', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    // 获取 license 和关联的 activation_code
+    const [rows] = await pool.query('SELECT id, activation_code FROM licenses WHERE id = ?', [id]);
+    if (rows.length === 0) return res.status(404).json({ error: '许可证不存在' });
+
+    const license = rows[0];
+    // 清除设备绑定（licenses 和 activation_codes 都清除）
+    await pool.query('UPDATE licenses SET device_fingerprint = NULL WHERE id = ?', [id]);
+    if (license.activation_code) {
+      await pool.query('UPDATE activation_codes SET bound_fingerprint = NULL WHERE code = ?', [license.activation_code]);
+    }
+
+    await auditLog('license_unbind', req, `手动解绑许可证 #${id}（不计入用户换绑次数）`);
+    res.json({ success: true, message: '设备已解绑' });
+  } catch (err) {
+    console.error('Unbind license error:', err);
+    res.status(500).json({ error: '解绑失败' });
   }
 });
 
@@ -1289,6 +1315,42 @@ router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('Batch operation error:', err);
     res.status(500).json({ error: '批量操作失败' });
+  }
+});
+
+// ==================== IP Bans ====================
+
+router.get('/ip-bans', requireAdmin, async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, ip, error_count, banned_until, created_at, updated_at FROM ip_bans ORDER BY updated_at DESC LIMIT 200'
+    );
+    res.json({
+      items: rows.map(r => ({
+        id: r.id,
+        ip: r.ip,
+        errorCount: r.error_count,
+        bannedUntil: r.banned_until,
+        isCurrentlyBanned: r.banned_until && new Date(r.banned_until) > new Date(),
+        createdAt: r.created_at,
+        updatedAt: r.updated_at,
+      }))
+    });
+  } catch (err) {
+    console.error('List IP bans error:', err);
+    res.status(500).json({ error: '获取封禁列表失败' });
+  }
+});
+
+router.post('/ip-bans/:id/unban', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  try {
+    await pool.query('UPDATE ip_bans SET banned_until = NULL, error_count = 0 WHERE id = ?', [id]);
+    await auditLog('ip_unbanned', req, `解封 IP 封禁记录 #${id}`);
+    res.json({ success: true, message: 'IP 已解封' });
+  } catch (err) {
+    console.error('Unban IP error:', err);
+    res.status(500).json({ error: '解封失败' });
   }
 });
 

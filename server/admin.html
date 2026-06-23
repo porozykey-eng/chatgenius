@@ -387,6 +387,8 @@
     .badge-purple { background: #f3e8ff; color: #6b21a8; }
     .badge-gray { background: var(--gray-100); color: var(--gray-600); }
 
+    .text-gray { color: var(--gray-400); }
+
     /* Pagination */
     .pagination {
       display: flex;
@@ -722,6 +724,7 @@
           <button class="tab" data-tab="licenses">许可证</button>
           <button class="tab" data-tab="audit">审计日志</button>
           <button class="tab" data-tab="settings">系统设置</button>
+          <button class="tab" data-tab="ipbans">封禁管理</button>
           <button class="tab" data-tab="security">安全中心</button>
         </nav>
       </aside>
@@ -952,18 +955,19 @@
             <table>
               <thead>
                 <tr>
-                  <th><input type="checkbox" id="licenseSelectAll"></th>
                   <th>激活码</th>
                   <th>类型</th>
-                  <th>用户邮箱</th>
-                  <th>激活时间</th>
-                  <th>到期时间</th>
+                  <th>设备指纹</th>
+                  <th>最后心跳</th>
+                  <th>换绑次数</th>
                   <th>状态</th>
+                  <th>激活时间</th>
+                  <th>过期时间</th>
                   <th>操作</th>
                 </tr>
               </thead>
               <tbody id="licensesTableBody">
-                <tr><td colspan="8" class="loading">加载中</td></tr>
+                <tr><td colspan="9" class="loading">加载中</td></tr>
               </tbody>
             </table>
           </div>
@@ -1065,6 +1069,30 @@
             <input type="password" id="changeConfirmPassword">
           </div>
           <button class="btn btn-primary" id="changePasswordBtn">修改密码</button>
+        </div>
+      </div>
+
+      <!-- IP Bans Tab -->
+      <div id="ipbansTab" class="tab-content">
+        <div class="card">
+          <div class="card-title">IP 封禁管理</div>
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>IP 地址</th>
+                  <th>错误次数</th>
+                  <th>封禁状态</th>
+                  <th>封禁到期</th>
+                  <th>最后更新</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="ipBansTableBody">
+                <tr><td colspan="6" class="loading">加载中</td></tr>
+              </tbody>
+            </table>
+          </div>
         </div>
       </div>
 
@@ -1432,6 +1460,7 @@
         else if (tabName === 'licenses') loadLicenses();
         else if (tabName === 'audit') loadAuditLogs();
         else if (tabName === 'settings') loadSettings();
+        else if (tabName === 'ipbans') loadIpBans();
         else if (tabName === 'security') loadSecurity();
       });
     });
@@ -2069,7 +2098,7 @@
     // Licenses
     async function loadLicenses() {
       const tbody = document.getElementById('licensesTableBody');
-      tbody.innerHTML = '<tr><td colspan="8" class="loading">加载中</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="9" class="loading">加载中</td></tr>';
       
       const search = document.getElementById('licenseSearch').value;
       const type = document.getElementById('licenseTypeFilter').value;
@@ -2087,30 +2116,44 @@
         
         const res = await api(`/licenses?${params}`);
         if (!res.ok) {
-          tbody.innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" class="empty">加载失败</td></tr>';
           return;
         }
         const data = await res.json();
         
         if (data.items.length === 0) {
-          tbody.innerHTML = '<tr><td colspan="8" class="empty">暂无数据</td></tr>';
+          tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无数据</td></tr>';
         } else {
           tbody.innerHTML = data.items.map(l => {
             const isExpiring = l.expiresAt && new Date(l.expiresAt) < new Date(Date.now() + 30 * 24 * 60 * 60 * 1000);
+            // 设备指纹（截断显示）
+            const fp = l.deviceFingerprint ? l.deviceFingerprint.substring(0, 12) + '...' : '<span class="text-gray">未绑定</span>';
+            // 最后心跳
+            const heartbeat = l.lastHeartbeat ? formatDate(l.lastHeartbeat) : '<span class="text-gray">无</span>';
+            // 换绑次数
+            const unbindCount = `${l.unbindCount || 0}/2`;
+            // 状态
+            const statusMap = { active: ['生效', 'success'], locked: ['锁定', 'warning'], banned: ['封禁', 'danger'] };
+            const [statusLabel, statusClass] = statusMap[l.licenseStatus] || [l.licenseStatus, 'gray'];
+            const statusBadge = `<span class="badge badge-${statusClass}">${statusLabel}</span>`;
+            // 解绑按钮（仅当有设备指纹时显示）
+            const unbindBtn = l.deviceFingerprint ? `<button class="btn btn-sm btn-secondary" onclick="unbindLicense(${l.id})">解绑</button>` : '';
             return `
               <tr class="${isExpiring && l.isActive ? 'highlight-warning' : ''}">
-                <td><input type="checkbox" class="license-checkbox" value="${l.id}"></td>
                 <td><code>${escapeHtml(l.activationCode)}</code></td>
                 <td>${typeBadge(l.type)}</td>
-                <td>${escapeHtml(l.userEmail) || '-'}</td>
+                <td>${fp}</td>
+                <td>${heartbeat}</td>
+                <td>${unbindCount}</td>
+                <td>${statusBadge}</td>
                 <td>${formatDate(l.activatedAt)}</td>
                 <td>${l.type === 'lifetime' ? '永久' : formatDate(l.expiresAt)}</td>
-                <td>${l.isActive ? '<span class="badge badge-success">有效</span>' : '<span class="badge badge-danger">已撤销</span>'}</td>
                 <td>
                   ${l.isActive ? `
                     ${l.type !== 'lifetime' ? `<button class="btn btn-sm btn-secondary" onclick="openExtend('${l.id}')">延期</button>` : ''}
                     <button class="btn btn-sm btn-danger" onclick="revokeLicense('${l.id}')">撤销</button>
                   ` : `<button class="btn btn-sm btn-primary" onclick="reactivateLicense('${l.id}')">重新激活</button>`}
+                  ${unbindBtn}
                 </td>
               </tr>
             `;
@@ -2119,7 +2162,7 @@
         
         document.getElementById('licensesPagination').innerHTML = paginationHtml(data.total, licensesPage, 50);
       } catch (err) {
-        tbody.innerHTML = '<tr><td colspan="8" class="empty">加载失败</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="9" class="empty">加载失败</td></tr>';
       }
     }
 
@@ -2156,6 +2199,22 @@
         } else {
           const data = await res.json();
           showToast(data.error || '操作失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    }
+
+    async function unbindLicense(id) {
+      if (!confirm('确认手动解绑该设备？此操作不计入用户换绑次数。')) return;
+      try {
+        const res = await api('/licenses/' + id + '/unbind', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('设备已解绑', 'success');
+          loadLicenses();
+        } else {
+          showToast(data.error || '解绑失败', 'error');
         }
       } catch (err) {
         showToast('网络错误', 'error');
@@ -2324,6 +2383,47 @@
           loadSecurity();
         } else {
           showToast('操作失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    }
+
+    // IP Bans
+    async function loadIpBans() {
+      const tbody = document.getElementById('ipBansTableBody');
+      tbody.innerHTML = '<tr><td colspan="6" class="loading">加载中</td></tr>';
+      try {
+        const res = await api('/ip-bans');
+        const data = await res.json();
+        if (!data.items || data.items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="6" class="empty">暂无封禁记录</td></tr>';
+          return;
+        }
+        tbody.innerHTML = data.items.map(b => `
+          <tr>
+            <td>${escapeHtml(b.ip)}</td>
+            <td>${b.errorCount}</td>
+            <td>${b.isCurrentlyBanned ? '<span class="badge badge-danger">封禁中</span>' : '<span class="badge badge-gray">已过期</span>'}</td>
+            <td>${b.bannedUntil ? formatDate(b.bannedUntil) : '-'}</td>
+            <td>${formatDate(b.updatedAt)}</td>
+            <td>${b.isCurrentlyBanned ? `<button class="btn btn-sm btn-secondary" onclick="unbanIp(${b.id})">解封</button>` : ''}</td>
+          </tr>
+        `).join('');
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="6" class="empty">加载失败</td></tr>';
+      }
+    }
+
+    async function unbanIp(id) {
+      try {
+        const res = await api('/ip-bans/' + id + '/unban', { method: 'POST' });
+        const data = await res.json();
+        if (data.success) {
+          showToast('IP 已解封', 'success');
+          loadIpBans();
+        } else {
+          showToast(data.error || '解封失败', 'error');
         }
       } catch (err) {
         showToast('网络错误', 'error');

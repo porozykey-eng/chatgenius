@@ -9,6 +9,10 @@ const DAILY_LIMIT = 20;
 // Upgrade URL
 const UPGRADE_URL = 'https://chatgenius.ai/#pricing';
 
+// SYNC: HMAC secret for license request signing - must match backend .env LICENSE_HMAC_SECRET
+// Note: This key is public on the client; used for replay prevention, not encryption.
+const LICENSE_HMAC_SECRET = 'chatgenius-license-hmac-secret-2026-v3';
+
 // Chrome API compatibility layer for standalone preview
 if (typeof chrome === 'undefined' || !chrome.storage) {
   const _mockStorage = {};
@@ -1471,21 +1475,33 @@ document.addEventListener('DOMContentLoaded', () => {
   if (activateBtn && activationCodeInput) {
     activateBtn.addEventListener('click', async () => {
       const code = activationCodeInput.value.trim();
-      if (!code) { if (activationError) activationError.textContent = I18N[currentLang].activateErrorEmpty || 'Please enter activation code'; return; }
+      if (!code) {
+        if (activationError) {
+          activationError.textContent = I18N[currentLang].activateErrorEmpty || '请输入激活码';
+          activationError.style.display = 'block';
+        }
+        return;
+      }
 
       activateBtn.disabled = true;
-      activateBtn.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="40"></circle></svg><span>' + escapeHtml(I18N[currentLang].activateVerifying || 'Verifying...') + '</span>';
-      if (activationError) activationError.textContent = '';
+      activateBtn.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="40"></circle></svg><span>' + escapeHtml(I18N[currentLang].activateVerifying || '验证中...') + '</span>';
+      if (activationError) activationError.style.display = 'none';
 
       try {
+        // 获取设备指纹
+        const fingerprint = await FingerprintUtil.getDeviceFingerprint();
+        const timestamp = Date.now().toString();
+        const signature = await FingerprintUtil.signRequest(code.toUpperCase(), timestamp, LICENSE_HMAC_SECRET);
+
         const response = await fetch(API_BASE_URL + '/api/license/activate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: code.toUpperCase() })
+          body: JSON.stringify({ code: code.toUpperCase(), fingerprint, timestamp, signature })
         });
         const result = await response.json();
 
         if (result.valid && result.type) {
+          // 激活成功
           await chrome.storage.sync.set({
             licenseCode: code.toUpperCase(),
             licenseType: result.type,
@@ -1497,17 +1513,73 @@ document.addEventListener('DOMContentLoaded', () => {
           updateLicenseDisplay(result.type);
           updateStats();
           updateFreeTierNotification();
-          showToast((I18N[currentLang].activateSuccessPrefix || 'Activated! ') + result.type);
+          showToast((I18N[currentLang].activateSuccessPrefix || '激活成功！') + result.type);
+        } else if (result.needRebind) {
+          // 需要换绑确认
+          const confirmed = confirm(
+            `该激活码已在其他设备使用，是否强制在此设备登录？\n本月剩余换绑次数：${result.remainingCount}`
+          );
+          if (confirmed) {
+            await doRebind(code.toUpperCase(), fingerprint, timestamp, signature);
+          }
         } else {
-          if (activationError) activationError.textContent = result.error || (I18N[currentLang].activateErrorInvalid || 'Invalid code');
+          if (activationError) {
+            activationError.textContent = result.error || (I18N[currentLang].activateErrorInvalid || '激活码无效');
+            activationError.style.display = 'block';
+          }
         }
-      } catch (error) {
-        if (activationError) activationError.textContent = I18N[currentLang].activateFail || 'Activation failed';
+      } catch (err) {
+        if (activationError) {
+          activationError.textContent = I18N[currentLang].activateFail || '网络错误，请检查网络连接';
+          activationError.style.display = 'block';
+        }
       } finally {
         activateBtn.disabled = false;
-        activateBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span>' + escapeHtml(I18N[currentLang].activateLabel || 'Activate') + '</span>';
+        activateBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span>' + escapeHtml(I18N[currentLang].activateLabel || '激活') + '</span>';
       }
     });
+
+    // 换绑函数
+    async function doRebind(code, fingerprint, timestamp, signature) {
+      activateBtn.disabled = true;
+      activateBtn.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="40"></circle></svg><span>换绑中...</span>';
+      if (activationError) activationError.style.display = 'none';
+      try {
+        const response = await fetch(API_BASE_URL + '/api/license/rebind', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ code, fingerprint, timestamp, signature })
+        });
+        const result = await response.json();
+        if (result.valid && result.type) {
+          await chrome.storage.sync.set({
+            licenseCode: code,
+            licenseType: result.type,
+            activatedAt: result.activatedAt || new Date().toISOString()
+          });
+          if (activationSuccess) activationSuccess.style.display = 'flex';
+          if (licenseTypeDisplay) licenseTypeDisplay.textContent = I18N[currentLang]['statPro' + (result.type === 'lifetime' ? 'Lifetime' : 'Year')] || result.type;
+          activationCodeInput.value = '';
+          updateLicenseDisplay(result.type);
+          updateStats();
+          updateFreeTierNotification();
+          showToast('换绑成功！');
+        } else {
+          if (activationError) {
+            activationError.textContent = result.error || '换绑失败';
+            activationError.style.display = 'block';
+          }
+        }
+      } catch (err) {
+        if (activationError) {
+          activationError.textContent = '网络错误';
+          activationError.style.display = 'block';
+        }
+      } finally {
+        activateBtn.disabled = false;
+        activateBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span>' + escapeHtml(I18N[currentLang].activateLabel || '激活') + '</span>';
+      }
+    }
 
     activationCodeInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') activateBtn.click(); });
   }

@@ -9,6 +9,13 @@ const DAILY_LIMIT = 20;
 // SYNC: Backend API base URL - must match across all files (background.js, options.js)
 const API_BASE_URL = 'https://chat.sopie.cc';
 
+// SYNC: HMAC secret for license request signing - must match backend .env LICENSE_HMAC_SECRET
+const LICENSE_HMAC_SECRET = 'chatgenius-license-hmac-secret-2026-v3';
+
+// Heartbeat detection constants
+const HEARTBEAT_INTERVAL_HOURS = 6;
+const HEARTBEAT_CACHE_MINUTES = 30;
+
 // License verification on extension startup
 chrome.runtime.onInstalled.addListener(async (details) => {
   if (details.reason === 'install') {
@@ -74,6 +81,193 @@ async function verifyLicenseOnStartup() {
     console.error('License verification failed:', error);
     // On error, default to free
     await chrome.storage.sync.set({ licenseType: 'free' });
+  }
+
+  // Trigger an initial heartbeat after startup verification
+  sendHeartbeat().catch(err => console.warn('Initial heartbeat failed:', err.message));
+}
+
+// ================================
+// Heartbeat Detection System
+// ================================
+
+// Register periodic heartbeat alarm (MV3-compatible)
+chrome.alarms.create('licenseHeartbeat', {
+  periodInMinutes: HEARTBEAT_INTERVAL_HOURS * 60
+});
+
+// Listen for alarm events
+chrome.alarms.onAlarm.addListener((alarm) => {
+  if (alarm.name === 'licenseHeartbeat') {
+    sendHeartbeat().catch(err => console.warn('Heartbeat alarm failed:', err.message));
+  }
+});
+
+// Send heartbeat to server — verifies fingerprint consistency
+async function sendHeartbeat() {
+  try {
+    const { licenseCode, licenseType } = await chrome.storage.sync.get(['licenseCode', 'licenseType']);
+
+    // Only heartbeat for activated (non-free) licenses
+    if (!licenseCode || licenseType === 'free') {
+      return;
+    }
+
+    // Throttle: skip if last heartbeat was within cache window
+    const cacheData = await chrome.storage.local.get(['lastHeartbeatAt']);
+    const lastAt = cacheData.lastHeartbeatAt ? new Date(cacheData.lastHeartbeatAt).getTime() : 0;
+    const elapsedMin = (Date.now() - lastAt) / 60000;
+    if (elapsedMin < HEARTBEAT_CACHE_MINUTES) {
+      return; // Within cache window, skip
+    }
+
+    // Get device fingerprint (prefer cached, fallback to background generator)
+    let fingerprint = null;
+    const fpData = await chrome.storage.local.get(['deviceFingerprint']);
+    if (fpData.deviceFingerprint) {
+      fingerprint = fpData.deviceFingerprint;
+    } else {
+      fingerprint = await generateFingerprintInBackground();
+      if (fingerprint) {
+        await chrome.storage.local.set({ deviceFingerprint: fingerprint });
+      }
+    }
+
+    if (!fingerprint) {
+      console.warn('Heartbeat: no fingerprint available, skipping');
+      return;
+    }
+
+    // Sign request (HMAC-SHA256)
+    const timestamp = Date.now().toString();
+    const signature = await signRequestInBackground(licenseCode.toUpperCase(), timestamp, LICENSE_HMAC_SECRET);
+
+    const response = await fetch(`${API_BASE_URL}/api/license/heartbeat`, {
+      method: 'POST',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({
+        code: licenseCode.toUpperCase(),
+        fingerprint,
+        timestamp,
+        signature
+      })
+    });
+
+    if (!response.ok) {
+      console.warn(`Heartbeat HTTP ${response.status}, will retry next alarm`);
+      return;
+    }
+
+    const result = await response.json();
+
+    if (result.valid) {
+      // Heartbeat success — cache timestamp
+      await chrome.storage.local.set({ lastHeartbeatAt: new Date().toISOString() });
+      console.log('Heartbeat OK');
+    } else {
+      // Fingerprint mismatch or license revoked — force logout
+      console.warn('Heartbeat rejected:', result.reason || 'fingerprint mismatch');
+      await forceLogout(result.reason || '设备指纹不匹配，已被强制下线');
+    }
+  } catch (err) {
+    console.warn('Heartbeat error (network?), will retry next alarm:', err.message);
+  }
+}
+
+// Force logout — downgrade to free and clear sensitive data
+async function forceLogout(reason) {
+  try {
+    // Downgrade to free
+    await chrome.storage.sync.set({
+      licenseType: 'free',
+      licenseCode: null,
+      licenseInvalid: true
+    });
+
+    // Clear sensitive API credentials
+    await chrome.storage.sync.remove(['apiKey', 'apiProvider']);
+
+    // Clear local heartbeat cache
+    await chrome.storage.local.remove(['lastHeartbeatAt']);
+
+    // Notify all open tabs to refresh UI
+    try {
+      const tabs = await chrome.tabs.query({});
+      for (const tab of tabs) {
+        if (tab.id) {
+          chrome.tabs.sendMessage(tab.id, {
+            action: 'LICENSE_REVOKED',
+            reason: reason
+          }).catch(() => { /* tab may not have listener */ });
+        }
+      }
+    } catch (e) {
+      // Ignore tab messaging errors
+    }
+
+    // Show desktop notification
+    if (chrome.notifications) {
+      chrome.notifications.create({
+        type: 'basic',
+        iconUrl: 'icon128.png',
+        title: '许可证已失效',
+        message: reason || '您的许可证已在其他设备激活，本设备已自动退出登录。',
+        priority: 2
+      });
+    }
+
+    console.warn('Force logout completed:', reason);
+  } catch (err) {
+    console.error('Force logout failed:', err);
+  }
+}
+
+// Background fingerprint generator (fallback when options page hasn't cached one)
+async function generateFingerprintInBackground() {
+  try {
+    // Service Worker has no DOM access — use navigator/screen info only
+    const nav = self.navigator || {};
+    const components = [
+      nav.userAgent || '',
+      nav.language || '',
+      nav.languages ? nav.languages.join(',') : '',
+      nav.platform || '',
+      nav.hardwareConcurrency || 0,
+      (nav.deviceMemory || 0).toString(),
+      String(self.screen?.width || 0),
+      String(self.screen?.height || 0),
+      String(self.screen?.colorDepth || 0),
+      new Date().getTimezoneOffset().toString(),
+      Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+    ];
+    const raw = components.join('|');
+    // Simple SHA-256 via crypto.subtle
+    const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
+    const arr = Array.from(new Uint8Array(buf));
+    return arr.map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) {
+    console.warn('Background fingerprint generation failed:', e);
+    return null;
+  }
+}
+
+// HMAC-SHA256 signature for background requests
+async function signRequestInBackground(code, timestamp, secret) {
+  try {
+    const key = await crypto.subtle.importKey(
+      'raw',
+      new TextEncoder().encode(secret),
+      { name: 'HMAC', hash: 'SHA-256' },
+      false,
+      ['sign']
+    );
+    const data = new TextEncoder().encode(code + timestamp);
+    const sig = await crypto.subtle.sign('HMAC', key, data);
+    const arr = Array.from(new Uint8Array(sig));
+    return arr.map(b => b.toString(16).padStart(2, '0')).join('');
+  } catch (e) {
+    console.warn('Background signing failed:', e);
+    return '';
   }
 }
 
@@ -345,10 +539,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         let licenseType = localLicenseType;
         if (localLicenseType !== 'free' && data.licenseCode) {
           try {
+            const localFpData = await chrome.storage.local.get(['deviceFingerprint']);
             const verifyResponse = await fetch(`${API_BASE_URL}/api/license/verify-token`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({ licenseCode: data.licenseCode })
+              body: JSON.stringify({
+                licenseCode: data.licenseCode,
+                fingerprint: localFpData.deviceFingerprint || null
+              })
             });
             if (verifyResponse.ok) {
               const verifyResult = await verifyResponse.json();
