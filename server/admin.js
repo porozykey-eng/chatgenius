@@ -157,6 +157,22 @@ async function requireAdmin(req, res, next) {
   }
 }
 
+// ==================== Public Settings (无需认证) ====================
+// 仅返回非敏感的公开设置项，供前台展示
+router.get('/public-settings', async (req, res) => {
+  try {
+    const [rows] = await pool.query(
+      "SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('contact.qqGroup', 'contact.qqGroupLink')"
+    );
+    const result = {};
+    rows.forEach(s => { result[s.setting_key] = s.setting_value; });
+    res.json(result);
+  } catch (err) {
+    console.error('Get public settings error:', err);
+    res.status(500).json({ error: '获取设置失败' });
+  }
+});
+
 // ==================== Authentication ====================
 
 router.post('/login', async (req, res) => {

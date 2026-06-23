@@ -1324,6 +1324,25 @@
     /* ================================
        Footer Status Bar
        ================================ */
+    /* Privacy Notice */
+    .privacy-notice {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 1180px;
+      margin: 0 auto 16px;
+      padding: 10px 16px;
+      background: var(--accent-light, #e8f0fe);
+      border-radius: 8px;
+      font-size: 12.5px;
+      color: var(--text-secondary, #5f6368);
+      line-height: 1.5;
+    }
+    .privacy-notice-icon {
+      color: var(--accent, #1a73e8);
+      flex-shrink: 0;
+    }
+
     .page-footer {
       margin-top: var(--spacing-8);
       padding: var(--spacing-4) 0;
@@ -2158,6 +2177,14 @@
           </div>
         </div>
       </div>
+    </div>
+
+    <!-- Privacy Notice -->
+    <div class="privacy-notice">
+      <svg class="privacy-notice-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
+      </svg>
+      <span>本插件仅在本地浏览器运行，聊天数据与预设 Prompt 直接与大模型厂商加密交互，我们不存储任何您的聊天记录和商业数据</span>
     </div>
 
     <!-- Footer Status Bar -->

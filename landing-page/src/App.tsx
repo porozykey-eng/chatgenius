@@ -2029,6 +2029,10 @@ function Footer() {
             <p className="text-white/60 text-sm leading-relaxed max-w-xs">
               让 AI 成为您的聊天助手，提升沟通效率，释放更多时间专注于真正重要的事情。
             </p>
+            <div className="mt-4 flex items-center gap-2 px-3 py-2 rounded-lg bg-green-500/10 border border-green-500/20 max-w-xs">
+              <Shield className="w-4 h-4 text-green-400 flex-shrink-0" />
+              <span className="text-green-300/80 text-xs leading-relaxed">数据本地处理，不存储聊天记录和商业数据</span>
+            </div>
           </div>
           {[
             { title: '产品', links: [
@@ -2077,6 +2081,12 @@ function Footer() {
           
           <p className="text-white/50 text-sm">© 2026 ChatGenius AI. All rights reserved.</p>
         </div>
+
+        <div className="mt-6 pt-6 border-t border-white/5">
+          <p className="text-white/40 text-xs leading-relaxed text-center max-w-3xl mx-auto">
+            隐私声明：本插件仅在本地浏览器运行，聊天数据与预设 Prompt 直接与大模型厂商加密交互，我们不存储任何您的聊天记录和商业数据。
+          </p>
+        </div>
       </div>
     </footer>
   )
@@ -2089,8 +2099,21 @@ function App() {
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed' | null>(null)
   const [paymentOrderNo, setPaymentOrderNo] = useState('')
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
+  const [qqGroup, setQqGroup] = useState('')
+  const [qqGroupLink, setQqGroupLink] = useState('')
   const DOWNLOAD_COOLDOWN = 5000 // 5 秒冷却时间
   const MAX_DOWNLOADS_PER_SESSION = 3 // 每会话最多下载 3 次
+
+  // 获取售后QQ群配置
+  useEffect(() => {
+    fetch('/api/admin/public-settings')
+      .then(res => res.json())
+      .then(data => {
+        if (data['contact.qqGroup']) setQqGroup(data['contact.qqGroup'])
+        if (data['contact.qqGroupLink']) setQqGroupLink(data['contact.qqGroupLink'])
+      })
+      .catch(() => {})
+  }, [])
 
   // 检测支付返回
   useEffect(() => {
@@ -2205,17 +2228,30 @@ function App() {
               {paymentStatus === 'pending' && <Clock className="w-5 h-5 animate-pulse" />}
               <div>
                 {paymentStatus === 'success' && (
-                  <div>
-                    <p className="font-semibold">支付成功！</p>
-                    <p className="text-sm text-white/60">订单号：{paymentOrderNo}</p>
-                    <button
-                      onClick={() => setShowInvoiceModal(true)}
-                      className="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors underline"
-                    >
-                      申请发票
-                    </button>
-                  </div>
-                )}
+            <div>
+              <p className="font-semibold">支付成功！</p>
+              <p className="text-sm text-white/60">订单号：{paymentOrderNo}</p>
+              <button
+                onClick={() => setShowInvoiceModal(true)}
+                className="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors underline"
+              >
+                申请发票
+              </button>
+              {qqGroup && (
+                <div className="mt-2 pt-2 border-t border-white/10">
+                  <p className="text-xs text-white/60">售后交流群：</p>
+                  {qqGroupLink ? (
+                    <a href={qqGroupLink} target="_blank" rel="noopener noreferrer"
+                       className="text-xs text-blue-400 hover:text-blue-300 transition-colors underline">
+                      QQ群 {qqGroup}（点击加群）
+                    </a>
+                  ) : (
+                    <p className="text-xs text-white/80">QQ群：{qqGroup}</p>
+                  )}
+                </div>
+              )}
+            </div>
+          )}
                 {paymentStatus === 'failed' && (
                   <div>
                     <p className="font-semibold">支付未完成</p>
