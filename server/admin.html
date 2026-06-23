@@ -9,8 +9,8 @@
     * { margin: 0; padding: 0; box-sizing: border-box; }
     
     :root {
-      --primary: #4F46E5;
-      --primary-hover: #4338CA;
+      --primary: #1a73e8;
+      --primary-hover: #1557b0;
       --success: #10b981;
       --warning: #f59e0b;
       --danger: #ef4444;
@@ -40,7 +40,7 @@
 
     /* Header */
     .header {
-      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      background: #1a73e8;
       color: white;
       padding: 0 24px;
       height: 56px;
@@ -56,10 +56,6 @@
       display: flex;
       align-items: center;
       gap: 8px;
-    }
-
-    .header-title::before {
-      content: '🔧';
     }
 
     .logout-btn {
@@ -184,7 +180,9 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 24px;
+      font-size: 14px;
+      font-weight: 700;
+      color: var(--gray-600);
       flex-shrink: 0;
     }
 
@@ -537,7 +535,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      background: linear-gradient(135deg, #4F46E5, #7C3AED);
+      background: #1a73e8;
     }
 
     .login-card {
@@ -620,7 +618,7 @@
     .loading {
       text-align: center;
       padding: 40px;
-      color: var(--gray-400);
+      color: var(--gray-500);
     }
 
     .loading::after {
@@ -639,14 +637,7 @@
     .empty {
       text-align: center;
       padding: 40px;
-      color: var(--gray-400);
-    }
-
-    .empty::before {
-      content: '📭';
-      display: block;
-      font-size: 48px;
-      margin-bottom: 12px;
+      color: var(--gray-500);
     }
 
     /* Responsive */
@@ -690,7 +681,7 @@
   <!-- Login Page -->
   <div id="loginPage" class="login-container">
     <div class="login-card">
-      <h1 class="login-title">🔧 ChatGenius Admin</h1>
+      <h1 class="login-title">ChatGenius Admin</h1>
       <p class="login-subtitle">请输入管理员密码登录</p>
       <div id="loginError" class="login-error"></div>
       <div class="form-group">
@@ -710,13 +701,13 @@
     <div class="admin-layout">
       <aside class="sidebar">
         <nav class="tabs">
-          <button class="tab active" data-tab="dashboard">📊 概览</button>
-          <button class="tab" data-tab="codes">🔑 激活码</button>
-          <button class="tab" data-tab="orders">📦 订单</button>
-          <button class="tab" data-tab="licenses">📋 许可证</button>
-          <button class="tab" data-tab="audit">📝 审计日志</button>
-          <button class="tab" data-tab="settings">⚙️ 系统设置</button>
-          <button class="tab" data-tab="security">🔒 安全中心</button>
+          <button class="tab active" data-tab="dashboard">概览</button>
+          <button class="tab" data-tab="codes">激活码</button>
+          <button class="tab" data-tab="orders">订单</button>
+          <button class="tab" data-tab="licenses">许可证</button>
+          <button class="tab" data-tab="audit">审计日志</button>
+          <button class="tab" data-tab="settings">系统设置</button>
+          <button class="tab" data-tab="security">安全中心</button>
         </nav>
       </aside>
 
@@ -1411,56 +1402,56 @@
         
         grid.innerHTML = `
           <div class="stat-card">
-            <div class="stat-icon revenue">💰</div>
+            <div class="stat-icon revenue">今</div>
             <div class="stat-info">
               <div class="stat-label">今日收入</div>
               <div class="stat-value">¥${data.todayRevenue}</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon revenue">💵</div>
+            <div class="stat-icon revenue">周</div>
             <div class="stat-info">
               <div class="stat-label">本周收入</div>
               <div class="stat-value">¥${data.weekRevenue}</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon revenue">💳</div>
+            <div class="stat-icon revenue">月</div>
             <div class="stat-info">
               <div class="stat-label">本月收入</div>
               <div class="stat-value">¥${data.monthRevenue}</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon revenue">💎</div>
+            <div class="stat-icon revenue">总</div>
             <div class="stat-info">
               <div class="stat-label">总收入</div>
               <div class="stat-value">¥${data.totalRevenue}</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon activation">🎯</div>
+            <div class="stat-icon activation">今</div>
             <div class="stat-info">
               <div class="stat-label">今日激活</div>
               <div class="stat-value">${data.todayActivations}</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon activation">📈</div>
+            <div class="stat-icon activation">周</div>
             <div class="stat-info">
               <div class="stat-label">本周激活</div>
               <div class="stat-value">${data.weekActivations}</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon license">📋</div>
+            <div class="stat-icon license">有效</div>
             <div class="stat-info">
               <div class="stat-label">有效许可证</div>
               <div class="stat-value">${data.activeLicenses}</div>
             </div>
           </div>
           <div class="stat-card">
-            <div class="stat-icon expiring">⚠️</div>
+            <div class="stat-icon expiring">急</div>
             <div class="stat-info">
               <div class="stat-label">即将到期</div>
               <div class="stat-value">${data.expiringSoon}</div>

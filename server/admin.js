@@ -353,45 +353,45 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
       'SELECT COALESCE(SUM(CAST(price AS DECIMAL)), 0) as total FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
       ['completed', today, tomorrow]
     );
-    const todayRevenue = parseFloat(todayRows[0].total) || 0;
+    const todayRevenue = parseFloat(todayRows[0].total || 0);
 
     // Week revenue
     const [weekRows] = await pool.query(
       'SELECT COALESCE(SUM(CAST(price AS DECIMAL)), 0) as total FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
       ['completed', weekStart, tomorrow]
     );
-    const weekRevenue = parseFloat(weekRows[0].total) || 0;
+    const weekRevenue = parseFloat(weekRows[0].total || 0);
 
     // Month revenue
     const [monthRows] = await pool.query(
       'SELECT COALESCE(SUM(CAST(price AS DECIMAL)), 0) as total FROM orders WHERE status = ? AND completed_at >= ? AND completed_at < ?',
       ['completed', monthStart, tomorrow]
     );
-    const monthRevenue = parseFloat(monthRows[0].total) || 0;
+    const monthRevenue = parseFloat(monthRows[0].total || 0);
 
     // Total revenue
     const [totalRows] = await pool.query('SELECT COALESCE(SUM(CAST(price AS DECIMAL)), 0) as total FROM orders WHERE status = ?', ['completed']);
-    const totalRevenue = parseFloat(totalRows[0].total) || 0;
+    const totalRevenue = parseFloat(totalRows[0].total || 0);
 
     // Today's activations
     const [todayActs] = await pool.query(
       'SELECT COUNT(*) as cnt FROM activation_codes WHERE status = ? AND used_at >= ? AND used_at < ?',
       ['used', today, tomorrow]
     );
-    const todayActivations = todayActs[0].cnt;
+    const todayActivations = todayActs[0].cnt || 0;
 
     // Week activations
     const [weekActs] = await pool.query(
       'SELECT COUNT(*) as cnt FROM activation_codes WHERE status = ? AND used_at >= ? AND used_at < ?',
       ['used', weekStart, tomorrow]
     );
-    const weekActivations = weekActs[0].cnt;
+    const weekActivations = weekActs[0].cnt || 0;
 
     // Active licenses
     const [activeLic] = await pool.query(
       'SELECT COUNT(*) as cnt FROM licenses WHERE is_active = TRUE'
     );
-    const activeLicenses = activeLic[0].cnt;
+    const activeLicenses = activeLic[0].cnt || 0;
 
     // Expiring soon (within 30 days)
     const thirtyDaysLater = new Date();
@@ -400,7 +400,7 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
       'SELECT COUNT(*) as cnt FROM licenses WHERE is_active = TRUE AND expires_at IS NOT NULL AND expires_at <= ? AND expires_at > ?',
       [thirtyDaysLater, new Date()]
     );
-    const expiringSoon = expiringLic[0].cnt;
+    const expiringSoon = expiringLic[0].cnt || 0;
 
     // Recent orders
     const [recentOrders] = await pool.query(
@@ -424,7 +424,7 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
       recentOrders: recentOrders.map(o => ({
         orderNo: o.order_no,
         plan: o.plan,
-        price: o.price,
+        price: o.price || '0',
         status: o.status,
         channel: o.channel,
         createdAt: o.created_at
@@ -432,7 +432,7 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
       channelStats: channelStats.map(c => ({
         channel: c.channel,
         count: parseInt(c.cnt),
-        total: parseFloat(c.total).toFixed(2)
+        total: parseFloat(c.total || 0).toFixed(2)
       }))
     });
   } catch (err) {
@@ -828,7 +828,7 @@ router.get('/orders/statistics', requireAdmin, async (req, res) => {
     orders.forEach(order => {
       const type = order.type || 'year';
       const channel = order.channel || 'unknown';
-      const price = parseFloat(order.price) || 0;
+      const price = parseFloat(order.price || 0) || 0;
 
       typeBreakdown[type] = (typeBreakdown[type] || 0) + price;
       channelBreakdown[channel] = (channelBreakdown[channel] || 0) + price;
@@ -939,7 +939,7 @@ router.get('/orders/:orderNo', requireAdmin, async (req, res) => {
       id: order.id,
       orderNo: order.order_no,
       plan: order.plan,
-      price: order.price,
+      price: order.price || '0',
       type: order.type,
       channel: order.channel,
       status: order.status,
