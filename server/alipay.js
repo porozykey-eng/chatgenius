@@ -159,34 +159,39 @@ if (!rawPublicKey) {
   console.log('✅ ALIPAY_PUBLIC_KEY loaded, length:', rawPublicKey.length);
 }
 
-// 初始化支付宝 SDK
-const alipaySdk = new AlipaySDK({
-  appId: process.env.ALIPAY_APP_ID,
-  privateKey: privateKey,
-  alipayPublicKey: alipayPublicKey,
-  gateway: process.env.ALIPAY_GATEWAY || 'https://openapi.alipay.com/gateway.do',
-  signType: 'RSA2',
-  keyType: 'PKCS8',  // 明确指定私钥格式为 PKCS#8
-});
+// 初始化支付宝 SDK（仅在配置完整时）
+let alipaySdk = null;
+if (process.env.ALIPAY_APP_ID && privateKey && alipayPublicKey) {
+  alipaySdk = new AlipaySDK({
+    appId: process.env.ALIPAY_APP_ID,
+    privateKey: privateKey,
+    alipayPublicKey: alipayPublicKey,
+    gateway: process.env.ALIPAY_GATEWAY || 'https://openapi.alipay.com/gateway.do',
+    signType: 'RSA2',
+    keyType: 'PKCS8',  // 明确指定私钥格式为 PKCS#8
+  });
 
-// 启动时验证密钥是否可用
-try {
-  const testSign = crypto.createSign('RSA-SHA256');
-  testSign.update('test');
-  const signature = testSign.sign(privateKey, 'base64');
-  console.log('✅ Private key signing test PASSED (RSA-SHA256)');
-} catch (e) {
-  console.error('❌ Private key signing test FAILED:', e.message);
-  console.error('   Key first line:', privateKey.split('\n')[0]);
-  console.error('   Key length:', privateKey.length, 'chars');
-  // 尝试用 PKCS#1 类型解析
+  // 启动时验证密钥是否可用
   try {
-    const obj = crypto.createPrivateKey(privateKey);
-    const exported = obj.export({ format: 'pem', type: 'pkcs8' });
-    console.log('   crypto.createPrivateKey (auto) succeeded, re-exported PKCS#8');
-  } catch (e2) {
-    console.error('   crypto.createPrivateKey (auto) also failed:', e2.message);
+    const testSign = crypto.createSign('RSA-SHA256');
+    testSign.update('test');
+    const signature = testSign.sign(privateKey, 'base64');
+    console.log('✅ Private key signing test PASSED (RSA-SHA256)');
+  } catch (e) {
+    console.error('❌ Private key signing test FAILED:', e.message);
+    console.error('   Key first line:', privateKey.split('\n')[0]);
+    console.error('   Key length:', privateKey.length, 'chars');
+    // 尝试用 PKCS#1 类型解析
+    try {
+      const obj = crypto.createPrivateKey(privateKey);
+      const exported = obj.export({ format: 'pem', type: 'pkcs8' });
+      console.log('   crypto.createPrivateKey (auto) succeeded, re-exported PKCS#8');
+    } catch (e2) {
+      console.error('   crypto.createPrivateKey (auto) also failed:', e2.message);
+    }
   }
+} else {
+  console.warn('⚠️  支付宝配置不完整，支付功能将不可用');
 }
 
 // 创建支付订单（电脑网站支付 - alipay.trade.page.pay）
