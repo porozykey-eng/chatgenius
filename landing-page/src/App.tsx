@@ -2203,8 +2203,8 @@ function App() {
     localStorage.setItem('lastDownloadTime', Date.now().toString())
     
     try {
-      // 5. 使用 fetch 下载文件
-      const response = await fetch('/extension.zip')
+      // 5. 使用 fetch 下载文件（加时间戳参数绕过浏览器缓存，确保下载最新版本）
+      const response = await fetch(`/extension.zip?t=${Date.now()}`)
       if (!response.ok) throw new Error('下载失败')
       
       const blob = await response.blob()

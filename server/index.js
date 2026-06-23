@@ -123,7 +123,21 @@ app.get('/health', (req, res) => {
 
 // Serve landing page static files
 const landingPath = __dirname + '/../landing-page/dist';
-app.use(express.static(landingPath));
+// 静态资源默认缓存 1 小时（HTML/CSS/JS/图片等）
+app.use(express.static(landingPath, {
+  maxAge: '1h',
+  etag: true,
+  lastModified: true
+}));
+
+// extension.zip 必须实时刷新，禁止缓存（确保用户下载到最新版本插件）
+app.get('/extension.zip', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
+  res.setHeader('Pragma', 'no-cache');
+  res.setHeader('Expires', '0');
+  res.sendFile(landingPath + '/extension.zip');
+});
+
 app.get('*', (req, res) => {
   res.sendFile(landingPath + '/index.html');
 });
