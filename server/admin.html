@@ -1055,6 +1055,17 @@
           <button class="btn btn-primary" id="saveContactBtn">保存售后联系</button>
         </div>
         <div class="card">
+          <div class="card-title">支付商品名称（风控合规）</div>
+          <div class="form-group">
+            <label>商品名称（显示在客户账单中，避免使用"WhatsApp/自动回复/群发/破解"等敏感词）</label>
+            <input type="text" id="settingProductName" placeholder="例如：出海工作台效率插件-终身版">
+            <small style="color: var(--gray-500); font-size: 12px; margin-top: 4px; display: block;">
+              建议：包装成正规效率办公软件，越枯燥越官方越安全。留空则使用默认名称。
+            </small>
+          </div>
+          <button class="btn btn-primary" id="saveProductNameBtn">保存商品名称</button>
+        </div>
+        <div class="card">
           <div class="card-title">修改密码</div>
           <div class="form-group">
             <label>当前密码</label>
@@ -2279,6 +2290,7 @@
         document.getElementById('settingLifetimePrice').value = data['pricing.lifetime'] || '';
         document.getElementById('settingQqGroup').value = data['contact.qqGroup'] || '';
         document.getElementById('settingQqGroupLink').value = data['contact.qqGroupLink'] || '';
+        document.getElementById('settingProductName').value = data['payment.productName'] || '';
         const whitelistData = data['security.ipWhitelist'];
         let whitelistArr = [];
         if (typeof whitelistData === 'string') {
@@ -2719,6 +2731,19 @@
           body: JSON.stringify({ key: 'contact.qqGroupLink', value: qqGroupLink })
         });
         showToast('售后联系已保存', 'success');
+      } catch (err) {
+        showToast('保存失败', 'error');
+      }
+    });
+
+    document.getElementById('saveProductNameBtn').addEventListener('click', async () => {
+      const productName = document.getElementById('settingProductName').value.trim();
+      try {
+        await api('/settings', {
+          method: 'PUT',
+          body: JSON.stringify({ key: 'payment.productName', value: productName })
+        });
+        showToast('商品名称已保存', 'success');
       } catch (err) {
         showToast('保存失败', 'error');
       }

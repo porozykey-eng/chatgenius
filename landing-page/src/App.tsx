@@ -427,6 +427,13 @@ function PaymentModal({
                     </button>
                   </div>
 
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-3 flex items-start gap-2">
+                    <span className="text-amber-400 text-sm flex-shrink-0 mt-0.5">⚠️</span>
+                    <p className="text-xs text-amber-200/90 leading-relaxed">
+                      <span className="font-semibold">温馨提示：</span>如遇支付失败或风险提示，请暂时关闭全局代理/VPN，或使用手机流量扫码支付。
+                    </p>
+                  </div>
+
                   <button
                     onClick={() => setStep('select')}
                     className="w-full py-2 text-white/50 hover:text-white text-sm transition-colors"
@@ -460,10 +467,13 @@ function PaymentModal({
                     </p>
                   </div>
                   
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-xl p-4">
+                  <div className="bg-amber-500/10 border border-amber-500/30 rounded-xl p-4">
                     <p className="text-sm text-amber-300 font-medium mb-1">⏳ 等待支付</p>
-                    <p className="text-xs text-white/60">
+                    <p className="text-xs text-white/60 mb-2">
                       请使用{paymentChannel === 'alipay' ? '支付宝' : paymentChannel === 'wechat' ? '微信' : 'PayPal'}扫描二维码完成支付，支付成功后将自动跳转。
+                    </p>
+                    <p className="text-xs text-amber-200/90 leading-relaxed">
+                      <span className="font-semibold">⚠️ 温馨提示：</span>如遇支付失败或风险提示，请暂时关闭全局代理/VPN，或使用手机流量扫码支付。
                     </p>
                   </div>
 
@@ -521,6 +531,11 @@ function PaymentModal({
                       <li>在页面底部找到"激活产品"区域</li>
                       <li>粘贴激活码并点击"激活"</li>
                     </ol>
+                  </div>
+                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-4 text-left">
+                    <p className="text-xs text-amber-200/90 leading-relaxed">
+                      <span className="font-semibold">📧 邮件提醒：</span>激活码已发送至您的邮箱，若未收到，请检查垃圾邮件夹（Spam Folder）。如有问题请联系客服。
+                    </p>
                   </div>
                   <button
                     onClick={() => { resetModal(); onClose() }}

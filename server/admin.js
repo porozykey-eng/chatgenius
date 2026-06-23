@@ -162,7 +162,7 @@ async function requireAdmin(req, res, next) {
 router.get('/public-settings', async (req, res) => {
   try {
     const [rows] = await pool.query(
-      "SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('contact.qqGroup', 'contact.qqGroupLink')"
+      "SELECT setting_key, setting_value FROM system_settings WHERE setting_key IN ('contact.qqGroup', 'contact.qqGroupLink', 'payment.productName')"
     );
     const result = {};
     rows.forEach(s => { result[s.setting_key] = s.setting_value; });
