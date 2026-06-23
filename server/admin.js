@@ -404,7 +404,7 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
 
     // Recent orders
     const [recentOrders] = await pool.query(
-      'SELECT order_no, plan, price, status, created_at FROM orders ORDER BY created_at DESC LIMIT 5'
+      'SELECT order_no, plan, price, status, channel, created_at FROM orders ORDER BY created_at DESC LIMIT 5'
     );
 
     // Channel stats
@@ -426,6 +426,7 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
         plan: o.plan,
         price: o.price,
         status: o.status,
+        channel: o.channel,
         createdAt: o.created_at
       })),
       channelStats: channelStats.map(c => ({

@@ -765,12 +765,13 @@
                   <th>订单号</th>
                   <th>套餐</th>
                   <th>金额</th>
+                  <th>渠道</th>
                   <th>状态</th>
                   <th>时间</th>
                 </tr>
               </thead>
               <tbody id="recentOrdersBody">
-                <tr><td colspan="5" class="loading">加载中</td></tr>
+                <tr><td colspan="6" class="loading">加载中</td></tr>
               </tbody>
             </table>
           </div>
@@ -1470,17 +1471,20 @@
         // Recent orders
         const recentBody = document.getElementById('recentOrdersBody');
         if (data.recentOrders && data.recentOrders.length > 0) {
+          const channelNames = { alipay: '支付宝', wechat: '微信', paypal: 'PayPal' };
+          const channelColors = { alipay: 'info', wechat: 'success', paypal: 'purple' };
           recentBody.innerHTML = data.recentOrders.map(o => `
             <tr>
               <td><code>${escapeHtml(o.orderNo)}</code></td>
               <td>${escapeHtml(o.plan) || '-'}</td>
               <td>¥${escapeHtml(o.price) || '0'}</td>
+              <td>${o.channel ? `<span class="badge badge-${channelColors[o.channel] || 'gray'}">${channelNames[o.channel] || o.channel}</span>` : '-'}</td>
               <td>${statusBadge(o.status)}</td>
               <td>${formatDate(o.createdAt)}</td>
             </tr>
           `).join('');
         } else {
-          recentBody.innerHTML = '<tr><td colspan="5" class="empty">暂无订单</td></tr>';
+          recentBody.innerHTML = '<tr><td colspan="6" class="empty">暂无订单</td></tr>';
         }
 
         // Load charts
@@ -1721,12 +1725,14 @@
         } else {
           tbody.innerHTML = data.items.map(o => {
             const tradeNo = o.channel === 'alipay' ? o.alipayTradeNo : (o.channel === 'wechat' ? o.wechatTradeNo : '-');
+            const chNames = { alipay: '支付宝', wechat: '微信', paypal: 'PayPal' };
+            const chColors = { alipay: 'info', wechat: 'success', paypal: 'purple' };
             return `
             <tr>
               <td><code style="cursor:pointer" onclick="viewOrderDetail('${o.orderNo}')">${escapeHtml(o.orderNo)}</code></td>
               <td>${escapeHtml(o.plan) || '-'}</td>
               <td>¥${escapeHtml(o.price) || '0'}</td>
-              <td>${escapeHtml(o.channel) || '-'}</td>
+              <td>${o.channel ? `<span class="badge badge-${chColors[o.channel] || 'gray'}">${chNames[o.channel] || o.channel}</span>` : '-'}</td>
               <td>${tradeNo ? `<code>${escapeHtml(tradeNo)}</code>` : '-'}</td>
               <td>${statusBadge(o.status)}</td>
               <td>${formatDate(o.createdAt)}</td>
@@ -1763,7 +1769,8 @@
         const data = await res.json();
 
         if (res.ok) {
-          const channelNames = { alipay: '支付宝', wechat: '微信支付', paypal: 'PayPal' };
+          const chNames = { alipay: '支付宝', wechat: '微信支付', paypal: 'PayPal' };
+          const chColors = { alipay: 'info', wechat: 'success', paypal: 'purple' };
           const statusNames = { pending: '待支付', completed: '已完成', refunded: '已退款', cancelled: '已取消' };
           const typeNames = { year: '年付', lifetime: '永久' };
           const tradeNo = data.channel === 'alipay' ? data.alipayTradeNo : (data.channel === 'wechat' ? data.wechatTradeNo : '-');
@@ -1774,7 +1781,7 @@
               <dt>套餐</dt><dd>${escapeHtml(data.plan) || '-'}</dd>
               <dt>金额</dt><dd>¥${escapeHtml(data.price) || '0'}</dd>
               <dt>类型</dt><dd>${typeNames[data.type] || escapeHtml(data.type) || '-'}</dd>
-              <dt>渠道</dt><dd>${channelNames[data.channel] || escapeHtml(data.channel) || '-'}</dd>
+              <dt>渠道</dt><dd>${data.channel ? `<span class="badge badge-${chColors[data.channel] || 'gray'}">${chNames[data.channel] || data.channel}</span>` : '-'}</dd>
               <dt>状态</dt><dd>${statusBadge(data.status)}</dd>
               <dt>支付流水号</dt><dd>${tradeNo ? `<code>${escapeHtml(tradeNo)}</code>` : '-'}</dd>
               <dt>用户邮箱</dt><dd>${escapeHtml(data.userEmail) || '-'}</dd>
