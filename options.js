@@ -55,6 +55,7 @@ if (typeof chrome === 'undefined' || !chrome.storage) {
 const I18N = {
   en: {
     title: 'ChatGenius AI Settings',
+    pageTitle: 'ChatGenius AI - Settings',
     subtitle: 'Manage your AI personas, knowledge base and preferences',
     tabPersonas: 'AI Personas',
     tabKnowledge: 'Knowledge Base',
@@ -64,6 +65,7 @@ const I18N = {
     personaHelp: 'Create multiple AI personas. Click anywhere to expand prompt.',
     addPersona: '+ Add Persona',
     templateLibrary: 'Template Library',
+    templateHelp: 'Select a preset template to quickly create a new persona.',
     livePreview: 'Live Preview',
     previewHelp: 'Test your active persona in real-time.',
     previewPlaceholder: 'Type a test message...',
@@ -152,6 +154,7 @@ const I18N = {
     importParseFail: 'Failed to parse JSON',
     exportSuccess: 'Exported {n} Q&A items',
     exportNone: 'No Q&A items to export',
+    saveFailed: 'Save failed, please retry',
     templateAdded: 'Template added: {name}',
     personaNamePlaceholder: 'Persona Name',
     statusActive: 'Active',
@@ -164,6 +167,8 @@ const I18N = {
     upgradeOptCodeTitle: 'I have an activation code',
     upgradeOptBuyTitle: 'Purchase Online',
     close: 'Close',
+    cancel: 'Cancel',
+    confirm: 'Confirm',
     statProLifetime: 'Pro Lifetime',
     statProYear: 'Pro Year',
     statFree: 'Free',
@@ -179,16 +184,20 @@ const I18N = {
     templateSuccessDesc: 'Dedicated manager for customer onboarding',
     undoDelete: 'Undo',
     deletedFaq: 'Deleted 1 Q&A item',
+    deletedPersona: 'Deleted "{name}"',
     importSettingsSuccess: 'Settings imported successfully!',
     importSettingsFail: 'Failed to import settings',
     exportSettingsSuccess: 'Settings exported!',
     exportSettingsNone: 'No settings to export',
     personaPromptPlaceholder: 'System Prompt\n\nExample: You are a professional customer service representative...',
     freeTierQuota: 'Today remaining {n} replies',
-    freeTierUpgrade: 'Upgrade Pro'
+    freeTierUpgrade: 'Upgrade Pro',
+    importFileTooLarge: 'File too large (max 1MB)',
+    importInvalidData: 'Invalid data format'
   },
   zh: {
     title: 'ChatGenius AI 设置',
+    pageTitle: 'ChatGenius AI - 设置',
     subtitle: '管理你的 AI 角色、知识库和偏好',
     tabPersonas: 'AI 角色',
     tabKnowledge: '知识库',
@@ -198,6 +207,7 @@ const I18N = {
     personaHelp: '创建多个 AI 角色，点击任意位置展开 prompt。',
     addPersona: '+ 添加角色',
     templateLibrary: '模板库',
+    templateHelp: '选择预设模板快速创建新角色。',
     livePreview: '实时预览',
     previewHelp: '测试当前激活角色的回复效果。',
     previewPlaceholder: '输入测试消息...',
@@ -213,6 +223,8 @@ const I18N = {
     catService: '售后服务',
     catOther: '其他',
     batchSelectAll: '全选',
+    batchCountPrefix: '已选 ',
+    batchCountSuffix: ' 条',
     batchDelete: '删除',
     batchMoveTo: '移动到分类...',
     smartCategorize: '智能分类',
@@ -284,6 +296,7 @@ const I18N = {
     importParseFail: '解析JSON失败',
     exportSuccess: '已导出 {n} 条问答',
     exportNone: '没有可导出的问答',
+    saveFailed: '保存失败，请重试',
     templateAdded: '已添加模板：{name}',
     personaNamePlaceholder: '角色名称',
     statusActive: '当前使用',
@@ -311,15 +324,27 @@ const I18N = {
     templateSuccessDesc: '专注于客户引导和服务的经理',
     undoDelete: '撤销',
     deletedFaq: '已删除 1 条问答',
+    deletedPersona: '已删除 "{name}"',
     importSettingsSuccess: '设置导入成功！',
     importSettingsFail: '导入设置失败',
     exportSettingsSuccess: '设置已导出！',
     exportSettingsNone: '没有可导出的设置',
     personaPromptPlaceholder: '系统提示词 (Prompt)\n\n例如：你是一个专业的客服代表，负责解答客户关于产品的疑问...',
     freeTierQuota: '今日剩余 {n} 次回复机会',
-    freeTierUpgrade: '升级 Pro'
+    freeTierUpgrade: '升级 Pro',
+    importFileTooLarge: '文件过大（最大 1MB）',
+    importInvalidData: '数据格式无效'
   }
 };
+
+// Utility: debounce
+function debounce(fn, delay) {
+  let timer = null;
+  return function(...args) {
+    if (timer) clearTimeout(timer);
+    timer = setTimeout(() => fn.apply(this, args), delay);
+  };
+}
 
 // Persona Templates
 const PERSONA_TEMPLATES = [
@@ -336,7 +361,6 @@ const PERSONA_TEMPLATES = [
 document.addEventListener('DOMContentLoaded', () => {
   // ---- State ----
   let currentLang = 'zh';
-  let currentTheme = 'light';
   let faqData = [];
   let personas = [];
   let activePersonaId = null;
@@ -344,6 +368,17 @@ document.addEventListener('DOMContentLoaded', () => {
   let faqCategoryQuery = 'all';
   let selectedFaqIndices = new Set();
   let deletedFaqUndo = null; // { items: [], timer }
+  let deletedPersonaUndo = null; // { item, index, wasActive, timer }
+
+  // ---- XSS Protection ----
+  function escapeHtml(str) {
+    if (typeof str !== 'string') return '';
+    return str.replace(/&/g, '&amp;')
+              .replace(/</g, '&lt;')
+              .replace(/>/g, '&gt;')
+              .replace(/"/g, '&quot;')
+              .replace(/'/g, '&#39;');
+  }
 
   // ---- Auto-save ----
   let saveTimer = null;
@@ -362,7 +397,6 @@ document.addEventListener('DOMContentLoaded', () => {
     const tone = document.getElementById('tone')?.value || 'auto';
     const replyLength = document.getElementById('replyLength')?.value || 'auto';
     const btnTheme = document.getElementById('btnTheme')?.value || 'gradient';
-    const shortcut = document.getElementById('shortcut')?.value || '';
     const apiProvider = document.getElementById('apiProvider')?.value || 'openai';
     const apiKey = document.getElementById('apiKey')?.value || '';
 
@@ -373,12 +407,15 @@ document.addEventListener('DOMContentLoaded', () => {
       replyLength,
       faqData: faqData,
       btnTheme,
-      shortcut,
       apiProvider,
       apiKey,
-      theme: currentTheme,
       lang: currentLang
     }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('Save failed:', chrome.runtime.lastError);
+        showToast(I18N[currentLang].saveFailed || '保存失败，请重试', true);
+        return;
+      }
       updateSaveStatus('saved');
     });
   }
@@ -397,9 +434,9 @@ document.addEventListener('DOMContentLoaded', () => {
     }
     const L = I18N[currentLang];
     if (status === 'saved') {
-      statusEl.innerHTML = '<span style="color:var(--success);font-weight:600;">✓ ' + (L.saved || 'Saved') + '</span>';
+      statusEl.innerHTML = '<span style="color:var(--success);font-weight:600;">✓ ' + escapeHtml(L.saved || 'Saved') + '</span>';
     } else if (status === 'saving') {
-      statusEl.innerHTML = '<span style="color:var(--text-tertiary);">' + (L.saving || 'Saving...') + '</span>';
+      statusEl.innerHTML = '<span style="color:var(--text-tertiary);">' + escapeHtml(L.saving || 'Saving...') + '</span>';
     }
   }
 
@@ -423,36 +460,16 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Switch to pending tab
   chrome.storage.local.get(['pendingOptionsTab'], (data) => {
+    if (chrome.runtime.lastError) {
+      console.error('Storage error:', chrome.runtime.lastError);
+      return;
+    }
     if (data.pendingOptionsTab) {
       chrome.storage.local.remove('pendingOptionsTab');
       const targetBtn = document.querySelector('.tab-btn[data-tab="' + data.pendingOptionsTab + '"]');
       if (targetBtn) targetBtn.click();
     }
   });
-
-  // ---- Theme Toggle ----
-  const themeToggleBtn = document.getElementById('themeToggleBtn');
-  const themeIconLight = document.getElementById('themeIconLight');
-  const themeIconDark = document.getElementById('themeIconDark');
-
-  function updateThemeIcons() {
-    if (currentTheme === 'dark') {
-      themeIconLight.style.display = 'none';
-      themeIconDark.style.display = 'block';
-    } else {
-      themeIconLight.style.display = 'block';
-      themeIconDark.style.display = 'none';
-    }
-  }
-
-  if (themeToggleBtn) {
-    themeToggleBtn.addEventListener('click', () => {
-      currentTheme = currentTheme === 'light' ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', currentTheme);
-      updateThemeIcons();
-      scheduleSave();
-    });
-  }
 
   // ---- Toast ----
   function showToast(msg, isError) {
@@ -461,8 +478,92 @@ document.addEventListener('DOMContentLoaded', () => {
     if (!toast || !toastMsg) return;
     toastMsg.textContent = msg;
     toast.className = (isError ? 'error ' : '') + 'show';
-    setTimeout(() => { toast.className = toast.className.replace('show', '').trim(); }, 2500);
+
+    // 添加关闭按钮（仅创建一次）
+    let closeBtn = toast.querySelector('.toast-close');
+    if (!closeBtn) {
+      closeBtn = document.createElement('button');
+      closeBtn.className = 'toast-close';
+      closeBtn.setAttribute('aria-label', '关闭');
+      closeBtn.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;font-size:18px;line-height:1;padding:0;margin-left:8px;opacity:0.6;flex-shrink:0;';
+      closeBtn.textContent = '×';
+      toast.appendChild(closeBtn);
+    }
+    closeBtn.onclick = () => {
+      if (toast._toastTimer) {
+        clearTimeout(toast._toastTimer);
+        toast._toastTimer = null;
+      }
+      toast.className = toast.className.replace('show', '').trim();
+    };
+
+    // 错误类显示 5 秒，成功类显示 2.5 秒
+    const duration = isError ? 5000 : 2500;
+    if (toast._toastTimer) clearTimeout(toast._toastTimer);
+    toast._toastTimer = setTimeout(() => {
+      toast.className = toast.className.replace('show', '').trim();
+      toast._toastTimer = null;
+    }, duration);
+
+    // 鼠标悬停时暂停自动关闭
+    toast.onmouseenter = () => {
+      if (toast._toastTimer) {
+        clearTimeout(toast._toastTimer);
+        toast._toastTimer = null;
+      }
+    };
   }
+
+  function showConfirm(title, message) {
+    return new Promise((resolve) => {
+      const modal = document.getElementById('confirmModal');
+      const titleEl = document.getElementById('confirmTitle');
+      const messageEl = document.getElementById('confirmMessage');
+      const okBtn = document.getElementById('confirmOkBtn');
+      const cancelBtn = document.getElementById('confirmCancelBtn');
+
+      if (!modal || !okBtn || !cancelBtn) {
+        // 降级到原生 confirm
+        resolve(confirm(message));
+        return;
+      }
+
+      if (titleEl) titleEl.textContent = title;
+      if (messageEl) messageEl.textContent = message;
+      modal.style.display = 'flex';
+
+      const cleanup = (result) => {
+        modal.style.display = 'none';
+        okBtn.removeEventListener('click', okHandler);
+        cancelBtn.removeEventListener('click', cancelHandler);
+        resolve(result);
+      };
+
+      const okHandler = () => cleanup(true);
+      const cancelHandler = () => cleanup(false);
+
+      okBtn.addEventListener('click', okHandler);
+      cancelBtn.addEventListener('click', cancelHandler);
+    });
+  }
+
+  // ---- Global Escape key to close modals ----
+  document.addEventListener('keydown', (e) => {
+    if (e.key !== 'Escape') return;
+    const modals = document.querySelectorAll('.modal-overlay');
+    modals.forEach(modal => {
+      const isVisible = modal.classList.contains('show') ||
+                        (modal.style.display && modal.style.display !== 'none');
+      if (!isVisible) return;
+      if (modal.id === 'confirmModal') {
+        // Trigger cancel button so showConfirm resolves(false) correctly
+        const cancelBtn = modal.querySelector('#confirmCancelBtn');
+        if (cancelBtn) cancelBtn.click();
+      } else {
+        modal.classList.remove('show');
+      }
+    });
+  });
 
   // ---- I18n ----
   function applyI18n() {
@@ -489,8 +590,11 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (personas.length === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'padding:24px;text-align:center;color:var(--text-tertiary);font-size:14px;';
-      empty.textContent = I18N[currentLang].noMatchingPersonas || 'No personas yet. Click "Add Persona" to create one.';
+      empty.style.cssText = 'padding:40px 24px;text-align:center;color:var(--text-tertiary);font-size:14px;border:1px dashed var(--border-default);border-radius:var(--radius-md);';
+      empty.innerHTML = '<div style="font-size:32px;margin-bottom:8px;opacity:0.5;">🤖</div>' +
+        '<div style="margin-bottom:4px;color:var(--text-secondary);font-weight:500;">' +
+        escapeHtml(I18N[currentLang].noMatchingPersonas || 'No personas yet') + '</div>' +
+        '<div style="font-size:12px;">' + escapeHtml(I18N[currentLang].personaHelp || 'Click "Add Persona" to create one.') + '</div>';
       personaList.appendChild(empty);
       return;
     }
@@ -518,11 +622,12 @@ document.addEventListener('DOMContentLoaded', () => {
       nameInput.value = persona.name;
       nameInput.addEventListener('input', (e) => { personas[index].name = e.target.value; scheduleSave(); });
       nameInput.addEventListener('click', (e) => e.stopPropagation());
+      nameInput.addEventListener('mousedown', (e) => e.stopPropagation());
 
       const status = document.createElement('div');
       status.className = 'persona-status' + (isActive ? ' active' : '');
       status.innerHTML = '<span class="persona-status-dot"></span><span>' +
-        (isActive ? (I18N[currentLang].statusActive || 'Active') : (I18N[currentLang].statusInactive || 'Inactive')) +
+        escapeHtml(isActive ? (I18N[currentLang].statusActive || 'Active') : (I18N[currentLang].statusInactive || 'Inactive')) +
         '</span>';
 
       info.appendChild(nameInput);
@@ -535,15 +640,53 @@ document.addEventListener('DOMContentLoaded', () => {
       delBtn.className = 'persona-action-btn delete';
       delBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
       delBtn.title = 'Delete';
-      delBtn.addEventListener('click', (e) => {
+      delBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
-        if (confirm(I18N[currentLang].confirmDeletePersona || 'Delete this persona?')) {
-          personas.splice(index, 1);
-          if (activePersonaId === persona.id) {
-            activePersonaId = personas.length > 0 ? personas[0].id : null;
-          }
-          renderPersonas();
-          scheduleSave();
+        const confirmed = await showConfirm(I18N[currentLang].confirmDeletePersona || '确认删除', I18N[currentLang].confirmDeletePersona || '确定要删除这个角色吗？');
+        if (!confirmed) return;
+
+        // Delete with undo
+        const deletedPersona = personas.splice(index, 1)[0];
+        const wasActive = activePersonaId === deletedPersona.id;
+        if (wasActive) {
+          activePersonaId = personas.length > 0 ? personas[0].id : null;
+        }
+        deletedPersonaUndo = { item: deletedPersona, index, wasActive, timer: null };
+        renderPersonas();
+        scheduleSave();
+        showToast((I18N[currentLang].deletedPersona || 'Deleted "{name}"').replace('{name}', deletedPersona.name || ''));
+
+        // Show undo toast
+        const toast = document.getElementById('toast');
+        const toastMsg = document.getElementById('toastMsg');
+        if (toast && toastMsg) {
+          toastMsg.textContent = (I18N[currentLang].deletedPersona || 'Deleted "{name}"').replace('{name}', deletedPersona.name || '');
+          // Remove any existing undo button
+          const existingUndo = toast.querySelector('.undo-btn');
+          if (existingUndo) existingUndo.remove();
+          // Add undo button
+          const undoBtn = document.createElement('button');
+          undoBtn.className = 'undo-btn';
+          undoBtn.textContent = I18N[currentLang].undoDelete || 'Undo';
+          undoBtn.style.cssText = 'margin-left:8px;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:600;font-size:13px;';
+          undoBtn.addEventListener('click', () => {
+            personas.splice(deletedPersonaUndo.index, 0, deletedPersonaUndo.item);
+            if (deletedPersonaUndo.wasActive) {
+              activePersonaId = deletedPersonaUndo.item.id;
+            }
+            deletedPersonaUndo = null;
+            renderPersonas();
+            scheduleSave();
+            toast.className = toast.className.replace('show', '').trim();
+          });
+          toast.appendChild(undoBtn);
+          toast.className = 'show';
+          if (toast._toastTimer) { clearTimeout(toast._toastTimer); toast._toastTimer = null; }
+          clearTimeout(deletedPersonaUndo.timer);
+          deletedPersonaUndo.timer = setTimeout(() => {
+            toast.className = toast.className.replace('show', '').trim();
+            deletedPersonaUndo = null;
+          }, 3000);
         }
       });
 
@@ -567,6 +710,7 @@ document.addEventListener('DOMContentLoaded', () => {
       promptInput.value = persona.prompt;
       promptInput.addEventListener('input', (e) => { personas[index].prompt = e.target.value; scheduleSave(); });
       promptInput.addEventListener('click', (e) => e.stopPropagation());
+      promptInput.addEventListener('mousedown', (e) => e.stopPropagation());
 
       // Toggle active button
       const toggleBtn = document.createElement('button');
@@ -600,6 +744,7 @@ document.addEventListener('DOMContentLoaded', () => {
       renderPersonas();
       scheduleSave();
       setTimeout(() => {
+        if (!personaList) return;
         const cards = personaList.querySelectorAll('.persona-card');
         cards.forEach(c => {
           const nameInput = c.querySelector('.persona-name-input');
@@ -689,6 +834,13 @@ document.addEventListener('DOMContentLoaded', () => {
     bubble.className = 'chat-bubble ' + type;
     bubble.textContent = text;
     previewChat.appendChild(bubble);
+    // 限制 DOM 气泡数量
+    const bubbles = previewChat.querySelectorAll('.chat-bubble');
+    if (bubbles.length > 20) {
+      for (let i = 0; i < bubbles.length - 20; i++) {
+        bubbles[i].remove();
+      }
+    }
     previewChat.scrollTop = previewChat.scrollHeight;
   }
 
@@ -696,12 +848,13 @@ document.addEventListener('DOMContentLoaded', () => {
     previewSendBtn.addEventListener('click', async () => {
       const text = previewInput?.value.trim();
       if (!text) return;
+      if (!previewChat) return;
       addPreviewMessage(text, 'user');
       if (previewInput) previewInput.value = '';
 
       const thinkingBubble = document.createElement('div');
       thinkingBubble.className = 'chat-bubble ai';
-      thinkingBubble.innerHTML = '<span style="opacity:0.5;">' + (I18N[currentLang].previewThinking || 'AI thinking...') + '</span>';
+      thinkingBubble.innerHTML = '<span style="opacity:0.5;">' + escapeHtml(I18N[currentLang].previewThinking || 'AI thinking...') + '</span>';
       previewChat.appendChild(thinkingBubble);
       previewChat.scrollTop = previewChat.scrollHeight;
 
@@ -716,6 +869,11 @@ document.addEventListener('DOMContentLoaded', () => {
           }
         });
 
+        // 限制预览历史最多 20 条消息
+        if (historyMessages.length >= 20) {
+          historyMessages.splice(0, historyMessages.length - 19);
+        }
+
         const response = await Promise.race([
           chrome.runtime.sendMessage({ action: 'previewChat', messages: historyMessages }),
           new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时，请重试')), 35000))
@@ -725,10 +883,10 @@ document.addEventListener('DOMContentLoaded', () => {
           thinkingBubble.textContent = response.reply;
           thinkingBubble.style.opacity = '1';
         } else {
-          thinkingBubble.innerHTML = '<span style="color:var(--error);">' + (I18N[currentLang].previewError || 'Error: ') + (response?.error || '') + '</span>';
+          thinkingBubble.innerHTML = '<span style="color:var(--error);">' + escapeHtml(I18N[currentLang].previewError || 'Error: ') + escapeHtml(response?.error || '') + '</span>';
         }
       } catch (error) {
-        thinkingBubble.innerHTML = '<span style="color:var(--error);">' + (I18N[currentLang].previewError || 'Error: ') + error.message + '</span>';
+        thinkingBubble.innerHTML = '<span style="color:var(--error);">' + escapeHtml(I18N[currentLang].previewError || 'Error: ') + escapeHtml(error.message) + '</span>';
       }
     });
   }
@@ -787,10 +945,18 @@ document.addEventListener('DOMContentLoaded', () => {
       filteredFaq.push({ item, originalIndex: index });
     });
 
-    if (filteredFaq.length === 0 && faqData.length > 0) {
+    if (filteredFaq.length === 0) {
       const noResults = document.createElement('div');
-      noResults.style.cssText = 'padding:24px;text-align:center;color:var(--text-tertiary);font-size:14px;';
-      noResults.textContent = I18N[currentLang].noMatchingFaq || 'No matching Q&A found';
+      noResults.style.cssText = 'padding:40px 24px;text-align:center;color:var(--text-tertiary);font-size:14px;border:1px dashed var(--border-default);border-radius:var(--radius-md);';
+      if (faqData.length === 0) {
+        noResults.innerHTML = '<div style="font-size:32px;margin-bottom:8px;opacity:0.5;">📚</div>' +
+          '<div style="margin-bottom:4px;color:var(--text-secondary);font-weight:500;">' +
+          escapeHtml(I18N[currentLang].faq || 'Knowledge Base') + '</div>' +
+          '<div style="font-size:12px;">' + escapeHtml(I18N[currentLang].faqHelp || 'Click "Add Q&A" to create one.') + '</div>';
+      } else {
+        noResults.innerHTML = '<div style="font-size:28px;margin-bottom:8px;opacity:0.5;">🔍</div>' +
+          '<div>' + escapeHtml(I18N[currentLang].noMatchingFaq || 'No matching Q&A found') + '</div>';
+      }
       faqList.appendChild(noResults);
       updateBatchToolbar();
       return;
@@ -810,10 +976,10 @@ document.addEventListener('DOMContentLoaded', () => {
         else selectedFaqIndices.delete(index);
         updateBatchToolbar();
       });
-      div.appendChild(checkbox);
 
       const headerRow = document.createElement('div');
       headerRow.className = 'faq-item-header';
+      headerRow.appendChild(checkbox);
 
       const cats = getFaqCategories();
       const catSelect = document.createElement('select');
@@ -892,7 +1058,11 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (faqSearchInput) {
-    faqSearchInput.addEventListener('input', (e) => { faqSearchQuery = e.target.value.trim(); renderFaq(); });
+    const debouncedRenderFaq = debounce(() => renderFaq(), 200);
+    faqSearchInput.addEventListener('input', (e) => {
+      faqSearchQuery = e.target.value.trim();
+      debouncedRenderFaq();
+    });
   }
   if (faqCategoryFilter) {
     faqCategoryFilter.addEventListener('change', (e) => { faqCategoryQuery = e.target.value; renderFaq(); });
@@ -901,6 +1071,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // Select all
   if (faqSelectAll) {
     faqSelectAll.addEventListener('change', (e) => {
+      if (!faqList) return;
       faqList.querySelectorAll('.faq-item-checkbox').forEach(cb => {
         cb.checked = e.target.checked;
         const idx = parseInt(cb.id.replace('faq-', ''));
@@ -913,17 +1084,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // Batch delete
   if (batchDeleteBtn) {
-    batchDeleteBtn.addEventListener('click', () => {
+    batchDeleteBtn.addEventListener('click', async () => {
       if (selectedFaqIndices.size === 0) return;
       const count = selectedFaqIndices.size;
-      if (confirm((I18N[currentLang].confirmBatchDelete || 'Delete {n} items?').replace('{n}', count))) {
-        const sortedIndices = Array.from(selectedFaqIndices).sort((a, b) => b - a);
-        sortedIndices.forEach(idx => faqData.splice(idx, 1));
-        selectedFaqIndices.clear();
-        renderFaq();
-        scheduleSave();
-        showToast((I18N[currentLang].deletedCount || 'Deleted {n}').replace('{n}', count));
-      }
+      const confirmed = await showConfirm(I18N[currentLang].confirmBatchDelete.replace('{n}', count) || '确认删除', I18N[currentLang].confirmBatchDelete.replace('{n}', count));
+      if (!confirmed) return;
+      const sortedIndices = Array.from(selectedFaqIndices).sort((a, b) => b - a);
+      sortedIndices.forEach(idx => faqData.splice(idx, 1));
+      selectedFaqIndices.clear();
+      renderFaq();
+      scheduleSave();
+      showToast((I18N[currentLang].deletedCount || 'Deleted {n}').replace('{n}', count));
     });
   }
 
@@ -1024,21 +1195,6 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Shortcut ----
   const shortcutInput = document.getElementById('shortcut');
-  if (shortcutInput) {
-    shortcutInput.addEventListener('keydown', (e) => {
-      e.preventDefault();
-      if (e.key === 'Backspace' || e.key === 'Delete') { shortcutInput.value = ''; scheduleSave(); return; }
-      const keys = [];
-      if (e.ctrlKey) keys.push('Ctrl');
-      if (e.altKey) keys.push('Alt');
-      if (e.shiftKey) keys.push('Shift');
-      if (e.metaKey) keys.push('Cmd');
-      if (e.key !== 'Control' && e.key !== 'Alt' && e.key !== 'Shift' && e.key !== 'Meta') {
-        keys.push(e.key.toUpperCase());
-      }
-      if (keys.length > 0) { shortcutInput.value = keys.join(' + '); scheduleSave(); }
-    });
-  }
 
   // ---- API Configuration ----
   const apiProvider = document.getElementById('apiProvider');
@@ -1052,6 +1208,20 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (apiKeyInput) {
     apiKeyInput.addEventListener('input', () => scheduleSave());
+  }
+
+  // API Key show/hide toggle
+  const apiKeyToggle = document.getElementById('apiKeyToggle');
+  if (apiKeyToggle && apiKeyInput) {
+    apiKeyToggle.addEventListener('click', () => {
+      if (apiKeyInput.type === 'password') {
+        apiKeyInput.type = 'text';
+        apiKeyToggle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M17.94 17.94A10.07 10.07 0 0 1 12 20c-7 0-11-8-11-8a18.45 18.45 0 0 1 5.06-5.94M9.9 4.24A9.12 9.12 0 0 1 12 4c7 0 11 8 11 8a18.5 18.5 0 0 1-2.16 3.19m-6.72-1.07a3 3 0 1 1-4.24-4.24"></path><line x1="1" y1="1" x2="23" y2="23"></line></svg>';
+      } else {
+        apiKeyInput.type = 'password';
+        apiKeyToggle.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path><circle cx="12" cy="12" r="3"></circle></svg>';
+      }
+    });
   }
 
   if (testApiBtn) {
@@ -1090,20 +1260,26 @@ document.addEventListener('DOMContentLoaded', () => {
           if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
           showToast(I18N[currentLang].apiTestSuccess || 'Connection successful!');
           // Save connection status
-          chrome.storage.sync.set({ connectionValid: true });
+          chrome.storage.sync.set({ connectionValid: true }, () => {
+            if (chrome.runtime.lastError) console.error('Storage error:', chrome.runtime.lastError);
+          });
         } else {
           const errData = await response.json().catch(() => ({}));
           const errMsg = errData.error?.message || errData.message || 'HTTP ' + response.status;
           if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
           if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
           showToast((I18N[currentLang].apiTestFail || 'Connection failed: ') + errMsg, true);
-          chrome.storage.sync.set({ connectionValid: false });
+          chrome.storage.sync.set({ connectionValid: false }, () => {
+            if (chrome.runtime.lastError) console.error('Storage error:', chrome.runtime.lastError);
+          });
         }
       } catch (error) {
         if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
         showToast((I18N[currentLang].apiTestFail || 'Connection failed: ') + error.message, true);
-        chrome.storage.sync.set({ connectionValid: false });
+        chrome.storage.sync.set({ connectionValid: false }, () => {
+          if (chrome.runtime.lastError) console.error('Storage error:', chrome.runtime.lastError);
+        });
       } finally {
         testApiBtn.disabled = false;
         testApiBtn.textContent = I18N[currentLang].testConnection || 'Test Connection';
@@ -1135,11 +1311,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (activateBtn && activationCodeInput) {
     activateBtn.addEventListener('click', async () => {
       const code = activationCodeInput.value.trim();
-      if (!code) { activationError.textContent = I18N[currentLang].activateErrorEmpty || 'Please enter activation code'; return; }
+      if (!code) { if (activationError) activationError.textContent = I18N[currentLang].activateErrorEmpty || 'Please enter activation code'; return; }
 
       activateBtn.disabled = true;
-      activateBtn.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="40"></circle></svg><span>' + (I18N[currentLang].activateVerifying || 'Verifying...') + '</span>';
-      activationError.textContent = '';
+      activateBtn.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="40"></circle></svg><span>' + escapeHtml(I18N[currentLang].activateVerifying || 'Verifying...') + '</span>';
+      if (activationError) activationError.textContent = '';
 
       try {
         const response = await fetch(API_BASE_URL + '/api/license/activate', {
@@ -1155,21 +1331,21 @@ document.addEventListener('DOMContentLoaded', () => {
             licenseType: result.type,
             activatedAt: result.activatedAt || new Date().toISOString()
           });
-          activationSuccess.style.display = 'flex';
-          licenseTypeDisplay.textContent = I18N[currentLang]['statPro' + (result.type === 'lifetime' ? 'Lifetime' : 'Year')] || result.type;
+          if (activationSuccess) activationSuccess.style.display = 'flex';
+          if (licenseTypeDisplay) licenseTypeDisplay.textContent = I18N[currentLang]['statPro' + (result.type === 'lifetime' ? 'Lifetime' : 'Year')] || result.type;
           activationCodeInput.value = '';
           updateLicenseDisplay(result.type);
           updateStats();
           updateFreeTierNotification();
           showToast((I18N[currentLang].activateSuccessPrefix || 'Activated! ') + result.type);
         } else {
-          activationError.textContent = result.error || (I18N[currentLang].activateErrorInvalid || 'Invalid code');
+          if (activationError) activationError.textContent = result.error || (I18N[currentLang].activateErrorInvalid || 'Invalid code');
         }
       } catch (error) {
-        activationError.textContent = I18N[currentLang].activateFail || 'Activation failed';
+        if (activationError) activationError.textContent = I18N[currentLang].activateFail || 'Activation failed';
       } finally {
         activateBtn.disabled = false;
-        activateBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span>' + (I18N[currentLang].activateLabel || 'Activate') + '</span>';
+        activateBtn.innerHTML = '<svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg><span>' + escapeHtml(I18N[currentLang].activateLabel || 'Activate') + '</span>';
       }
     });
 
@@ -1200,12 +1376,20 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateFreeTierNotification() {
     chrome.storage.sync.get(['licenseType'], (syncData) => {
+      if (chrome.runtime.lastError) {
+        console.error('Storage error:', chrome.runtime.lastError);
+        return;
+      }
       const licenseType = syncData.licenseType || 'free';
       if (licenseType !== 'free') {
         if (freeTierNotification) freeTierNotification.classList.remove('show');
         return;
       }
       chrome.storage.local.get(['dailyReplyCount', 'lastResetDate'], (usageData) => {
+        if (chrome.runtime.lastError) {
+          console.error('Storage error:', chrome.runtime.lastError);
+          return;
+        }
         const today = new Date().toISOString().split('T')[0];
         const effectiveCount = usageData.lastResetDate === today ? (usageData.dailyReplyCount || 0) : 0;
         const remaining = Math.max(0, DAILY_LIMIT - effectiveCount);
@@ -1233,6 +1417,11 @@ document.addEventListener('DOMContentLoaded', () => {
   if (exportAllSettingsBtn) {
     exportAllSettingsBtn.addEventListener('click', () => {
       chrome.storage.sync.get(null, (data) => {
+        if (chrome.runtime.lastError) {
+          console.error('Storage error:', chrome.runtime.lastError);
+          showToast(I18N[currentLang].exportSettingsNone || 'No settings to export', true);
+          return;
+        }
         const settings = {
           personas: data.personas || [],
           activePersonaId: data.activePersonaId,
@@ -1264,18 +1453,63 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (importAllSettingsBtn && allSettingsFileInput) {
     importAllSettingsBtn.addEventListener('click', () => allSettingsFileInput.click());
+
+    function validateSettings(data) {
+      if (typeof data !== 'object' || data === null) return false;
+
+      if ('personas' in data) {
+        if (!Array.isArray(data.personas)) return false;
+        for (const p of data.personas) {
+          if (typeof p !== 'object' || typeof p.id !== 'string' ||
+              typeof p.name !== 'string' || typeof p.prompt !== 'string') return false;
+        }
+      }
+
+      if ('faqData' in data) {
+        if (!Array.isArray(data.faqData)) return false;
+        for (const f of data.faqData) {
+          if (typeof f !== 'object' || typeof f.q !== 'string' || typeof f.a !== 'string') return false;
+        }
+      }
+
+      const stringFields = ['tone', 'replyLength', 'btnTheme', 'shortcut', 'apiProvider', 'apiKey', 'licenseType', 'licenseCode'];
+      for (const field of stringFields) {
+        if (field in data && typeof data[field] !== 'string') return false;
+      }
+
+      return true;
+    }
+
     allSettingsFileInput.addEventListener('change', (e) => {
       const file = e.target.files[0];
       if (!file) return;
+
+      // File size validation (max 1MB)
+      if (file.size > 1024 * 1024) {
+        showToast(I18N[currentLang].importFileTooLarge || 'File too large (max 1MB)', true);
+        allSettingsFileInput.value = '';
+        return;
+      }
+
       const reader = new FileReader();
       reader.onload = (event) => {
         try {
           const imported = JSON.parse(event.target.result);
+          if (!validateSettings(imported)) {
+            showToast(I18N[currentLang].importInvalidData || 'Invalid data format', true);
+            allSettingsFileInput.value = '';
+            return;
+          }
           const settingsToSave = {};
           const keys = ['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'btnTheme', 'shortcut', 'apiProvider', 'licenseType', 'licenseCode', 'activatedAt'];
           keys.forEach(key => { if (imported[key] !== undefined) settingsToSave[key] = imported[key]; });
 
           chrome.storage.sync.set(settingsToSave, () => {
+            if (chrome.runtime.lastError) {
+              console.error('Import save error:', chrome.runtime.lastError);
+              showToast(I18N[currentLang].importSettingsFail || 'Failed to import settings', true);
+              return;
+            }
             // Reload state
             if (imported.personas) { personas = imported.personas; activePersonaId = imported.activePersonaId || (personas.length > 0 ? personas[0].id : null); }
             if (imported.faqData) faqData = imported.faqData;
@@ -1300,6 +1534,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateStats() {
     chrome.storage.local.get({ totalReplies: 0, successCount: 0, failedCount: 0 }, (data) => {
+      if (chrome.runtime.lastError) {
+        console.error('Storage error:', chrome.runtime.lastError);
+        return;
+      }
       const replies = data.totalReplies || 0;
       const successCount = data.successCount || 0;
       const failedCount = data.failedCount || 0;
@@ -1311,9 +1549,17 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     chrome.storage.sync.get(['licenseType'], (licenseData) => {
+      if (chrome.runtime.lastError) {
+        console.error('Storage error:', chrome.runtime.lastError);
+        return;
+      }
       const licenseType = licenseData.licenseType || 'free';
       if (licenseType === 'free') {
         chrome.storage.local.get(['dailyReplyCount', 'lastResetDate'], (usageData) => {
+          if (chrome.runtime.lastError) {
+            console.error('Storage error:', chrome.runtime.lastError);
+            return;
+          }
           const today = new Date().toISOString().split('T')[0];
           const effectiveCount = usageData.lastResetDate === today ? (usageData.dailyReplyCount || 0) : 0;
           if (statQuotaEl) statQuotaEl.textContent = effectiveCount + '/' + DAILY_LIMIT;
@@ -1333,7 +1579,6 @@ document.addEventListener('DOMContentLoaded', () => {
     replyLength: 'auto',
     faqData: [],
     btnTheme: 'gradient',
-    theme: 'light',
     lang: 'zh',
     apiProvider: 'openai',
     apiKey: '',
@@ -1342,10 +1587,10 @@ document.addEventListener('DOMContentLoaded', () => {
     activatedAt: null,
     onboardingCompleted: false
   }, (data) => {
-    currentTheme = data.theme || 'light';
+    if (chrome.runtime.lastError) {
+      console.error('Load settings error:', chrome.runtime.lastError);
+    }
     currentLang = data.lang || 'zh';
-    document.documentElement.setAttribute('data-theme', currentTheme);
-    updateThemeIcons();
     applyI18n();
 
     personas = data.personas || [];
@@ -1360,7 +1605,6 @@ document.addEventListener('DOMContentLoaded', () => {
     if (toneSelect) toneSelect.value = data.tone || 'auto';
     if (replyLengthSelect) replyLengthSelect.value = data.replyLength || 'auto';
     if (btnThemeSelect) btnThemeSelect.value = data.btnTheme || 'gradient';
-    if (shortcutInput) shortcutInput.value = data.shortcut || '';
     if (apiProvider) apiProvider.value = data.apiProvider || 'openai';
     if (apiKeyInput) apiKeyInput.value = data.apiKey || '';
 
@@ -1384,9 +1628,35 @@ document.addEventListener('DOMContentLoaded', () => {
 
     updateStats();
     updateFreeTierNotification();
+
+    // 移除骨架屏，显示真实内容
+    const skeleton = document.getElementById('skeletonScreen');
+    const container = document.querySelector('.page-container');
+    if (skeleton) skeleton.classList.add('hidden');
+    if (container) container.classList.add('loaded');
   });
 
   // Refresh stats periodically
-  setInterval(updateStats, 30000);
-  setInterval(updateFreeTierNotification, 60000);
+  let statsIntervalId = null;
+  let notificationIntervalId = null;
+
+  function startIntervals() {
+    if (!statsIntervalId) statsIntervalId = setInterval(updateStats, 30000);
+    if (!notificationIntervalId) notificationIntervalId = setInterval(updateFreeTierNotification, 60000);
+  }
+
+  function stopIntervals() {
+    if (statsIntervalId) { clearInterval(statsIntervalId); statsIntervalId = null; }
+    if (notificationIntervalId) { clearInterval(notificationIntervalId); notificationIntervalId = null; }
+  }
+
+  document.addEventListener('visibilitychange', () => {
+    if (document.hidden) {
+      stopIntervals();
+    } else {
+      startIntervals();
+    }
+  });
+
+  startIntervals();
 });

@@ -23,11 +23,11 @@
       --text-tertiary: #9ca3af;
       --text-placeholder: #d1d5db;
       
-      --accent: #4f46e5;
-      --accent-hover: #4338ca;
-      --accent-light: #eef2ff;
-      --accent-glow: rgba(79, 70, 229, 0.15);
-      --accent-text: #4f46e5;
+      --accent: #1a73e8;
+      --accent-hover: #1557b0;
+      --accent-light: #e8f0fe;
+      --accent-glow: rgba(26, 115, 232, 0.15);
+      --accent-text: #1a73e8;
       
       --success: #10b981;
       --success-bg: rgba(16, 185, 129, 0.1);
@@ -45,7 +45,7 @@
       --border-subtle: #f3f4f6;
       --border-default: #e5e7eb;
       --border-strong: #d1d5db;
-      --border-focus: #4f46e5;
+      --border-focus: #1a73e8;
       
       --radius-sm: 6px;
       --radius-md: 10px;
@@ -74,45 +74,6 @@
       --spacing-16: 64px;
     }
     
-    /* Dark Theme */
-    :root[data-theme="dark"] {
-      --bg-primary: #09090b;
-      --bg-secondary: #18181b;
-      --bg-elevated: rgba(24, 24, 27, 0.9);
-      --bg-hover: #27272a;
-      --bg-active: #3f3f46;
-      --bg-tertiary: #27272a;
-      
-      --text-primary: #fafafa;
-      --text-secondary: #a1a1aa;
-      --text-tertiary: #71717a;
-      --text-placeholder: #52525b;
-      
-      --accent: #818cf8;
-      --accent-hover: #6366f1;
-      --accent-light: rgba(129, 140, 248, 0.08);
-      --accent-glow: rgba(129, 140, 248, 0.2);
-      --accent-text: #a5b4fc;
-      
-      --success: #10b981;
-      --success-bg: rgba(16, 185, 129, 0.15);
-      --success-text: #34d399;
-      --warning: #fbbf24;
-      --error: #ef4444;
-      --error-bg: rgba(239, 68, 68, 0.15);
-      
-      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.3);
-      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(0, 0, 0, 0.3);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(0, 0, 0, 0.3);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px rgba(0, 0, 0, 0.3);
-      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.5), 0 8px 10px rgba(0, 0, 0, 0.3);
-      
-      --border-subtle: #27272a;
-      --border-default: #3f3f46;
-      --border-strong: #52525b;
-      --border-focus: #818cf8;
-    }
-    
     /* Base Styles */
     * {
       box-sizing: border-box;
@@ -135,12 +96,85 @@
       line-height: 1.5;
     }
     
-    :root[data-theme="dark"] body {
-      background: 
-        radial-gradient(ellipse 80% 50% at 50% -20%, rgba(129, 140, 248, 0.08), transparent),
-        var(--bg-primary);
+    /* ================================
+       Skeleton Screen
+       ================================ */
+    .skeleton-screen {
+      max-width: 960px;
+      margin: 0 auto;
+      padding: var(--spacing-8) var(--spacing-6);
     }
-    
+
+    .skeleton-block {
+      background: linear-gradient(90deg, #f3f4f6 25%, #e5e7eb 50%, #f3f4f6 75%);
+      background-size: 200% 100%;
+      animation: shimmer 1.5s infinite;
+      border-radius: var(--radius-sm);
+    }
+
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
+
+    .skeleton-header {
+      margin-bottom: var(--spacing-6);
+    }
+
+    .skeleton-title {
+      width: 200px;
+      height: 24px;
+      margin-bottom: var(--spacing-2);
+    }
+
+    .skeleton-subtitle {
+      width: 300px;
+      height: 14px;
+    }
+
+    .skeleton-tabs {
+      display: flex;
+      gap: var(--spacing-4);
+      margin-bottom: var(--spacing-6);
+      border-bottom: 1px solid var(--border-default);
+      padding-bottom: var(--spacing-4);
+    }
+
+    .skeleton-tab {
+      width: 80px;
+      height: 16px;
+    }
+
+    .skeleton-panel {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+
+    .skeleton-panel-title {
+      width: 150px;
+      height: 18px;
+    }
+
+    .skeleton-panel-line {
+      width: 100%;
+      height: 14px;
+    }
+
+    .skeleton-panel-line.short {
+      width: 60%;
+    }
+
+    .skeleton-card {
+      width: 100%;
+      height: 80px;
+      border-radius: var(--radius-md);
+    }
+
+    .skeleton-screen.hidden {
+      display: none;
+    }
+
     /* ================================
        Layout
        ================================ */
@@ -149,6 +183,12 @@
       margin: 0 auto;
       padding: var(--spacing-8) var(--spacing-6);
       padding-bottom: var(--spacing-4);
+      opacity: 0;
+      transition: opacity var(--duration-slow) var(--ease-out);
+    }
+
+    .page-container.loaded {
+      opacity: 1;
     }
 
     /* ================================
@@ -202,31 +242,6 @@
       font-weight: 400;
     }
 
-    .theme-toggle-btn {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-sm);
-      border: 1px solid var(--border-default);
-      background: var(--bg-secondary);
-      color: var(--text-secondary);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all var(--duration-fast) var(--ease-out);
-    }
-
-    .theme-toggle-btn:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-      border-color: var(--border-strong);
-    }
-
-    .theme-toggle-btn svg {
-      width: 18px;
-      height: 18px;
-    }
-    
     /* ================================
        Free Tier Notification Bar
        ================================ */
@@ -351,14 +366,19 @@
     }
 
     .tab-btn.active {
-      color: var(--text-primary);
+      color: var(--accent);
       font-weight: 600;
       background: transparent;
       box-shadow: none;
+      position: relative;
     }
 
     .tab-btn.active::after {
-      transform: scaleX(1);
+      transform: translateX(-50%);
+      left: 50%;
+      right: auto;
+      width: 24px;
+      border-radius: 1px;
     }
 
     .tab-btn svg {
@@ -482,6 +502,24 @@
 
     .persona-card.active::before {
       background: var(--accent);
+    }
+
+    .persona-card.active::after {
+      content: '✓';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      width: 20px;
+      height: 20px;
+      background: var(--accent);
+      color: white;
+      border-radius: 50%;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 12px;
+      font-weight: bold;
+      z-index: 1;
     }
 
     .persona-card-header {
@@ -787,6 +825,36 @@
       border-color: var(--accent);
       box-shadow: 0 0 0 3px var(--accent-glow);
       outline: none;
+    }
+
+    .api-key-wrapper {
+      position: relative;
+      width: 100%;
+    }
+
+    .api-key-wrapper .form-input {
+      padding-right: 40px;
+    }
+
+    .api-key-toggle {
+      position: absolute;
+      right: 8px;
+      top: 50%;
+      transform: translateY(-50%);
+      background: none;
+      border: none;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      padding: 4px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      transition: color var(--duration-fast) var(--ease-out);
+    }
+
+    .api-key-toggle:hover {
+      color: var(--text-primary);
     }
 
     /* ================================
@@ -1445,6 +1513,25 @@
   </style>
 </head>
 <body>
+  <div id="skeletonScreen" class="skeleton-screen">
+    <div class="skeleton-header">
+      <div class="skeleton-block skeleton-title"></div>
+      <div class="skeleton-block skeleton-subtitle"></div>
+    </div>
+    <div class="skeleton-tabs">
+      <div class="skeleton-block skeleton-tab"></div>
+      <div class="skeleton-block skeleton-tab"></div>
+      <div class="skeleton-block skeleton-tab"></div>
+      <div class="skeleton-block skeleton-tab"></div>
+    </div>
+    <div class="skeleton-panel">
+      <div class="skeleton-block skeleton-panel-title"></div>
+      <div class="skeleton-block skeleton-panel-line"></div>
+      <div class="skeleton-block skeleton-panel-line short"></div>
+      <div class="skeleton-block skeleton-card"></div>
+      <div class="skeleton-block skeleton-card"></div>
+    </div>
+  </div>
   <div class="page-container">
     <!-- Header -->
     <header class="page-header">
@@ -1459,22 +1546,6 @@
           <p class="page-subtitle" data-i18n="subtitle">管理你的 AI 角色、知识库和偏好</p>
         </div>
       </div>
-      <button class="theme-toggle-btn" id="themeToggleBtn" title="切换主题">
-        <svg id="themeIconLight" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-        <svg id="themeIconDark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="display:none;">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-      </button>
     </header>
 
     <!-- Free Tier Notification Bar -->
@@ -1703,7 +1774,7 @@
           <div class="form-grid" style="margin-top: var(--spacing-4);">
             <div class="form-group full-width">
               <label class="form-label" for="shortcut" data-i18n="shortcut">快捷键</label>
-              <input type="text" class="form-input" id="shortcut" readonly placeholder="按下组合键设置...">
+              <input type="text" class="form-input" id="shortcut" readonly value="Alt+2 · Ctrl+Enter · Ctrl+R">
               <div style="margin-top:6px;font-size:12px;color:var(--text-tertiary);" data-i18n="shortcutHint">Alt+2 打开快捷菜单 · Ctrl+Enter 插入回复 · Ctrl+R 重新生成</div>
             </div>
             <div class="form-group">
@@ -1751,7 +1822,15 @@
               </div>
               <div class="form-group">
                 <label class="form-label" for="apiKey" data-i18n="apiKey">API Key</label>
-                <input type="password" class="form-input" id="apiKey" placeholder="sk-...">
+                <div class="api-key-wrapper">
+                  <input type="password" class="form-input" id="apiKey" placeholder="sk-..." autocomplete="off" spellcheck="false" autocapitalize="off">
+                  <button type="button" class="api-key-toggle" id="apiKeyToggle" title="显示/隐藏">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                </div>
               </div>
             </div>
             <button class="btn btn-secondary api-test-btn" id="testApiBtn" data-i18n="testConnection">测试连接</button>
@@ -1792,6 +1871,7 @@
               data-i18n="activatePlaceholder"
               placeholder="输入激活码（例如：PRO-XXXX-XXXX）"
               autocomplete="off"
+              spellcheck="false"
             />
             <div id="activationError" class="activation-error"></div>
             <button id="activateBtn" class="btn btn-primary activation-btn">
@@ -1902,6 +1982,18 @@
         </button>
       </div>
       <button class="btn btn-secondary" id="closeUpgradeModal" style="width:100%;" data-i18n="close">关闭</button>
+    </div>
+  </div>
+
+  <!-- Confirm Modal -->
+  <div class="modal-overlay" id="confirmModal" style="display:none;">
+    <div class="modal-content" style="max-width:400px;">
+      <h2 class="modal-title" id="confirmTitle">确认</h2>
+      <p class="panel-desc" id="confirmMessage" style="margin-bottom:24px;">确定要执行此操作吗？</p>
+      <div style="display:flex;gap:12px;justify-content:flex-end;">
+        <button class="btn btn-secondary" id="confirmCancelBtn" data-i18n="cancel">取消</button>
+        <button class="btn btn-destructive" id="confirmOkBtn" data-i18n="confirm">确认</button>
+      </div>
     </div>
   </div>
 
