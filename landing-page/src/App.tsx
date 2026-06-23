@@ -13,6 +13,7 @@ import {
   Plane, HeadsetIcon, Handshake, Star, Twitter, Facebook, Linkedin, Github
 } from 'lucide-react'
 import { activationService } from './services/activationService'
+import { invoiceService } from './services/invoiceService'
 
 // ==================== Animation Variants ====================
 const fadeInUp = {
@@ -2087,6 +2088,7 @@ function App() {
   const [downloadCount, setDownloadCount] = useState(0)
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed' | null>(null)
   const [paymentOrderNo, setPaymentOrderNo] = useState('')
+  const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const DOWNLOAD_COOLDOWN = 5000 // 5 秒冷却时间
   const MAX_DOWNLOADS_PER_SESSION = 3 // 每会话最多下载 3 次
 
@@ -2206,6 +2208,12 @@ function App() {
                   <div>
                     <p className="font-semibold">支付成功！</p>
                     <p className="text-sm text-white/60">订单号：{paymentOrderNo}</p>
+                    <button
+                      onClick={() => setShowInvoiceModal(true)}
+                      className="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors underline"
+                    >
+                      申请发票
+                    </button>
                   </div>
                 )}
                 {paymentStatus === 'failed' && (
@@ -2247,6 +2255,182 @@ function App() {
       </main>
       <Footer />
       <BackToTop />
+
+      {/* 发票申请弹窗 */}
+      {showInvoiceModal && (
+        <InvoiceModal
+          orderNo={paymentOrderNo}
+          onClose={() => setShowInvoiceModal(false)}
+        />
+      )}
+    </div>
+  )
+}
+
+// ==================== 发票申请弹窗 ====================
+function InvoiceModal({ orderNo, onClose }: { orderNo: string; onClose: () => void }) {
+  const [invoiceType, setInvoiceType] = useState<'personal' | 'company'>('personal')
+  const [title, setTitle] = useState('')
+  const [taxNumber, setTaxNumber] = useState('')
+  const [email, setEmail] = useState('')
+  const [submitting, setSubmitting] = useState(false)
+  const [result, setResult] = useState<{ success: boolean; message: string } | null>(null)
+
+  const handleSubmit = async () => {
+    if (!title.trim()) {
+      setResult({ success: false, message: '请填写发票抬头' })
+      return
+    }
+    if (invoiceType === 'company' && !taxNumber.trim()) {
+      setResult({ success: false, message: '企业发票必须填写纳税人识别号' })
+      return
+    }
+    if (!email.trim() || !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email)) {
+      setResult({ success: false, message: '请填写有效的邮箱地址' })
+      return
+    }
+
+    setSubmitting(true)
+    setResult(null)
+
+    const res = await invoiceService.submitInvoice({
+      orderNo,
+      invoiceType,
+      title: title.trim(),
+      taxNumber: taxNumber.trim() || undefined,
+      email: email.trim(),
+    })
+
+    setSubmitting(false)
+    setResult({
+      success: res.success,
+      message: res.success
+        ? '发票申请已提交，我们将在 1-3 个工作日内处理并发送到您的邮箱'
+        : res.error || '提交失败，请稍后重试',
+    })
+  }
+
+  return (
+    <div
+      className="fixed inset-0 z-[100] flex items-center justify-center bg-black/60 backdrop-blur-sm p-4"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-zinc-900 rounded-2xl shadow-2xl w-full max-w-md p-6"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <div className="flex items-center justify-between mb-4">
+          <h3 className="text-lg font-bold text-zinc-900 dark:text-white">申请电子发票</h3>
+          <button
+            onClick={onClose}
+            className="text-zinc-400 hover:text-zinc-600 dark:hover:text-zinc-200 transition-colors"
+          >
+            <X className="w-5 h-5" />
+          </button>
+        </div>
+
+        {result ? (
+          <div className="text-center py-6">
+            {result.success ? (
+              <CheckCircle className="w-12 h-12 text-green-500 mx-auto mb-3" />
+            ) : (
+              <AlertCircle className="w-12 h-12 text-red-500 mx-auto mb-3" />
+            )}
+            <p className="text-sm text-zinc-700 dark:text-zinc-300 mb-4">{result.message}</p>
+            <button
+              onClick={onClose}
+              className="px-6 py-2 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors"
+            >
+              关闭
+            </button>
+          </div>
+        ) : (
+          <div className="space-y-4">
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                发票类型
+              </label>
+              <div className="flex gap-2">
+                <button
+                  onClick={() => setInvoiceType('personal')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    invoiceType === 'personal'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                  }`}
+                >
+                  个人
+                </button>
+                <button
+                  onClick={() => setInvoiceType('company')}
+                  className={`flex-1 py-2 px-3 rounded-lg text-sm font-medium transition-colors ${
+                    invoiceType === 'company'
+                      ? 'bg-blue-600 text-white'
+                      : 'bg-zinc-100 dark:bg-zinc-800 text-zinc-600 dark:text-zinc-400'
+                  }`}
+                >
+                  企业
+                </button>
+              </div>
+            </div>
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                发票抬头 {invoiceType === 'company' && '*'}
+              </label>
+              <input
+                type="text"
+                value={title}
+                onChange={(e) => setTitle(e.target.value)}
+                placeholder={invoiceType === 'company' ? '请输入企业全称' : '请输入个人姓名'}
+                className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            {invoiceType === 'company' && (
+              <div>
+                <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                  纳税人识别号 *
+                </label>
+                <input
+                  type="text"
+                  value={taxNumber}
+                  onChange={(e) => setTaxNumber(e.target.value.toUpperCase())}
+                  placeholder="18位统一社会信用代码"
+                  className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
+                />
+              </div>
+            )}
+
+            <div>
+              <label className="block text-sm font-medium text-zinc-700 dark:text-zinc-300 mb-1.5">
+                接收邮箱 *
+              </label>
+              <input
+                type="email"
+                value={email}
+                onChange={(e) => setEmail(e.target.value)}
+                placeholder="发票将发送到此邮箱"
+                className="w-full px-3 py-2 rounded-lg border border-zinc-300 dark:border-zinc-700 bg-white dark:bg-zinc-800 text-zinc-900 dark:text-white text-sm focus:outline-none focus:border-blue-500"
+              />
+            </div>
+
+            <div className="text-xs text-zinc-500 dark:text-zinc-400 bg-zinc-50 dark:bg-zinc-800/50 rounded-lg p-3">
+              订单号：{orderNo}
+              <br />
+              发票将在 1-3 个工作日内开具并发送到您的邮箱
+            </div>
+
+            <button
+              onClick={handleSubmit}
+              disabled={submitting}
+              className="w-full py-2.5 bg-blue-600 text-white rounded-lg text-sm font-medium hover:bg-blue-700 transition-colors disabled:opacity-50"
+            >
+              {submitting ? '提交中...' : '提交申请'}
+            </button>
+          </div>
+        )}
+      </div>
     </div>
   )
 }

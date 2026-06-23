@@ -6,6 +6,7 @@ const crypto = require('crypto');
 const fs = require('fs');
 const path = require('path');
 const { pool } = require('./config');
+const { sendInvoiceIssuedEmail } = require('./mail');
 
 const router = express.Router();
 
@@ -1310,6 +1311,200 @@ router.put('/settings', requireAdmin, async (req, res) => {
   } catch (err) {
     console.error('Update setting error:', err);
     res.status(500).json({ error: '更新设置失败' });
+  }
+});
+
+// ==================== Invoice Management ====================
+
+// GET /api/admin/invoices - 发票申请列表
+router.get('/invoices', requireAdmin, async (req, res) => {
+  const { status, search, page = 1, limit = 50 } = req.query;
+  const pageNum = parseInt(page);
+  let limitNum = parseInt(limit);
+  if (limitNum > 200) limitNum = 200;
+
+  try {
+    let whereClause = '1=1';
+    const params = [];
+
+    if (status && status !== 'all') {
+      whereClause += ' AND i.status = ?';
+      params.push(status);
+    }
+    if (search) {
+      whereClause += ' AND (i.order_no LIKE ? OR i.title LIKE ? OR i.email LIKE ?)';
+      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+    }
+
+    const [countRows] = await pool.query(
+      `SELECT COUNT(*) as cnt FROM invoice_requests i WHERE ${whereClause}`,
+      params
+    );
+    const total = countRows[0].cnt;
+
+    const [invoices] = await pool.query(
+      `SELECT i.id, i.order_no, i.invoice_type, i.title, i.tax_number, i.email,
+              i.amount, i.status, i.invoice_url, i.remark, i.created_at, i.issued_at,
+              o.plan, o.channel
+       FROM invoice_requests i
+       LEFT JOIN orders o ON i.order_no = o.order_no
+       WHERE ${whereClause}
+       ORDER BY i.created_at DESC LIMIT ? OFFSET ?`,
+      [...params, limitNum, (pageNum - 1) * limitNum]
+    );
+
+    res.json({
+      items: invoices.map(inv => ({
+        id: inv.id,
+        orderNo: inv.order_no,
+        invoiceType: inv.invoice_type,
+        title: inv.title,
+        taxNumber: inv.tax_number,
+        email: inv.email,
+        amount: parseFloat(inv.amount || 0).toFixed(2),
+        status: inv.status,
+        invoiceUrl: inv.invoice_url,
+        remark: inv.remark,
+        createdAt: inv.created_at,
+        issuedAt: inv.issued_at,
+        plan: inv.plan,
+        channel: inv.channel,
+      })),
+      total,
+      page: pageNum,
+      limit: limitNum,
+    });
+  } catch (err) {
+    console.error('List invoices error:', err);
+    res.status(500).json({ error: '获取发票列表失败' });
+  }
+});
+
+// GET /api/admin/invoices/:id - 发票详情
+router.get('/invoices/:id', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+
+  try {
+    const [rows] = await pool.query(
+      `SELECT i.*, o.plan, o.channel, o.price as order_price
+       FROM invoice_requests i
+       LEFT JOIN orders o ON i.order_no = o.order_no
+       WHERE i.id = ?`,
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: '发票申请不存在' });
+    }
+
+    const inv = rows[0];
+    res.json({
+      id: inv.id,
+      orderNo: inv.order_no,
+      invoiceType: inv.invoice_type,
+      title: inv.title,
+      taxNumber: inv.tax_number,
+      email: inv.email,
+      amount: parseFloat(inv.amount || 0).toFixed(2),
+      status: inv.status,
+      invoiceUrl: inv.invoice_url,
+      remark: inv.remark,
+      createdAt: inv.created_at,
+      issuedAt: inv.issued_at,
+      plan: inv.plan,
+      channel: inv.channel,
+    });
+  } catch (err) {
+    console.error('Get invoice error:', err);
+    res.status(500).json({ error: '获取发票详情失败' });
+  }
+});
+
+// POST /api/admin/invoices/:id/issue - 标记发票已开具
+router.post('/invoices/:id/issue', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { invoiceUrl, remark } = req.body;
+
+  if (!invoiceUrl) {
+    return res.status(400).json({ error: '请提供发票下载链接' });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, order_no, title, email, amount, status FROM invoice_requests WHERE id = ?',
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: '发票申请不存在' });
+    }
+
+    const inv = rows[0];
+    if (inv.status === 'issued') {
+      return res.status(400).json({ error: '该发票已开具' });
+    }
+
+    await pool.query(
+      'UPDATE invoice_requests SET status = ?, invoice_url = ?, remark = ?, issued_at = ? WHERE id = ?',
+      ['issued', invoiceUrl, remark || null, new Date(), id]
+    );
+
+    await auditLog('invoice_issued', req, `开具发票 #${id} 订单 ${inv.order_no}`);
+
+    // 发送邮件通知用户
+    const mailResult = await sendInvoiceIssuedEmail(inv.email, {
+      title: inv.title,
+      orderNo: inv.order_no,
+      amount: inv.amount,
+      invoiceUrl,
+    });
+
+    res.json({
+      success: true,
+      message: '发票已标记为已开具',
+      emailSent: mailResult.success,
+      emailError: mailResult.success ? undefined : mailResult.error,
+    });
+  } catch (err) {
+    console.error('Issue invoice error:', err);
+    res.status(500).json({ error: '操作失败' });
+  }
+});
+
+// POST /api/admin/invoices/:id/reject - 拒绝发票申请
+router.post('/invoices/:id/reject', requireAdmin, async (req, res) => {
+  const { id } = req.params;
+  const { remark } = req.body;
+
+  if (!remark) {
+    return res.status(400).json({ error: '请填写拒绝原因' });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT id, order_no, status FROM invoice_requests WHERE id = ?',
+      [id]
+    );
+
+    if (rows.length === 0) {
+      return res.status(404).json({ error: '发票申请不存在' });
+    }
+
+    if (rows[0].status === 'issued') {
+      return res.status(400).json({ error: '已开具的发票不能拒绝' });
+    }
+
+    await pool.query(
+      'UPDATE invoice_requests SET status = ?, remark = ? WHERE id = ?',
+      ['rejected', remark, id]
+    );
+
+    await auditLog('invoice_rejected', req, `拒绝发票申请 #${id} 订单 ${rows[0].order_no}`);
+
+    res.json({ success: true, message: '发票申请已拒绝' });
+  } catch (err) {
+    console.error('Reject invoice error:', err);
+    res.status(500).json({ error: '操作失败' });
   }
 });
 

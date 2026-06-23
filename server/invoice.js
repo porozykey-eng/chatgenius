@@ -1,0 +1,134 @@
+// ChatGenius - 发票申请 API（用户端）
+const express = require('express');
+const rateLimit = require('express-rate-limit');
+const { pool } = require('./config');
+
+const router = express.Router();
+
+// 限流：每分钟 5 次
+const invoiceLimiter = rateLimit({
+  windowMs: 60 * 1000,
+  max: 5,
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: '请求过于频繁，请稍后再试' },
+});
+
+// 邮箱格式校验
+function isValidEmail(email) {
+  return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
+}
+
+// 纳税人识别号校验（18位统一社会信用代码或15位/20位税号）
+function isValidTaxNumber(tax) {
+  return /^[A-Z0-9]{15,20}$/.test(tax);
+}
+
+// POST /api/invoice/submit - 提交发票申请
+router.post('/submit', invoiceLimiter, async (req, res) => {
+  const { orderNo, invoiceType, title, taxNumber, email } = req.body;
+
+  // 参数校验
+  if (!orderNo || !invoiceType || !title || !email) {
+    return res.status(400).json({ success: false, error: '请填写完整信息' });
+  }
+
+  if (!['personal', 'company'].includes(invoiceType)) {
+    return res.status(400).json({ success: false, error: '发票类型无效' });
+  }
+
+  if (title.length > 200) {
+    return res.status(400).json({ success: false, error: '发票抬头过长' });
+  }
+
+  if (!isValidEmail(email)) {
+    return res.status(400).json({ success: false, error: '邮箱格式不正确' });
+  }
+
+  // 企业发票必须有税号
+  if (invoiceType === 'company') {
+    if (!taxNumber) {
+      return res.status(400).json({ success: false, error: '企业发票必须填写纳税人识别号' });
+    }
+    if (!isValidTaxNumber(taxNumber)) {
+      return res.status(400).json({ success: false, error: '纳税人识别号格式不正确（15-20位字母或数字）' });
+    }
+  }
+
+  try {
+    // 验证订单存在且已完成
+    const [orders] = await pool.query(
+      'SELECT order_no, price, status FROM orders WHERE order_no = ?',
+      [orderNo]
+    );
+
+    if (orders.length === 0) {
+      return res.status(404).json({ success: false, error: '订单不存在' });
+    }
+
+    const order = orders[0];
+    if (order.status !== 'completed') {
+      return res.status(400).json({ success: false, error: '订单未完成，无法申请发票' });
+    }
+
+    // 检查是否已有发票申请（pending 或 issued 状态不可重复申请）
+    const [existing] = await pool.query(
+      'SELECT id, status FROM invoice_requests WHERE order_no = ? AND status IN (?, ?)',
+      [orderNo, 'pending', 'issued']
+    );
+
+    if (existing.length > 0) {
+      return res.status(409).json({
+        success: false,
+        error: '该订单已提交过发票申请，请勿重复提交',
+      });
+    }
+
+    // 创建发票申请
+    await pool.query(
+      `INSERT INTO invoice_requests (order_no, invoice_type, title, tax_number, email, amount, status)
+       VALUES (?, ?, ?, ?, ?, ?, 'pending')`,
+      [orderNo, invoiceType, title, taxNumber || null, email, order.price]
+    );
+
+    console.log(`✅ 发票申请已创建: order=${orderNo}, type=${invoiceType}, email=${email}`);
+
+    res.json({
+      success: true,
+      message: '发票申请已提交，我们将在 1-3 个工作日内处理',
+    });
+  } catch (err) {
+    console.error('Submit invoice error:', err);
+    res.status(500).json({ success: false, error: '提交失败，请稍后重试' });
+  }
+});
+
+// GET /api/invoice/status/:orderNo - 查询订单的发票状态
+router.get('/status/:orderNo', async (req, res) => {
+  const { orderNo } = req.params;
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT status, invoice_url, created_at, issued_at FROM invoice_requests WHERE order_no = ? ORDER BY created_at DESC LIMIT 1',
+      [orderNo]
+    );
+
+    if (rows.length === 0) {
+      return res.json({ exists: false });
+    }
+
+    const inv = rows[0];
+    res.json({
+      exists: true,
+      status: inv.status,
+      invoiceUrl: inv.invoice_url,
+      createdAt: inv.created_at,
+      issuedAt: inv.issued_at,
+    });
+  } catch (err) {
+    console.error('Get invoice status error:', err);
+    res.status(500).json({ exists: false, error: '查询失败' });
+  }
+});
+
+module.exports = router;

@@ -10,6 +10,7 @@ const alipayRouter = require('./alipay');
 const wechatRouter = require('./wechat');
 const licenseRouter = require('./license');
 const adminRouter = require('./admin');
+const invoiceRouter = require('./invoice');
 
 const app = express();
 const PORT = process.env.PORT || 3010;
@@ -92,10 +93,19 @@ const adminLimiter = rateLimit({
   message: { error: '管理操作过于频繁，请稍后再试' }
 });
 
+const invoiceLimiter = rateLimit({
+  windowMs: 60 * 1000, // 1 minute
+  max: 10, // 10 requests per minute
+  standardHeaders: true,
+  legacyHeaders: false,
+  message: { error: '请求过于频繁，请稍后再试' }
+});
+
 // Routes with rate limiting
 app.use('/api/alipay', alipayLimiter, alipayRouter);
 app.use('/api/wechat', wechatLimiter, wechatRouter);
 app.use('/api/license', licenseLimiter, licenseRouter);
+app.use('/api/invoice', invoiceLimiter, invoiceRouter);
 
 // Admin dashboard (route obfuscated via ADMIN_ROUTE env var)
 const adminRoute = process.env.ADMIN_ROUTE || '/admin-cg7x9k';

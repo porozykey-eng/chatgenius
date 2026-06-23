@@ -704,6 +704,7 @@
           <button class="tab active" data-tab="dashboard">概览</button>
           <button class="tab" data-tab="codes">激活码</button>
           <button class="tab" data-tab="orders">订单</button>
+          <button class="tab" data-tab="invoices">发票</button>
           <button class="tab" data-tab="licenses">许可证</button>
           <button class="tab" data-tab="audit">审计日志</button>
           <button class="tab" data-tab="settings">系统设置</button>
@@ -866,6 +867,46 @@
             </table>
           </div>
           <div class="pagination" id="ordersPagination"></div>
+        </div>
+      </div>
+
+      <!-- Invoices Tab -->
+      <div id="invoicesTab" class="tab-content">
+        <div class="toolbar">
+          <div class="toolbar-left">
+            <select id="invoiceStatusFilter">
+              <option value="all">全部状态</option>
+              <option value="pending">待处理</option>
+              <option value="issued">已开具</option>
+              <option value="rejected">已拒绝</option>
+            </select>
+            <input type="text" id="invoiceSearch" placeholder="订单号/抬头/邮箱">
+            <button class="btn btn-secondary" id="searchInvoicesBtn">查询</button>
+            <button class="btn btn-secondary" id="resetInvoicesBtn">重置</button>
+          </div>
+        </div>
+        <div class="card">
+          <div class="table-wrapper">
+            <table>
+              <thead>
+                <tr>
+                  <th>订单号</th>
+                  <th>类型</th>
+                  <th>抬头</th>
+                  <th>税号</th>
+                  <th>邮箱</th>
+                  <th>金额</th>
+                  <th>状态</th>
+                  <th>申请时间</th>
+                  <th>操作</th>
+                </tr>
+              </thead>
+              <tbody id="invoicesTableBody">
+                <tr><td colspan="9" class="loading">加载中</td></tr>
+              </tbody>
+            </table>
+          </div>
+          <div class="pagination" id="invoicesPagination"></div>
         </div>
       </div>
 
@@ -1168,6 +1209,29 @@
     </div>
   </div>
 
+  <!-- Invoice Process Modal -->
+  <div class="modal-overlay" id="invoiceProcessModal">
+    <div class="modal">
+      <h3 class="modal-title" id="invoiceModalTitle">处理发票申请</h3>
+      <div class="modal-body">
+        <div class="detail-list" id="invoiceDetailList"></div>
+        <div class="form-group" id="invoiceUrlGroup">
+          <label>发票下载链接 *</label>
+          <input type="text" id="invoiceUrlInput" placeholder="https://...（PDF 发票链接）">
+        </div>
+        <div class="form-group" id="invoiceRemarkGroup">
+          <label>备注</label>
+          <textarea id="invoiceRemarkInput" placeholder="可选备注信息"></textarea>
+        </div>
+      </div>
+      <div class="modal-footer" id="invoiceModalFooter">
+        <button class="btn btn-secondary" onclick="closeModal('invoiceProcessModal')">取消</button>
+        <button class="btn btn-danger" id="rejectInvoiceBtn">拒绝</button>
+        <button class="btn btn-primary" id="issueInvoiceBtn">开具发票</button>
+      </div>
+    </div>
+  </div>
+
   <!-- Toast -->
   <div class="toast" id="toast"></div>
 
@@ -1176,7 +1240,7 @@
     let token = localStorage.getItem('admin_token');
     let refreshToken = localStorage.getItem('admin_refresh_token');
     let currentTab = 'dashboard';
-    let codesPage = 1, ordersPage = 1, licensesPage = 1, auditPage = 1;
+    let codesPage = 1, ordersPage = 1, licensesPage = 1, auditPage = 1, invoicesPage = 1;
     let currentLicenseId = null;
     let currentOrderNo = null;
     let revenueChart = null;
@@ -1338,6 +1402,7 @@
         if (tabName === 'dashboard') loadDashboard();
         else if (tabName === 'codes') loadCodes();
         else if (tabName === 'orders') loadOrders();
+        else if (tabName === 'invoices') loadInvoices();
         else if (tabName === 'licenses') loadLicenses();
         else if (tabName === 'audit') loadAuditLogs();
         else if (tabName === 'settings') loadSettings();
@@ -1383,6 +1448,7 @@
     function goPage(p) {
       if (currentTab === 'codes') { codesPage = p; loadCodes(); }
       else if (currentTab === 'orders') { ordersPage = p; loadOrders(); }
+      else if (currentTab === 'invoices') { invoicesPage = p; loadInvoices(); }
       else if (currentTab === 'licenses') { licensesPage = p; loadLicenses(); }
       else if (currentTab === 'audit') { auditPage = p; loadAuditLogs(); }
     }
@@ -1808,6 +1874,171 @@
         showToast('网络错误', 'error');
       }
     }
+
+    // ==================== Invoices ====================
+    let currentInvoiceId = null;
+
+    async function loadInvoices() {
+      const tbody = document.getElementById('invoicesTableBody');
+      tbody.innerHTML = '<tr><td colspan="9" class="loading">加载中</td></tr>';
+
+      const status = document.getElementById('invoiceStatusFilter').value;
+      const search = document.getElementById('invoiceSearch').value;
+
+      try {
+        let params = `page=${invoicesPage}&limit=50`;
+        if (status && status !== 'all') params += `&status=${status}`;
+        if (search) params += `&search=${encodeURIComponent(search)}`;
+
+        const data = await api('/invoices?' + params);
+        if (!data.ok) {
+          tbody.innerHTML = `<tr><td colspan="9" class="empty">${data.error || '加载失败'}</td></tr>`;
+          return;
+        }
+
+        const result = await data.json();
+        if (!result.items || result.items.length === 0) {
+          tbody.innerHTML = '<tr><td colspan="9" class="empty">暂无发票申请</td></tr>';
+          document.getElementById('invoicesPagination').innerHTML = '';
+          return;
+        }
+
+        tbody.innerHTML = result.items.map(inv => `
+          <tr>
+            <td>${escapeHtml(inv.orderNo)}</td>
+            <td>${inv.invoiceType === 'company' ? '<span class="badge badge-info">企业</span>' : '<span class="badge badge-gray">个人</span>'}</td>
+            <td>${escapeHtml(inv.title)}</td>
+            <td>${escapeHtml(inv.taxNumber) || '-'}</td>
+            <td>${escapeHtml(inv.email)}</td>
+            <td>¥${inv.amount}</td>
+            <td>${invoiceStatusBadge(inv.status)}</td>
+            <td>${formatDate(inv.createdAt)}</td>
+            <td>
+              <button class="btn btn-sm btn-secondary" onclick="showInvoiceProcess(${inv.id})">处理</button>
+            </td>
+          </tr>
+        `).join('');
+
+        document.getElementById('invoicesPagination').innerHTML = paginationHtml(result.total, result.page, result.limit);
+      } catch (err) {
+        tbody.innerHTML = '<tr><td colspan="9" class="empty">加载失败</td></tr>';
+      }
+    }
+
+    function invoiceStatusBadge(status) {
+      const map = {
+        pending: ['待处理', 'warning'],
+        issued: ['已开具', 'success'],
+        rejected: ['已拒绝', 'danger']
+      };
+      const [label, cls] = map[status] || [status, 'gray'];
+      return `<span class="badge badge-${cls}">${label}</span>`;
+    }
+
+    async function showInvoiceProcess(id) {
+      currentInvoiceId = id;
+      try {
+        const res = await api('/invoices/' + id);
+        if (!res.ok) {
+          showToast('获取详情失败', 'error');
+          return;
+        }
+        const inv = await res.json();
+        const detailList = document.getElementById('invoiceDetailList');
+        detailList.innerHTML = `
+          <dt>订单号</dt><dd>${escapeHtml(inv.orderNo)}</dd>
+          <dt>类型</dt><dd>${inv.invoiceType === 'company' ? '企业' : '个人'}</dd>
+          <dt>抬头</dt><dd>${escapeHtml(inv.title)}</dd>
+          <dt>税号</dt><dd>${escapeHtml(inv.taxNumber) || '-'}</dd>
+          <dt>邮箱</dt><dd>${escapeHtml(inv.email)}</dd>
+          <dt>金额</dt><dd>¥${inv.amount}</dd>
+          <dt>状态</dt><dd>${invoiceStatusBadge(inv.status)}</dd>
+          <dt>申请时间</dt><dd>${formatDate(inv.createdAt)}</dd>
+          ${inv.issuedAt ? `<dt>开具时间</dt><dd>${formatDate(inv.issuedAt)}</dd>` : ''}
+          ${inv.invoiceUrl ? `<dt>发票链接</dt><dd><a href="${escapeHtml(inv.invoiceUrl)}" target="_blank" style="color: var(--primary);">查看</a></dd>` : ''}
+          ${inv.remark ? `<dt>备注</dt><dd>${escapeHtml(inv.remark)}</dd>` : ''}
+        `;
+
+        document.getElementById('invoiceUrlInput').value = inv.invoiceUrl || '';
+        document.getElementById('invoiceRemarkInput').value = inv.remark || '';
+
+        const isPending = inv.status === 'pending';
+        const isRejected = inv.status === 'rejected';
+        document.getElementById('invoiceUrlGroup').style.display = (isPending || isRejected) ? '' : 'none';
+        document.getElementById('issueInvoiceBtn').style.display = (isPending || isRejected) ? '' : 'none';
+        document.getElementById('rejectInvoiceBtn').style.display = isPending ? '' : 'none';
+
+        document.getElementById('invoiceProcessModal').classList.add('active');
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    }
+
+    document.getElementById('issueInvoiceBtn').addEventListener('click', async () => {
+      const invoiceUrl = document.getElementById('invoiceUrlInput').value.trim();
+      const remark = document.getElementById('invoiceRemarkInput').value.trim();
+
+      if (!invoiceUrl) {
+        showToast('请填写发票下载链接', 'error');
+        return;
+      }
+
+      try {
+        const res = await api('/invoices/' + currentInvoiceId + '/issue', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ invoiceUrl, remark })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast(data.emailSent ? '发票已开具，邮件已发送' : '发票已开具（邮件发送失败，请检查 SMTP 配置）', 'success');
+          closeModal('invoiceProcessModal');
+          loadInvoices();
+        } else {
+          showToast(data.error || '操作失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    });
+
+    document.getElementById('rejectInvoiceBtn').addEventListener('click', async () => {
+      const remark = document.getElementById('invoiceRemarkInput').value.trim();
+      if (!remark) {
+        showToast('拒绝时必须填写备注原因', 'error');
+        return;
+      }
+
+      try {
+        const res = await api('/invoices/' + currentInvoiceId + '/reject', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ remark })
+        });
+        const data = await res.json();
+        if (data.success) {
+          showToast('发票申请已拒绝', 'success');
+          closeModal('invoiceProcessModal');
+          loadInvoices();
+        } else {
+          showToast(data.error || '操作失败', 'error');
+        }
+      } catch (err) {
+        showToast('网络错误', 'error');
+      }
+    });
+
+    document.getElementById('searchInvoicesBtn').addEventListener('click', () => {
+      invoicesPage = 1;
+      loadInvoices();
+    });
+
+    document.getElementById('resetInvoicesBtn').addEventListener('click', () => {
+      document.getElementById('invoiceStatusFilter').value = 'all';
+      document.getElementById('invoiceSearch').value = '';
+      invoicesPage = 1;
+      loadInvoices();
+    });
 
     // Licenses
     async function loadLicenses() {
