@@ -193,7 +193,22 @@ const I18N = {
     freeTierQuota: 'Today remaining {n} replies',
     freeTierUpgrade: 'Upgrade Pro',
     importFileTooLarge: 'File too large (max 1MB)',
-    importInvalidData: 'Invalid data format'
+    importInvalidData: 'Invalid data format',
+    onboardingTitle: 'Welcome to ChatGenius',
+    onboardingStep1Desc: 'Choose a persona template to get started',
+    onboardingStep2Desc: 'Configure your AI API (can be changed later)',
+    onboardingSkip: 'Skip',
+    onboardingNext: 'Next',
+    onboardingStart: 'Get Started',
+    onboardingDone: 'All Set!',
+    onboardingDoneDesc: "You've completed the basic setup. Ready to use ChatGenius AI.",
+    apiGuideText: 'Configure your API to enable AI replies',
+    apiGuideBtn: 'Configure Now',
+    emptyPersonas: 'No custom personas yet',
+    emptyPersonasCta1: 'Create from Template',
+    emptyPersonasCta2: 'Add Manually',
+    emptyFaq: 'No knowledge base entries',
+    emptyFaqCta: 'Add First Entry'
   },
   zh: {
     title: 'ChatGenius AI 设置',
@@ -333,7 +348,22 @@ const I18N = {
     freeTierQuota: '今日剩余 {n} 次回复机会',
     freeTierUpgrade: '升级 Pro',
     importFileTooLarge: '文件过大（最大 1MB）',
-    importInvalidData: '数据格式无效'
+    importInvalidData: '数据格式无效',
+    onboardingTitle: '欢迎使用 ChatGenius',
+    onboardingStep1Desc: '选择一个角色模板，快速开始（可稍后自定义）',
+    onboardingStep2Desc: '配置你的 AI API（可稍后在设置中修改）',
+    onboardingSkip: '跳过',
+    onboardingNext: '下一步',
+    onboardingStart: '开始使用',
+    onboardingDone: '一切就绪！',
+    onboardingDoneDesc: '你已完成基础配置，现在可以开始使用 ChatGenius AI 了。',
+    apiGuideText: '建议先配置 API 以启用 AI 回复',
+    apiGuideBtn: '去配置',
+    emptyPersonas: '还没有自定义角色',
+    emptyPersonasCta1: '从模板创建',
+    emptyPersonasCta2: '手动添加',
+    emptyFaq: '还没有知识库条目',
+    emptyFaqCta: '添加第一条'
   }
 };
 
@@ -369,6 +399,8 @@ document.addEventListener('DOMContentLoaded', () => {
   let selectedFaqIndices = new Set();
   let deletedFaqUndo = null; // { items: [], timer }
   let deletedPersonaUndo = null; // { item, index, wasActive, timer }
+  let modelsConfig = null; // Loaded from models-config.json
+  let onboardingCurrentStep = 1;
 
   // ---- XSS Protection ----
   function escapeHtml(str) {
@@ -400,6 +432,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiProvider = document.getElementById('apiProvider')?.value || 'openai';
     const apiKey = document.getElementById('apiKey')?.value || '';
 
+    // API Key and Provider go to local storage (migrated from sync)
+    chrome.storage.local.set({ apiProvider, apiKey }, () => {
+      if (chrome.runtime.lastError) {
+        console.error('Local save failed:', chrome.runtime.lastError);
+      }
+    });
+
+    // Other settings remain in sync storage
     chrome.storage.sync.set({
       personas: personas,
       activePersonaId,
@@ -407,8 +447,6 @@ document.addEventListener('DOMContentLoaded', () => {
       replyLength,
       faqData: faqData,
       btnTheme,
-      apiProvider,
-      apiKey,
       lang: currentLang
     }, () => {
       if (chrome.runtime.lastError) {
@@ -418,6 +456,9 @@ document.addEventListener('DOMContentLoaded', () => {
       }
       updateSaveStatus('saved');
     });
+
+    // Re-check API guide bar visibility after save
+    checkApiGuideBar();
   }
 
   function updateSaveStatus(status) {
@@ -444,17 +485,23 @@ document.addEventListener('DOMContentLoaded', () => {
   const tabBtns = document.querySelectorAll('.tab-btn');
   const tabContents = document.querySelectorAll('.tab-content');
 
+  function switchTab(targetTab) {
+    if (!targetTab) return;
+    tabBtns.forEach(b => {
+      b.classList.remove('active');
+      if (b.getAttribute('data-tab') === targetTab) b.classList.add('active');
+    });
+    tabContents.forEach(content => {
+      content.classList.remove('active');
+      if (content.id === 'tab-' + targetTab) {
+        content.classList.add('active');
+      }
+    });
+  }
+
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
-      const targetTab = btn.getAttribute('data-tab');
-      tabBtns.forEach(b => b.classList.remove('active'));
-      btn.classList.add('active');
-      tabContents.forEach(content => {
-        content.classList.remove('active');
-        if (content.id === 'tab-' + targetTab) {
-          content.classList.add('active');
-        }
-      });
+      switchTab(btn.getAttribute('data-tab'));
     });
   });
 
@@ -590,11 +637,32 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (personas.length === 0) {
       const empty = document.createElement('div');
-      empty.style.cssText = 'padding:40px 24px;text-align:center;color:var(--text-tertiary);font-size:14px;border:1px dashed var(--border-default);border-radius:var(--radius-md);';
-      empty.innerHTML = '<div style="font-size:32px;margin-bottom:8px;opacity:0.5;">🤖</div>' +
-        '<div style="margin-bottom:4px;color:var(--text-secondary);font-weight:500;">' +
-        escapeHtml(I18N[currentLang].noMatchingPersonas || 'No personas yet') + '</div>' +
-        '<div style="font-size:12px;">' + escapeHtml(I18N[currentLang].personaHelp || 'Click "Add Persona" to create one.') + '</div>';
+      empty.className = 'empty-state';
+      empty.innerHTML = '<div class="empty-state-icon">🤖</div>' +
+        '<div class="empty-state-title">' +
+        escapeHtml(I18N[currentLang].emptyPersonas || 'No custom personas yet') + '</div>' +
+        '<div class="empty-state-desc">' + escapeHtml(I18N[currentLang].personaHelp || 'Click "Add Persona" to create one.') + '</div>';
+      const ctaRow = document.createElement('div');
+      ctaRow.className = 'empty-state-cta';
+
+      const cta1 = document.createElement('button');
+      cta1.className = 'btn btn-primary';
+      cta1.textContent = I18N[currentLang].emptyPersonasCta1 || 'Create from Template';
+      cta1.addEventListener('click', () => {
+        renderTemplateLibrary();
+        if (templateModal) templateModal.classList.add('show');
+      });
+
+      const cta2 = document.createElement('button');
+      cta2.className = 'btn btn-secondary';
+      cta2.textContent = I18N[currentLang].emptyPersonasCta2 || 'Add Manually';
+      cta2.addEventListener('click', () => {
+        if (addPersonaBtn) addPersonaBtn.click();
+      });
+
+      ctaRow.appendChild(cta1);
+      ctaRow.appendChild(cta2);
+      empty.appendChild(ctaRow);
       personaList.appendChild(empty);
       return;
     }
@@ -743,13 +811,15 @@ document.addEventListener('DOMContentLoaded', () => {
       activePersonaId = newId;
       renderPersonas();
       scheduleSave();
+      // Focus the name input of the newly created (last) card
       setTimeout(() => {
         if (!personaList) return;
         const cards = personaList.querySelectorAll('.persona-card');
-        cards.forEach(c => {
-          const nameInput = c.querySelector('.persona-name-input');
-          if (nameInput && !nameInput.value) nameInput.focus();
-        });
+        const lastCard = cards[cards.length - 1];
+        if (lastCard) {
+          const nameInput = lastCard.querySelector('.persona-name-input');
+          if (nameInput) nameInput.focus();
+        }
       }, 50);
     });
   }
@@ -947,15 +1017,27 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (filteredFaq.length === 0) {
       const noResults = document.createElement('div');
-      noResults.style.cssText = 'padding:40px 24px;text-align:center;color:var(--text-tertiary);font-size:14px;border:1px dashed var(--border-default);border-radius:var(--radius-md);';
+      noResults.className = 'empty-state';
       if (faqData.length === 0) {
-        noResults.innerHTML = '<div style="font-size:32px;margin-bottom:8px;opacity:0.5;">📚</div>' +
-          '<div style="margin-bottom:4px;color:var(--text-secondary);font-weight:500;">' +
-          escapeHtml(I18N[currentLang].faq || 'Knowledge Base') + '</div>' +
-          '<div style="font-size:12px;">' + escapeHtml(I18N[currentLang].faqHelp || 'Click "Add Q&A" to create one.') + '</div>';
+        noResults.innerHTML = '<div class="empty-state-icon">📚</div>' +
+          '<div class="empty-state-title">' +
+          escapeHtml(I18N[currentLang].emptyFaq || 'No knowledge base entries') + '</div>' +
+          '<div class="empty-state-desc">' + escapeHtml(I18N[currentLang].faqHelp || 'Click "Add Q&A" to create one.') + '</div>';
+        const ctaRow = document.createElement('div');
+        ctaRow.className = 'empty-state-cta';
+
+        const cta = document.createElement('button');
+        cta.className = 'btn btn-primary';
+        cta.textContent = I18N[currentLang].emptyFaqCta || 'Add First Entry';
+        cta.addEventListener('click', () => {
+          if (addFaqBtn) addFaqBtn.click();
+        });
+
+        ctaRow.appendChild(cta);
+        noResults.appendChild(ctaRow);
       } else {
-        noResults.innerHTML = '<div style="font-size:28px;margin-bottom:8px;opacity:0.5;">🔍</div>' +
-          '<div>' + escapeHtml(I18N[currentLang].noMatchingFaq || 'No matching Q&A found') + '</div>';
+        noResults.innerHTML = '<div class="empty-state-icon">🔍</div>' +
+          '<div class="empty-state-title">' + escapeHtml(I18N[currentLang].noMatchingFaq || 'No matching Q&A found') + '</div>';
       }
       faqList.appendChild(noResults);
       updateBatchToolbar();
@@ -1203,8 +1285,77 @@ document.addEventListener('DOMContentLoaded', () => {
   const apiStatusIndicator = document.getElementById('apiStatusIndicator');
   const apiStatusText = document.getElementById('apiStatusText');
 
+  // Load API providers from models-config.json dynamically
+  async function loadApiProviders(targetSelect) {
+    const select = targetSelect || apiProvider;
+    if (!select) return;
+    try {
+      let resp;
+      if (chrome.runtime && chrome.runtime.getURL) {
+        resp = await fetch(chrome.runtime.getURL('models-config.json'));
+      } else {
+        resp = await fetch('models-config.json');
+      }
+      const config = await resp.json();
+      modelsConfig = config;
+
+      const currentValue = select.value;
+      const internationalIds = ['openai', 'anthropic', 'google', 'openrouter', 'custom'];
+      select.innerHTML = '';
+
+      const intlGroup = document.createElement('optgroup');
+      intlGroup.label = currentLang === 'zh' ? '国际厂商' : 'International';
+      const domesticGroup = document.createElement('optgroup');
+      domesticGroup.label = currentLang === 'zh' ? '国内厂商' : 'Domestic';
+
+      (config.providers || []).forEach(provider => {
+        const opt = document.createElement('option');
+        opt.value = provider.id;
+        opt.textContent = provider.name;
+        if (internationalIds.includes(provider.id)) {
+          intlGroup.appendChild(opt);
+        } else {
+          domesticGroup.appendChild(opt);
+        }
+      });
+
+      // Domestic first (primary audience), then international
+      select.appendChild(domesticGroup);
+      select.appendChild(intlGroup);
+
+      if (currentValue) {
+        select.value = currentValue;
+      }
+      updateApiProviderUI(select.value);
+    } catch (err) {
+      console.error('Failed to load models config:', err);
+    }
+  }
+
+  // Update API Key placeholder and "Get Key" link based on selected provider
+  function updateApiProviderUI(providerId) {
+    if (!modelsConfig) return;
+    const provider = (modelsConfig.providers || []).find(p => p.id === providerId);
+    if (!provider) return;
+    if (apiKeyInput) {
+      apiKeyInput.placeholder = (currentLang === 'zh' ? '请输入 ' : 'Enter ') + provider.name + ' API Key';
+    }
+    const getKeyLink = document.getElementById('getKeyLink');
+    if (getKeyLink) {
+      if (provider.getKey) {
+        getKeyLink.href = provider.getKey;
+        getKeyLink.style.display = '';
+      } else {
+        getKeyLink.style.display = 'none';
+      }
+    }
+  }
+
   if (apiProvider) {
-    apiProvider.addEventListener('change', () => scheduleSave());
+    apiProvider.addEventListener('change', () => {
+      updateApiProviderUI(apiProvider.value);
+      scheduleSave();
+    });
   }
   if (apiKeyInput) {
     apiKeyInput.addEventListener('input', () => scheduleSave());
@@ -1240,16 +1391,17 @@ document.addEventListener('DOMContentLoaded', () => {
 
       try {
         let testUrl, headers, body;
+        const providerConfig = modelsConfig?.providers?.find(p => p.id === provider);
         if (provider === 'anthropic') {
-          testUrl = 'https://api.anthropic.com/v1/messages';
+          testUrl = (providerConfig?.url) || 'https://api.anthropic.com/v1/messages';
           headers = { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' };
           body = JSON.stringify({ model: 'claude-3-haiku-20240307', max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] });
         } else if (provider === 'google') {
-          testUrl = 'https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + key;
+          testUrl = (providerConfig?.url) || ('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + key);
           headers = { 'Content-Type': 'application/json' };
           body = JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }] });
         } else {
-          testUrl = 'https://api.openai.com/v1/chat/completions';
+          testUrl = (providerConfig?.url) || 'https://api.openai.com/v1/chat/completions';
           headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };
           body = JSON.stringify({ model: 'gpt-3.5-turbo', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 10 });
         }
@@ -1259,13 +1411,20 @@ document.addEventListener('DOMContentLoaded', () => {
           if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator connected'; }
           if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
           showToast(I18N[currentLang].apiTestSuccess || 'Connection successful!');
-          // Save connection status
           chrome.storage.sync.set({ connectionValid: true }, () => {
             if (chrome.runtime.lastError) console.error('Storage error:', chrome.runtime.lastError);
           });
         } else {
           const errData = await response.json().catch(() => ({}));
-          const errMsg = errData.error?.message || errData.message || 'HTTP ' + response.status;
+          const rawErr = errData.error?.message || errData.message || 'HTTP ' + response.status;
+          let errMsg;
+          if (response.status === 401 || response.status === 403) {
+            errMsg = currentLang === 'zh' ? 'API Key 无效或权限不足' : 'API Key invalid or insufficient permissions';
+          } else if (response.status === 429) {
+            errMsg = currentLang === 'zh' ? '请求频率过高或额度不足' : 'Rate limit exceeded or quota insufficient';
+          } else {
+            errMsg = rawErr;
+          }
           if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
           if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
           showToast((I18N[currentLang].apiTestFail || 'Connection failed: ') + errMsg, true);
@@ -1274,9 +1433,10 @@ document.addEventListener('DOMContentLoaded', () => {
           });
         }
       } catch (error) {
+        const errMsg = currentLang === 'zh' ? '网络连接失败，请检查网络' : 'Network connection failed, please check your network';
         if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
-        showToast((I18N[currentLang].apiTestFail || 'Connection failed: ') + error.message, true);
+        showToast((I18N[currentLang].apiTestFail || 'Connection failed: ') + errMsg, true);
         chrome.storage.sync.set({ connectionValid: false }, () => {
           if (chrome.runtime.lastError) console.error('Storage error:', chrome.runtime.lastError);
         });
@@ -1367,6 +1527,18 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (upgradeModal) {
     upgradeModal.addEventListener('click', (e) => { if (e.target === upgradeModal) upgradeModal.classList.remove('show'); });
+  }
+
+  // Dead button fix: "I have an activation code" button
+  const useActivationCodeBtn = document.getElementById('useActivationCodeBtn') || document.getElementById('upgradeOptionCode');
+  if (useActivationCodeBtn) {
+    useActivationCodeBtn.addEventListener('click', () => {
+      if (upgradeModal) upgradeModal.classList.remove('show');
+      switchTab('account');
+      setTimeout(() => {
+        if (activationCodeInput) activationCodeInput.focus();
+      }, 100);
+    });
   }
 
   // Free tier notification
@@ -1570,71 +1742,333 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ---- Load Settings ----
-  chrome.storage.sync.get({
-    personas: [{ id: 'default', name: '默认角色 (Default)', prompt: '你是一个专业的AI助手。请根据用户的消息上下文进行专业、礼貌的回复。' }],
-    activePersonaId: 'default',
-    shortcut: 'Alt + 1',
-    tone: 'auto',
-    replyLength: 'auto',
-    faqData: [],
-    btnTheme: 'gradient',
-    lang: 'zh',
-    apiProvider: 'openai',
-    apiKey: '',
-    licenseType: 'free',
-    licenseCode: null,
-    activatedAt: null,
-    onboardingCompleted: false
-  }, (data) => {
-    if (chrome.runtime.lastError) {
-      console.error('Load settings error:', chrome.runtime.lastError);
-    }
-    currentLang = data.lang || 'zh';
-    applyI18n();
-
-    personas = data.personas || [];
-    activePersonaId = data.activePersonaId;
-    if (personas.length > 0 && !activePersonaId) activePersonaId = personas[0].id;
-    faqData = data.faqData || [];
-
-    // Set form values
-    const toneSelect = document.getElementById('tone');
-    const replyLengthSelect = document.getElementById('replyLength');
-    const btnThemeSelect = document.getElementById('btnTheme');
-    if (toneSelect) toneSelect.value = data.tone || 'auto';
-    if (replyLengthSelect) replyLengthSelect.value = data.replyLength || 'auto';
-    if (btnThemeSelect) btnThemeSelect.value = data.btnTheme || 'gradient';
-    if (apiProvider) apiProvider.value = data.apiProvider || 'openai';
-    if (apiKeyInput) apiKeyInput.value = data.apiKey || '';
-
-    // Add change listeners for auto-save
-    [toneSelect, replyLengthSelect, btnThemeSelect].forEach(el => {
-      if (el) el.addEventListener('change', () => scheduleSave());
+  // ---- API Key Storage Migration (sync → local) ----
+  function migrateApiKeyToLocal() {
+    chrome.storage.sync.get(['apiKey', 'apiProvider'], (syncData) => {
+      if (chrome.runtime.lastError) { console.error(chrome.runtime.lastError); return; }
+      chrome.storage.local.get(['apiKey', 'apiProvider'], (localData) => {
+        if (chrome.runtime.lastError) { console.error(chrome.runtime.lastError); return; }
+        if (syncData.apiKey && !localData.apiKey) {
+          const toMigrate = {};
+          if (syncData.apiKey) toMigrate.apiKey = syncData.apiKey;
+          if (syncData.apiProvider) toMigrate.apiProvider = syncData.apiProvider;
+          chrome.storage.local.set(toMigrate, () => {
+            chrome.storage.sync.remove('apiKey', () => {});
+          });
+        } else if (syncData.apiKey && localData.apiKey) {
+          // Local already has key, clean up sync
+          chrome.storage.sync.remove('apiKey', () => {});
+        }
+      });
     });
+  }
 
-    renderPersonas();
-    renderFaq();
-    updateLicenseDisplay(data.licenseType || 'free');
-
-    // Check existing license
-    if (data.licenseCode && data.licenseType && data.licenseType !== 'free') {
-      if (activationSuccess) activationSuccess.style.display = 'flex';
-      if (licenseTypeDisplay) {
-        const typeNames = { 'lifetime': I18N[currentLang].statProLifetime, 'year': I18N[currentLang].statProYear };
-        licenseTypeDisplay.textContent = typeNames[data.licenseType] || data.licenseType;
-      }
+  // ---- API Guide Bar ----
+  function checkApiGuideBar() {
+    const bar = document.getElementById('apiGuideBar');
+    if (!bar) return;
+    if (sessionStorage.getItem('apiGuideClosed') === 'true') {
+      bar.style.display = 'none';
+      return;
     }
+    chrome.storage.local.get(['apiKey'], (data) => {
+      if (chrome.runtime.lastError) return;
+      bar.style.display = data.apiKey ? 'none' : 'flex';
+    });
+  }
 
-    updateStats();
-    updateFreeTierNotification();
+  const apiGuideConfigBtn = document.getElementById('apiGuideConfigBtn');
+  if (apiGuideConfigBtn) {
+    apiGuideConfigBtn.addEventListener('click', () => {
+      switchTab('settings');
+      const apiPanel = document.getElementById('apiPanel');
+      if (apiPanel) {
+        apiPanel.scrollIntoView({ behavior: 'smooth' });
+      } else if (apiProvider) {
+        const panel = apiProvider.closest('.panel');
+        if (panel) panel.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
 
-    // 移除骨架屏，显示真实内容
-    const skeleton = document.getElementById('skeletonScreen');
-    const container = document.querySelector('.page-container');
-    if (skeleton) skeleton.classList.add('hidden');
-    if (container) container.classList.add('loaded');
-  });
+  const apiGuideCloseBtn = document.getElementById('apiGuideCloseBtn');
+  if (apiGuideCloseBtn) {
+    apiGuideCloseBtn.addEventListener('click', () => {
+      const bar = document.getElementById('apiGuideBar');
+      if (bar) bar.style.display = 'none';
+      sessionStorage.setItem('apiGuideClosed', 'true');
+    });
+  }
+
+  // ---- Onboarding ----
+  function checkOnboarding() {
+    chrome.storage.local.get(['apiKey'], (localData) => {
+      if (chrome.runtime.lastError) return;
+      chrome.storage.sync.get(['onboardingCompleted'], (syncData) => {
+        if (chrome.runtime.lastError) return;
+        if (!localData.apiKey && syncData.onboardingCompleted !== true) {
+          showOnboarding();
+        }
+      });
+    });
+  }
+
+  function showOnboarding() {
+    const modal = document.getElementById('onboardingModal');
+    if (!modal) return;
+    modal.style.display = 'flex';
+    onboardingCurrentStep = 1;
+    showOnboardingStep(1);
+    renderOnboardingTemplates();
+  }
+
+  function showOnboardingStep(step) {
+    onboardingCurrentStep = step;
+    const step1 = document.getElementById('onboardingStep1');
+    const step2 = document.getElementById('onboardingStep2');
+    const step3 = document.getElementById('onboardingStep3');
+    const indicator = document.getElementById('onboardingStepIndicator');
+    const nextBtn = document.getElementById('onboardingNextBtn');
+    const startBtn = document.getElementById('onboardingStartBtn');
+    if (step1) step1.style.display = step === 1 ? 'block' : 'none';
+    if (step2) step2.style.display = step === 2 ? 'block' : 'none';
+    if (step3) step3.style.display = step === 3 ? 'block' : 'none';
+    if (indicator) indicator.textContent = (currentLang === 'zh' ? '步骤 ' : 'Step ') + step + ' / 3';
+    if (nextBtn) {
+      nextBtn.style.display = step === 2 ? '' : 'none';
+      nextBtn.textContent = I18N[currentLang].onboardingNext || 'Next';
+    }
+    if (startBtn) startBtn.style.display = step === 3 ? '' : 'none';
+  }
+
+  function renderOnboardingTemplates() {
+    const grid = document.getElementById('onboardingTemplateGrid');
+    if (!grid) return;
+    grid.innerHTML = '';
+    PERSONA_TEMPLATES.forEach(template => {
+      const card = document.createElement('div');
+      card.className = 'onboarding-template-card';
+      card.style.cssText = 'cursor:pointer;padding:16px;border:1px solid var(--border-default);border-radius:var(--radius-md);transition:border-color 0.2s;';
+      const header = document.createElement('div');
+      header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:8px;';
+      const avatar = document.createElement('div');
+      avatar.style.cssText = 'font-size:24px;';
+      avatar.textContent = template.icon;
+      const name = document.createElement('div');
+      name.style.cssText = 'font-size:14px;font-weight:600;color:var(--text-primary);';
+      name.textContent = I18N[currentLang][template.nameKey] || template.nameKey;
+      header.appendChild(avatar);
+      header.appendChild(name);
+      const desc = document.createElement('div');
+      desc.style.cssText = 'font-size:12px;color:var(--text-secondary);';
+      desc.textContent = I18N[currentLang][template.descKey] || template.descKey;
+      card.appendChild(header);
+      card.appendChild(desc);
+      card.addEventListener('click', () => {
+        const newId = Math.random().toString(36).substr(2, 9);
+        personas.push({
+          id: newId,
+          name: I18N[currentLang][template.nameKey] || template.nameKey,
+          prompt: template.prompt
+        });
+        if (!activePersonaId) activePersonaId = newId;
+        renderPersonas();
+        scheduleSave();
+        showOnboardingStep(2);
+        const providerSelect = document.getElementById('onboardingProviderSelect');
+        if (providerSelect) loadApiProviders(providerSelect);
+      });
+      grid.appendChild(card);
+    });
+  }
+
+  // Onboarding Skip
+  const onboardingSkipBtn = document.getElementById('onboardingSkipBtn');
+  if (onboardingSkipBtn) {
+    onboardingSkipBtn.addEventListener('click', () => {
+      const modal = document.getElementById('onboardingModal');
+      if (modal) modal.style.display = 'none';
+      chrome.storage.sync.set({ onboardingCompleted: true }, () => {});
+    });
+  }
+
+  // Onboarding Next (step 2 → 3)
+  const onboardingNextBtn = document.getElementById('onboardingNextBtn');
+  if (onboardingNextBtn) {
+    onboardingNextBtn.addEventListener('click', () => {
+      if (onboardingCurrentStep === 2) {
+        const providerSelect = document.getElementById('onboardingProviderSelect');
+        const keyInput = document.getElementById('onboardingApiKeyInput');
+        const provider = providerSelect?.value || 'openai';
+        const key = keyInput?.value || '';
+        chrome.storage.local.set({ apiProvider: provider, apiKey: key }, () => {
+          showOnboardingStep(3);
+        });
+      }
+    });
+  }
+
+  // Onboarding Start (step 3 complete)
+  const onboardingStartBtn = document.getElementById('onboardingStartBtn');
+  if (onboardingStartBtn) {
+    onboardingStartBtn.addEventListener('click', () => {
+      const modal = document.getElementById('onboardingModal');
+      if (modal) modal.style.display = 'none';
+      chrome.storage.sync.set({ onboardingCompleted: true }, () => {
+        loadSettings();
+      });
+    });
+  }
+
+  // Onboarding Test Connection
+  const onboardingTestBtn = document.getElementById('onboardingTestBtn');
+  if (onboardingTestBtn) {
+    onboardingTestBtn.addEventListener('click', async () => {
+      const providerSelect = document.getElementById('onboardingProviderSelect');
+      const keyInput = document.getElementById('onboardingApiKeyInput');
+      const resultEl = document.getElementById('onboardingTestResult');
+      const provider = providerSelect?.value || 'openai';
+      const key = keyInput?.value.trim();
+      if (!key) {
+        if (resultEl) resultEl.textContent = currentLang === 'zh' ? '请输入 API Key' : 'Please enter API Key';
+        return;
+      }
+      if (resultEl) resultEl.textContent = I18N[currentLang].apiTesting || 'Testing...';
+      try {
+        const providerConfig = modelsConfig?.providers?.find(p => p.id === provider);
+        let testUrl, headers, body;
+        if (provider === 'anthropic') {
+          testUrl = providerConfig?.url || 'https://api.anthropic.com/v1/messages';
+          headers = { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' };
+          body = JSON.stringify({ model: 'claude-3-haiku-20240307', max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] });
+        } else if (provider === 'google') {
+          testUrl = providerConfig?.url || ('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + key);
+          headers = { 'Content-Type': 'application/json' };
+          body = JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }] });
+        } else {
+          testUrl = providerConfig?.url || 'https://api.openai.com/v1/chat/completions';
+          headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };
+          body = JSON.stringify({ model: 'gpt-3.5-turbo', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 10 });
+        }
+        const response = await fetch(testUrl, { method: 'POST', headers, body });
+        if (response.ok) {
+          if (resultEl) resultEl.textContent = I18N[currentLang].apiTestSuccess || 'Connection successful!';
+        } else {
+          let errMsg;
+          if (response.status === 401 || response.status === 403) {
+            errMsg = currentLang === 'zh' ? 'API Key 无效或权限不足' : 'API Key invalid';
+          } else if (response.status === 429) {
+            errMsg = currentLang === 'zh' ? '请求频率过高或额度不足' : 'Rate limit exceeded';
+          } else {
+            const errData = await response.json().catch(() => ({}));
+            errMsg = errData.error?.message || errData.message || 'HTTP ' + response.status;
+          }
+          if (resultEl) resultEl.textContent = (I18N[currentLang].apiTestFail || 'Connection failed: ') + errMsg;
+        }
+      } catch (error) {
+        const errMsg = currentLang === 'zh' ? '网络连接失败，请检查网络' : 'Network error';
+        if (resultEl) resultEl.textContent = (I18N[currentLang].apiTestFail || 'Connection failed: ') + errMsg;
+      }
+    });
+  }
+
+  // Onboarding provider change → update "Get Key" link
+  const onboardingProviderSelectEl = document.getElementById('onboardingProviderSelect');
+  if (onboardingProviderSelectEl) {
+    onboardingProviderSelectEl.addEventListener('change', () => {
+      const providerId = onboardingProviderSelectEl.value;
+      const provider = modelsConfig?.providers?.find(p => p.id === providerId);
+      const getKeyLink = document.getElementById('onboardingGetKeyLink');
+      if (getKeyLink && provider) {
+        if (provider.getKey) {
+          getKeyLink.href = provider.getKey;
+          getKeyLink.style.display = '';
+        } else {
+          getKeyLink.style.display = 'none';
+        }
+      }
+    });
+  }
+
+  // ---- Load Settings ----
+  function loadSettings() {
+    migrateApiKeyToLocal();
+    chrome.storage.local.get({ apiKey: '', apiProvider: 'openai' }, (localData) => {
+      chrome.storage.sync.get({
+        personas: [{ id: 'default', name: '默认角色 (Default)', prompt: '你是一个专业的AI助手。请根据用户的消息上下文进行专业、礼貌的回复。' }],
+        activePersonaId: 'default',
+        shortcut: 'Alt + 1',
+        tone: 'auto',
+        replyLength: 'auto',
+        faqData: [],
+        btnTheme: 'gradient',
+        lang: 'zh',
+        licenseType: 'free',
+        licenseCode: null,
+        activatedAt: null,
+        onboardingCompleted: false
+      }, (data) => {
+        if (chrome.runtime.lastError) {
+          console.error('Load settings error:', chrome.runtime.lastError);
+        }
+        currentLang = data.lang || 'zh';
+        applyI18n();
+
+        personas = data.personas || [];
+        activePersonaId = data.activePersonaId;
+        if (personas.length > 0 && !activePersonaId) activePersonaId = personas[0].id;
+        faqData = data.faqData || [];
+
+        // Set form values
+        const toneSelect = document.getElementById('tone');
+        const replyLengthSelect = document.getElementById('replyLength');
+        const btnThemeSelect = document.getElementById('btnTheme');
+        if (toneSelect) toneSelect.value = data.tone || 'auto';
+        if (replyLengthSelect) replyLengthSelect.value = data.replyLength || 'auto';
+        if (btnThemeSelect) btnThemeSelect.value = data.btnTheme || 'gradient';
+
+        // Load API providers dynamically, then set saved values from local storage
+        loadApiProviders().then(() => {
+          if (apiProvider) apiProvider.value = localData.apiProvider || 'openai';
+          if (apiKeyInput) apiKeyInput.value = localData.apiKey || '';
+          updateApiProviderUI(localData.apiProvider || 'openai');
+        });
+
+        // Add change listeners for auto-save
+        [toneSelect, replyLengthSelect, btnThemeSelect].forEach(el => {
+          if (el) el.addEventListener('change', () => scheduleSave());
+        });
+
+        renderPersonas();
+        renderFaq();
+        updateLicenseDisplay(data.licenseType || 'free');
+
+        // Check existing license
+        if (data.licenseCode && data.licenseType && data.licenseType !== 'free') {
+          if (activationSuccess) activationSuccess.style.display = 'flex';
+          if (licenseTypeDisplay) {
+            const typeNames = { 'lifetime': I18N[currentLang].statProLifetime, 'year': I18N[currentLang].statProYear };
+            licenseTypeDisplay.textContent = typeNames[data.licenseType] || data.licenseType;
+          }
+        }
+
+        updateStats();
+        updateFreeTierNotification();
+
+        // 移除骨架屏，显示真实内容
+        const skeleton = document.getElementById('skeletonScreen');
+        const container = document.querySelector('.page-container');
+        if (skeleton) skeleton.classList.add('hidden');
+        if (container) container.classList.add('loaded');
+
+        // Check onboarding and API guide bar
+        checkOnboarding();
+        checkApiGuideBar();
+      });
+    });
+  }
+
+  loadSettings();
 
   // Refresh stats periodically
   let statsIntervalId = null;
