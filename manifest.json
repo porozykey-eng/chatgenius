@@ -1,7 +1,7 @@
 {
   "manifest_version": 3,
   "name": "ChatGenius AI - Smart Auto Reply",
-  "version": "2.2.0",
+  "version": "2.3.0",
   "description": "AI-powered auto-reply assistant with multiple AI models, custom personas, and smart knowledge base integration.",
   "permissions": [
     "storage",

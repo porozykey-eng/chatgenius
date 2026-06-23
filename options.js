@@ -393,6 +393,21 @@ const PERSONA_TEMPLATES = [
 // Main
 // ================================
 document.addEventListener('DOMContentLoaded', () => {
+  // ---- Theme Toggle ----
+  const themeToggle = document.getElementById('themeToggle');
+  if (themeToggle) {
+    themeToggle.addEventListener('click', () => {
+      const currentTheme = document.documentElement.getAttribute('data-theme');
+      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+      document.documentElement.setAttribute('data-theme', newTheme);
+      try {
+        localStorage.setItem('chatgenius_theme', newTheme);
+      } catch (e) {
+        // localStorage 不可用时忽略
+      }
+    });
+  }
+
   // ---- State ----
   let currentLang = 'zh';
   let faqData = [];
