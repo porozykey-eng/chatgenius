@@ -1,1420 +1,658 @@
 <!DOCTYPE html>
-<html lang="zh-CN" data-theme="light">
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <title>大模型配置指南 - ChatGenius AI</title>
+  <title>配置指南 — ChatGenius AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
-  <script>
-    (function() {
-      try {
-        var savedTheme = localStorage.getItem('chatgenius_theme') || 'light';
-        document.documentElement.setAttribute('data-theme', savedTheme);
-      } catch (e) {}
-    })();
-  </script>
   <style>
-    /* Design System */
-    :root[data-theme="light"] {
-      color-scheme: light;
-      --bg-primary: #ffffff;
-      --bg-secondary: #fafafa;
-      --bg-tertiary: #f5f5f5;
-      --bg-hover: #f5f5f5;
-      --text-primary: #111827;
-      --text-secondary: #6b7280;
-      --text-tertiary: #9ca3af;
-      --accent: #111827;
-      --accent-hover: #000000;
-      --accent-light: #f5f5f5;
-      --accent-glow: rgba(17, 24, 39, 0.04);
-      --accent-text: #111827;
-      --success: #16a34a;
-      --success-bg: rgba(22, 163, 74, 0.06);
-      --error: #dc2626;
-      --error-bg: rgba(220, 38, 38, 0.05);
-      --border-subtle: #f3f4f6;
-      --border-default: #e5e7eb;
-      --border-strong: #d1d5db;
-      --border-focus: #111827;
-      --radius-sm: 4px;
-      --radius-md: 6px;
-      --radius-lg: 8px;
-      --radius-full: 9999px;
-      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-      --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", monospace;
-      --spacing-1: 4px;
-      --spacing-2: 8px;
-      --spacing-3: 12px;
-      --spacing-4: 16px;
-      --spacing-5: 20px;
-      --spacing-6: 24px;
-      --spacing-8: 32px;
-      --spacing-10: 40px;
-      --spacing-12: 48px;
-    }
-
-    :root[data-theme="dark"] {
-      color-scheme: dark;
-      --bg-primary: #0a0a0a;
-      --bg-secondary: #171717;
-      --bg-tertiary: #1f1f1f;
-      --bg-hover: #1f1f1f;
-      --text-primary: #fafafa;
-      --text-secondary: #a3a3a3;
-      --text-tertiary: #737373;
-      --accent: #ffffff;
-      --accent-hover: #e5e5e5;
-      --accent-light: #1f1f1f;
-      --accent-glow: rgba(255, 255, 255, 0.04);
-      --accent-text: #ffffff;
-      --success: #22c55e;
-      --success-bg: rgba(34, 197, 94, 0.08);
-      --error: #ef4444;
-      --error-bg: rgba(239, 68, 68, 0.08);
-      --border-subtle: #1f1f1f;
-      --border-default: #262626;
-      --border-strong: #404040;
-      --border-focus: #ffffff;
-      --radius-sm: 4px;
-      --radius-md: 6px;
-      --radius-lg: 8px;
-      --radius-full: 9999px;
-      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "Segoe UI", Roboto, sans-serif;
-      --font-mono: "SF Mono", "JetBrains Mono", "Fira Code", monospace;
-      --spacing-1: 4px;
-      --spacing-2: 8px;
-      --spacing-3: 12px;
-      --spacing-4: 16px;
-      --spacing-5: 20px;
-      --spacing-6: 24px;
-      --spacing-8: 32px;
-      --spacing-10: 40px;
-      --spacing-12: 48px;
-    }
-
-    * {
-      box-sizing: border-box;
-      margin: 0;
-      padding: 0;
-    }
-
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
     body {
-      font-family: var(--font-sans);
-      background: var(--bg-primary);
-      color: var(--text-primary);
-      font-size: 15px;
-      line-height: 1.6;
-      -webkit-font-smoothing: antialiased;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fafafa; color: #1a1a1a; line-height: 1.7;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
     }
 
-    /* Header */
-    .guide-header {
-      position: sticky;
-      top: 0;
-      z-index: 100;
-      background: var(--bg-primary);
-      border-bottom: 1px solid var(--border-default);
-      padding: var(--spacing-4) var(--spacing-6);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
+    /* ===== Layout ===== */
+    .page { display: flex; min-height: 100vh; }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      width: 280px; flex-shrink: 0; background: #fff;
+      border-right: 1px solid #e8e8e8; position: fixed;
+      top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100;
     }
-
-    .header-brand {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-3);
+    .sidebar::-webkit-scrollbar { width: 4px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #e0e0e0; border-radius: 4px; }
+    .sidebar-header {
+      padding: 24px 24px 20px; border-bottom: 1px solid #f0f0f0;
     }
-
-    .header-icon {
-      width: 28px;
-      height: 28px;
-      background: var(--accent);
-      border-radius: var(--radius-sm);
-      display: flex;
-      align-items: center;
-      justify-content: center;
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: #1a1a1a; font-weight: 700; font-size: 15px;
     }
-
-    .header-icon svg {
-      width: 16px;
-      height: 16px;
-      color: var(--bg-primary);
+    .sidebar-logo-icon {
+      width: 30px; height: 30px; border-radius: 8px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex; align-items: center; justify-content: center;
     }
-
-    .header-title {
-      font-size: 16px;
-      font-weight: 600;
+    .sidebar-logo-icon svg { width: 16px; height: 16px; color: #fff; }
+    .sidebar-doc-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #999; margin-top: 12px;
     }
-
-    .header-actions {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-3);
+    .sidebar-search { padding: 16px 20px 8px; }
+    .sidebar-search input {
+      width: 100%; padding: 8px 12px 8px 36px;
+      background: #f5f5f5; border: 1px solid transparent; border-radius: 8px;
+      font-size: 13px; color: #1a1a1a; outline: none;
+      font-family: inherit; transition: all 0.2s;
     }
-
-    .btn-back {
-      padding: var(--spacing-2) var(--spacing-4);
-      background: transparent;
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.15s ease;
+    .sidebar-search input:focus {
+      background: #fff; border-color: #d0d0d0; box-shadow: 0 0 0 3px rgba(99,102,241,0.08);
     }
-
-    .btn-back:hover {
-      border-color: var(--border-strong);
-      color: var(--text-primary);
+    .sidebar-search input::placeholder { color: #b0b0b0; }
+    .sidebar-search-wrap { position: relative; }
+    .sidebar-search-icon {
+      position: absolute; left: 11px; top: 50%; transform: translateY(-50%);
+      color: #b0b0b0; pointer-events: none;
     }
-
-    .theme-toggle {
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-sm);
-      background: transparent;
-      border: 1px solid var(--border-default);
-      color: var(--text-secondary);
-      cursor: pointer;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      transition: all 0.15s ease;
+    .sidebar-nav { padding: 8px 12px 24px; }
+    .nav-group { margin-bottom: 20px; }
+    .nav-group-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #999; padding: 8px 12px 4px;
     }
-
-    .theme-toggle:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
+    .nav-link {
+      display: flex; align-items: center; gap: 10px;
+      padding: 7px 12px; border-radius: 6px; font-size: 13.5px;
+      color: #666; text-decoration: none; cursor: pointer;
+      transition: all 0.15s; border: none; background: none;
+      width: 100%; text-align: left; font-family: inherit;
     }
+    .nav-link:hover { background: #f5f5f5; color: #333; }
+    .nav-link.active { background: #f0f0ff; color: #4f46e5; font-weight: 500; }
+    .nav-link .nav-icon { font-size: 15px; width: 20px; text-align: center; flex-shrink: 0; }
+    .nav-sep { height: 1px; background: #f0f0f0; margin: 8px 12px; }
 
-    .theme-toggle svg {
-      width: 16px;
-      height: 16px;
-    }
+    /* ===== Main ===== */
+    .main { flex: 1; margin-left: 280px; min-width: 0; }
+    .main-inner { max-width: 760px; margin: 0 auto; padding: 48px 48px 120px; }
 
-    [data-theme="light"] .theme-toggle .icon-moon { display: block; }
-    [data-theme="light"] .theme-toggle .icon-sun { display: none; }
-    [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
-    [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
-
-    /* Layout */
-    .guide-layout {
-      display: flex;
-      min-height: calc(100vh - 65px);
-    }
-
-    /* Sidebar */
-    .guide-sidebar {
-      width: 260px;
-      border-right: 1px solid var(--border-default);
-      background: var(--bg-secondary);
-      padding: var(--spacing-4) 0;
-      overflow-y: auto;
-      flex-shrink: 0;
-    }
-
-    .sidebar-section {
-      margin-bottom: var(--spacing-4);
-    }
-
-    .sidebar-section-title {
-      padding: var(--spacing-2) var(--spacing-5);
-      font-size: 11px;
-      font-weight: 600;
-      text-transform: uppercase;
-      letter-spacing: 0.05em;
-      color: var(--text-tertiary);
-    }
-
-    .sidebar-item {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-3);
-      padding: var(--spacing-2) var(--spacing-5);
-      font-size: 13px;
-      color: var(--text-secondary);
-      cursor: pointer;
-      transition: all 0.15s ease;
-      text-decoration: none;
-      border-left: 3px solid transparent;
-    }
-
-    .sidebar-item:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-    }
-
-    .sidebar-item.active {
-      background: var(--accent-glow);
-      color: var(--accent-text);
-      border-left-color: var(--accent);
-      font-weight: 500;
-    }
-
-    .sidebar-item-icon {
-      font-size: 18px;
-      width: 24px;
-      text-align: center;
-    }
-
-    .sidebar-divider {
-      height: 1px;
-      background: var(--border-subtle);
-      margin: var(--spacing-3) var(--spacing-5);
-    }
-
-    /* Content */
-    .guide-content {
-      flex: 1;
-      padding: var(--spacing-8) var(--spacing-10);
-      max-width: 800px;
-      overflow-y: auto;
-    }
-
-    .content-section {
-      display: none;
-      animation: fadeIn 0.2s ease;
-    }
-
-    .content-section.active {
-      display: block;
-    }
-
-    @keyframes fadeIn {
-      from { opacity: 0; transform: translateY(8px); }
+    /* ===== Content Sections ===== */
+    .doc-section { display: none; animation: fadeUp 0.3s ease; }
+    .doc-section.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
 
-    .section-header {
-      margin-bottom: var(--spacing-6);
+    /* ===== Typography ===== */
+    .doc-title {
+      font-size: 36px; font-weight: 700; letter-spacing: -0.03em;
+      line-height: 1.15; margin-bottom: 12px; color: #111;
     }
-
-    .section-title {
-      font-size: 24px;
-      font-weight: 700;
-      margin-bottom: var(--spacing-2);
+    .doc-subtitle {
+      font-size: 17px; color: #666; line-height: 1.6; margin-bottom: 48px;
+      max-width: 560px;
     }
-
-    .section-subtitle {
-      font-size: 14px;
-      color: var(--text-secondary);
+    .doc-h2 {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
+      margin: 48px 0 16px; color: #111; padding-top: 16px;
+      border-top: 1px solid #eee;
     }
-
-    /* Steps */
-    .steps-container {
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-6);
+    .doc-h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+    .doc-h3 { font-size: 16px; font-weight: 600; margin: 32px 0 12px; color: #222; }
+    .doc-p { font-size: 15px; color: #444; margin-bottom: 16px; }
+    .doc-p a { color: #4f46e5; text-decoration: underline; text-underline-offset: 2px; }
+    .doc-p a:hover { color: #4338ca; }
+    .doc-strong { font-weight: 600; color: #111; }
+    .doc-code {
+      font-family: 'SF Mono', 'Fira Code', Menlo, monospace; font-size: 0.85em;
+      background: #f4f4f5; padding: 2px 7px; border-radius: 4px; color: #6d28d9;
+      border: 1px solid #e8e8ec;
     }
+    .doc-ul, .doc-ol { padding-left: 20px; margin-bottom: 16px; }
+    .doc-li { font-size: 15px; color: #444; margin-bottom: 8px; padding-left: 4px; }
+    .doc-li::marker { color: #ccc; }
 
-    .step {
-      position: relative;
-      padding-left: var(--spacing-10);
+    /* ===== Callout ===== */
+    .callout {
+      display: flex; gap: 14px; padding: 16px 20px;
+      border-radius: 10px; margin: 24px 0; font-size: 14px;
+      border: 1px solid; align-items: flex-start;
     }
+    .callout-icon { font-size: 17px; flex-shrink: 0; line-height: 1.5; }
+    .callout-body { flex: 1; min-width: 0; }
+    .callout-title { font-weight: 600; margin-bottom: 4px; font-size: 14px; }
+    .callout-text { line-height: 1.6; }
+    .callout-blue { background: #f0f4ff; border-color: #dbeafe; }
+    .callout-blue .callout-title { color: #1e40af; }
+    .callout-blue .callout-text { color: #3b5998; }
+    .callout-amber { background: #fffbeb; border-color: #fde68a; }
+    .callout-amber .callout-title { color: #92400e; }
+    .callout-amber .callout-text { color: #78350f; }
+    .callout-green { background: #f0fdf4; border-color: #bbf7d0; }
+    .callout-green .callout-title { color: #166534; }
+    .callout-green .callout-text { color: #15803d; }
 
-    .step-number {
-      position: absolute;
-      left: 0;
-      top: 0;
-      width: 28px;
-      height: 28px;
-      background: var(--accent);
-      color: var(--bg-primary);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
+    /* ===== Steps ===== */
+    .steps { position: relative; margin: 28px 0; padding-left: 32px; }
+    .steps::before {
+      content: ''; position: absolute; left: 11px; top: 8px; bottom: 8px;
+      width: 2px; background: linear-gradient(to bottom, #c7d2fe, #e0e7ff, transparent);
+      border-radius: 2px;
     }
-
-    .step-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: var(--spacing-2);
+    .step-item { position: relative; padding: 0 0 36px; }
+    .step-item:last-child { padding-bottom: 0; }
+    .step-dot {
+      position: absolute; left: -32px; top: 2px;
+      width: 24px; height: 24px; border-radius: 50%;
+      background: #fff; border: 2px solid #c7d2fe;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 11px; font-weight: 700; color: #4f46e5; z-index: 1;
+      transition: all 0.2s;
     }
-
-    .step-desc {
-      font-size: 14px;
-      color: var(--text-secondary);
-      line-height: 1.6;
+    .step-item:hover .step-dot { border-color: #4f46e5; background: #4f46e5; color: #fff; }
+    .step-title { font-size: 16px; font-weight: 600; color: #111; margin-bottom: 6px; }
+    .step-desc { font-size: 14px; color: #666; line-height: 1.6; }
+    .step-action { margin-top: 14px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 9px 20px; background: #111; color: #fff; border: none;
+      border-radius: 8px; font-size: 13px; font-weight: 500;
+      cursor: pointer; text-decoration: none; font-family: inherit;
+      transition: all 0.15s;
     }
+    .btn-primary:hover { background: #333; text-decoration: none; }
 
-    .step-actions {
-      margin-top: var(--spacing-3);
-      display: flex;
-      gap: var(--spacing-3);
+    /* ===== Provider Cards ===== */
+    .provider-grid {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 14px; margin: 24px 0;
     }
-
-    .btn-link {
-      padding: var(--spacing-2) var(--spacing-4);
-      background: var(--accent);
-      color: var(--bg-primary);
-      border: none;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.15s ease;
+    .provider-card {
+      padding: 20px; background: #fff; border: 1px solid #e8e8e8;
+      border-radius: 12px; transition: all 0.2s; cursor: default;
     }
-
-    .btn-link:hover {
-      background: var(--accent-hover);
+    .provider-card:hover {
+      border-color: #d0d0d0; box-shadow: 0 2px 8px rgba(0,0,0,0.04);
+      transform: translateY(-1px);
     }
+    .provider-card-icon { font-size: 28px; margin-bottom: 14px; }
+    .provider-card-title { font-size: 15px; font-weight: 600; color: #111; margin-bottom: 4px; }
+    .provider-card-desc { font-size: 13px; color: #888; line-height: 1.5; }
 
-    .btn-link-outline {
-      padding: var(--spacing-2) var(--spacing-4);
-      background: transparent;
-      color: var(--accent-text);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      font-weight: 500;
-      cursor: pointer;
-      text-decoration: none;
-      transition: all 0.15s ease;
+    /* ===== FAQ ===== */
+    .faq-list { margin: 24px 0; }
+    .faq-item {
+      border: 1px solid #e8e8e8; border-radius: 10px;
+      margin-bottom: 8px; overflow: hidden; background: #fff;
+      transition: border-color 0.2s;
     }
-
-    .btn-link-outline:hover {
-      border-color: var(--border-strong);
-      background: var(--bg-hover);
+    .faq-item:hover { border-color: #d0d0d0; }
+    .faq-q {
+      padding: 16px 20px; font-size: 14.5px; font-weight: 500; color: #222;
+      cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; user-select: none; background: #fff; transition: background 0.15s;
     }
-
-    /* Tips */
-    .tip-box {
-      padding: var(--spacing-4);
-      background: var(--success-bg);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      margin-top: var(--spacing-4);
+    .faq-q:hover { background: #fafafa; }
+    .faq-arrow {
+      width: 20px; height: 20px; color: #bbb; flex-shrink: 0;
+      transition: transform 0.25s ease; transform: rotate(0deg);
     }
-
-    .tip-box.warning {
-      background: var(--error-bg);
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+    .faq-a {
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease, padding 0.3s ease;
+      padding: 0 20px; font-size: 14px; color: #555; line-height: 1.7;
     }
+    .faq-item.open .faq-a { max-height: 500px; padding: 0 20px 20px; }
 
-    .tip-title {
-      font-size: 13px;
-      font-weight: 600;
-      margin-bottom: var(--spacing-2);
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-2);
+    /* ===== Contact ===== */
+    .contact-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 16px; margin: 28px 0;
     }
-
-    .tip-content {
-      font-size: 13px;
-      color: var(--text-secondary);
-    }
-
-    /* Common Steps Section */
-    .common-steps {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      padding: var(--spacing-6);
-      margin-bottom: var(--spacing-6);
-    }
-
-    .common-steps-title {
-      font-size: 16px;
-      font-weight: 600;
-      margin-bottom: var(--spacing-4);
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-2);
-    }
-
-    .common-steps-list {
-      list-style: none;
-      counter-reset: step-counter;
-    }
-
-    .common-steps-list li {
-      counter-increment: step-counter;
-      padding: var(--spacing-3) 0;
-      border-bottom: 1px solid var(--border-subtle);
-      font-size: 14px;
-      color: var(--text-secondary);
-      display: flex;
-      align-items: flex-start;
-      gap: var(--spacing-3);
-    }
-
-    .common-steps-list li:last-child {
-      border-bottom: none;
-    }
-
-    .common-steps-list li::before {
-      content: counter(step-counter);
-      background: var(--accent);
-      color: var(--bg-primary);
-      width: 22px;
-      height: 22px;
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 12px;
-      font-weight: 600;
-      flex-shrink: 0;
-    }
-
-    /* Search */
-    .search-container {
-      position: relative;
-      margin-bottom: var(--spacing-4);
-    }
-
-    .search-input {
-      width: 100%;
-      padding: var(--spacing-3) var(--spacing-4);
-      padding-left: 36px;
-      background: var(--bg-primary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      font-size: 14px;
-      color: var(--text-primary);
-      outline: none;
-      transition: border-color 0.15s ease;
-    }
-
-    .search-input:focus {
-      border-color: var(--accent);
-    }
-
-    .search-icon {
-      position: absolute;
-      left: 12px;
-      top: 50%;
-      transform: translateY(-50%);
-      color: var(--text-tertiary);
-    }
-
-    /* Contact Section */
     .contact-card {
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      padding: var(--spacing-6);
-      text-align: center;
+      padding: 28px; background: #fff; border: 1px solid #e8e8e8;
+      border-radius: 12px; text-align: center; transition: all 0.2s;
+    }
+    .contact-card:hover { border-color: #d0d0d0; box-shadow: 0 2px 8px rgba(0,0,0,0.04); }
+    .contact-card-icon { font-size: 32px; margin-bottom: 14px; }
+    .contact-card-title { font-size: 15px; font-weight: 600; margin-bottom: 6px; }
+    .contact-card-desc { font-size: 13px; color: #888; }
+    .info-box {
+      background: #fff; border: 1px solid #e8e8e8; border-radius: 12px;
+      padding: 24px; margin: 28px 0;
+    }
+    .info-box-title {
+      font-size: 14px; font-weight: 600; margin-bottom: 14px;
+      display: flex; align-items: center; gap: 8px; color: #333;
     }
 
-    .contact-icon {
-      font-size: 48px;
-      margin-bottom: var(--spacing-4);
+    /* ===== Top Bar (mobile) ===== */
+    .topbar {
+      display: none; position: fixed; top: 0; left: 0; right: 0;
+      height: 56px; background: #fff; border-bottom: 1px solid #e8e8e8;
+      z-index: 200; align-items: center; padding: 0 16px;
+      justify-content: space-between;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 12px; }
+    .topbar-logo {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; color: #111; font-weight: 700; font-size: 14px;
+    }
+    .topbar-logo-icon {
+      width: 26px; height: 26px; border-radius: 6px;
+      background: linear-gradient(135deg, #6366f1, #a855f7);
+      display: flex; align-items: center; justify-content: center;
+    }
+    .topbar-logo-icon svg { width: 14px; height: 14px; color: #fff; }
+    .menu-btn {
+      width: 36px; height: 36px; border: 1px solid #e8e8e8; border-radius: 8px;
+      background: #fff; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: #666; transition: all 0.15s;
+    }
+    .menu-btn:hover { background: #f5f5f5; }
+    .back-link {
+      font-size: 13px; color: #666; text-decoration: none;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .back-link:hover { color: #111; }
+
+    /* ===== Overlay ===== */
+    .overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.3);
+      z-index: 90; backdrop-filter: blur(2px);
     }
 
-    .contact-title {
-      font-size: 18px;
-      font-weight: 600;
-      margin-bottom: var(--spacing-2);
-    }
-
-    .contact-desc {
-      font-size: 14px;
-      color: var(--text-secondary);
-      margin-bottom: var(--spacing-6);
-    }
-
-    .contact-methods {
-      display: flex;
-      justify-content: center;
-      gap: var(--spacing-4);
-    }
-
-    .contact-method {
-      padding: var(--spacing-4);
-      background: var(--bg-primary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      min-width: 180px;
-    }
-
-    .contact-method-icon {
-      font-size: 24px;
-      margin-bottom: var(--spacing-2);
-    }
-
-    .contact-method-title {
-      font-size: 14px;
-      font-weight: 600;
-      margin-bottom: var(--spacing-1);
-    }
-
-    .contact-method-desc {
-      font-size: 12px;
-      color: var(--text-tertiary);
-    }
-
-    /* Responsive */
-    @media (max-width: 768px) {
-      .guide-layout {
-        flex-direction: column;
+    /* ===== Responsive ===== */
+    @media (max-width: 860px) {
+      .topbar { display: flex; }
+      .sidebar {
+        transform: translateX(-100%); transition: transform 0.25s ease;
+        box-shadow: none; z-index: 300; top: 0;
       }
-
-      .guide-sidebar {
-        width: 100%;
-        border-right: none;
-        border-bottom: 1px solid var(--border-default);
-        padding: var(--spacing-3) 0;
-      }
-
-      .sidebar-section {
-        margin-bottom: var(--spacing-2);
-      }
-
-      .sidebar-item {
-        padding: var(--spacing-2) var(--spacing-4);
-      }
-
-      .guide-content {
-        padding: var(--spacing-6) var(--spacing-4);
-      }
+      .sidebar.open { transform: translateX(0); box-shadow: 4px 0 24px rgba(0,0,0,0.1); }
+      .overlay.open { display: block; }
+      .main { margin-left: 0; padding-top: 56px; }
+      .main-inner { padding: 28px 20px 80px; }
+      .doc-title { font-size: 28px; }
+      .doc-subtitle { font-size: 15px; margin-bottom: 32px; }
+      .provider-grid { grid-template-columns: 1fr; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .doc-h2 { font-size: 20px; margin-top: 36px; }
     }
   </style>
 </head>
 <body>
-  <!-- Header -->
-  <header class="guide-header">
-    <div class="header-brand">
-      <div class="header-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-      </div>
-      <span class="header-title">大模型配置指南</span>
+
+<!-- Top Bar (mobile) -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="menu-btn" id="menuBtn" aria-label="菜单">
+      <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <a href="/" class="topbar-logo">
+      <div class="topbar-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+      ChatGenius
+    </a>
+  </div>
+  <a href="/" class="back-link">
+    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>
+    首页
+  </a>
+</div>
+<div class="overlay" id="overlay"></div>
+
+<div class="page">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="sidebar-logo">
+        <div class="sidebar-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        ChatGenius AI
+      </a>
+      <div class="sidebar-doc-label">配置指南</div>
     </div>
-    <div class="header-actions">
-      <button class="theme-toggle" id="themeToggle" title="切换主题">
-        <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
-        </svg>
-        <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="12" cy="12" r="5"></circle>
-          <line x1="12" y1="1" x2="12" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="23"></line>
-          <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
-          <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
-          <line x1="1" y1="12" x2="3" y2="12"></line>
-          <line x1="21" y1="12" x2="23" y2="12"></line>
-          <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
-          <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
-        </svg>
-      </button>
-      <a href="options.html" class="btn-back">← 返回设置</a>
+    <div class="sidebar-search">
+      <div class="sidebar-search-wrap">
+        <svg class="sidebar-search-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="11" cy="11" r="8"/><path d="M21 21l-4.35-4.35"/></svg>
+        <input type="text" id="searchInput" placeholder="搜索…">
+      </div>
     </div>
-  </header>
-
-  <div class="guide-layout">
-    <!-- Sidebar -->
-    <nav class="guide-sidebar">
-      <div class="search-container">
-        <svg class="search-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
-          <circle cx="11" cy="11" r="8"></circle>
-          <path d="M21 21l-4.35-4.35"></path>
-        </svg>
-        <input type="text" class="search-input" id="searchInput" placeholder="搜索服务商...">
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <div class="nav-group-title">快速开始</div>
+        <button class="nav-link active" data-s="quickstart"><span class="nav-icon">→</span> 快速配置</button>
+        <button class="nav-link" data-s="choose"><span class="nav-icon">◎</span> 选择服务商</button>
+        <button class="nav-link" data-s="faq"><span class="nav-icon">?</span> 常见问题</button>
       </div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">快速开始</div>
-        <a class="sidebar-item active" data-section="quickstart">
-          <span class="sidebar-item-icon">🚀</span>
-          <span>3 分钟快速配置</span>
-        </a>
-        <a class="sidebar-item" data-section="faq">
-          <span class="sidebar-item-icon">❓</span>
-          <span>常见问题</span>
-        </a>
+      <div class="nav-sep"></div>
+      <div class="nav-group">
+        <div class="nav-group-title">国内服务商</div>
+        <button class="nav-link" data-s="deepseek"><span class="nav-icon">◆</span> DeepSeek</button>
+        <button class="nav-link" data-s="qwen"><span class="nav-icon">◆</span> 通义千问</button>
+        <button class="nav-link" data-s="zhipu"><span class="nav-icon">◆</span> 智谱清言</button>
+        <button class="nav-link" data-s="doubao"><span class="nav-icon">◆</span> 豆包</button>
+        <button class="nav-link" data-s="moonshot"><span class="nav-icon">◆</span> Moonshot</button>
+        <button class="nav-link" data-s="baichuan"><span class="nav-icon">◆</span> 百川大模型</button>
+        <button class="nav-link" data-s="yi"><span class="nav-icon">◆</span> 零一万物</button>
+        <button class="nav-link" data-s="minimax"><span class="nav-icon">◆</span> MiniMax</button>
+        <button class="nav-link" data-s="stepfun"><span class="nav-icon">◆</span> 阶跃星辰</button>
       </div>
-
-      <div class="sidebar-divider"></div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">国内厂商</div>
-        <a class="sidebar-item" data-section="deepseek">
-          <span class="sidebar-item-icon">🟠</span>
-          <span>DeepSeek</span>
-        </a>
-        <a class="sidebar-item" data-section="qwen">
-          <span class="sidebar-item-icon">🟡</span>
-          <span>通义千问</span>
-        </a>
-        <a class="sidebar-item" data-section="zhipu">
-          <span class="sidebar-item-icon">🟤</span>
-          <span>智谱清言</span>
-        </a>
-        <a class="sidebar-item" data-section="doubao">
-          <span class="sidebar-item-icon">🔴</span>
-          <span>豆包</span>
-        </a>
-        <a class="sidebar-item" data-section="moonshot">
-          <span class="sidebar-item-icon">🌙</span>
-          <span>Moonshot</span>
-        </a>
-        <a class="sidebar-item" data-section="baichuan">
-          <span class="sidebar-item-icon">🔷</span>
-          <span>百川大模型</span>
-        </a>
-        <a class="sidebar-item" data-section="yi">
-          <span class="sidebar-item-icon">💠</span>
-          <span>零一万物</span>
-        </a>
-        <a class="sidebar-item" data-section="minimax">
-          <span class="sidebar-item-icon">🟣</span>
-          <span>MiniMax</span>
-        </a>
-        <a class="sidebar-item" data-section="stepfun">
-          <span class="sidebar-item-icon">⭐</span>
-          <span>阶跃星辰</span>
-        </a>
+      <div class="nav-sep"></div>
+      <div class="nav-group">
+        <div class="nav-group-title">国际服务商</div>
+        <button class="nav-link" data-s="openai"><span class="nav-icon">◆</span> OpenAI</button>
+        <button class="nav-link" data-s="anthropic"><span class="nav-icon">◆</span> Anthropic</button>
+        <button class="nav-link" data-s="google"><span class="nav-icon">◆</span> Google AI</button>
+        <button class="nav-link" data-s="openrouter"><span class="nav-icon">◆</span> OpenRouter</button>
       </div>
-
-      <div class="sidebar-divider"></div>
-
-      <div class="sidebar-section">
-        <div class="sidebar-section-title">国际厂商</div>
-        <a class="sidebar-item" data-section="openai">
-          <span class="sidebar-item-icon">🟢</span>
-          <span>OpenAI</span>
-        </a>
-        <a class="sidebar-item" data-section="anthropic">
-          <span class="sidebar-item-icon">🟣</span>
-          <span>Anthropic</span>
-        </a>
-        <a class="sidebar-item" data-section="google">
-          <span class="sidebar-item-icon">🔵</span>
-          <span>Google AI</span>
-        </a>
-        <a class="sidebar-item" data-section="openrouter">
-          <span class="sidebar-item-icon">🚀</span>
-          <span>OpenRouter</span>
-        </a>
-      </div>
-
-      <div class="sidebar-divider"></div>
-
-      <div class="sidebar-section">
-        <a class="sidebar-item" data-section="contact">
-          <span class="sidebar-item-icon">💬</span>
-          <span>联系客服</span>
-        </a>
+      <div class="nav-sep"></div>
+      <div class="nav-group">
+        <button class="nav-link" data-s="contact"><span class="nav-icon">✉</span> 联系客服</button>
       </div>
     </nav>
+  </aside>
 
-    <!-- Content -->
-    <main class="guide-content">
-      <!-- Quick Start -->
-      <section class="content-section active" id="section-quickstart">
-        <div class="section-header">
-          <h1 class="section-title">3 分钟快速配置</h1>
-          <p class="section-subtitle">无论您选择哪家服务商，配置流程都是相同的</p>
+  <!-- Main Content -->
+  <main class="main">
+    <div class="main-inner">
+
+      <!-- ===== Quickstart ===== -->
+      <section class="doc-section active" id="s-quickstart">
+        <h1 class="doc-title">快速配置指南</h1>
+        <p class="doc-subtitle">无论您选择哪家 AI 服务商，配置流程都是相同的。只需 4 步，即可在 WhatsApp 等平台使用 AI 自动回复。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册服务商账号</div><div class="step-desc">访问服务商官网，注册并完成实名认证（国内厂商通常需要手机号验证）。详见左侧各服务商配置页。</div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">获取 API 额度</div><div class="step-desc">部分服务商提供新人免费额度，可先用于测试。付费用户可按需充值。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">创建 API Key</div><div class="step-desc">在服务商控制台找到「API 密钥」或「API Keys」页面，点击创建一个新的密钥并复制。</div></div>
+          <div class="step-item"><div class="step-dot">4</div><div class="step-title">粘贴到 ChatGenius</div><div class="step-desc">打开插件设置页，选择对应的服务商，将 API Key 粘贴到输入框，点击「测试连接」验证成功即可。</div></div>
         </div>
-
-        <div class="common-steps">
-          <div class="common-steps-title">📋 通用配置步骤</div>
-          <ol class="common-steps-list">
-            <li>
-              <div>
-                <strong>注册账号</strong>
-                <div style="font-size:13px;margin-top:4px;">访问服务商官网，注册并完成实名认证（国内厂商通常需要）</div>
-              </div>
-            </li>
-            <li>
-              <div>
-                <strong>充值或获取免费额度</strong>
-                <div style="font-size:13px;margin-top:4px;">部分服务商提供新人免费额度，付费用户可按需充值</div>
-              </div>
-            </li>
-            <li>
-              <div>
-                <strong>创建 API Key</strong>
-                <div style="font-size:13px;margin-top:4px;">在控制台找到「API 密钥」或「API Keys」页面，创建一个新的密钥</div>
-              </div>
-            </li>
-            <li>
-              <div>
-                <strong>复制密钥到插件</strong>
-                <div style="font-size:13px;margin-top:4px;">复制生成的 API Key，粘贴到 ChatGenius 设置页的对应输入框中</div>
-              </div>
-            </li>
-          </ol>
-        </div>
-
-        <div class="tip-box">
-          <div class="tip-title">💡 小提示</div>
-          <div class="tip-content">
-            API Key 只需配置一次，之后会保存在您的浏览器本地。如需更换服务商，可随时在设置页修改。
-          </div>
-        </div>
-
-        <div style="margin-top:var(--spacing-6);">
-          <h3 style="font-size:16px;font-weight:600;margin-bottom:var(--spacing-4);">🤔 如何选择服务商？</h3>
-          <div style="display:grid;grid-template-columns:repeat(auto-fit,minmax(200px,1fr));gap:var(--spacing-4);">
-            <div style="padding:var(--spacing-4);border:1px solid var(--border-default);border-radius:var(--radius-md);">
-              <div style="font-size:14px;font-weight:600;margin-bottom:var(--spacing-2);">💰 追求性价比</div>
-              <div style="font-size:13px;color:var(--text-secondary);">推荐 DeepSeek，价格实惠且支持支付宝充值</div>
-            </div>
-            <div style="padding:var(--spacing-4);border:1px solid var(--border-default);border-radius:var(--radius-md);">
-              <div style="font-size:14px;font-weight:600;margin-bottom:var(--spacing-2);">🏢 企业稳定性</div>
-              <div style="font-size:13px;color:var(--text-secondary);">推荐通义千问（阿里云），大厂背书，服务稳定</div>
-            </div>
-            <div style="padding:var(--spacing-4);border:1px solid var(--border-default);border-radius:var(--radius-md);">
-              <div style="font-size:14px;font-weight:600;margin-bottom:var(--spacing-2);">🆓 免费体验</div>
-              <div style="font-size:13px;color:var(--text-secondary);">推荐智谱清言，部分模型免费使用</div>
-            </div>
+        <div class="callout callout-green">
+          <span class="callout-icon">✓</span>
+          <div class="callout-body">
+            <div class="callout-title">只需配置一次</div>
+            <div class="callout-text">API Key 保存在浏览器本地，不会上传到我们的服务器。如需更换服务商，在设置页重新选择即可。</div>
           </div>
         </div>
       </section>
 
-      <!-- FAQ -->
-      <section class="content-section" id="section-faq">
-        <div class="section-header">
-          <h1 class="section-title">常见问题</h1>
-          <p class="section-subtitle">配置过程中可能遇到的问题及解决方案</p>
+      <!-- ===== Choose Provider ===== -->
+      <section class="doc-section" id="s-choose">
+        <h1 class="doc-title">选择服务商</h1>
+        <p class="doc-subtitle">根据您的需求选择合适的 AI 服务商。所有服务商的配置流程基本相同。</p>
+        <h2 class="doc-h2">推荐方案</h2>
+        <div class="provider-grid">
+          <div class="provider-card"><div class="provider-card-icon">💰</div><div class="provider-card-title">追求性价比</div><div class="provider-card-desc">DeepSeek 价格实惠，支持支付宝充值，国内直连稳定。</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🏢</div><div class="provider-card-title">企业稳定性</div><div class="provider-card-desc">通义千问（阿里云）大厂背书，服务稳定，新人有免费额度。</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🆓</div><div class="provider-card-title">免费体验</div><div class="provider-card-desc">智谱清言提供免费模型（GLM-4 Flash），注册即可使用。</div></div>
         </div>
-
-        <div style="display:flex;flex-direction:column;gap:var(--spacing-4);">
-          <details style="border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;">
-            <summary style="padding:var(--spacing-4);cursor:pointer;font-weight:500;background:var(--bg-secondary);">API Key 在哪里找？</summary>
-            <div style="padding:var(--spacing-4);font-size:14px;color:var(--text-secondary);">
-              每家服务商的 API Key 位置略有不同，但通常都在「控制台」→「API 密钥」或「API Keys」菜单下。
-              <br><br>
-              <strong>通用查找路径：</strong>
-              <ol style="padding-left:var(--spacing-5);margin-top:var(--spacing-2);">
-                <li>登录服务商官网</li>
-                <li>进入「控制台」或「管理后台」</li>
-                <li>找到「API」或「密钥管理」相关菜单</li>
-                <li>点击「创建 API Key」</li>
-              </ol>
-            </div>
-          </details>
-
-          <details style="border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;">
-            <summary style="padding:var(--spacing-4);cursor:pointer;font-weight:500;background:var(--bg-secondary);">测试连接失败怎么办？</summary>
-            <div style="padding:var(--spacing-4);font-size:14px;color:var(--text-secondary);">
-              <strong>常见原因及解决方法：</strong>
-              <ul style="padding-left:var(--spacing-5);margin-top:var(--spacing-2);">
-                <li><strong>Key 无效（401/403）</strong>：检查是否复制完整，注意不要多复制空格</li>
-                <li><strong>余额不足（429）</strong>：需要先在服务商后台充值</li>
-                <li><strong>网络问题</strong>：国内用户建议选择国内服务商，访问更稳定</li>
-                <li><strong>Key 权限不足</strong>：部分服务商需要单独开通 API 权限</li>
-              </ul>
-            </div>
-          </details>
-
-          <details style="border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;">
-            <summary style="padding:var(--spacing-4);cursor:pointer;font-weight:500;background:var(--bg-secondary);">API Key 安全吗？会泄露吗？</summary>
-            <div style="padding:var(--spacing-4);font-size:14px;color:var(--text-secondary);">
-              您的 API Key 仅保存在浏览器本地（chrome.storage.local），<strong>不会上传到我们的服务器</strong>。
-              <br><br>
-              安全建议：
-              <ul style="padding-left:var(--spacing-5);margin-top:var(--spacing-2);">
-                <li>不要分享您的 API Key 给他人</li>
-                <li>定期检查服务商后台的用量，发现异常及时更换 Key</li>
-                <li>部分服务商支持设置 Key 的使用范围和额度限制</li>
-              </ul>
-            </div>
-          </details>
-
-          <details style="border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;">
-            <summary style="padding:var(--spacing-4);cursor:pointer;font-weight:500;background:var(--bg-secondary);">可以使用多家服务商吗？</summary>
-            <div style="padding:var(--spacing-4);font-size:14px;color:var(--text-secondary);">
-              目前插件支持配置一家服务商。如果您想切换到其他服务商，只需在设置页重新选择并输入新的 API Key 即可。
-            </div>
-          </details>
-
-          <details style="border:1px solid var(--border-default);border-radius:var(--radius-md);overflow:hidden;">
-            <summary style="padding:var(--spacing-4);cursor:pointer;font-weight:500;background:var(--bg-secondary);">如何查看我的用量和费用？</summary>
-            <div style="padding:var(--spacing-4);font-size:14px;color:var(--text-secondary);">
-              用量和费用由您选择的服务商管理。请登录服务商后台查看详细的调用记录和账单。
-              <br><br>
-              插件本身不会产生额外费用，您只需支付服务商的 API 调用费用。
-            </div>
-          </details>
+        <h2 class="doc-h2">国内服务商</h2>
+        <p class="doc-p">国内服务商的优势是<strong class="doc-strong">访问稳定</strong>、<strong class="doc-strong">支持支付宝/微信充值</strong>，推荐优先选择。</p>
+        <div class="provider-grid">
+          <div class="provider-card"><div class="provider-card-icon">🟠</div><div class="provider-card-title">DeepSeek</div><div class="provider-card-desc">高性价比，支持支付宝</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🟡</div><div class="provider-card-title">通义千问</div><div class="provider-card-desc">阿里云，稳定可靠</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🟤</div><div class="provider-card-title">智谱清言</div><div class="provider-card-desc">免费模型可用</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🔴</div><div class="provider-card-title">豆包</div><div class="provider-card-desc">字节跳动，性能强劲</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🌙</div><div class="provider-card-title">Moonshot</div><div class="provider-card-desc">长文本处理能力强</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🔷</div><div class="provider-card-title">百川大模型</div><div class="provider-card-desc">中文能力出色</div></div>
+          <div class="provider-card"><div class="provider-card-icon">💠</div><div class="provider-card-title">零一万物</div><div class="provider-card-desc">性能均衡</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🟣</div><div class="provider-card-title">MiniMax</div><div class="provider-card-desc">多模态能力强</div></div>
+          <div class="provider-card"><div class="provider-card-icon">⭐</div><div class="provider-card-title">阶跃星辰</div><div class="provider-card-desc">新兴服务商</div></div>
         </div>
-      </section>
-
-      <!-- DeepSeek -->
-      <section class="content-section" id="section-deepseek">
-        <div class="section-header">
-          <h1 class="section-title">🟠 DeepSeek 配置指南</h1>
-          <p class="section-subtitle">深度求索 - 高性价比国产大模型，支持支付宝充值</p>
+        <h2 class="doc-h2">国际服务商</h2>
+        <p class="doc-p">国际服务商模型能力强，但国内访问可能需要稳定的网络环境。</p>
+        <div class="provider-grid">
+          <div class="provider-card"><div class="provider-card-icon">🟢</div><div class="provider-card-title">OpenAI</div><div class="provider-card-desc">GPT-4o，全球领先</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🟣</div><div class="provider-card-title">Anthropic</div><div class="provider-card-desc">Claude，安全性著称</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🔵</div><div class="provider-card-title">Google AI</div><div class="provider-card-desc">Gemini，超长上下文</div></div>
+          <div class="provider-card"><div class="provider-card-icon">🚀</div><div class="provider-card-title">OpenRouter</div><div class="provider-card-desc">聚合平台，一个 Key 多模型</div></div>
         </div>
-
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册 DeepSeek 账号</div>
-            <div class="step-desc">访问 DeepSeek 开放平台，使用手机号或邮箱注册账号</div>
-            <div class="step-actions">
-              <a href="https://platform.deepseek.com/" target="_blank" class="btn-link">前往注册 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">充值或使用免费额度</div>
-            <div class="step-desc">新用户通常有免费额度可供测试。如需更多用量，可在「费用中心」使用支付宝充值</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在左侧菜单找到「API Keys」，点击「创建 API Key」，输入名称后确认创建</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">4</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">点击复制按钮获取 Key（格式通常为 sk- 开头），返回 ChatGenius 设置页粘贴即可</div>
-          </div>
-        </div>
-
-        <div class="tip-box">
-          <div class="tip-title">💡 提示</div>
-          <div class="tip-content">
-            DeepSeek 的 API Key 以 <code style="background:var(--bg-tertiary);padding:2px 6px;border-radius:4px;font-family:var(--font-mono);font-size:12px;">sk-</code> 开头，请确保复制完整。
+        <div class="callout callout-blue">
+          <span class="callout-icon">i</span>
+          <div class="callout-body">
+            <div class="callout-title">不确定选哪个？</div>
+            <div class="callout-text">推荐从 DeepSeek 开始 — 价格实惠、支付宝充值、国内直连。点击左侧菜单查看详细配置教程。</div>
           </div>
         </div>
       </section>
 
-      <!-- 通义千问 -->
-      <section class="content-section" id="section-qwen">
-        <div class="section-header">
-          <h1 class="section-title">🟡 通义千问配置指南</h1>
-          <p class="section-subtitle">阿里云旗下大模型，稳定可靠，新人有免费额度</p>
-        </div>
-
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册阿里云账号</div>
-            <div class="step-desc">访问阿里云官网，注册并完成实名认证（如已有账号可直接登录）</div>
-            <div class="step-actions">
-              <a href="https://dashscope.console.aliyun.com/" target="_blank" class="btn-link">前往控制台 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">开通 DashScope 服务</div>
-            <div class="step-desc">在 DashScope 控制台开通服务，新用户通常有免费额度</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在「API-KEY 管理」页面创建新的密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">4</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key（格式通常为 sk- 开头），返回 ChatGenius 设置页粘贴即可</div>
-          </div>
+      <!-- ===== FAQ ===== -->
+      <section class="doc-section" id="s-faq">
+        <h1 class="doc-title">常见问题</h1>
+        <p class="doc-subtitle">配置过程中可能遇到的问题及解决方案。</p>
+        <div class="faq-list">
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')"><span>API Key 在哪里找？</span><svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="faq-a">每家服务商的 API Key 位置略有不同，但通常都在「控制台」→「API 密钥」或「API Keys」菜单下。<br><br><strong>通用查找路径：</strong><br>① 登录服务商官网<br>② 进入「控制台」或「管理后台」<br>③ 找到「API」或「密钥管理」相关菜单<br>④ 点击「创建 API Key」</div></div>
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')"><span>测试连接失败怎么办？</span><svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="faq-a"><strong>常见原因及解决方法：</strong><br>• <strong>Key 无效（401/403）</strong> — 检查是否复制完整，注意不要多复制空格<br>• <strong>余额不足（429）</strong> — 需要先在服务商后台充值<br>• <strong>网络问题</strong> — 国内用户建议选择国内服务商<br>• <strong>Key 权限不足</strong> — 部分服务商需要单独开通 API 权限</div></div>
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')"><span>API Key 安全吗？会泄露吗？</span><svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="faq-a">您的 API Key 仅保存在浏览器本地，<strong>不会上传到我们的服务器</strong>。<br><br><strong>安全建议：</strong><br>• 不要分享您的 API Key 给他人<br>• 定期检查服务商后台的用量，发现异常及时更换 Key<br>• 部分服务商支持设置 Key 的使用范围和额度限制</div></div>
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')"><span>可以使用多家服务商吗？</span><svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="faq-a">目前插件支持配置一家服务商。如需切换，在设置页重新选择并输入新的 API Key 即可。</div></div>
+          <div class="faq-item"><div class="faq-q" onclick="this.parentElement.classList.toggle('open')"><span>如何查看用量和费用？</span><svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg></div><div class="faq-a">用量和费用由您选择的服务商管理。请登录服务商后台查看详细的调用记录和账单。插件本身不会产生额外费用。</div></div>
         </div>
       </section>
 
-      <!-- 智谱清言 -->
-      <section class="content-section" id="section-zhipu">
-        <div class="section-header">
-          <h1 class="section-title">🟤 智谱清言配置指南</h1>
-          <p class="section-subtitle">清华系大模型，提供免费模型可用</p>
-        </div>
-
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册智谱开放平台账号</div>
-            <div class="step-desc">访问智谱开放平台，使用手机号注册</div>
-            <div class="step-actions">
-              <a href="https://open.bigmodel.cn/" target="_blank" class="btn-link">前往注册 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">领取免费额度</div>
-            <div class="step-desc">新用户注册后可领取免费 Token 额度，部分模型（如 GLM-4 Flash）完全免费</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在「API 密钥」页面创建新密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">4</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key，返回 ChatGenius 设置页粘贴即可</div>
-          </div>
-        </div>
-
-        <div class="tip-box">
-          <div class="tip-title">💡 提示</div>
-          <div class="tip-content">
-            智谱的 API Key 格式较长，通常是 <code style="background:var(--bg-tertiary);padding:2px 6px;border-radius:4px;font-family:var(--font-mono);font-size:12px;">xxxxxxxx.xxxxxxxx</code> 格式，请确保完整复制。
-          </div>
+      <!-- ===== DeepSeek ===== -->
+      <section class="doc-section" id="s-deepseek">
+        <h1 class="doc-title">DeepSeek 配置</h1>
+        <p class="doc-subtitle">深度求索 — 高性价比国产大模型，支持支付宝充值，国内直连稳定。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册账号</div><div class="step-desc">访问 DeepSeek 开放平台，使用手机号或邮箱注册账号。</div><div class="step-action"><a href="https://platform.deepseek.com/" target="_blank" class="btn-primary">前往 DeepSeek →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">获取额度</div><div class="step-desc">新用户通常有免费额度可供测试。如需更多用量，在「费用中心」使用支付宝充值。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">创建 API Key</div><div class="step-desc">在左侧菜单找到「API Keys」，点击「创建 API Key」，输入名称后确认。</div></div>
+          <div class="step-item"><div class="step-dot">4</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key，打开 ChatGenius 设置页粘贴即可。Key 格式以 <code class="doc-code">sk-</code> 开头。</div></div>
         </div>
       </section>
 
-      <!-- 豆包 -->
-      <section class="content-section" id="section-doubao">
-        <div class="section-header">
-          <h1 class="section-title">🔴 豆包配置指南</h1>
-          <p class="section-subtitle">字节跳动旗下大模型，性能强劲</p>
-        </div>
-
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册火山引擎账号</div>
-            <div class="step-desc">访问火山引擎控制台，注册并完成实名认证</div>
-            <div class="step-actions">
-              <a href="https://console.volcengine.com/ark" target="_blank" class="btn-link">前往控制台 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">开通豆包服务</div>
-            <div class="step-desc">在火山方舟控制台开通豆包模型服务</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在「API Key 管理」页面创建密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">4</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key，返回 ChatGenius 设置页粘贴即可</div>
-          </div>
+      <!-- ===== 通义千问 ===== -->
+      <section class="doc-section" id="s-qwen">
+        <h1 class="doc-title">通义千问配置</h1>
+        <p class="doc-subtitle">阿里云旗下大模型，稳定可靠，新人有免费额度。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册阿里云账号</div><div class="step-desc">访问阿里云官网注册并完成实名认证。如已有账号可直接登录。</div><div class="step-action"><a href="https://dashscope.console.aliyun.com/" target="_blank" class="btn-primary">前往控制台 →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">开通 DashScope 服务</div><div class="step-desc">在 DashScope 控制台开通服务，新用户通常有免费额度。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">创建 API Key</div><div class="step-desc">在「API-KEY 管理」页面创建新的密钥。</div></div>
+          <div class="step-item"><div class="step-dot">4</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key（格式以 <code class="doc-code">sk-</code> 开头），打开 ChatGenius 设置页粘贴即可。</div></div>
         </div>
       </section>
 
-      <!-- Moonshot -->
-      <section class="content-section" id="section-moonshot">
-        <div class="section-header">
-          <h1 class="section-title">🌙 Moonshot 配置指南</h1>
-          <p class="section-subtitle">月之暗面旗下大模型，擅长长文本处理</p>
+      <!-- ===== 智谱清言 ===== -->
+      <section class="doc-section" id="s-zhipu">
+        <h1 class="doc-title">智谱清言配置</h1>
+        <p class="doc-subtitle">清华系大模型，提供免费模型可用（GLM-4 Flash），注册简单。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册账号</div><div class="step-desc">访问智谱开放平台，使用手机号注册。</div><div class="step-action"><a href="https://open.bigmodel.cn/" target="_blank" class="btn-primary">前往智谱 →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">领取免费额度</div><div class="step-desc">新用户注册后可领取免费 Token 额度，部分模型完全免费。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">创建 API Key</div><div class="step-desc">在「API 密钥」页面创建新密钥。</div></div>
+          <div class="step-item"><div class="step-dot">4</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key，打开 ChatGenius 设置页粘贴即可。</div></div>
         </div>
+        <div class="callout callout-blue"><span class="callout-icon">i</span><div class="callout-body"><div class="callout-title">Key 格式说明</div><div class="callout-text">智谱的 API Key 格式较长，通常是 <code class="doc-code">xxxxxxxx.xxxxxxxx</code> 格式，请确保完整复制。</div></div></div>
+      </section>
 
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册 Moonshot 开放平台账号</div>
-            <div class="step-desc">访问 Moonshot 开放平台注册账号</div>
-            <div class="step-actions">
-              <a href="https://platform.moonshot.cn/" target="_blank" class="btn-link">前往注册 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在「API 密钥管理」页面创建新密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key（格式通常为 sk- 开头），返回 ChatGenius 设置页粘贴即可</div>
-          </div>
+      <!-- ===== 豆包 ===== -->
+      <section class="doc-section" id="s-doubao">
+        <h1 class="doc-title">豆包配置</h1>
+        <p class="doc-subtitle">字节跳动旗下大模型，性能强劲，适合高频调用场景。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册火山引擎账号</div><div class="step-desc">访问火山引擎控制台，注册并完成实名认证。</div><div class="step-action"><a href="https://console.volcengine.com/ark" target="_blank" class="btn-primary">前往控制台 →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">开通豆包服务</div><div class="step-desc">在火山方舟控制台开通豆包模型服务。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">创建 API Key</div><div class="step-desc">在「API Key 管理」页面创建密钥。</div></div>
+          <div class="step-item"><div class="step-dot">4</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key，打开 ChatGenius 设置页粘贴即可。</div></div>
         </div>
       </section>
 
-      <!-- 百川大模型 -->
-      <section class="content-section" id="section-baichuan">
-        <div class="section-header">
-          <h1 class="section-title">🔷 百川大模型配置指南</h1>
-          <p class="section-subtitle">百川智能旗下大模型，中文能力出色</p>
-        </div>
-
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册百川开放平台账号</div>
-            <div class="step-desc">访问百川开放平台注册账号</div>
-            <div class="step-actions">
-              <a href="https://platform.baichuan-ai.com/" target="_blank" class="btn-link">前往注册 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在「API Keys」页面创建新密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key，返回 ChatGenius 设置页粘贴即可</div>
-          </div>
+      <!-- ===== Moonshot ===== -->
+      <section class="doc-section" id="s-moonshot">
+        <h1 class="doc-title">Moonshot 配置</h1>
+        <p class="doc-subtitle">月之暗面旗下大模型，擅长长文本处理（支持 128K 上下文）。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册账号</div><div class="step-desc">访问 Moonshot 开放平台注册账号。</div><div class="step-action"><a href="https://platform.moonshot.cn/" target="_blank" class="btn-primary">前往 Moonshot →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">创建 API Key</div><div class="step-desc">在「API 密钥管理」页面创建新密钥。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key（格式以 <code class="doc-code">sk-</code> 开头），打开 ChatGenius 设置页粘贴即可。</div></div>
         </div>
       </section>
 
-      <!-- 零一万物 -->
-      <section class="content-section" id="section-yi">
-        <div class="section-header">
-          <h1 class="section-title">💠 零一万物配置指南</h1>
-          <p class="section-subtitle">李开复创办的 AI 公司旗下大模型</p>
-        </div>
-
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册零一万物开放平台账号</div>
-            <div class="step-desc">访问零一万物开放平台注册账号</div>
-            <div class="step-actions">
-              <a href="https://platform.lingyiwanwu.com/" target="_blank" class="btn-link">前往注册 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在「API 密钥」页面创建新密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key，返回 ChatGenius 设置页粘贴即可</div>
-          </div>
+      <!-- ===== 百川 ===== -->
+      <section class="doc-section" id="s-baichuan">
+        <h1 class="doc-title">百川大模型配置</h1>
+        <p class="doc-subtitle">百川智能旗下大模型，中文能力出色。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册账号</div><div class="step-desc">访问百川开放平台注册账号。</div><div class="step-action"><a href="https://platform.baichuan-ai.com/" target="_blank" class="btn-primary">前往百川 →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">创建 API Key</div><div class="step-desc">在「API Keys」页面创建新密钥。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key，打开 ChatGenius 设置页粘贴即可。</div></div>
         </div>
       </section>
 
-      <!-- MiniMax -->
-      <section class="content-section" id="section-minimax">
-        <div class="section-header">
-          <h1 class="section-title">🟣 MiniMax 配置指南</h1>
-          <p class="section-subtitle">MiniMax 旗下大模型，多模态能力强</p>
-        </div>
-
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册 MiniMax 开放平台账号</div>
-            <div class="step-desc">访问 MiniMax 开放平台注册账号</div>
-            <div class="step-actions">
-              <a href="https://www.minimaxi.com/" target="_blank" class="btn-link">前往注册 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在「接口密钥」页面创建新密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key，返回 ChatGenius 设置页粘贴即可</div>
-          </div>
+      <!-- ===== 零一万物 ===== -->
+      <section class="doc-section" id="s-yi">
+        <h1 class="doc-title">零一万物配置</h1>
+        <p class="doc-subtitle">零一万物旗下大模型，性能均衡。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册账号</div><div class="step-desc">访问零一万物开放平台注册账号。</div><div class="step-action"><a href="https://platform.lingyiwanwu.com/" target="_blank" class="btn-primary">前往零一万物 →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">创建 API Key</div><div class="step-desc">在「API 密钥」页面创建新密钥。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key，打开 ChatGenius 设置页粘贴即可。</div></div>
         </div>
       </section>
 
-      <!-- 阶跃星辰 -->
-      <section class="content-section" id="section-stepfun">
-        <div class="section-header">
-          <h1 class="section-title">⭐ 阶跃星辰配置指南</h1>
-          <p class="section-subtitle">阶跃星辰旗下大模型</p>
-        </div>
-
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册阶跃星辰开放平台账号</div>
-            <div class="step-desc">访问阶跃星辰开放平台注册账号</div>
-            <div class="step-actions">
-              <a href="https://platform.stepfun.com/" target="_blank" class="btn-link">前往注册 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在「API 密钥」页面创建新密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key，返回 ChatGenius 设置页粘贴即可</div>
-          </div>
+      <!-- ===== MiniMax ===== -->
+      <section class="doc-section" id="s-minimax">
+        <h1 class="doc-title">MiniMax 配置</h1>
+        <p class="doc-subtitle">MiniMax 旗下大模型，多模态能力强。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册账号</div><div class="step-desc">访问 MiniMax 开放平台注册账号。</div><div class="step-action"><a href="https://www.minimaxi.com/" target="_blank" class="btn-primary">前往 MiniMax →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">创建 API Key</div><div class="step-desc">在「接口密钥」页面创建新密钥。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key，打开 ChatGenius 设置页粘贴即可。</div></div>
         </div>
       </section>
 
-      <!-- OpenAI -->
-      <section class="content-section" id="section-openai">
-        <div class="section-header">
-          <h1 class="section-title">🟢 OpenAI 配置指南</h1>
-          <p class="section-subtitle">ChatGPT 背后的公司，全球最知名的大模型服务商</p>
-        </div>
-
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册 OpenAI 账号</div>
-            <div class="step-desc">访问 OpenAI 官网，使用邮箱或 Google 账号注册</div>
-            <div class="step-actions">
-              <a href="https://platform.openai.com/" target="_blank" class="btn-link">前往注册 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">充值额度</div>
-            <div class="step-desc">在 Billing 页面添加支付方式并充值（支持国际信用卡）</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在 API Keys 页面创建新密钥，选择「Create new secret key」</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">4</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key（格式为 sk- 开头），返回 ChatGenius 设置页粘贴即可</div>
-          </div>
-        </div>
-
-        <div class="tip-box warning">
-          <div class="tip-title">⚠️ 注意</div>
-          <div class="tip-content">
-            国内用户访问 OpenAI 可能需要稳定的网络环境。如遇到连接问题，建议选择国内服务商。
-          </div>
+      <!-- ===== 阶跃星辰 ===== -->
+      <section class="doc-section" id="s-stepfun">
+        <h1 class="doc-title">阶跃星辰配置</h1>
+        <p class="doc-subtitle">阶跃星辰旗下大模型。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册账号</div><div class="step-desc">访问阶跃星辰开放平台注册账号。</div><div class="step-action"><a href="https://platform.stepfun.com/" target="_blank" class="btn-primary">前往阶跃星辰 →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">创建 API Key</div><div class="step-desc">在「API 密钥」页面创建新密钥。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key，打开 ChatGenius 设置页粘贴即可。</div></div>
         </div>
       </section>
 
-      <!-- Anthropic -->
-      <section class="content-section" id="section-anthropic">
-        <div class="section-header">
-          <h1 class="section-title">🟣 Anthropic 配置指南</h1>
-          <p class="section-subtitle">Claude 系列模型的开发商，安全性著称</p>
+      <!-- ===== OpenAI ===== -->
+      <section class="doc-section" id="s-openai">
+        <h1 class="doc-title">OpenAI 配置</h1>
+        <p class="doc-subtitle">ChatGPT 背后的公司，全球最知名的大模型服务商。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册账号</div><div class="step-desc">访问 OpenAI 官网，使用邮箱或 Google 账号注册。</div><div class="step-action"><a href="https://platform.openai.com/" target="_blank" class="btn-primary">前往 OpenAI →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">充值额度</div><div class="step-desc">在 Billing 页面添加支付方式并充值（支持国际信用卡）。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">创建 API Key</div><div class="step-desc">在 API Keys 页面选择「Create new secret key」创建新密钥。</div></div>
+          <div class="step-item"><div class="step-dot">4</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key（格式以 <code class="doc-code">sk-</code> 开头），打开 ChatGenius 设置页粘贴即可。</div></div>
         </div>
+        <div class="callout callout-amber"><span class="callout-icon">!</span><div class="callout-body"><div class="callout-title">网络要求</div><div class="callout-text">国内用户访问 OpenAI 可能需要稳定的网络环境。如遇到连接问题，建议选择国内服务商。</div></div></div>
+      </section>
 
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册 Anthropic 账号</div>
-            <div class="step-desc">访问 Anthropic Console 注册账号</div>
-            <div class="step-actions">
-              <a href="https://console.anthropic.com/" target="_blank" class="btn-link">前往注册 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在 API Keys 页面创建新密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key（格式为 sk-ant- 开头），返回 ChatGenius 设置页粘贴即可</div>
-          </div>
+      <!-- ===== Anthropic ===== -->
+      <section class="doc-section" id="s-anthropic">
+        <h1 class="doc-title">Anthropic 配置</h1>
+        <p class="doc-subtitle">Claude 系列模型的开发商，以安全性和长文本能力著称。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册账号</div><div class="step-desc">访问 Anthropic Console 注册账号。</div><div class="step-action"><a href="https://console.anthropic.com/" target="_blank" class="btn-primary">前往 Anthropic →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">创建 API Key</div><div class="step-desc">在 API Keys 页面创建新密钥。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key（格式以 <code class="doc-code">sk-ant-</code> 开头），打开 ChatGenius 设置页粘贴即可。</div></div>
         </div>
+        <div class="callout callout-amber"><span class="callout-icon">!</span><div class="callout-body"><div class="callout-title">网络要求</div><div class="callout-text">国内用户访问 Anthropic 可能需要稳定的网络环境。如遇到连接问题，建议选择国内服务商。</div></div></div>
+      </section>
 
-        <div class="tip-box warning">
-          <div class="tip-title">⚠️ 注意</div>
-          <div class="tip-content">
-            国内用户访问 Anthropic 可能需要稳定的网络环境。如遇到连接问题，建议选择国内服务商。
-          </div>
+      <!-- ===== Google AI ===== -->
+      <section class="doc-section" id="s-google">
+        <h1 class="doc-title">Google AI 配置</h1>
+        <p class="doc-subtitle">Gemini 系列模型，Google 出品，支持超长上下文。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">登录 Google AI Studio</div><div class="step-desc">使用 Google 账号登录 Google AI Studio。</div><div class="step-action"><a href="https://aistudio.google.com/apikey" target="_blank" class="btn-primary">前往获取 Key →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">创建 API Key</div><div class="step-desc">点击「Create API Key」创建新密钥。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key，打开 ChatGenius 设置页粘贴即可。</div></div>
+        </div>
+        <div class="callout callout-amber"><span class="callout-icon">!</span><div class="callout-body"><div class="callout-title">网络要求</div><div class="callout-text">国内用户访问 Google AI 可能需要稳定的网络环境。如遇到连接问题，建议选择国内服务商。</div></div></div>
+      </section>
+
+      <!-- ===== OpenRouter ===== -->
+      <section class="doc-section" id="s-openrouter">
+        <h1 class="doc-title">OpenRouter 配置</h1>
+        <p class="doc-subtitle">聚合多家大模型的统一接口平台，一个 Key 访问多种模型。</p>
+        <div class="steps">
+          <div class="step-item"><div class="step-dot">1</div><div class="step-title">注册账号</div><div class="step-desc">访问 OpenRouter 官网，使用 Google 或 GitHub 账号登录。</div><div class="step-action"><a href="https://openrouter.ai/" target="_blank" class="btn-primary">前往 OpenRouter →</a></div></div>
+          <div class="step-item"><div class="step-dot">2</div><div class="step-title">创建 API Key</div><div class="step-desc">在 Keys 页面创建新密钥。</div></div>
+          <div class="step-item"><div class="step-dot">3</div><div class="step-title">粘贴到插件</div><div class="step-desc">复制生成的 Key（格式以 <code class="doc-code">sk-or-</code> 开头），打开 ChatGenius 设置页粘贴即可。</div></div>
+        </div>
+        <div class="callout callout-blue"><span class="callout-icon">i</span><div class="callout-body"><div class="callout-title">关于 OpenRouter</div><div class="callout-text">OpenRouter 聚合了多家大模型，您可以用一个 Key 访问多种模型。但价格可能比直接使用原厂稍高。</div></div></div>
+      </section>
+
+      <!-- ===== Contact ===== -->
+      <section class="doc-section" id="s-contact">
+        <h1 class="doc-title">联系客服</h1>
+        <p class="doc-subtitle">遇到问题？我们随时为您提供帮助。</p>
+        <div class="contact-grid">
+          <div class="contact-card"><div class="contact-card-icon">✉</div><div class="contact-card-title">邮件支持</div><div class="contact-card-desc">support@chatgenius.ai</div></div>
+          <div class="contact-card"><div class="contact-card-icon">◎</div><div class="contact-card-title">微信客服</div><div class="contact-card-desc">扫码添加客服微信</div></div>
+        </div>
+        <div class="info-box">
+          <div class="info-box-title">反馈问题时，请提供以下信息</div>
+          <ul class="doc-ul">
+            <li class="doc-li">您使用的服务商名称</li>
+            <li class="doc-li">遇到的错误提示（如有）</li>
+            <li class="doc-li">您已尝试的解决方法</li>
+            <li class="doc-li">截图（如方便）</li>
+          </ul>
         </div>
       </section>
 
-      <!-- Google AI -->
-      <section class="content-section" id="section-google">
-        <div class="section-header">
-          <h1 class="section-title">🔵 Google AI 配置指南</h1>
-          <p class="section-subtitle">Gemini 系列模型，Google 出品</p>
-        </div>
+    </div>
+  </main>
+</div>
 
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册 Google AI Studio 账号</div>
-            <div class="step-desc">使用 Google 账号登录 Google AI Studio</div>
-            <div class="step-actions">
-              <a href="https://aistudio.google.com/apikey" target="_blank" class="btn-link">前往获取 Key →</a>
-            </div>
-          </div>
+<script>
+  var navLinks = document.querySelectorAll('.nav-link[data-s]');
+  var docSections = document.querySelectorAll('.doc-section');
+  var sidebar = document.getElementById('sidebar');
+  var overlay = document.getElementById('overlay');
 
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">点击「Create API Key」创建新密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key，返回 ChatGenius 设置页粘贴即可</div>
-          </div>
-        </div>
-
-        <div class="tip-box warning">
-          <div class="tip-title">⚠️ 注意</div>
-          <div class="tip-content">
-            国内用户访问 Google AI 可能需要稳定的网络环境。如遇到连接问题，建议选择国内服务商。
-          </div>
-        </div>
-      </section>
-
-      <!-- OpenRouter -->
-      <section class="content-section" id="section-openrouter">
-        <div class="section-header">
-          <h1 class="section-title">🚀 OpenRouter 配置指南</h1>
-          <p class="section-subtitle">聚合多家大模型的统一接口平台</p>
-        </div>
-
-        <div class="steps-container">
-          <div class="step">
-            <div class="step-number">1</div>
-            <div class="step-title">注册 OpenRouter 账号</div>
-            <div class="step-desc">访问 OpenRouter 官网，使用 Google 或 GitHub 账号登录</div>
-            <div class="step-actions">
-              <a href="https://openrouter.ai/" target="_blank" class="btn-link">前往注册 →</a>
-            </div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">2</div>
-            <div class="step-title">创建 API Key</div>
-            <div class="step-desc">在 Keys 页面创建新密钥</div>
-          </div>
-
-          <div class="step">
-            <div class="step-number">3</div>
-            <div class="step-title">复制并粘贴到插件</div>
-            <div class="step-desc">复制生成的 Key（格式为 sk-or- 开头），返回 ChatGenius 设置页粘贴即可</div>
-          </div>
-        </div>
-
-        <div class="tip-box">
-          <div class="tip-title">💡 提示</div>
-          <div class="tip-content">
-            OpenRouter 聚合了多家大模型，您可以使用一个 Key 访问多种模型。但价格可能比直接使用原厂稍高。
-          </div>
-        </div>
-      </section>
-
-      <!-- Contact -->
-      <section class="content-section" id="section-contact">
-        <div class="section-header">
-          <h1 class="section-title">💬 联系客服</h1>
-          <p class="section-subtitle">遇到问题？我们随时为您提供帮助</p>
-        </div>
-
-        <div class="contact-card">
-          <div class="contact-icon">🛟</div>
-          <div class="contact-title">需要帮助？</div>
-          <div class="contact-desc">如果您在配置过程中遇到任何问题，请通过以下方式联系我们，我们将尽快为您解答。</div>
-          <div class="contact-methods">
-            <div class="contact-method">
-              <div class="contact-method-icon">📧</div>
-              <div class="contact-method-title">邮件支持</div>
-              <div class="contact-method-desc">support@chatgenius.ai</div>
-            </div>
-            <div class="contact-method">
-              <div class="contact-method-icon">💬</div>
-              <div class="contact-method-title">微信客服</div>
-              <div class="contact-method-desc">扫码添加客服微信</div>
-            </div>
-          </div>
-        </div>
-
-        <div style="margin-top:var(--spacing-6);">
-          <h3 style="font-size:16px;font-weight:600;margin-bottom:var(--spacing-4);">📝 反馈问题时，请提供以下信息</h3>
-          <div style="background:var(--bg-secondary);border:1px solid var(--border-default);border-radius:var(--radius-md);padding:var(--spacing-4);">
-            <ul style="font-size:14px;color:var(--text-secondary);padding-left:var(--spacing-5);">
-              <li>您使用的服务商名称</li>
-              <li>遇到的错误提示（如有）</li>
-              <li>您已尝试的解决方法</li>
-              <li>截图（如方便）</li>
-            </ul>
-          </div>
-        </div>
-      </section>
-    </main>
-  </div>
-
-  <script>
-    // Theme Toggle
-    const themeToggle = document.getElementById('themeToggle');
-    themeToggle.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'light' ? 'dark' : 'light';
-      document.documentElement.setAttribute('data-theme', newTheme);
-      localStorage.setItem('chatgenius_theme', newTheme);
+  function showSection(id) {
+    docSections.forEach(function(s) { s.classList.remove('active'); });
+    navLinks.forEach(function(l) { l.classList.remove('active'); });
+    var sec = document.getElementById('s-' + id);
+    if (sec) sec.classList.add('active');
+    var link = document.querySelector('.nav-link[data-s="' + id + '"]');
+    if (link) link.classList.add('active');
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+    window.scrollTo(0, 0);
+  }
+  navLinks.forEach(function(link) {
+    link.addEventListener('click', function(e) {
+      e.preventDefault();
+      showSection(this.getAttribute('data-s'));
     });
-
-    // Sidebar Navigation
-    const sidebarItems = document.querySelectorAll('.sidebar-item');
-    const contentSections = document.querySelectorAll('.content-section');
-
-    function showSection(sectionId) {
-      contentSections.forEach(section => {
-        section.classList.remove('active');
-      });
-      sidebarItems.forEach(item => {
-        item.classList.remove('active');
-      });
-
-      const targetSection = document.getElementById('section-' + sectionId);
-      if (targetSection) {
-        targetSection.classList.add('active');
-      }
-
-      const targetItem = document.querySelector(`.sidebar-item[data-section="${sectionId}"]`);
-      if (targetItem) {
-        targetItem.classList.add('active');
-      }
-    }
-
-    sidebarItems.forEach(item => {
-      item.addEventListener('click', (e) => {
-        e.preventDefault();
-        const sectionId = item.getAttribute('data-section');
-        showSection(sectionId);
-      });
+  });
+  document.getElementById('menuBtn').addEventListener('click', function() {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  });
+  overlay.addEventListener('click', function() {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  });
+  document.getElementById('searchInput').addEventListener('input', function(e) {
+    var q = e.target.value.toLowerCase();
+    navLinks.forEach(function(l) {
+      l.style.display = l.textContent.toLowerCase().indexOf(q) !== -1 || !q ? '' : 'none';
     });
-
-    // Search
-    const searchInput = document.getElementById('searchInput');
-    searchInput.addEventListener('input', (e) => {
-      const query = e.target.value.toLowerCase();
-      sidebarItems.forEach(item => {
-        const text = item.textContent.toLowerCase();
-        if (text.includes(query) || query === '') {
-          item.style.display = '';
-        } else {
-          item.style.display = 'none';
-        }
-      });
-    });
-
-    // Handle URL hash
-    if (window.location.hash) {
-      const sectionId = window.location.hash.substring(1);
-      showSection(sectionId);
-    }
-  </script>
+  });
+  if (window.location.hash) {
+    var hash = window.location.hash.substring(1);
+    if (document.getElementById('s-' + hash)) showSection(hash);
+  }
+</script>
 </body>
 </html>
