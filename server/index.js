@@ -151,12 +151,6 @@ app.get('/extension.zip', (req, res) => {
   res.sendFile(landingPath + '/extension.zip');
 });
 
-// 大模型配置指南页面（独立页面，由项目根目录 serve）
-const guidePath = __dirname + '/../guide.html';
-app.get('/guide.html', (req, res) => {
-  res.sendFile(guidePath);
-});
-
 app.get('*', (req, res) => {
   res.sendFile(landingPath + '/index.html');
 });
