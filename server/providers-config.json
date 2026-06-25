@@ -1,0 +1,34 @@
+{
+  "version": "2026-06-24",
+  "recommended": [
+    {
+      "id": "deepseek",
+      "priority": 1,
+      "tags": ["支付宝充值", "国内直连", "高性价比"],
+      "scenario": "适合外贸询盘、复杂对话、代码生成",
+      "costEstimate": "日均50条 ≈ ¥1.2/天",
+      "costNote": "参考估算，以实际为准",
+      "enabled": true
+    },
+    {
+      "id": "qwen",
+      "priority": 2,
+      "tags": ["阿里云稳定", "新人免费额度", "多模态"],
+      "scenario": "适合客服对话、内容创作、多语言翻译",
+      "costEstimate": "日均50条 ≈ ¥0.8/天",
+      "costNote": "参考估算，以实际为准",
+      "enabled": true
+    },
+    {
+      "id": "zhipu",
+      "priority": 3,
+      "tags": ["免费模型可用", "国内直连", "注册简单"],
+      "scenario": "适合轻量对话、日常问答、免费体验",
+      "costEstimate": "GLM-4 Flash 免费使用",
+      "costNote": "免费模型有限速，以实际为准",
+      "enabled": true
+    }
+  ],
+  "complianceNotice": "合作推荐，服务由第三方提供",
+  "defaultProvider": "deepseek"
+}

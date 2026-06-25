@@ -121,6 +121,19 @@ app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
 });
 
+// API 推荐配置（公开接口，CDN 缓存 1 小时）
+let providersConfig = null;
+try {
+  providersConfig = JSON.parse(require('fs').readFileSync(__dirname + '/providers-config.json', 'utf8'));
+} catch (e) {
+  console.warn('⚠️ providers-config.json not found or invalid, using empty config');
+  providersConfig = { version: '0', recommended: [], defaultProvider: 'deepseek' };
+}
+app.get('/api/config/providers', (req, res) => {
+  res.setHeader('Cache-Control', 'public, max-age=3600');
+  res.json(providersConfig);
+});
+
 // Serve landing page static files
 const landingPath = __dirname + '/../landing-page/dist';
 // 静态资源默认缓存 1 小时（HTML/CSS/JS/图片等）

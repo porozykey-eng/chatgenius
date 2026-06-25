@@ -452,7 +452,12 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiKey = document.getElementById('apiKey')?.value || '';
 
     // API Key and Provider go to local storage (migrated from sync)
-    chrome.storage.local.set({ apiProvider, apiKey }, () => {
+    // 同时保存 apiUrl 和 modelName，供 background.js fallback 使用
+    const providerConf = (modelsConfig?.providers || []).find(p => p.id === apiProvider);
+    const apiUrl = providerConf?.url || '';
+    const modelName = (providerConf?.models || []).find(m => m.recommended)?.id
+      || (providerConf?.models || [])[0]?.id || '';
+    chrome.storage.local.set({ apiProvider, apiKey, apiUrl, modelName }, () => {
       if (chrome.runtime.lastError) {
         console.error('Local save failed:', chrome.runtime.lastError);
       }
@@ -1351,6 +1356,264 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ================================
+  // 远程推荐配置热更新
+  // ================================
+  const REMOTE_CONFIG_TTL = 24 * 60 * 60 * 1000; // 24 小时
+
+  async function fetchRemoteProviderConfig() {
+    try {
+      const stored = await chrome.storage.local.get(['remoteProviderConfig', 'remoteConfigFetchedAt']);
+      const now = Date.now();
+      // 24 小时内使用缓存
+      if (stored.remoteProviderConfig && stored.remoteConfigFetchedAt && (now - stored.remoteConfigFetchedAt < REMOTE_CONFIG_TTL)) {
+        mergeRemoteConfig(stored.remoteProviderConfig);
+        return;
+      }
+      // 拉取远程配置
+      const resp = await fetch(API_BASE_URL + '/api/config/providers');
+      if (!resp.ok) return;
+      const remoteConfig = await resp.json();
+      if (!remoteConfig?.recommended) return;
+      // 缓存到 local storage
+      chrome.storage.local.set({
+        remoteProviderConfig: remoteConfig,
+        remoteConfigFetchedAt: now
+      });
+      mergeRemoteConfig(remoteConfig);
+    } catch (e) {
+      // 静默失败，使用本地兜底配置
+    }
+  }
+
+  // 将远程推荐配置合并到本地 modelsConfig
+  function mergeRemoteConfig(remoteConfig) {
+    if (!modelsConfig?.providers || !remoteConfig?.recommended) return;
+    remoteConfig.recommended.forEach(remote => {
+      if (!remote.enabled) return;
+      const local = modelsConfig.providers.find(p => p.id === remote.id);
+      if (!local) return;
+      // 远程配置覆盖本地的导购字段
+      if (remote.priority !== undefined) local.priority = remote.priority;
+      if (remote.tags) local.tags = remote.tags;
+      if (remote.scenario) local.scenario = remote.scenario;
+      if (remote.costEstimate) local.costEstimate = remote.costEstimate;
+      if (remote.costNote) local.costNote = remote.costNote;
+      local.recommended = true;
+    });
+  }
+
+  // ================================
+  // Provider Cards — 导购式 API 选择
+  // ================================
+
+  // 当前选中的 provider（卡片模式）
+  let selectedCardProviderId = null;
+
+  // 渲染推荐厂商卡片
+  function renderProviderCards(containerId, context) {
+    const container = document.getElementById(containerId);
+    if (!container || !modelsConfig) return;
+    container.innerHTML = '';
+
+    const providers = (modelsConfig.providers || [])
+      .filter(p => p.recommended)
+      .sort((a, b) => (a.priority || 99) - (b.priority || 99));
+
+    providers.forEach(provider => {
+      const card = document.createElement('div');
+      card.className = 'provider-card';
+      card.dataset.providerId = provider.id;
+
+      const tagsHtml = (provider.tags || [])
+        .map(t => `<span class="provider-tag">${t}</span>`).join('');
+
+      card.innerHTML = `
+        <div class="provider-card-header">
+          <span class="provider-card-icon">${provider.icon}</span>
+          <span class="provider-card-name">${provider.name}</span>
+        </div>
+        ${tagsHtml ? `<div class="provider-card-tags">${tagsHtml}</div>` : ''}
+        ${provider.scenario ? `<div class="provider-card-scenario">${provider.scenario}</div>` : ''}
+        ${provider.costEstimate ? `<div class="provider-card-cost">${provider.costEstimate}</div>` : ''}
+      `;
+
+      card.addEventListener('click', () => selectProviderCard(provider.id, context));
+      container.appendChild(card);
+    });
+  }
+
+  // 选中推荐厂商卡片
+  function selectProviderCard(providerId, context) {
+    const provider = (modelsConfig?.providers || []).find(p => p.id === providerId);
+    if (!provider) return;
+
+    selectedCardProviderId = providerId;
+
+    // 高亮选中卡片
+    const containerId = context === 'onboarding' ? 'onboardingProviderCards' : 'settingsProviderCards';
+    const container = document.getElementById(containerId);
+    if (container) {
+      container.querySelectorAll('.provider-card').forEach(card => {
+        card.classList.toggle('selected', card.dataset.providerId === providerId);
+      });
+    }
+
+    // 展开 Key 输入区
+    const keySectionId = context === 'onboarding' ? 'onboardingKeySection' : 'settingsKeySection';
+    const keySection = document.getElementById(keySectionId);
+    if (keySection) keySection.style.display = '';
+
+    // 设置选中厂商信息
+    const iconId = context === 'onboarding' ? 'onboardingSelectedIcon' : 'settingsSelectedIcon';
+    const nameId = context === 'onboarding' ? 'onboardingSelectedName' : 'settingsSelectedName';
+    const linkId = context === 'onboarding' ? 'onboardingGetKeyLink' : 'settingsGetKeyLink';
+
+    const iconEl = document.getElementById(iconId);
+    const nameEl = document.getElementById(nameId);
+    const linkEl = document.getElementById(linkId);
+
+    if (iconEl) iconEl.textContent = provider.icon;
+    if (nameEl) nameEl.textContent = provider.name;
+    if (linkEl) {
+      if (provider.getKey) {
+        linkEl.href = provider.getKey;
+        linkEl.style.display = '';
+      } else {
+        linkEl.style.display = 'none';
+      }
+    }
+
+    // 更新隐藏的 apiProvider select（用于高级模式同步）
+    const apiProviderSelect = document.getElementById('apiProvider');
+    if (apiProviderSelect) apiProviderSelect.value = providerId;
+
+    // 清除之前的校验状态
+    const validationId = context === 'onboarding' ? 'onboardingKeyValidation' : 'settingsKeyValidation';
+    const validationEl = document.getElementById(validationId);
+    if (validationEl) {
+      validationEl.textContent = '';
+      validationEl.className = 'key-validation-hint';
+    }
+  }
+
+  // 智能 Key 格式校验
+  function validateKeyFormat(providerId, key) {
+    if (!key || key.length < 10) return null;
+    const provider = (modelsConfig?.providers || []).find(p => p.id === providerId);
+    if (!provider?.keyPattern) return null;
+    try {
+      const regex = new RegExp(provider.keyPattern);
+      return regex.test(key);
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // 更新 Key 校验 UI
+  function updateKeyValidation(providerId, key, context) {
+    const validationId = context === 'onboarding' ? 'onboardingKeyValidation' : 'settingsKeyValidation';
+    const validationEl = document.getElementById(validationId);
+    if (!validationEl) return;
+
+    const result = validateKeyFormat(providerId, key);
+    if (result === true) {
+      validationEl.textContent = '✓ 格式正确';
+      validationEl.className = 'key-validation-hint valid';
+    } else if (result === false) {
+      validationEl.textContent = '✗ Key 格式似乎不正确，请检查是否复制完整';
+      validationEl.className = 'key-validation-hint invalid';
+    } else {
+      validationEl.textContent = '';
+      validationEl.className = 'key-validation-hint';
+    }
+  }
+
+  // 拟人化错误提示
+  function getFriendlyError(status, providerName) {
+    const zh = currentLang === 'zh';
+    switch (status) {
+      case 401: case 403:
+        return zh ? 'Key 似乎无效，请检查是否复制完整' : 'Key appears invalid, please check';
+      case 429:
+        return zh ? (providerName + ' 余额不足或请求频繁，请先充值') : 'Rate limited or insufficient balance';
+      case 402:
+        return zh ? (providerName + ' 余额不足，请先充值') : 'Insufficient balance';
+      default:
+        return zh ? ('连接失败 (' + status + ')，请稍后重试') : ('Connection failed (' + status + ')');
+    }
+  }
+
+  // 通用测试连接逻辑（卡片模式和高级模式共用）
+  async function doTestConnection(providerId, apiKey, resultEl, btnEl) {
+    if (!apiKey) {
+      if (resultEl) {
+        resultEl.textContent = currentLang === 'zh' ? '请先输入 API Key' : 'Please enter API Key';
+        resultEl.style.color = 'var(--error)';
+      }
+      return;
+    }
+
+    if (btnEl) { btnEl.disabled = true; btnEl.textContent = currentLang === 'zh' ? '测试中...' : 'Testing...'; }
+    if (resultEl) { resultEl.textContent = currentLang === 'zh' ? '正在测试连接...' : 'Testing connection...'; resultEl.style.color = 'var(--text-secondary)'; }
+
+    try {
+      let testUrl, headers, body;
+      const providerConfig = modelsConfig?.providers?.find(p => p.id === providerId);
+
+      if (providerId === 'anthropic') {
+        testUrl = (providerConfig?.url) || 'https://api.anthropic.com/v1/messages';
+        headers = { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
+        body = JSON.stringify({ model: 'claude-3-haiku-20240307', max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] });
+      } else if (providerId === 'google') {
+        testUrl = (providerConfig?.url) || 'https://generativelanguage.googleapis.com/v1beta/openai/chat/completions';
+        headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
+        body = JSON.stringify({ model: 'gemini-2.0-flash', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 10 });
+      } else {
+        testUrl = (providerConfig?.url) || 'https://api.openai.com/v1/chat/completions';
+        headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
+        const testModel = (providerConfig?.models || []).find(m => m.recommended)?.id
+          || (providerConfig?.models || [])[0]?.id || 'gpt-3.5-turbo';
+        body = JSON.stringify({ model: testModel, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 10 });
+      }
+
+      const response = await fetch(testUrl, { method: 'POST', headers, body });
+      if (response.ok) {
+        if (resultEl) { resultEl.textContent = '✓ ' + (currentLang === 'zh' ? '连接成功！' : 'Connection successful!'); resultEl.style.color = 'var(--success)'; }
+        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator connected'; }
+        if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
+        chrome.storage.sync.set({ connectionValid: true });
+      } else {
+        const errMsg = getFriendlyError(response.status, providerConfig?.name || providerId);
+        if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
+        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
+        if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
+        chrome.storage.sync.set({ connectionValid: false });
+      }
+    } catch (error) {
+      const errMsg = currentLang === 'zh' ? '网络连接失败，请检查网络' : 'Network connection failed';
+      if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
+      if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
+      if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
+      chrome.storage.sync.set({ connectionValid: false });
+    } finally {
+      if (btnEl) { btnEl.disabled = false; btnEl.textContent = currentLang === 'zh' ? '测试连接' : 'Test Connection'; }
+    }
+  }
+
+  // 为卡片模式的 Key 输入框绑定校验事件
+  function setupCardKeyValidation(context) {
+    const inputId = context === 'onboarding' ? 'onboardingApiKeyInput' : 'apiKey';
+    const input = document.getElementById(inputId);
+    if (!input) return;
+
+    input.addEventListener('input', () => {
+      const providerId = selectedCardProviderId || document.getElementById('apiProvider')?.value || 'openai';
+      updateKeyValidation(providerId, input.value, context);
+      scheduleSave();
+    });
+  }
+
   // Update API Key placeholder and "Get Key" link based on selected provider
   function updateApiProviderUI(providerId) {
     if (!modelsConfig) return;
@@ -1377,7 +1640,32 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
   if (apiKeyInput) {
-    apiKeyInput.addEventListener('input', () => scheduleSave());
+    apiKeyInput.addEventListener('input', () => {
+      // 同步到高级模式输入框
+      const advInput = document.getElementById('apiKeyAdvanced');
+      if (advInput && advInput.value !== apiKeyInput.value) advInput.value = apiKeyInput.value;
+      scheduleSave();
+    });
+  }
+
+  // 高级模式 API Key 输入同步
+  const apiKeyAdvancedInput = document.getElementById('apiKeyAdvanced');
+  if (apiKeyAdvancedInput) {
+    apiKeyAdvancedInput.addEventListener('input', () => {
+      // 同步到卡片模式输入框
+      if (apiKeyInput && apiKeyInput.value !== apiKeyAdvancedInput.value) {
+        apiKeyInput.value = apiKeyAdvancedInput.value;
+      }
+      scheduleSave();
+    });
+  }
+
+  // 高级模式 API Key show/hide toggle
+  const apiKeyAdvancedToggle = document.getElementById('apiKeyAdvancedToggle');
+  if (apiKeyAdvancedToggle && apiKeyAdvancedInput) {
+    apiKeyAdvancedToggle.addEventListener('click', () => {
+      apiKeyAdvancedInput.type = apiKeyAdvancedInput.type === 'password' ? 'text' : 'password';
+    });
   }
 
   // API Key show/hide toggle
@@ -1394,75 +1682,69 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // Settings page test connection — 卡片模式
   if (testApiBtn) {
-    testApiBtn.addEventListener('click', async () => {
-      const provider = apiProvider?.value || 'openai';
-      const key = apiKeyInput?.value.trim();
-      if (!key) {
-        showToast('Please enter API Key', true);
-        return;
+    testApiBtn.addEventListener('click', () => {
+      const provider = selectedCardProviderId || document.getElementById('apiProvider')?.value || 'openai';
+      const key = document.getElementById('apiKey')?.value.trim() || '';
+      const resultEl = document.getElementById('settingsKeyValidation');
+      doTestConnection(provider, key, resultEl, testApiBtn);
+    });
+  }
+
+  // Settings page test connection — 高级模式
+  const testApiAdvancedBtn = document.getElementById('testApiAdvancedBtn');
+  if (testApiAdvancedBtn) {
+    testApiAdvancedBtn.addEventListener('click', () => {
+      const provider = document.getElementById('apiProvider')?.value || 'openai';
+      const key = document.getElementById('apiKeyAdvanced')?.value.trim() || '';
+      doTestConnection(provider, key, null, testApiAdvancedBtn);
+    });
+  }
+
+  // Onboarding test connection — 卡片模式
+  const onboardingTestBtn = document.getElementById('onboardingTestBtn');
+  if (onboardingTestBtn) {
+    onboardingTestBtn.addEventListener('click', () => {
+      const provider = selectedCardProviderId || 'openai';
+      const key = document.getElementById('onboardingApiKeyInput')?.value.trim() || '';
+      const resultEl = document.getElementById('onboardingTestResult');
+      doTestConnection(provider, key, resultEl, onboardingTestBtn);
+    });
+  }
+
+  // Onboarding test connection — 高级模式
+  const onboardingAdvancedTestBtn = document.getElementById('onboardingAdvancedTestBtn');
+  if (onboardingAdvancedTestBtn) {
+    onboardingAdvancedTestBtn.addEventListener('click', () => {
+      const provider = document.getElementById('onboardingProviderSelect')?.value || 'openai';
+      const key = document.getElementById('onboardingAdvancedApiKeyInput')?.value.trim() || '';
+      const resultEl = document.getElementById('onboardingAdvancedTestResult');
+      doTestConnection(provider, key, resultEl, onboardingAdvancedTestBtn);
+    });
+  }
+
+  // Onboarding 高级模式的下拉菜单联动
+  const onboardingProviderSelect = document.getElementById('onboardingProviderSelect');
+  if (onboardingProviderSelect) {
+    onboardingProviderSelect.addEventListener('change', () => {
+      const provider = (modelsConfig?.providers || []).find(p => p.id === onboardingProviderSelect.value);
+      const link = document.getElementById('onboardingAdvancedGetKeyLink');
+      if (link && provider?.getKey) {
+        link.href = provider.getKey;
+        link.style.display = '';
+      } else if (link) {
+        link.style.display = 'none';
       }
+    });
+  }
 
-      testApiBtn.disabled = true;
-      testApiBtn.textContent = I18N[currentLang].apiTesting || 'Testing...';
-      if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
-      if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiTesting || 'Testing...'; }
-
-      try {
-        let testUrl, headers, body;
-        const providerConfig = modelsConfig?.providers?.find(p => p.id === provider);
-        if (provider === 'anthropic') {
-          testUrl = (providerConfig?.url) || 'https://api.anthropic.com/v1/messages';
-          headers = { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' };
-          body = JSON.stringify({ model: 'claude-3-haiku-20240307', max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] });
-        } else if (provider === 'google') {
-          testUrl = (providerConfig?.url) || ('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + key);
-          headers = { 'Content-Type': 'application/json' };
-          body = JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }] });
-        } else {
-          testUrl = (providerConfig?.url) || 'https://api.openai.com/v1/chat/completions';
-          headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };
-          body = JSON.stringify({ model: 'gpt-3.5-turbo', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 10 });
-        }
-
-        const response = await fetch(testUrl, { method: 'POST', headers, body });
-        if (response.ok) {
-          if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator connected'; }
-          if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
-          showToast(I18N[currentLang].apiTestSuccess || 'Connection successful!');
-          chrome.storage.sync.set({ connectionValid: true }, () => {
-            if (chrome.runtime.lastError) console.error('Storage error:', chrome.runtime.lastError);
-          });
-        } else {
-          const errData = await response.json().catch(() => ({}));
-          const rawErr = errData.error?.message || errData.message || 'HTTP ' + response.status;
-          let errMsg;
-          if (response.status === 401 || response.status === 403) {
-            errMsg = currentLang === 'zh' ? 'API Key 无效或权限不足' : 'API Key invalid or insufficient permissions';
-          } else if (response.status === 429) {
-            errMsg = currentLang === 'zh' ? '请求频率过高或额度不足' : 'Rate limit exceeded or quota insufficient';
-          } else {
-            errMsg = rawErr;
-          }
-          if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
-          if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
-          showToast((I18N[currentLang].apiTestFail || 'Connection failed: ') + errMsg, true);
-          chrome.storage.sync.set({ connectionValid: false }, () => {
-            if (chrome.runtime.lastError) console.error('Storage error:', chrome.runtime.lastError);
-          });
-        }
-      } catch (error) {
-        const errMsg = currentLang === 'zh' ? '网络连接失败，请检查网络' : 'Network connection failed, please check your network';
-        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
-        if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
-        showToast((I18N[currentLang].apiTestFail || 'Connection failed: ') + errMsg, true);
-        chrome.storage.sync.set({ connectionValid: false }, () => {
-          if (chrome.runtime.lastError) console.error('Storage error:', chrome.runtime.lastError);
-        });
-      } finally {
-        testApiBtn.disabled = false;
-        testApiBtn.textContent = I18N[currentLang].testConnection || 'Test Connection';
-      }
+  // Onboarding 高级模式 Key 输入 show/hide toggle
+  const onboardingApiKeyToggle = document.getElementById('onboardingApiKeyToggle');
+  const onboardingApiKeyInput = document.getElementById('onboardingApiKeyInput');
+  if (onboardingApiKeyToggle && onboardingApiKeyInput) {
+    onboardingApiKeyToggle.addEventListener('click', () => {
+      onboardingApiKeyInput.type = onboardingApiKeyInput.type === 'password' ? 'text' : 'password';
     });
   }
 
@@ -1962,8 +2244,11 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPersonas();
         scheduleSave();
         showOnboardingStep(2);
+        // 渲染推荐厂商卡片 + 高级模式下拉菜单
+        renderProviderCards('onboardingProviderCards', 'onboarding');
         const providerSelect = document.getElementById('onboardingProviderSelect');
         if (providerSelect) loadApiProviders(providerSelect);
+        setupCardKeyValidation('onboarding');
       });
       grid.appendChild(card);
     });
@@ -1984,11 +2269,22 @@ document.addEventListener('DOMContentLoaded', () => {
   if (onboardingNextBtn) {
     onboardingNextBtn.addEventListener('click', () => {
       if (onboardingCurrentStep === 2) {
-        const providerSelect = document.getElementById('onboardingProviderSelect');
-        const keyInput = document.getElementById('onboardingApiKeyInput');
-        const provider = providerSelect?.value || 'openai';
-        const key = keyInput?.value || '';
-        chrome.storage.local.set({ apiProvider: provider, apiKey: key }, () => {
+        let provider, key;
+        if (selectedCardProviderId) {
+          // 卡片模式：使用选中的卡片厂商
+          provider = selectedCardProviderId;
+          key = document.getElementById('onboardingApiKeyInput')?.value || '';
+        } else {
+          // 高级模式：使用下拉菜单
+          provider = document.getElementById('onboardingProviderSelect')?.value || 'openai';
+          key = document.getElementById('onboardingAdvancedApiKeyInput')?.value || '';
+        }
+        // 同时保存 apiUrl 和 modelName
+        const providerConf = (modelsConfig?.providers || []).find(p => p.id === provider);
+        const apiUrl = providerConf?.url || '';
+        const modelName = (providerConf?.models || []).find(m => m.recommended)?.id
+          || (providerConf?.models || [])[0]?.id || '';
+        chrome.storage.local.set({ apiProvider: provider, apiKey: key, apiUrl, modelName }, () => {
           showOnboardingStep(3);
         });
       }
@@ -2116,9 +2412,41 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Load API providers dynamically, then set saved values from local storage
         loadApiProviders().then(() => {
-          if (apiProvider) apiProvider.value = localData.apiProvider || 'openai';
+          const savedProvider = localData.apiProvider || 'openai';
+          if (apiProvider) apiProvider.value = savedProvider;
           if (apiKeyInput) apiKeyInput.value = localData.apiKey || '';
-          updateApiProviderUI(localData.apiProvider || 'openai');
+          // 同步到高级模式输入框
+          const advKeyInput = document.getElementById('apiKeyAdvanced');
+          if (advKeyInput) advKeyInput.value = localData.apiKey || '';
+          updateApiProviderUI(savedProvider);
+
+          // 拉取远程推荐配置（异步，不阻塞渲染）
+          fetchRemoteProviderConfig().then(() => {
+            // 远程配置合并后，重新渲染卡片
+            renderProviderCards('settingsProviderCards', 'settings');
+            const isRecommended = (modelsConfig?.providers || []).find(
+              p => p.id === savedProvider && p.recommended
+            );
+            if (isRecommended) {
+              selectProviderCard(savedProvider, 'settings');
+            }
+          });
+
+          // 渲染推荐厂商卡片（设置页）
+          renderProviderCards('settingsProviderCards', 'settings');
+          setupCardKeyValidation('settings');
+
+          // 如果当前 provider 是推荐厂商，自动选中对应卡片
+          const isRecommended = (modelsConfig?.providers || []).find(
+            p => p.id === savedProvider && p.recommended
+          );
+          if (isRecommended) {
+            selectProviderCard(savedProvider, 'settings');
+            // 填入已保存的 Key
+            if (localData.apiKey && apiKeyInput) {
+              apiKeyInput.value = localData.apiKey;
+            }
+          }
         });
 
         // Add change listeners for auto-save

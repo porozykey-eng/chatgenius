@@ -278,6 +278,51 @@ const DEFAULT_FALLBACK_MODELS = [
   { name: 'gemini-pro', apiUrl: 'https://generativelanguage.googleapis.com/v1', enabled: false }
 ];
 
+// ================================
+// Models Config Loader（一次性加载，全局缓存）
+// ================================
+let _modelsConfig = null;
+async function getModelsConfig() {
+  if (!_modelsConfig) {
+    const resp = await fetch(chrome.runtime.getURL('models-config.json'));
+    _modelsConfig = await resp.json();
+  }
+  return _modelsConfig;
+}
+
+// 根据 provider id 解析完整 API 配置（URL + 推荐模型）
+async function resolveProviderConfig(providerId, apiKey) {
+  const config = await getModelsConfig();
+  const provider = (config.providers || []).find(p => p.id === providerId);
+  if (!provider) return null;
+  const recommendedModel = (provider.models || []).find(m => m.recommended)?.id
+    || (provider.models || [])[0]?.id
+    || 'gpt-3.5-turbo';
+  return {
+    apiUrl: provider.url,
+    modelName: recommendedModel,
+    apiKey: apiKey
+  };
+}
+
+// 从 local storage 读取 API 配置，合并到 data 对象
+async function loadApiSettings(data) {
+  const localApi = await chrome.storage.local.get(['apiProvider', 'apiKey', 'apiUrl', 'modelName']);
+  data.provider = localApi.apiProvider || 'openai';
+  data.apiKey = localApi.apiKey || '';
+
+  // 优先用 models-config.json 动态解析，fallback 到 local storage 缓存
+  const resolved = await resolveProviderConfig(data.provider, data.apiKey);
+  if (resolved) {
+    data.apiUrl = resolved.apiUrl;
+    data.modelName = resolved.modelName;
+  } else {
+    data.apiUrl = localApi.apiUrl || '';
+    data.modelName = localApi.modelName || '';
+  }
+  return data;
+}
+
 // Build correct API endpoint based on provider URL pattern
 function buildApiEndpoint(apiUrl) {
   const url = apiUrl.replace(/\/+$/, '');
@@ -528,7 +573,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // Validate request.context is an array (defensive against malformed messages)
       const context = Array.isArray(request.context) ? request.context : [];
       
-      const data = await chrome.storage.sync.get(['provider', 'apiUrl', 'apiKey', 'modelName', 'personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'totalReplies', 'fallbackModels', 'fallbackEnabled', 'licenseType', 'licenseCode']);
+      const data = await chrome.storage.sync.get(['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'totalReplies', 'fallbackModels', 'fallbackEnabled', 'licenseType', 'licenseCode']);
+      await loadApiSettings(data);
       try {
         if (!data.apiKey) {
           throw new Error('API Key not configured. Please open settings.');
@@ -686,7 +732,8 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       sendResponse({ success: true });
     } else if (request.action === 'previewChat') {
       // Preview chat for options page - reuses tryGenerate with full provider support
-      const data = await chrome.storage.sync.get(['provider', 'apiUrl', 'apiKey', 'modelName', 'personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'fallbackModels', 'fallbackEnabled', 'licenseType']);
+      const data = await chrome.storage.sync.get(['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'fallbackModels', 'fallbackEnabled', 'licenseType']);
+      await loadApiSettings(data);
       try {
         if (!data.apiKey) {
           throw new Error('请先配置 API Key');

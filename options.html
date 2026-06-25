@@ -1244,6 +1244,203 @@
     }
 
     /* ================================
+       Provider Cards — 导购式 API 选择
+       ================================ */
+    .provider-cards-grid {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: var(--spacing-3);
+      margin-bottom: var(--spacing-4);
+    }
+
+    .provider-card {
+      padding: var(--spacing-4);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: all var(--duration-base) var(--ease-out);
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+    }
+
+    .provider-card:hover {
+      border-color: var(--border-strong);
+      background: var(--bg-hover);
+    }
+
+    .provider-card.selected {
+      border-color: var(--accent);
+      background: var(--accent-glow);
+    }
+
+    .provider-card-header {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-2);
+    }
+
+    .provider-card-icon {
+      font-size: 20px;
+      line-height: 1;
+    }
+
+    .provider-card-name {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .provider-card-tags {
+      display: flex;
+      gap: 4px;
+      flex-wrap: wrap;
+    }
+
+    .provider-tag {
+      font-size: 11px;
+      padding: 2px 6px;
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+      color: var(--text-secondary);
+      white-space: nowrap;
+    }
+
+    .provider-card-scenario {
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.4;
+    }
+
+    .provider-card-cost {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: auto;
+    }
+
+    .selected-provider-bar {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-3) var(--spacing-4);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--spacing-3);
+      font-size: 13px;
+    }
+
+    .selected-provider-bar .provider-card-icon {
+      font-size: 18px;
+    }
+
+    .selected-provider-bar .provider-card-name {
+      font-size: 13px;
+      font-weight: 600;
+    }
+
+    .selected-provider-bar a {
+      margin-left: auto;
+      font-size: 12px;
+      color: var(--accent-text);
+      text-decoration: none;
+    }
+
+    .selected-provider-bar a:hover {
+      text-decoration: underline;
+    }
+
+    .key-validation-hint {
+      font-size: 12px;
+      margin-top: var(--spacing-1);
+      min-height: 18px;
+      transition: color var(--duration-fast);
+    }
+
+    .key-validation-hint.valid {
+      color: var(--success);
+    }
+
+    .key-validation-hint.invalid {
+      color: var(--error);
+    }
+
+    .key-privacy-note {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-top: var(--spacing-2);
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-1);
+    }
+
+    .key-tutorial {
+      margin-top: var(--spacing-3);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .key-tutorial summary {
+      padding: var(--spacing-2) var(--spacing-3);
+      font-size: 12px;
+      color: var(--text-secondary);
+      cursor: pointer;
+      background: var(--bg-secondary);
+    }
+
+    .key-tutorial summary:hover {
+      color: var(--text-primary);
+    }
+
+    .key-tutorial .tutorial-content {
+      padding: var(--spacing-3) var(--spacing-4);
+      font-size: 12px;
+      color: var(--text-secondary);
+      line-height: 1.6;
+    }
+
+    .key-tutorial .tutorial-content ol {
+      padding-left: var(--spacing-5);
+      margin: 0;
+    }
+
+    .key-tutorial .tutorial-content li {
+      margin-bottom: var(--spacing-1);
+    }
+
+    .key-tutorial .tutorial-note {
+      margin-top: var(--spacing-2);
+      padding: var(--spacing-2) var(--spacing-3);
+      background: var(--bg-tertiary);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+    }
+
+    .advanced-config-toggle {
+      margin-top: var(--spacing-4);
+      border: 1px solid var(--border-subtle);
+      border-radius: var(--radius-sm);
+      overflow: hidden;
+    }
+
+    .advanced-config-toggle summary {
+      padding: var(--spacing-2) var(--spacing-3);
+      font-size: 12px;
+      color: var(--text-tertiary);
+      cursor: pointer;
+      background: var(--bg-secondary);
+    }
+
+    .advanced-config-toggle summary:hover {
+      color: var(--text-secondary);
+    }
+
+    .advanced-config-toggle .advanced-config-body {
+      padding: var(--spacing-3) var(--spacing-4);
+    }
+
+    /* ================================
        Account Tab
        ================================ */
     .license-status-card {
@@ -1906,6 +2103,7 @@
     <!-- API Guide Bar -->
     <div id="apiGuideBar" class="api-guide-bar" style="display:none;">
       <span>建议先配置 API 以启用 AI 回复</span>
+      <a href="guide.html" target="_blank" class="btn btn-sm btn-secondary" style="margin-right:8px;">配置指南</a>
       <button class="btn btn-sm btn-primary" id="apiGuideConfigBtn">去配置</button>
       <button class="api-guide-close" id="apiGuideCloseBtn">×</button>
     </div>
@@ -2182,36 +2380,96 @@
           
           <div class="api-config-section">
             <div class="api-config-header">
-              <span class="api-config-title" data-i18n="apiProvider">API 提供商</span>
+              <span class="api-config-title" data-i18n="apiProvider">AI 引擎</span>
               <div class="api-status-indicator disconnected" id="apiStatusIndicator">
                 <span class="api-status-dot"></span>
                 <span id="apiStatusText" data-i18n="apiDisconnected">未连接</span>
               </div>
             </div>
-            <div class="form-grid">
-              <div class="form-group">
-                <label class="form-label" for="apiProvider" data-i18n="provider">提供商</label>
-                <select class="form-select" id="apiProvider">
-                  <option value="openai">OpenAI</option>
-                  <option value="anthropic">Anthropic</option>
-                  <option value="google">Google AI</option>
-                </select>
+
+            <!-- 推荐卡片区域 -->
+            <div id="settingsProviderCards" class="provider-cards-grid"></div>
+
+            <!-- 选中后展开的 Key 输入区 -->
+            <div id="settingsKeySection" style="display:none;">
+              <div class="selected-provider-bar">
+                <span id="settingsSelectedIcon" class="provider-card-icon"></span>
+                <span id="settingsSelectedName" class="provider-card-name"></span>
+                <a id="settingsGetKeyLink" href="#" target="_blank">获取 Key →</a>
               </div>
-              <div class="form-group">
-                <label class="form-label" for="apiKey" data-i18n="apiKey">API Key</label>
-                <div class="api-key-wrapper">
-                  <input type="password" class="form-input" id="apiKey" placeholder="sk-..." autocomplete="off" spellcheck="false" autocapitalize="off">
-                  <button type="button" class="api-key-toggle" id="apiKeyToggle" title="显示/隐藏">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </button>
+              <div class="form-grid">
+                <div class="form-group">
+                  <label class="form-label" for="apiKey" data-i18n="apiKey">API Key</label>
+                  <div class="api-key-wrapper">
+                    <input type="password" class="form-input" id="apiKey" placeholder="粘贴您的 API Key" autocomplete="off" spellcheck="false" autocapitalize="off">
+                    <button type="button" class="api-key-toggle" id="apiKeyToggle" title="显示/隐藏">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                        <circle cx="12" cy="12" r="3"></circle>
+                      </svg>
+                    </button>
+                  </div>
+                  <div id="settingsKeyValidation" class="key-validation-hint"></div>
+                  <div class="key-privacy-note">🔒 您的 API Key 仅保存在浏览器本地，不会上传到任何服务器</div>
                 </div>
               </div>
+              <button class="btn btn-secondary api-test-btn" id="testApiBtn" data-i18n="testConnection">测试连接</button>
+
+              <!-- 内嵌教程 -->
+              <details class="key-tutorial">
+                <summary>如何获取 API Key？</summary>
+                <div class="tutorial-content">
+                  <ol>
+                    <li>点击上方"获取 Key"链接，注册并登录</li>
+                    <li>在控制台找到 <strong>API Keys</strong> 页面</li>
+                    <li>点击"创建 Key"，复制生成的密钥</li>
+                    <li>回到此处粘贴即可</li>
+                  </ol>
+                  <p class="tutorial-note">💡 Key 只保存在您的浏览器本地，不会上传到任何服务器</p>
+                </div>
+              </details>
             </div>
-            <button class="btn btn-secondary api-test-btn" id="testApiBtn" data-i18n="testConnection">测试连接</button>
+
+            <!-- 折叠：已有 Key 的高级用户 -->
+            <details class="advanced-config-toggle" id="settingsAdvancedToggle">
+              <summary>已有 Key？自定义配置</summary>
+              <div class="advanced-config-body">
+                <div class="form-grid">
+                  <div class="form-group">
+                    <label class="form-label" for="apiProvider" data-i18n="provider">提供商</label>
+                    <select class="form-select" id="apiProvider">
+                      <option value="openai">OpenAI</option>
+                      <option value="anthropic">Anthropic</option>
+                      <option value="google">Google AI</option>
+                    </select>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="apiKeyAdvanced" data-i18n="apiKey">API Key</label>
+                    <div class="api-key-wrapper">
+                      <input type="password" class="form-input" id="apiKeyAdvanced" placeholder="sk-..." autocomplete="off" spellcheck="false" autocapitalize="off">
+                      <button type="button" class="api-key-toggle" id="apiKeyAdvancedToggle" title="显示/隐藏">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <button class="btn btn-secondary api-test-btn" id="testApiAdvancedBtn" data-i18n="testConnection">测试连接</button>
+                <a id="getKeyLink" href="#" target="_blank" style="font-size:12px;display:none;">如何获取 API Key？</a>
+              </div>
+            </details>
           </div>
+        </div>
+
+        <!-- 配置指南入口 -->
+        <div style="margin-top:var(--spacing-4);padding:var(--spacing-4);background:var(--bg-secondary);border:1px solid var(--border-default);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between;">
+          <div>
+            <div style="font-size:14px;font-weight:500;">📖 大模型配置指南</div>
+            <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">不知道如何获取 API Key？查看详细教程</div>
+          </div>
+          <a href="guide.html" target="_blank" style="padding:var(--spacing-2) var(--spacing-4);background:var(--accent);color:var(--bg-primary);border-radius:var(--radius-sm);font-size:13px;text-decoration:none;font-weight:500;">查看指南 →</a>
         </div>
       </div>
     </div>
@@ -2395,20 +2653,71 @@
           <p class="onboarding-desc" data-i18n="onboardingStep1Desc">选择一个角色模板，快速开始（可稍后自定义）：</p>
           <div id="onboardingTemplateGrid" class="onboarding-template-grid"></div>
         </div>
-        <!-- 步骤 2: 配置 API -->
+        <!-- 步骤 2: 配置 API（卡片式导购） -->
         <div id="onboardingStep2" class="onboarding-step" style="display:none;">
-          <p class="onboarding-desc" data-i18n="onboardingStep2Desc">配置你的 AI API（可稍后在设置中修改）：</p>
-          <div class="form-group" style="margin-bottom: var(--spacing-4);">
-            <label class="form-label">API 服务商</label>
-            <select class="form-select" id="onboardingProviderSelect"></select>
+          <p class="onboarding-desc">选择一个 AI 服务商，30 秒开始使用</p>
+
+          <!-- 推荐卡片区域 -->
+          <div id="onboardingProviderCards" class="provider-cards-grid"></div>
+
+          <!-- 选中后展开的 Key 输入区 -->
+          <div id="onboardingKeySection" style="display:none;">
+            <div class="selected-provider-bar">
+              <span id="onboardingSelectedIcon" class="provider-card-icon"></span>
+              <span id="onboardingSelectedName" class="provider-card-name"></span>
+              <a id="onboardingGetKeyLink" href="#" target="_blank">获取 Key →</a>
+            </div>
+            <div class="api-key-wrapper">
+              <input type="password" class="form-input" id="onboardingApiKeyInput" placeholder="粘贴您的 API Key" autocomplete="off" spellcheck="false" autocapitalize="off">
+              <button type="button" class="api-key-toggle" id="onboardingApiKeyToggle" title="显示/隐藏">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                  <circle cx="12" cy="12" r="3"></circle>
+                </svg>
+              </button>
+            </div>
+            <div id="onboardingKeyValidation" class="key-validation-hint"></div>
+            <div class="key-privacy-note">🔒 您的 API Key 仅保存在浏览器本地，不会上传到任何服务器</div>
+            <button class="btn btn-primary" id="onboardingTestBtn" type="button" style="width:100%;margin-top:12px;">验证并激活</button>
+            <span id="onboardingTestResult" style="font-size:13px;display:block;margin-top:8px;"></span>
+
+            <!-- 内嵌教程 -->
+            <details class="key-tutorial">
+              <summary>如何获取 API Key？</summary>
+              <div class="tutorial-content">
+                <ol>
+                  <li>点击上方"获取 Key"链接，注册并登录</li>
+                  <li>在控制台找到 <strong>API Keys</strong> 页面</li>
+                  <li>点击"创建 Key"，复制生成的密钥</li>
+                  <li>回到此处粘贴即可</li>
+                </ol>
+                <p class="tutorial-note">💡 Key 只保存在您的浏览器本地，不会上传到任何服务器</p>
+              </div>
+            </details>
           </div>
-          <div class="form-group" style="margin-bottom: var(--spacing-3);">
-            <label class="form-label">API Key</label>
-            <input type="password" class="form-input" id="onboardingApiKeyInput" placeholder="输入你的 API Key" autocomplete="off" spellcheck="false">
-            <a id="onboardingGetKeyLink" href="#" target="_blank" style="font-size:12px;">如何获取 API Key？</a>
+
+          <!-- 折叠：已有 Key 的高级用户 -->
+          <details class="advanced-config-toggle">
+            <summary>已有 Key？自定义配置</summary>
+            <div class="advanced-config-body">
+              <div class="form-group" style="margin-bottom: var(--spacing-3);">
+                <label class="form-label">API 服务商</label>
+                <select class="form-select" id="onboardingProviderSelect"></select>
+              </div>
+              <div class="form-group" style="margin-bottom: var(--spacing-3);">
+                <label class="form-label">API Key</label>
+                <input type="password" class="form-input" id="onboardingAdvancedApiKeyInput" placeholder="输入你的 API Key" autocomplete="off" spellcheck="false">
+                <a id="onboardingAdvancedGetKeyLink" href="#" target="_blank" style="font-size:12px;">如何获取 API Key？</a>
+              </div>
+              <button class="btn btn-secondary btn-sm" id="onboardingAdvancedTestBtn" type="button">测试连接</button>
+              <span id="onboardingAdvancedTestResult" style="font-size:13px;margin-left:8px;"></span>
+            </div>
+          </details>
+
+          <!-- 配置指南入口 -->
+          <div style="margin-top:var(--spacing-4);text-align:center;">
+            <a href="guide.html" target="_blank" style="font-size:12px;color:var(--text-tertiary);text-decoration:none;">📖 需要帮助？查看详细配置指南</a>
           </div>
-          <button class="btn btn-secondary btn-sm" id="onboardingTestBtn" type="button" data-i18n="testConnection">测试连接</button>
-          <span id="onboardingTestResult" style="font-size:13px;margin-left:8px;"></span>
         </div>
         <!-- 步骤 3: 完成 -->
         <div id="onboardingStep3" class="onboarding-step" style="display:none;text-align:center;padding:20px 0;">
