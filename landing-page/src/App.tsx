@@ -10,7 +10,7 @@ import {
   Globe, TrendingUp, Send,
   Crown, Rocket, Target, MessageCircleQuestion, Clock,
   ShieldCheck, Award, X, AlertCircle, CheckCircle,
-  Plane, HeadsetIcon, Handshake, Star, Twitter, Facebook, Linkedin, Github
+  Plane, HeadsetIcon, Handshake, Star, Twitter, Facebook, Linkedin, Github, BookOpen
 } from 'lucide-react'
 import { activationService } from './services/activationService'
 import { invoiceService } from './services/invoiceService'
@@ -582,6 +582,10 @@ function Navigation({ onDownload, isDownloading }: { onDownload: () => void, isD
             <a href="#features" className="text-white/60 hover:text-white transition-colors font-medium">功能</a>
             <a href="#models" className="text-white/60 hover:text-white transition-colors font-medium">模型</a>
             <a href="#pricing" className="text-white/60 hover:text-white transition-colors font-medium">定价</a>
+            <a href="/guide.html" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors font-medium flex items-center gap-1">
+              <BookOpen className="w-4 h-4" />
+              配置指南
+            </a>
             
             {/* 滚动后显示免费安装按钮 - 带 pulse 动画 */}
             {scrolled && (
@@ -651,6 +655,10 @@ function Navigation({ onDownload, isDownloading }: { onDownload: () => void, isD
                 <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2">功能</a>
                 <a href="#models" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2">模型</a>
                 <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2">定价</a>
+                <a href="/guide.html" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2 flex items-center gap-2">
+                  <BookOpen className="w-4 h-4" />
+                  配置指南
+                </a>
                 <Button 
                   onClick={() => { setShowQRCode(true); setMobileMenuOpen(false); }}
                   className="bg-gradient-to-r from-violet-600 to-purple-600 hover:opacity-90 shadow-glow w-full"
