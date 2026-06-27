@@ -18,6 +18,10 @@ __pycache__/
 *.log
 localhost-*.png
 
+# VitePress
+docs/.vitepress/cache/
+docs/.vitepress/dist/
+
 # Temporary or local configuration files
 .env
 .env.local

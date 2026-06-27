@@ -134,6 +134,14 @@ app.get('/api/config/providers', (req, res) => {
   res.json(providersConfig);
 });
 
+// Serve documentation site
+const docsPath = __dirname + '/../docs/.vitepress/dist';
+app.use('/docs', express.static(docsPath, { maxAge: '1h', etag: true }));
+
+// Redirect old guide paths to docs
+app.get('/guide.html', (req, res) => res.redirect(301, '/docs/guide/getting-started'));
+app.get('/guide', (req, res) => res.redirect(301, '/docs/guide/getting-started'));
+
 // Serve landing page static files
 const landingPath = __dirname + '/../landing-page/dist';
 // 静态资源默认缓存 1 小时（HTML/CSS/JS/图片等）

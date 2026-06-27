@@ -32,9 +32,27 @@ setTimeout(() => {
   });
 
   console.log('\n✅ 前端已启动');
+
+  // 启动文档站（可选，如果 docs 目录存在）
+  const docsDir = path.join(__dirname, 'docs');
+  const fs = require('fs');
+  if (fs.existsSync(path.join(docsDir, 'package.json'))) {
+    console.log('📚 启动文档开发服务器...');
+    const docs = spawn('npx', ['vitepress', 'dev', '--port', '5173'], {
+      cwd: docsDir,
+      stdio: 'inherit',
+      shell: true,
+    });
+
+    docs.on('error', (err) => {
+      console.error('❌ 文档站启动失败:', err);
+    });
+  }
+
   console.log('\n📍 访问地址：');
   console.log('   前端: http://localhost:5181');
-  console.log('   后端: http://localhost:3001\n');
+  console.log('   后端: http://localhost:3001');
+  console.log('   文档: http://localhost:5173/docs/\n');
 }, 2000);
 
 server.on('error', (err) => {

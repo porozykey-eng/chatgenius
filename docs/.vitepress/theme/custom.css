@@ -1,0 +1,710 @@
+/* =============================================
+   ChatGenius AI — VitePress Theme
+   Design reference: docs.bigmodel.cn
+   ============================================= */
+
+/* ==========================================
+   1. DESIGN TOKENS — Light Theme
+   ========================================== */
+:root {
+  /* Brand accent */
+  --vp-c-brand-1: #17191e;
+  --vp-c-brand-2: #3f4046;
+  --vp-c-brand-3: #5a5b60;
+  --vp-c-brand-soft: rgba(23, 25, 30, 0.06);
+
+  /* Text — reference: primary=black, secondary=rgb(112,114,119) */
+  --vp-c-text-1: #000000;
+  --vp-c-text-2: #707277;
+  --vp-c-text-3: #a0a3a8;
+
+  /* Background */
+  --vp-c-bg: #ffffff;
+  --vp-c-bg-soft: #f8f9fb;
+  --vp-c-bg-mute: rgba(238, 240, 245, 0.5);
+  --vp-c-bg-alt: #f8f9fb;
+
+  /* Borders — reference: rgb(238,240,245) */
+  --vp-c-divider: #eef0f5;
+  --vp-c-gutter: #eef0f5;
+  --vp-c-border: #eef0f5;
+
+  /* Sidebar */
+  --vp-sidebar-bg-color: #ffffff;
+  --vp-sidebar-border-color: #eef0f5;
+
+  /* Code */
+  --vp-code-block-bg: rgba(238, 240, 245, 0.5);
+  --vp-code-bg: rgba(238, 240, 245, 0.5);
+  --vp-code-color: #111827;
+
+  /* Layout */
+  --vp-layout-max-width: 1200px;
+  --vp-sidebar-width: 256px;
+
+  /* Font */
+  --vp-font-family-base: "Inter", "Space Grotesk", -apple-system, BlinkMacSystemFont,
+    "Segoe UI", system-ui, sans-serif;
+  --vp-font-family-mono: "JetBrains Mono", "SF Mono", "Fira Code",
+    ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+}
+
+/* ==========================================
+   2. DESIGN TOKENS — Dark Theme
+   ========================================== */
+.dark {
+  --vp-c-brand-1: #e8eaed;
+  --vp-c-brand-2: #bdc1c6;
+  --vp-c-brand-3: #9aa0a6;
+  --vp-c-brand-soft: rgba(232, 234, 237, 0.06);
+
+  --vp-c-text-1: #e8eaed;
+  --vp-c-text-2: #9aa0a6;
+  --vp-c-text-3: #5f6368;
+
+  --vp-c-bg: #0c0e12;
+  --vp-c-bg-soft: #14161c;
+  --vp-c-bg-mute: #1c1e24;
+  --vp-c-bg-alt: #14161c;
+
+  --vp-c-divider: #1f2228;
+  --vp-c-gutter: #1f2228;
+  --vp-c-border: #1f2228;
+
+  --vp-sidebar-bg-color: #0c0e12;
+  --vp-sidebar-border-color: #1f2228;
+
+  --vp-code-block-bg: #14161c;
+  --vp-code-bg: #1c1e24;
+  --vp-code-color: #e8eaed;
+}
+
+/* ==========================================
+   3. GLOBAL LAYOUT
+   ========================================== */
+.VPDoc .content-container {
+  max-width: 780px !important;
+}
+
+/* Top navigation bar — cleaner border */
+.VPNavBar {
+  border-bottom: 1px solid var(--vp-c-divider) !important;
+}
+
+/* ==========================================
+   4. TYPOGRAPHY — matching reference
+   ========================================== */
+.vp-doc h1 {
+  font-size: 30px !important;
+  font-weight: 700 !important;
+  line-height: 36px !important;
+  color: #17191e;
+  letter-spacing: -0.02em;
+  margin-bottom: 16px;
+}
+
+.dark .vp-doc h1 {
+  color: #e8eaed;
+}
+
+.vp-doc h2 {
+  font-size: 22px !important;
+  font-weight: 600 !important;
+  line-height: 30px !important;
+  color: #17191e;
+  margin-top: 48px !important;
+  margin-bottom: 16px;
+  padding-top: 0 !important;
+  border-top: none !important;
+}
+
+.dark .vp-doc h2 {
+  color: #e8eaed;
+}
+
+.vp-doc h3 {
+  font-size: 18px !important;
+  font-weight: 600 !important;
+  line-height: 26px !important;
+  color: #17191e;
+  margin-top: 32px !important;
+  margin-bottom: 12px;
+}
+
+.dark .vp-doc h3 {
+  color: #e8eaed;
+}
+
+.vp-doc p {
+  font-size: 16px;
+  line-height: 26px;
+  margin-bottom: 16px;
+}
+
+/* ==========================================
+   5. SIDEBAR — reference: 14px default, 16px/600 active
+   ========================================== */
+.VPSidebarItem .text {
+  font-size: 14px !important;
+  line-height: 20px !important;
+  color: #707277 !important;
+  font-weight: 400 !important;
+  transition: all 0.15s ease;
+}
+
+.dark .VPSidebarItem .text {
+  color: #9aa0a6 !important;
+}
+
+.VPSidebarItem.is-active > .item > .link .text {
+  font-size: 15px !important;
+  font-weight: 600 !important;
+  line-height: 22px !important;
+  color: #17191e !important;
+}
+
+.dark .VPSidebarItem.is-active > .item > .link .text {
+  color: #e8eaed !important;
+}
+
+/* Sidebar section headings */
+.VPSidebarItem.level-0 > .item .text {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: #a0a3a8 !important;
+}
+
+.dark .VPSidebarItem.level-0 > .item .text {
+  color: #5f6368 !important;
+}
+
+/* Sidebar hover */
+.VPSidebarItem .link:hover .text {
+  color: #17191e !important;
+}
+
+.dark .VPSidebarItem .link:hover .text {
+  color: #e8eaed !important;
+}
+
+/* Active indicator bar */
+.VPSidebarItem.is-active > .item > .link {
+  background: var(--vp-c-brand-soft);
+  border-radius: 6px;
+}
+
+/* ==========================================
+   6. INLINE CODE — reference: 14px/500, semi-transparent bg
+   ========================================== */
+.vp-doc :not(pre) > code {
+  font-size: 14px;
+  font-weight: 500;
+  background: rgba(238, 240, 245, 0.7);
+  padding: 2px 8px;
+  border-radius: 6px;
+  color: #111827;
+  border: none;
+}
+
+.dark .vp-doc :not(pre) > code {
+  background: rgba(255, 255, 255, 0.08);
+  color: #e8eaed;
+}
+
+/* ==========================================
+   7. CODE BLOCKS — reference: no border, subtle bg
+   ========================================== */
+.vp-doc div[class*="language-"] {
+  border-radius: 8px;
+  background: var(--vp-code-block-bg);
+  border: 1px solid var(--vp-c-divider);
+  margin: 16px 0;
+}
+
+.dark .vp-doc div[class*="language-"] {
+  border-color: var(--vp-c-divider);
+}
+
+/* Copy button styling */
+.vp-doc div[class*="language-"] button.copy {
+  opacity: 0;
+  transition: opacity 0.2s;
+}
+
+.vp-doc div[class*="language-"]:hover button.copy {
+  opacity: 1;
+}
+
+/* ==========================================
+   8. CALLOUT CONTAINERS — with SVG icons
+   ========================================== */
+.vp-doc .custom-container {
+  border-radius: 10px;
+  padding: 16px 20px 16px 52px;
+  border: none;
+  border-left: none;
+  position: relative;
+  margin: 20px 0;
+}
+
+.vp-doc .custom-container::before {
+  position: absolute;
+  left: 18px;
+  top: 18px;
+  width: 20px;
+  height: 20px;
+  content: "";
+  background-size: 20px 20px;
+  background-repeat: no-repeat;
+}
+
+.vp-doc .custom-container .custom-container-title {
+  font-size: 15px;
+  font-weight: 600;
+  margin-bottom: 6px;
+}
+
+.vp-doc .custom-container p {
+  font-size: 15px;
+  line-height: 24px;
+  margin-bottom: 4px;
+}
+
+.vp-doc .custom-container p:last-child {
+  margin-bottom: 0;
+}
+
+/* TIP — green lightbulb */
+.vp-doc .custom-container.tip {
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.vp-doc .custom-container.tip::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%2310b981'%3E%3Cpath fill-rule='evenodd' d='M10 2a6 6 0 00-6 6c0 1.887.87 3.568 2.23 4.668A2.002 2.002 0 008 14.666V16a2 2 0 002 2 2 2 0 002-2v-1.334a2.002 2.002 0 001.77-1.998C15.13 11.568 16 9.887 16 8a6 6 0 00-6-6zM8 17a1 1 0 011-1h2a1 1 0 011 1v1H8v-1z' clip-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.vp-doc .custom-container.tip .custom-container-title {
+  color: #059669;
+}
+
+.dark .vp-doc .custom-container.tip {
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.dark .vp-doc .custom-container.tip .custom-container-title {
+  color: #34d399;
+}
+
+/* WARNING — yellow triangle */
+.vp-doc .custom-container.warning {
+  background: rgba(245, 158, 11, 0.06);
+}
+
+.vp-doc .custom-container.warning::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23f59e0b'%3E%3Cpath fill-rule='evenodd' d='M8.257 3.099c.765-1.36 2.722-1.36 3.486 0l5.58 9.92c.75 1.334-.213 2.98-1.742 2.98H4.42c-1.53 0-2.493-1.646-1.743-2.98l5.58-9.92zM11 13a1 1 0 11-2 0 1 1 0 012 0zm-1-8a1 1 0 00-1 1v3a1 1 0 002 0V6a1 1 0 00-1-1z' clip-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.vp-doc .custom-container.warning .custom-container-title {
+  color: #d97706;
+}
+
+.dark .vp-doc .custom-container.warning {
+  background: rgba(245, 158, 11, 0.08);
+}
+
+.dark .vp-doc .custom-container.warning .custom-container-title {
+  color: #fbbf24;
+}
+
+/* DANGER — red shield */
+.vp-doc .custom-container.danger {
+  background: rgba(239, 68, 68, 0.06);
+}
+
+.vp-doc .custom-container.danger::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%23ef4444'%3E%3Cpath fill-rule='evenodd' d='M10 1.944A11.954 11.954 0 012.166 5C2.057 5.649 2 6.319 2 7c0 5.225 3.34 9.67 8 11.317C14.66 16.67 18 12.225 18 7c0-.682-.057-1.35-.166-2.001A11.954 11.954 0 0110 1.944zM11 14a1 1 0 11-2 0 1 1 0 012 0zm0-7a1 1 0 10-2 0v3a1 1 0 102 0V7z' clip-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.vp-doc .custom-container.danger .custom-container-title {
+  color: #dc2626;
+}
+
+.dark .vp-doc .custom-container.danger {
+  background: rgba(239, 68, 68, 0.08);
+}
+
+.dark .vp-doc .custom-container.danger .custom-container-title {
+  color: #f87171;
+}
+
+/* INFO — blue info circle */
+.vp-doc .custom-container.info {
+  background: rgba(59, 130, 246, 0.05);
+}
+
+.vp-doc .custom-container.info::before {
+  background-image: url("data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 20 20' fill='%233b82f6'%3E%3Cpath fill-rule='evenodd' d='M18 10a8 8 0 11-16 0 8 8 0 0116 0zm-7-4a1 1 0 11-2 0 1 1 0 012 0zM9 9a1 1 0 000 2v3a1 1 0 001 1h1a1 1 0 100-2v-3a1 1 0 00-1-1H9z' clip-rule='evenodd'/%3E%3C/svg%3E");
+}
+
+.vp-doc .custom-container.info .custom-container-title {
+  color: #2563eb;
+}
+
+.dark .vp-doc .custom-container.info {
+  background: rgba(59, 130, 246, 0.08);
+}
+
+.dark .vp-doc .custom-container.info .custom-container-title {
+  color: #60a5fa;
+}
+
+/* ==========================================
+   9. TABLES — clean horizontal lines
+   ========================================== */
+.vp-doc table {
+  font-size: 14px;
+  border-collapse: collapse;
+  width: 100%;
+  margin: 20px 0;
+}
+
+.vp-doc thead {
+  border-bottom: 2px solid var(--vp-c-divider);
+}
+
+.vp-doc th {
+  background: transparent;
+  font-weight: 600;
+  text-align: left;
+  padding: 10px 16px;
+  color: var(--vp-c-text-1);
+  border: none;
+}
+
+.vp-doc td {
+  padding: 10px 16px;
+  border: none;
+  border-bottom: 1px solid var(--vp-c-divider);
+  color: var(--vp-c-text-2);
+  line-height: 1.6;
+}
+
+.vp-doc tbody tr:hover td {
+  background: var(--vp-c-bg-soft);
+}
+
+.vp-doc td strong {
+  color: var(--vp-c-text-1);
+}
+
+/* ==========================================
+   10. LINKS
+   ========================================== */
+.vp-doc a {
+  color: var(--vp-c-brand-1);
+  font-weight: 500;
+  text-decoration: underline;
+  text-decoration-color: rgba(0, 0, 0, 0.15);
+  text-underline-offset: 3px;
+  transition: text-decoration-color 0.2s, color 0.2s;
+}
+
+.vp-doc a:hover {
+  text-decoration-color: var(--vp-c-brand-1);
+}
+
+.dark .vp-doc a {
+  color: var(--vp-c-brand-1);
+  text-decoration-color: rgba(255, 255, 255, 0.15);
+}
+
+.dark .vp-doc a:hover {
+  text-decoration-color: var(--vp-c-brand-1);
+}
+
+/* ==========================================
+   11. IMAGES
+   ========================================== */
+.vp-doc img {
+  border-radius: 8px;
+  border: 1px solid var(--vp-c-divider);
+  margin: 20px 0;
+}
+
+/* ==========================================
+   12. LISTS
+   ========================================== */
+.vp-doc ul,
+.vp-doc ol {
+  font-size: 16px;
+  line-height: 26px;
+}
+
+.vp-doc li {
+  margin-bottom: 6px;
+}
+
+.vp-doc li > p {
+  margin-bottom: 4px;
+}
+
+/* ==========================================
+   13. BREADCRUMB (injected by CustomLayout)
+   ========================================== */
+.cg-breadcrumb {
+  font-size: 13px;
+  color: var(--vp-c-text-3);
+  margin-bottom: 12px;
+  display: flex;
+  align-items: center;
+  gap: 6px;
+  flex-wrap: wrap;
+}
+
+.cg-breadcrumb a {
+  color: var(--vp-c-text-3);
+  text-decoration: none;
+  font-weight: 400;
+  transition: color 0.15s;
+}
+
+.cg-breadcrumb a:hover {
+  color: var(--vp-c-text-2);
+}
+
+.cg-breadcrumb .separator {
+  font-size: 11px;
+  opacity: 0.5;
+}
+
+.cg-breadcrumb .current {
+  color: var(--vp-c-text-2);
+  font-weight: 500;
+}
+
+/* ==========================================
+   14. PAGE FEEDBACK (injected by CustomLayout)
+   ========================================== */
+.cg-feedback {
+  margin-top: 48px;
+  padding-top: 24px;
+  border-top: 1px solid var(--vp-c-divider);
+  text-align: center;
+}
+
+.cg-feedback-title {
+  font-size: 15px;
+  font-weight: 500;
+  color: var(--vp-c-text-2);
+  margin-bottom: 12px;
+}
+
+.cg-feedback-buttons {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+
+.cg-feedback-btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  padding: 8px 18px;
+  border-radius: 8px;
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg);
+  color: var(--vp-c-text-2);
+  font-size: 14px;
+  cursor: pointer;
+  transition: all 0.15s ease;
+}
+
+.cg-feedback-btn:hover {
+  border-color: var(--vp-c-text-3);
+  color: var(--vp-c-text-1);
+  background: var(--vp-c-bg-soft);
+}
+
+.cg-feedback-btn.active {
+  border-color: #10b981;
+  color: #059669;
+  background: rgba(16, 185, 129, 0.06);
+}
+
+.dark .cg-feedback-btn.active {
+  border-color: #34d399;
+  color: #34d399;
+  background: rgba(16, 185, 129, 0.08);
+}
+
+.cg-feedback-thanks {
+  font-size: 14px;
+  color: #059669;
+  margin-top: 8px;
+}
+
+.dark .cg-feedback-thanks {
+  color: #34d399;
+}
+
+/* ==========================================
+   15. BADGE / PILL UTILITIES
+   ========================================== */
+.badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 9999px;
+  font-size: 12px;
+  font-weight: 500;
+  line-height: 1.5;
+}
+
+.badge-green {
+  background: rgba(16, 185, 129, 0.1);
+  color: #059669;
+}
+
+.dark .badge-green {
+  background: rgba(16, 185, 129, 0.12);
+  color: #34d399;
+}
+
+.badge-blue {
+  background: rgba(59, 130, 246, 0.1);
+  color: #2563eb;
+}
+
+.dark .badge-blue {
+  background: rgba(59, 130, 246, 0.12);
+  color: #60a5fa;
+}
+
+.badge-gray {
+  background: var(--vp-c-bg-mute);
+  color: var(--vp-c-text-2);
+}
+
+/* ==========================================
+   16. HOME PAGE FEATURE CARDS
+   ========================================== */
+.cg-feature-grid {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(220px, 1fr));
+  gap: 16px;
+  margin: 32px 0;
+}
+
+.cg-feature-card {
+  padding: 24px;
+  border-radius: 12px;
+  border: 1px solid var(--vp-c-divider);
+  background: var(--vp-c-bg);
+  transition: all 0.2s ease;
+  text-decoration: none;
+  display: block;
+}
+
+.cg-feature-card:hover {
+  border-color: var(--vp-c-text-3);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.06);
+}
+
+.dark .cg-feature-card:hover {
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.cg-feature-card .icon {
+  font-size: 28px;
+  margin-bottom: 12px;
+}
+
+.cg-feature-card .title {
+  font-size: 16px;
+  font-weight: 600;
+  color: var(--vp-c-text-1);
+  margin-bottom: 6px;
+}
+
+.cg-feature-card .desc {
+  font-size: 14px;
+  color: var(--vp-c-text-2);
+  line-height: 1.5;
+}
+
+/* ==========================================
+   17. RESPONSIVE
+   ========================================== */
+@media (max-width: 768px) {
+  .vp-doc h1 {
+    font-size: 24px !important;
+    line-height: 30px !important;
+  }
+
+  .vp-doc h2 {
+    font-size: 20px !important;
+    line-height: 28px !important;
+    margin-top: 36px !important;
+  }
+
+  .vp-doc h3 {
+    font-size: 17px !important;
+  }
+
+  .vp-doc p,
+  .vp-doc ul,
+  .vp-doc ol {
+    font-size: 15px;
+  }
+
+  .cg-feature-grid {
+    grid-template-columns: 1fr;
+  }
+}
+
+/* ==========================================
+   18. OUTLINE / TABLE OF CONTENTS
+   ========================================== */
+.VPDocAsideOutline .outline-title {
+  font-size: 12px !important;
+  font-weight: 600 !important;
+  text-transform: uppercase !important;
+  letter-spacing: 0.05em !important;
+  color: var(--vp-c-text-3) !important;
+}
+
+/* ==========================================
+   19. FOOTER
+   ========================================== */
+.VPDocFooter {
+  border-top: 1px solid var(--vp-c-divider);
+  padding-top: 24px;
+  margin-top: 48px;
+}
+
+.VPFooter .message {
+  font-size: 13px;
+  color: var(--vp-c-text-3);
+}
+
+.VPFooter .copyright {
+  font-size: 12px;
+  color: var(--vp-c-text-3);
+}
+
+/* ==========================================
+   20. PREV/NEXT NAVIGATION
+   ========================================== */
+.vp-doc .prev-next .pager-link {
+  border: 1px solid var(--vp-c-divider);
+  border-radius: 8px;
+  padding: 12px 16px;
+  transition: all 0.15s;
+}
+
+.vp-doc .prev-next .pager-link:hover {
+  border-color: var(--vp-c-text-3);
+  background: var(--vp-c-bg-soft);
+}
