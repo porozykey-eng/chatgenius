@@ -21,7 +21,7 @@
        极简工业风：克制、专业、高效
        ================================ */
 
-    /* Light Theme (默认) — 纯净白底 + 深空黑强调 */
+    /* Light Theme (默认) — 纯净白底 + 品牌紫强调（与首页统一） */
     :root[data-theme="light"] {
       color-scheme: light;
       --bg-primary: #ffffff;
@@ -36,12 +36,12 @@
       --text-tertiary: #9ca3af;
       --text-placeholder: #d1d5db;
 
-      /* 强调色：克制的深空黑（亮色模式） */
-      --accent: #111827;
-      --accent-hover: #000000;
-      --accent-light: #f5f5f5;
-      --accent-glow: rgba(17, 24, 39, 0.04);
-      --accent-text: #111827;
+      /* 强调色：品牌紫 violet-600（与首页统一） */
+      --accent: #7c3aed;
+      --accent-hover: #6d28d9;
+      --accent-light: #f5f3ff;
+      --accent-glow: rgba(124, 58, 237, 0.12);
+      --accent-text: #7c3aed;
 
       --success: #16a34a;
       --success-bg: rgba(22, 163, 74, 0.06);
@@ -61,7 +61,7 @@
       --border-subtle: #f3f4f6;
       --border-default: #e5e7eb;
       --border-strong: #d1d5db;
-      --border-focus: #111827;
+      --border-focus: #7c3aed;
 
       /* 小圆角：工业风锐利感 */
       --radius-sm: 4px;
@@ -92,7 +92,7 @@
       --spacing-16: 64px;
     }
 
-    /* Dark Theme — 深邃沉静黑 + 纯白强调 */
+    /* Dark Theme — 深邃沉静黑 + 品牌紫强调（与首页统一） */
     :root[data-theme="dark"] {
       color-scheme: dark;
       --bg-primary: #0a0a0a;
@@ -107,12 +107,12 @@
       --text-tertiary: #737373;
       --text-placeholder: #404040;
 
-      /* 强调色：纯白（暗色模式） */
-      --accent: #ffffff;
-      --accent-hover: #e5e5e5;
-      --accent-light: #1f1f1f;
-      --accent-glow: rgba(255, 255, 255, 0.04);
-      --accent-text: #ffffff;
+      /* 强调色：品牌紫 violet-500（暗色模式略亮以保证对比度） */
+      --accent: #8b5cf6;
+      --accent-hover: #a78bfa;
+      --accent-light: #1f1a2e;
+      --accent-glow: rgba(139, 92, 246, 0.18);
+      --accent-text: #a78bfa;
 
       --success: #22c55e;
       --success-bg: rgba(34, 197, 94, 0.08);
@@ -131,7 +131,7 @@
       --border-subtle: #1f1f1f;
       --border-default: #262626;
       --border-strong: #404040;
-      --border-focus: #ffffff;
+      --border-focus: #8b5cf6;
 
       --radius-sm: 4px;
       --radius-md: 6px;
@@ -392,7 +392,14 @@
     }
 
     .free-tier-notification-icon {
-      font-size: 14px;
+      color: var(--warning);
+      display: flex;
+      align-items: center;
+    }
+
+    .free-tier-notification-icon svg {
+      width: 16px;
+      height: 16px;
     }
 
     .free-tier-notification-text {
@@ -2127,7 +2134,8 @@
     <div id="apiGuideBar" class="api-guide-bar" style="display:none;">
       <!-- 完整引导（未配置任何内容） -->
       <div id="apiGuideComplete" class="api-guide-content" style="display:none;">
-        <span>🚀 3步快速配置 API，开始使用 AI 助手</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--accent);"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>
+        <span>3步快速配置 API，开始使用 AI 助手</span>
         <div class="api-guide-steps">
           <span class="api-guide-step">1. 选择服务商</span>
           <span class="api-guide-step">2. 获取 API Key</span>
@@ -2138,7 +2146,8 @@
       </div>
       <!-- Key引导（有服务商但无Key） -->
       <div id="apiGuideKeyOnly" class="api-guide-content" style="display:none;">
-        <span>🔑 请获取 API Key 以激活 AI 功能</span>
+        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--accent);"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
+        <span>请获取 API Key 以激活 AI 功能</span>
         <a id="apiGuideGetKeyLink" href="#" target="_blank" class="btn btn-sm btn-secondary" style="margin-right:8px;">获取 API Key</a>
         <button class="btn btn-sm btn-primary" id="apiGuideConfigBtn2">去配置</button>
       </div>
@@ -2148,9 +2157,11 @@
     <!-- Free Tier Notification Bar -->
     <div class="free-tier-notification" id="freeTierNotification">
       <div class="free-tier-notification-left">
-        <span class="free-tier-notification-icon">⚠️</span>
+        <span class="free-tier-notification-icon">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        </span>
         <span class="free-tier-notification-text">
-          今日剩余 <strong id="quotaRemaining">5</strong> 次回复机会
+          今日剩余 <strong id="quotaRemaining">5</strong> 次回复
         </span>
       </div>
       <button class="free-tier-notification-btn" id="freeTierUpgradeBtn">升级 Pro</button>
@@ -2452,7 +2463,7 @@
                     </button>
                   </div>
                   <div id="settingsKeyValidation" class="key-validation-hint"></div>
-                  <div class="key-privacy-note">🔒 您的 API Key 仅保存在浏览器本地，不会上传到任何服务器</div>
+                  <div class="key-privacy-note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 您的 API Key 仅保存在浏览器本地，不会上传到任何服务器</div>
                 </div>
               </div>
               <button class="btn btn-secondary api-test-btn" id="testApiBtn" data-i18n="testConnection">测试连接</button>
@@ -2467,7 +2478,7 @@
                     <li>点击"创建 Key"，复制生成的密钥</li>
                     <li>回到此处粘贴即可</li>
                   </ol>
-                  <p class="tutorial-note">💡 Key 只保存在您的浏览器本地，不会上传到任何服务器</p>
+                  <p class="tutorial-note">Key 只保存在您的浏览器本地，不会上传到任何服务器</p>
                 </div>
               </details>
             </div>
@@ -2506,12 +2517,15 @@
         </div>
 
         <!-- 配置指南入口 -->
-        <div style="margin-top:var(--spacing-4);padding:var(--spacing-4);background:var(--bg-secondary);border:1px solid var(--border-default);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between;">
-          <div>
-            <div style="font-size:14px;font-weight:500;">📖 大模型配置指南</div>
-            <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">不知道如何获取 API Key？查看详细教程</div>
+        <div style="margin-top:var(--spacing-4);padding:var(--spacing-4);background:var(--bg-secondary);border:1px solid var(--border-default);border-radius:var(--radius-md);display:flex;align-items:center;justify-content:space-between;gap:var(--spacing-3);">
+          <div style="display:flex;align-items:center;gap:var(--spacing-3);">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color:var(--accent);flex-shrink:0;"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+            <div>
+              <div style="font-size:14px;font-weight:500;color:var(--text-primary);">大模型配置指南</div>
+              <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">不知道如何获取 API Key？查看详细教程</div>
+            </div>
           </div>
-          <a href="https://chat.sopie.cc/guide/" target="_blank" style="padding:var(--spacing-2) var(--spacing-4);background:var(--accent);color:var(--bg-primary);border-radius:var(--radius-sm);font-size:13px;text-decoration:none;font-weight:500;">查看指南 →</a>
+          <a href="https://chat.sopie.cc/guide/" target="_blank" style="padding:var(--spacing-2) var(--spacing-4);background:var(--accent);color:#fff;border-radius:var(--radius-sm);font-size:13px;text-decoration:none;font-weight:500;white-space:nowrap;">查看指南 →</a>
         </div>
       </div>
     </div>
@@ -2724,7 +2738,7 @@
               </button>
             </div>
             <div id="onboardingKeyValidation" class="key-validation-hint"></div>
-            <div class="key-privacy-note">🔒 您的 API Key 仅保存在浏览器本地，不会上传到任何服务器</div>
+            <div class="key-privacy-note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 您的 API Key 仅保存在浏览器本地，不会上传到任何服务器</div>
             <button class="btn btn-primary" id="onboardingTestBtn" type="button" style="width:100%;margin-top:12px;">验证并激活</button>
             <span id="onboardingTestResult" style="font-size:13px;display:block;margin-top:8px;"></span>
 
@@ -2738,7 +2752,7 @@
                   <li>点击"创建 Key"，复制生成的密钥</li>
                   <li>回到此处粘贴即可</li>
                 </ol>
-                <p class="tutorial-note">💡 Key 只保存在您的浏览器本地，不会上传到任何服务器</p>
+                <p class="tutorial-note">Key 只保存在您的浏览器本地，不会上传到任何服务器</p>
               </div>
             </details>
           </div>
@@ -2763,12 +2777,17 @@
 
           <!-- 配置指南入口 -->
           <div style="margin-top:var(--spacing-4);text-align:center;">
-            <a href="https://chat.sopie.cc/guide/" target="_blank" style="font-size:12px;color:var(--text-tertiary);text-decoration:none;">📖 需要帮助？查看详细配置指南</a>
+            <a href="https://chat.sopie.cc/guide/" target="_blank" style="font-size:12px;color:var(--text-tertiary);text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
+              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
+              需要帮助？查看详细配置指南
+            </a>
           </div>
         </div>
         <!-- 步骤 3: 完成 -->
         <div id="onboardingStep3" class="onboarding-step" style="display:none;text-align:center;padding:20px 0;">
-          <div style="font-size:48px;margin-bottom:16px;">✓</div>
+          <div style="width:56px;height:56px;margin:0 auto 16px;border-radius:50%;background:var(--success-bg);display:flex;align-items:center;justify-content:center;">
+            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--success);"><polyline points="20 6 9 17 4 12"></polyline></svg>
+          </div>
           <h3 data-i18n="onboardingDone">一切就绪！</h3>
           <p class="onboarding-desc" data-i18n="onboardingDoneDesc">你已完成基础配置，现在可以开始使用 ChatGenius AI 了。</p>
         </div>
