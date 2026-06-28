@@ -344,6 +344,72 @@
       .doc-h2 { font-size: 18px; margin-top: 32px; }
       .comparison-table { font-size: 11px; }
       .comparison-table th, .comparison-table td { padding: 6px 8px; }
+      .welcome-title { font-size: 24px; }
+      .welcome-subtitle { font-size: 14px; }
+      .welcome-values { grid-template-columns: 1fr; }
+      .welcome-smart { grid-template-columns: 1fr; }
+      .smart-card { padding: 16px; }
+      .breadcrumb { margin-bottom: 20px; }
+    }
+
+    /* ===== Breadcrumb ===== */
+    .breadcrumb {
+      font-size: 13px; color: #888; margin-bottom: 32px;
+    }
+    .breadcrumb a { color: #666; text-decoration: none; }
+    .breadcrumb a:hover { color: #111; }
+    .breadcrumb-sep { margin: 0 6px; color: #ccc; }
+
+    /* ===== Welcome Area ===== */
+    .welcome-area {
+      background: #fafafa; border-radius: 8px; padding: 40px 32px;
+      margin-bottom: 32px; border: 1px solid #eaeaea;
+    }
+    .welcome-title {
+      font-size: 28px; font-weight: 700; letter-spacing: -0.03em;
+      line-height: 1.2; color: #111; margin-bottom: 8px;
+    }
+    .welcome-subtitle {
+      font-size: 16px; color: #666; margin-bottom: 28px; line-height: 1.6;
+    }
+    .welcome-values {
+      display: grid; grid-template-columns: repeat(3, 1fr);
+      gap: 12px; margin-bottom: 28px;
+    }
+    .value-card {
+      background: #fff; border: 1px solid #eaeaea; border-radius: 6px;
+      padding: 20px; text-align: center;
+    }
+    .value-card-icon { font-size: 24px; margin-bottom: 8px; }
+    .value-card-title { font-size: 15px; font-weight: 600; color: #111; margin-bottom: 4px; }
+    .value-card-desc { font-size: 13px; color: #666; line-height: 1.5; }
+    .welcome-cta {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 12px 28px; background: #111; color: #fff; border: none;
+      border-radius: 6px; font-size: 14px; font-weight: 500;
+      cursor: pointer; text-decoration: none; font-family: inherit;
+      transition: all 0.15s;
+    }
+    .welcome-cta:hover { background: #333; text-decoration: none; }
+
+    /* ===== Smart Recommendations ===== */
+    .welcome-smart {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 12px; margin-top: 24px;
+    }
+    .smart-card {
+      background: #fff; border: 1px solid #eaeaea; border-radius: 6px;
+      padding: 18px; cursor: pointer; transition: all 0.15s;
+    }
+    .smart-card:hover { border-color: #ccc; }
+    .smart-card-q { font-size: 14px; font-weight: 600; color: #222; margin-bottom: 6px; }
+    .smart-card-a { font-size: 13px; color: #666; line-height: 1.5; }
+    .smart-card-a strong { color: #111; }
+
+    /* ===== Time Estimate ===== */
+    .time-estimate {
+      font-size: 12px; color: #888; margin-top: -4px; margin-bottom: 12px;
+      display: flex; align-items: center; gap: 4px;
     }
   </style>
 </head>
@@ -412,8 +478,58 @@
   <main class="main">
     <div class="main-inner">
 
+      <!-- Breadcrumb -->
+      <nav class="breadcrumb">
+        <a href="https://chat.sopie.cc/">首页</a><span class="breadcrumb-sep">&gt;</span><span>配置指南</span>
+      </nav>
+
       <!-- ==================== 快速配置 ==================== -->
       <div class="doc-section active" id="section-quickstart">
+
+        <!-- Welcome Area -->
+        <div class="welcome-area" id="welcome-area">
+          <h1 class="welcome-title">ChatGenius AI 配置指南</h1>
+          <p class="welcome-subtitle">3分钟快速配置，开始使用 AI 助手</p>
+          <div class="welcome-values">
+            <div class="value-card">
+              <div class="value-card-icon">⚡</div>
+              <div class="value-card-title">快速</div>
+              <div class="value-card-desc">3分钟内完成配置</div>
+            </div>
+            <div class="value-card">
+              <div class="value-card-icon">🔒</div>
+              <div class="value-card-title">安全</div>
+              <div class="value-card-desc">API Key 仅保存在本地</div>
+            </div>
+            <div class="value-card">
+              <div class="value-card-icon">🎁</div>
+              <div class="value-card-title">免费试用</div>
+              <div class="value-card-desc">大多数服务商提供免费额度</div>
+            </div>
+          </div>
+          <button class="welcome-cta" onclick="document.getElementById('welcome-area').style.display='none'; window.scrollTo({top:0,behavior:'smooth'});">开始配置</button>
+
+          <!-- Smart Recommendations -->
+          <div class="welcome-smart">
+            <div class="smart-card" data-navigate="deepseek">
+              <div class="smart-card-q">我不知道选哪个</div>
+              <div class="smart-card-a">推荐 <strong>DeepSeek</strong> — 性价比之王，国内直连</div>
+            </div>
+            <div class="smart-card" data-navigate="moonshot">
+              <div class="smart-card-q">我要处理长文档</div>
+              <div class="smart-card-a">推荐 <strong>Moonshot</strong> — 128K 超长上下文</div>
+            </div>
+            <div class="smart-card" data-navigate="openai">
+              <div class="smart-card-q">我要用最好的模型</div>
+              <div class="smart-card-a">推荐 <strong>OpenAI</strong> — GPT-4o 业界领先</div>
+            </div>
+            <div class="smart-card" data-navigate="deepseek">
+              <div class="smart-card-q">我要最便宜的</div>
+              <div class="smart-card-a">推荐 <strong>DeepSeek / 火山引擎</strong> — 极致低价</div>
+            </div>
+          </div>
+        </div>
+
         <h1 class="doc-title">快速配置</h1>
         <p class="doc-subtitle">只需 3 步，即可让 ChatGenius 连接到大语言模型。整个过程不超过 2 分钟。</p>
 
@@ -616,6 +732,7 @@
       <div class="doc-section" id="section-deepseek">
         <h1 class="doc-title">DeepSeek</h1>
         <p class="doc-subtitle">国产高性能大模型，性价比极高，支持国内直连。DeepSeek-V3 在多项评测中表现优异，R1 推理模型更是业界领先。</p>
+        <div class="time-estimate">🕐 预计配置时间：3-5 分钟</div>
 
         <h2 class="doc-h2">服务概览</h2>
         <div class="info-box">
@@ -664,6 +781,7 @@
       <div class="doc-section" id="section-tongyi">
         <h1 class="doc-title">通义千问</h1>
         <p class="doc-subtitle">阿里巴巴旗下大语言模型，中文理解能力强，企业级稳定性，支持多种模型规格。</p>
+        <div class="time-estimate">🕐 预计配置时间：3-5 分钟</div>
 
         <h2 class="doc-h2">服务概览</h2>
         <div class="info-box">
@@ -708,6 +826,7 @@
       <div class="doc-section" id="section-zhipu">
         <h1 class="doc-title">智谱 AI</h1>
         <p class="doc-subtitle">清华大学技术背景，GLM 系列模型在知识问答和文档分析领域表现突出。</p>
+        <div class="time-estimate">🕐 预计配置时间：3-5 分钟</div>
 
         <h2 class="doc-h2">服务概览</h2>
         <div class="info-box">
@@ -752,6 +871,7 @@
       <div class="doc-section" id="section-wenxin">
         <h1 class="doc-title">百度文心</h1>
         <p class="doc-subtitle">百度旗下大语言模型，中文写作和营销文案能力突出，与百度生态深度整合。</p>
+        <div class="time-estimate">🕐 预计配置时间：3-5 分钟</div>
 
         <h2 class="doc-h2">服务概览</h2>
         <div class="info-box">
@@ -796,6 +916,7 @@
       <div class="doc-section" id="section-volcengine">
         <h1 class="doc-title">火山引擎</h1>
         <p class="doc-subtitle">字节跳动旗下云服务平台，Doubao 系列模型价格极低，适合大规模调用场景。</p>
+        <div class="time-estimate">🕐 预计配置时间：3-5 分钟</div>
 
         <h2 class="doc-h2">服务概览</h2>
         <div class="info-box">
@@ -835,6 +956,7 @@
       <div class="doc-section" id="section-moonshot">
         <h1 class="doc-title">Moonshot</h1>
         <p class="doc-subtitle">月之暗面旗下模型，以超长上下文窗口著称，适合处理长文档和复杂对话。</p>
+        <div class="time-estimate">🕐 预计配置时间：3-5 分钟</div>
 
         <h2 class="doc-h2">服务概览</h2>
         <div class="info-box">
@@ -879,6 +1001,7 @@
       <div class="doc-section" id="section-openai">
         <h1 class="doc-title">OpenAI</h1>
         <p class="doc-subtitle">全球领先的大语言模型服务商，GPT 系列在各评测中持续领先。需要海外网络环境。</p>
+        <div class="time-estimate">🕐 预计配置时间：3-5 分钟</div>
 
         <h2 class="doc-h2">服务概览</h2>
         <div class="info-box">
@@ -928,6 +1051,7 @@
       <div class="doc-section" id="section-anthropic">
         <h1 class="doc-title">Anthropic</h1>
         <p class="doc-subtitle">Claude 系列模型，在长文本理解、分析写作方面表现卓越。需要海外网络环境。</p>
+        <div class="time-estimate">🕐 预计配置时间：3-5 分钟</div>
 
         <h2 class="doc-h2">服务概览</h2>
         <div class="info-box">
@@ -972,6 +1096,7 @@
       <div class="doc-section" id="section-gemini">
         <h1 class="doc-title">Google Gemini</h1>
         <p class="doc-subtitle">Google 旗下多模态大模型，支持文本、图片、代码等多种输入。部分模型提供免费额度。</p>
+        <div class="time-estimate">🕐 预计配置时间：3-5 分钟</div>
 
         <h2 class="doc-h2">服务概览</h2>
         <div class="info-box">
@@ -1168,6 +1293,22 @@
   overlay.addEventListener('click', () => {
     sidebar.classList.remove('open');
     overlay.classList.remove('open');
+  });
+
+  // ===== Smart Card Navigation =====
+  document.querySelectorAll('.smart-card[data-navigate]').forEach(card => {
+    card.addEventListener('click', () => {
+      const sectionId = card.getAttribute('data-navigate');
+      navLinks.forEach(l => l.classList.remove('active'));
+      const targetLink = document.querySelector('.nav-link[data-section="' + sectionId + '"]');
+      if (targetLink) targetLink.classList.add('active');
+      sections.forEach(s => s.classList.remove('active'));
+      const targetSection = document.getElementById('section-' + sectionId);
+      if (targetSection) targetSection.classList.add('active');
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+      window.scrollTo({ top: 0, behavior: 'smooth' });
+    });
   });
 </script>
 </body>
