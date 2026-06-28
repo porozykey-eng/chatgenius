@@ -138,6 +138,17 @@ app.get('/api/config/providers', (req, res) => {
 const docsPath = __dirname + '/../docs/.vitepress/dist';
 app.use('/docs', express.static(docsPath, { maxAge: '1h', etag: true }));
 
+// Docs SPA fallback: try appending .html for clean URLs
+app.get('/docs/*', (req, res, next) => {
+  const fs = require('fs');
+  const filePath = docsPath + req.path + '.html';
+  if (fs.existsSync(filePath)) {
+    res.sendFile(filePath);
+  } else {
+    next();
+  }
+});
+
 // Redirect old guide paths to docs
 app.get('/guide.html', (req, res) => res.redirect(301, '/docs/guide/getting-started'));
 app.get('/guide', (req, res) => res.redirect(301, '/docs/guide/getting-started'));
