@@ -1942,6 +1942,29 @@
       opacity: 1;
     }
 
+    .api-guide-content {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      flex: 1;
+    }
+
+    .api-guide-steps {
+      display: flex;
+      gap: var(--spacing-2);
+      margin: 0 var(--spacing-2);
+    }
+
+    .api-guide-step {
+      background: var(--accent);
+      color: var(--bg-primary);
+      padding: 2px 8px;
+      border-radius: 4px;
+      font-size: 11px;
+      font-weight: 500;
+      white-space: nowrap;
+    }
+
     /* ================================
        Shortcut Cards
        ================================ */
@@ -2100,11 +2123,25 @@
       </button>
     </header>
 
-    <!-- API Guide Bar -->
+    <!-- API Guide Bar - 智能引导 -->
     <div id="apiGuideBar" class="api-guide-bar" style="display:none;">
-      <span>建议先配置 API 以启用 AI 回复</span>
-      <a href="https://chat.sopie.cc/guide.html" target="_blank" class="btn btn-sm btn-secondary" style="margin-right:8px;">配置指南</a>
-      <button class="btn btn-sm btn-primary" id="apiGuideConfigBtn">去配置</button>
+      <!-- 完整引导（未配置任何内容） -->
+      <div id="apiGuideComplete" class="api-guide-content" style="display:none;">
+        <span>🚀 3步快速配置 API，开始使用 AI 助手</span>
+        <div class="api-guide-steps">
+          <span class="api-guide-step">1. 选择服务商</span>
+          <span class="api-guide-step">2. 获取 API Key</span>
+          <span class="api-guide-step">3. 测试连接</span>
+        </div>
+        <a href="https://chat.sopie.cc/guide/" target="_blank" class="btn btn-sm btn-secondary" style="margin-right:8px;">查看详细指南</a>
+        <button class="btn btn-sm btn-primary" id="apiGuideConfigBtn">立即配置</button>
+      </div>
+      <!-- Key引导（有服务商但无Key） -->
+      <div id="apiGuideKeyOnly" class="api-guide-content" style="display:none;">
+        <span>🔑 请获取 API Key 以激活 AI 功能</span>
+        <a id="apiGuideGetKeyLink" href="#" target="_blank" class="btn btn-sm btn-secondary" style="margin-right:8px;">获取 API Key</a>
+        <button class="btn btn-sm btn-primary" id="apiGuideConfigBtn2">去配置</button>
+      </div>
       <button class="api-guide-close" id="apiGuideCloseBtn">×</button>
     </div>
 
@@ -2474,7 +2511,7 @@
             <div style="font-size:14px;font-weight:500;">📖 大模型配置指南</div>
             <div style="font-size:12px;color:var(--text-tertiary);margin-top:2px;">不知道如何获取 API Key？查看详细教程</div>
           </div>
-          <a href="https://chat.sopie.cc/guide.html" target="_blank" style="padding:var(--spacing-2) var(--spacing-4);background:var(--accent);color:var(--bg-primary);border-radius:var(--radius-sm);font-size:13px;text-decoration:none;font-weight:500;">查看指南 →</a>
+          <a href="https://chat.sopie.cc/guide/" target="_blank" style="padding:var(--spacing-2) var(--spacing-4);background:var(--accent);color:var(--bg-primary);border-radius:var(--radius-sm);font-size:13px;text-decoration:none;font-weight:500;">查看指南 →</a>
         </div>
       </div>
     </div>
@@ -2726,7 +2763,7 @@
 
           <!-- 配置指南入口 -->
           <div style="margin-top:var(--spacing-4);text-align:center;">
-            <a href="https://chat.sopie.cc/guide.html" target="_blank" style="font-size:12px;color:var(--text-tertiary);text-decoration:none;">📖 需要帮助？查看详细配置指南</a>
+            <a href="https://chat.sopie.cc/guide/" target="_blank" style="font-size:12px;color:var(--text-tertiary);text-decoration:none;">📖 需要帮助？查看详细配置指南</a>
           </div>
         </div>
         <!-- 步骤 3: 完成 -->

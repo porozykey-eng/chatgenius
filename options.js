@@ -2146,7 +2146,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ---- API Guide Bar ----
+  // ---- API Guide Bar - 智能引导 ----
   function checkApiGuideBar() {
     const bar = document.getElementById('apiGuideBar');
     if (!bar) return;
@@ -2154,15 +2154,63 @@ document.addEventListener('DOMContentLoaded', () => {
       bar.style.display = 'none';
       return;
     }
-    chrome.storage.local.get(['apiKey'], (data) => {
+    
+    chrome.storage.local.get(['apiKey', 'apiProvider'], (data) => {
       if (chrome.runtime.lastError) return;
-      bar.style.display = data.apiKey ? 'none' : 'flex';
+      
+      const hasApiKey = !!data.apiKey;
+      const hasProvider = !!data.apiProvider;
+      
+      const completeGuide = document.getElementById('apiGuideComplete');
+      const keyOnlyGuide = document.getElementById('apiGuideKeyOnly');
+      
+      if (!hasApiKey && !hasProvider) {
+        // 状态1：完全未配置 - 显示完整引导
+        bar.style.display = 'flex';
+        if (completeGuide) completeGuide.style.display = 'flex';
+        if (keyOnlyGuide) keyOnlyGuide.style.display = 'none';
+      } else if (hasProvider && !hasApiKey) {
+        // 状态2：有服务商但无Key - 显示Key获取引导
+        bar.style.display = 'flex';
+        if (completeGuide) completeGuide.style.display = 'none';
+        if (keyOnlyGuide) {
+          keyOnlyGuide.style.display = 'flex';
+          // 更新获取Key链接
+          const getKeyLink = document.getElementById('apiGuideGetKeyLink');
+          if (getKeyLink) {
+            const provider = (modelsConfig?.providers || []).find(p => p.id === data.apiProvider);
+            if (provider?.getKey) {
+              getKeyLink.href = provider.getKey;
+              getKeyLink.textContent = `获取 ${provider.name} API Key`;
+            }
+          }
+        }
+      } else {
+        // 状态3：已配置完成 - 隐藏引导
+        bar.style.display = 'none';
+      }
     });
   }
 
+  // 配置按钮事件（完整引导）
   const apiGuideConfigBtn = document.getElementById('apiGuideConfigBtn');
   if (apiGuideConfigBtn) {
     apiGuideConfigBtn.addEventListener('click', () => {
+      switchTab('settings');
+      const apiPanel = document.getElementById('apiPanel');
+      if (apiPanel) {
+        apiPanel.scrollIntoView({ behavior: 'smooth' });
+      } else if (apiProvider) {
+        const panel = apiProvider.closest('.panel');
+        if (panel) panel.scrollIntoView({ behavior: 'smooth' });
+      }
+    });
+  }
+  
+  // 配置按钮事件（Key引导）
+  const apiGuideConfigBtn2 = document.getElementById('apiGuideConfigBtn2');
+  if (apiGuideConfigBtn2) {
+    apiGuideConfigBtn2.addEventListener('click', () => {
       switchTab('settings');
       const apiPanel = document.getElementById('apiPanel');
       if (apiPanel) {

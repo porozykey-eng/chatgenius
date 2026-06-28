@@ -139,6 +139,52 @@
     .step-title { font-size: 15px; font-weight: 600; color: #111; margin-bottom: 4px; }
     .step-desc { font-size: 13px; color: #666; line-height: 1.6; }
     .step-action { margin-top: 10px; }
+    
+    /* ===== Quickstart Flow ===== */
+    .quickstart-flow {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 20px;
+      margin: 30px 0;
+      padding: 24px;
+      background: #f8f9fa;
+      border-radius: 8px;
+      border: 1px solid #eaeaea;
+    }
+    .flow-step {
+      text-align: center;
+      flex: 1;
+    }
+    .flow-number {
+      width: 40px;
+      height: 40px;
+      border-radius: 50%;
+      background: #111;
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 18px;
+      font-weight: 700;
+      margin: 0 auto 10px;
+    }
+    .flow-title {
+      font-size: 15px;
+      font-weight: 600;
+      color: #111;
+      margin-bottom: 4px;
+    }
+    .flow-desc {
+      font-size: 12px;
+      color: #666;
+    }
+    .flow-arrow {
+      font-size: 24px;
+      color: #ccc;
+      font-weight: 300;
+    }
+    
     .btn-primary {
       display: inline-flex; align-items: center; gap: 6px;
       padding: 8px 16px; background: #111; color: #fff; border: none;
@@ -382,6 +428,27 @@
           <span class="doc-strong">安全性：</span>您的 API Key 仅保存在浏览器本地存储中，不会上传到 ChatGenius 服务器。您可以随时在插件设置中删除或更换。
         </p>
 
+        <h2 class="doc-h2">3分钟快速上手</h2>
+        <div class="quickstart-flow">
+          <div class="flow-step">
+            <div class="flow-number">1</div>
+            <div class="flow-title">选择服务商</div>
+            <div class="flow-desc">推荐 DeepSeek 或通义千问</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-number">2</div>
+            <div class="flow-title">获取 API Key</div>
+            <div class="flow-desc">在控制台创建密钥</div>
+          </div>
+          <div class="flow-arrow">→</div>
+          <div class="flow-step">
+            <div class="flow-number">3</div>
+            <div class="flow-title">粘贴测试</div>
+            <div class="flow-desc">在插件中验证连接</div>
+          </div>
+        </div>
+
         <h2 class="doc-h2">三步完成配置</h2>
         <div class="steps">
           <div class="step-item">
@@ -399,7 +466,7 @@
             <div class="step-title">在插件中粘贴 Key</div>
             <div class="step-desc">打开 ChatGenius 设置页，选择对应的服务商，将复制的 API Key 粘贴到输入框中，点击「测试连接」验证成功即可。</div>
             <div class="step-action">
-              <a href="/guide.html" class="btn-primary">查看各服务商详细教程</a>
+              <a href="/guide/" class="btn-primary">查看各服务商详细教程</a>
             </div>
           </div>
         </div>

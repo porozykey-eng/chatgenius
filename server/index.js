@@ -134,27 +134,21 @@ app.get('/api/config/providers', (req, res) => {
   res.json(providersConfig);
 });
 
-// Serve documentation site
-const docsPath = __dirname + '/../docs/.vitepress/dist';
-app.use('/docs', express.static(docsPath, { maxAge: '1h', etag: true }));
-
-// Docs SPA fallback: try appending .html for clean URLs
-app.get('/docs/*', (req, res, next) => {
-  const fs = require('fs');
-  const filePath = docsPath + req.path + '.html';
-  if (fs.existsSync(filePath)) {
-    res.sendFile(filePath);
-  } else {
-    next();
-  }
+// Redirect old documentation paths to guide
+app.get('/docs/*', (req, res) => {
+  res.redirect(301, '/guide/');
 });
 
-// Serve guide.html directly (配置指南)
+// Serve guide.html directly (配置指南) - 统一使用 /guide/ 路径
 const guidePath = __dirname + '/../landing-page/public/guide.html';
-app.get('/guide.html', (req, res) => {
+app.get('/guide/', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(guidePath);
 });
+
+// Redirect old guide paths to /guide/
+app.get('/guide.html', (req, res) => res.redirect(301, '/guide/'));
+app.get('/guide', (req, res) => res.redirect(301, '/guide/'));
 
 // Serve landing page static files
 const landingPath = __dirname + '/../landing-page/dist';

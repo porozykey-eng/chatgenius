@@ -582,7 +582,7 @@ function Navigation({ onDownload, isDownloading }: { onDownload: () => void, isD
             <a href="#features" className="text-white/60 hover:text-white transition-colors font-medium">功能</a>
             <a href="#models" className="text-white/60 hover:text-white transition-colors font-medium">模型</a>
             <a href="#pricing" className="text-white/60 hover:text-white transition-colors font-medium">定价</a>
-            <a href="/guide.html" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors font-medium flex items-center gap-1">
+            <a href="/guide/" target="_blank" rel="noopener noreferrer" className="text-white/60 hover:text-white transition-colors font-medium flex items-center gap-1">
               <BookOpen className="w-4 h-4" />
               配置指南
             </a>
@@ -655,7 +655,7 @@ function Navigation({ onDownload, isDownloading }: { onDownload: () => void, isD
                 <a href="#features" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2">功能</a>
                 <a href="#models" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2">模型</a>
                 <a href="#pricing" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2">定价</a>
-                <a href="/guide.html" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2 flex items-center gap-2">
+                <a href="/guide/" target="_blank" rel="noopener noreferrer" onClick={() => setMobileMenuOpen(false)} className="text-white/60 hover:text-white transition-colors font-medium py-2 flex items-center gap-2">
                   <BookOpen className="w-4 h-4" />
                   配置指南
                 </a>
