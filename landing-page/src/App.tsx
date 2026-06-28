@@ -951,9 +951,9 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
 function BrowserMarquee() {
   const browsers = [
     { name: 'Chrome', logo: './icons/chrome.svg' },
-    { name: 'Edge', logo: './icons/Edge.svg' },
-    { name: 'Brave', logo: './icons/Brave.svg' },
-    { name: 'Opera', logo: './icons/Opera.svg' },
+    { name: 'Edge', logo: './icons/edge.svg' },
+    { name: 'Brave', logo: './icons/brave.svg' },
+    { name: 'Opera', logo: './icons/opera.svg' },
     { name: 'Vivaldi', logo: './icons/vivaldi.svg' },
   ]
 

@@ -165,12 +165,28 @@ app.use(express.static(landingPath, {
 }));
 
 // extension.zip 必须实时刷新，禁止缓存（确保用户下载到最新版本插件）
+// 优先从 public 目录读取（git 跟踪，始终存在），避免依赖 dist 构建产物
 app.get('/extension.zip', (req, res) => {
+  const fs = require('fs');
+  const publicZip = __dirname + '/../landing-page/public/extension.zip';
+  const distZip = landingPath + '/extension.zip';
+  const zipPath = fs.existsSync(publicZip) ? publicZip : (fs.existsSync(distZip) ? distZip : null);
+
+  if (!zipPath) {
+    console.error('[extension.zip] 文件不存在: ', publicZip, distZip);
+    return res.status(404).json({ error: '下载文件未找到，请联系管理员' });
+  }
+
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   res.setHeader('Content-Disposition', 'attachment; filename="ChatGenius-AI-Extension.zip"');
-  res.sendFile(landingPath + '/extension.zip');
+  res.sendFile(zipPath, (err) => {
+    if (err) {
+      console.error('[extension.zip] 发送失败:', err.message);
+      if (!res.headersSent) res.status(500).json({ error: '下载失败' });
+    }
+  });
 });
 
 app.get('*', (req, res) => {
