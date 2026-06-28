@@ -32,6 +32,7 @@
       --color-error-bg: #fef2f2;
       --color-error-border: #fecaca;
       --sidebar-width: 220px;
+      --content-width: 720px;
       --radius-sm: 6px;
       --radius: 10px;
       --radius-lg: 14px;
@@ -89,9 +90,11 @@
 
     /* ============ Main ============ */
     .main { flex: 1; margin-left: var(--sidebar-width); min-width: 0; }
-    /* 顶部留白 + 视觉协调：内容区靠左，减小 max-width 和 padding */
+    /* 内容居中：使用 auto margin 水平居中，max-width 控制最佳阅读宽度 */
     .main-inner {
-      max-width: 680px; margin: 0; padding: 48px 56px 120px;
+      max-width: var(--content-width);
+      margin: 0 auto;
+      padding: 48px 40px 120px;
     }
     .content-area { flex: 1; min-width: 0; }
 
@@ -103,14 +106,37 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ============ Page Title (替代 Hero，更克制) ============ */
+    /* ============ Top Header (顶部标题栏) ============ */
+    .top-header {
+      background: var(--color-bg);
+      border-bottom: 1px solid var(--color-border);
+      padding: 16px 40px;
+      position: sticky; top: 0; z-index: 50;
+      backdrop-filter: blur(8px);
+      background: rgba(255,255,255,0.85);
+    }
+    .top-header-inner {
+      max-width: var(--content-width);
+      margin: 0 auto;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .top-header-title {
+      font-size: 15px; font-weight: 700; color: var(--color-text);
+      display: flex; align-items: center; gap: 8px;
+    }
+    .top-header-title svg { color: var(--color-primary); }
+    .top-header-meta {
+      font-size: 12px; color: var(--color-text-muted);
+    }
+
+    /* ============ Page Title ============ */
     .page-title-block { margin-bottom: 40px; }
     .page-eyebrow {
       font-size: 12px; font-weight: 600; color: var(--color-primary);
       text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;
     }
     .page-title {
-      font-size: 34px; font-weight: 800; letter-spacing: -0.03em;
+      font-size: 32px; font-weight: 800; letter-spacing: -0.03em;
       line-height: 1.15; color: var(--color-text); margin-bottom: 12px;
     }
     .page-subtitle {
@@ -198,7 +224,7 @@
     }
     .btn-secondary:hover { border-color: var(--color-primary); color: var(--color-primary-dark); }
 
-    /* ============ Configurator (核心交互区) ============ */
+    /* ============ Configurator ============ */
     .configurator {
       margin: 32px 0; border: 1px solid var(--color-border);
       border-radius: var(--radius-lg); overflow: hidden; background: var(--color-bg);
@@ -268,7 +294,7 @@
     .test-result.error { background: var(--color-error-bg); border: 1px solid var(--color-error-border); color: #991b1b; }
     .test-result.loading { background: #f0f4ff; border: 1px solid #c7d7fe; color: #3b52cc; }
 
-    /* ============ Provider Link List (精简版，无模型名) ============ */
+    /* ============ Provider Links (使用真实 SVG logo) ============ */
     .provider-links {
       display: grid; grid-template-columns: repeat(2, 1fr);
       gap: 10px; margin: 20px 0;
@@ -284,9 +310,13 @@
       box-shadow: var(--shadow-sm);
     }
     .provider-link-logo {
-      width: 32px; height: 32px; border-radius: 8px;
+      width: 36px; height: 36px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0;
+      flex-shrink: 0; overflow: hidden;
+      background: var(--color-bg-muted);
+    }
+    .provider-link-logo img {
+      width: 28px; height: 28px; object-fit: contain;
     }
     .provider-link-info { flex: 1; min-width: 0; }
     .provider-link-name { font-size: 14px; font-weight: 600; color: var(--color-text); }
@@ -345,12 +375,15 @@
       .sidebar.open { transform: translateX(0); }
       .main { margin-left: 0; }
       .main-inner { padding: 64px 20px 80px; max-width: 100%; }
+      .top-header { padding: 14px 20px; }
+      .top-header-inner { max-width: 100%; }
       .menu-btn { display: flex; }
       .step-flow { flex-direction: column; }
       .step-flow-arrow { transform: rotate(90deg); padding: 4px 0; }
       .provider-links { grid-template-columns: 1fr; }
       .configurator-actions { flex-direction: column; }
       .config-action-primary { width: 100%; }
+      .page-title { font-size: 26px; }
     }
   </style>
 </head>
@@ -382,6 +415,17 @@
     </aside>
 
     <main class="main">
+      <!-- 顶部标题栏 -->
+      <header class="top-header">
+        <div class="top-header-inner">
+          <div class="top-header-title">
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
+            使用教程
+          </div>
+          <div class="top-header-meta">ChatGenius AI · 帮助中心</div>
+        </div>
+      </header>
+
       <div class="main-inner">
         <div class="content-area">
 
@@ -389,7 +433,7 @@
           <div class="doc-section active" id="section-getting-started">
 
             <div class="page-title-block">
-              <div class="page-eyebrow">使用教程</div>
+              <div class="page-eyebrow">入门配置</div>
               <h1 class="page-title">3 分钟开始使用 ChatGenius</h1>
               <p class="page-subtitle">安装插件、配置大模型 API，立即在 WhatsApp / Messenger 中使用 AI 助手。</p>
             </div>
@@ -550,13 +594,13 @@
               </div>
             </div>
 
-            <!-- 服务商入口（仅链接，无模型名） -->
+            <!-- 服务商入口（使用真实 SVG logo） -->
             <h2 class="doc-h2">获取 API Key</h2>
             <p class="doc-p">选择一家服务商，注册账号后在控制台创建 API Key。点击下方卡片跳转至对应官网。</p>
 
             <div class="provider-links">
               <a href="https://platform.deepseek.com/" target="_blank" class="provider-link">
-                <div class="provider-link-logo" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">DS</div>
+                <div class="provider-link-logo"><img src="/icons/deepseek.svg" alt="DeepSeek"></div>
                 <div class="provider-link-info">
                   <div class="provider-link-name">DeepSeek</div>
                   <div class="provider-link-desc">国产 · 性价比高 · 国内直连</div>
@@ -564,7 +608,7 @@
                 <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </a>
               <a href="https://dashscope.console.aliyun.com/" target="_blank" class="provider-link">
-                <div class="provider-link-logo" style="background:linear-gradient(135deg,#f97316,#ef4444);">通义</div>
+                <div class="provider-link-logo"><img src="/icons/qwen.svg" alt="通义千问"></div>
                 <div class="provider-link-info">
                   <div class="provider-link-name">通义千问</div>
                   <div class="provider-link-desc">阿里 · 中文能力强 · 国内直连</div>
@@ -572,7 +616,7 @@
                 <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </a>
               <a href="https://open.bigmodel.cn/" target="_blank" class="provider-link">
-                <div class="provider-link-logo" style="background:linear-gradient(135deg,#0ea5e9,#06b6d4);">智谱</div>
+                <div class="provider-link-logo"><img src="/icons/ZHIPU.svg" alt="智谱 AI"></div>
                 <div class="provider-link-info">
                   <div class="provider-link-name">智谱 AI</div>
                   <div class="provider-link-desc">清华背景 · 有免费模型 · 国内直连</div>
@@ -580,7 +624,7 @@
                 <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </a>
               <a href="https://console.volcengine.com/ark" target="_blank" class="provider-link">
-                <div class="provider-link-logo" style="background:linear-gradient(135deg,#ef4444,#dc2626);">火山</div>
+                <div class="provider-link-logo"><img src="/icons/doubao.svg" alt="火山引擎"></div>
                 <div class="provider-link-info">
                   <div class="provider-link-name">火山引擎</div>
                   <div class="provider-link-desc">字节跳动 · 价格极低 · 国内直连</div>
@@ -588,7 +632,7 @@
                 <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </a>
               <a href="https://platform.moonshot.cn/" target="_blank" class="provider-link">
-                <div class="provider-link-logo" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">M</div>
+                <div class="provider-link-logo"><img src="/icons/kimi.svg" alt="Moonshot"></div>
                 <div class="provider-link-info">
                   <div class="provider-link-name">Moonshot</div>
                   <div class="provider-link-desc">长文本能力 · 国内直连</div>
@@ -596,7 +640,7 @@
                 <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </a>
               <a href="https://platform.openai.com/" target="_blank" class="provider-link">
-                <div class="provider-link-logo" style="background:linear-gradient(135deg,#22c55e,#16a34a);">AI</div>
+                <div class="provider-link-logo"><img src="/icons/openai.svg" alt="OpenAI"></div>
                 <div class="provider-link-info">
                   <div class="provider-link-name">OpenAI</div>
                   <div class="provider-link-desc">国际 · GPT 系列 · 需代理</div>
@@ -604,7 +648,7 @@
                 <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </a>
               <a href="https://console.anthropic.com/" target="_blank" class="provider-link">
-                <div class="provider-link-logo" style="background:linear-gradient(135deg,#d97706,#b45309);">An</div>
+                <div class="provider-link-logo"><img src="/icons/Claude.svg" alt="Anthropic"></div>
                 <div class="provider-link-info">
                   <div class="provider-link-name">Anthropic</div>
                   <div class="provider-link-desc">国际 · Claude 系列 · 需代理</div>
@@ -612,7 +656,7 @@
                 <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
               </a>
               <a href="https://aistudio.google.com/" target="_blank" class="provider-link">
-                <div class="provider-link-logo" style="background:linear-gradient(135deg,#4285f4,#ea4335);">G</div>
+                <div class="provider-link-logo"><img src="/icons/gemini.svg" alt="Google Gemini"></div>
                 <div class="provider-link-info">
                   <div class="provider-link-name">Google Gemini</div>
                   <div class="provider-link-desc">国际 · 多模态 · 需代理</div>
