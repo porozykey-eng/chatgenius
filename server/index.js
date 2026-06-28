@@ -134,10 +134,7 @@ app.get('/api/config/providers', (req, res) => {
   res.json(providersConfig);
 });
 
-// Redirect old documentation paths to guide
-app.get('/docs/*', (req, res) => {
-  res.redirect(301, '/guide/');
-});
+
 
 // Serve guide.html directly (配置指南) - 统一使用 /guide/ 路径
 const guidePath = __dirname + '/../landing-page/public/guide.html';
