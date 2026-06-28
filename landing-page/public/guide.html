@@ -60,6 +60,7 @@
       position: sticky; top: 0; align-self: flex-start;
       height: 100vh; overflow-y: auto; z-index: 100;
       padding-top: 32px;
+      display: flex; flex-direction: column;
     }
     .sidebar::-webkit-scrollbar { width: 3px; }
     .sidebar::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
@@ -74,14 +75,14 @@
       display: flex; align-items: center; justify-content: center;
     }
     .sidebar-logo-icon svg { width: 15px; height: 15px; color: #fff; }
-    .sidebar-nav { padding: 16px 12px 24px; }
+    .sidebar-nav { padding: 16px 12px 24px; flex: 1; }
     .nav-group { margin-bottom: 20px; }
     .nav-group-title {
-      font-size: 10px; font-weight: 700; text-transform: uppercase;
+      font-size: 11px; font-weight: 700; text-transform: uppercase;
       letter-spacing: 0.08em; color: var(--color-text-muted); padding: 6px 12px 8px;
     }
     .nav-link {
-      display: block; padding: 8px 12px; border-radius: var(--radius-sm); font-size: 13px;
+      display: block; padding: 10px 14px; border-radius: var(--radius-sm); font-size: 14px;
       color: var(--color-text-secondary); text-decoration: none; cursor: pointer;
       transition: all 0.2s; border: none; background: none;
       width: 100%; text-align: left; font-family: inherit; font-weight: 500;
@@ -90,6 +91,19 @@
     .nav-link.active {
       background: var(--color-primary-light); color: var(--color-primary-dark); font-weight: 600;
     }
+    /* 侧边栏底部联系客服 */
+    .sidebar-footer { padding: 16px 12px 24px; border-top: 1px solid var(--color-border); }
+    .sidebar-contact {
+      display: flex; align-items: center; gap: 10px; padding: 10px 12px;
+      border-radius: var(--radius); background: var(--color-bg);
+      text-decoration: none; color: var(--color-text-secondary);
+      font-size: 13px; transition: all 0.2s; border: 1px solid var(--color-border);
+    }
+    .sidebar-contact:hover { background: var(--color-primary-light); color: var(--color-primary-dark); border-color: var(--color-primary); }
+    .sidebar-contact svg { flex-shrink: 0; color: var(--color-primary); }
+    .sidebar-contact-text { line-height: 1.4; }
+    .sidebar-contact-text strong { display: block; font-size: 13px; font-weight: 600; color: var(--color-text); }
+    .sidebar-contact-text span { font-size: 11px; color: var(--color-text-muted); }
 
     /* ============ Main ============ */
     .main { flex: 1; min-width: 0; }
@@ -258,14 +272,19 @@
       box-shadow: 0 0 0 3px rgba(99,102,241,0.1);
     }
     .config-input::placeholder { color: var(--color-text-muted); }
-    .config-copy-btn {
-      padding: 0 16px; background: var(--color-bg-muted); border: 1px solid var(--color-border);
-      border-radius: var(--radius); color: var(--color-text-secondary); font-size: 13px;
-      cursor: pointer; font-family: inherit; transition: all 0.2s; white-space: nowrap;
-      display: flex; align-items: center; gap: 4px;
+    /* API URL 预设选择器 */
+    .url-presets { display: flex; gap: 6px; margin-bottom: 8px; flex-wrap: wrap; }
+    .url-preset {
+      padding: 6px 14px; font-size: 12px; font-weight: 500;
+      border: 1px solid var(--color-border); background: var(--color-bg);
+      color: var(--color-text-secondary); border-radius: 999px;
+      cursor: pointer; font-family: inherit; transition: all 0.2s;
     }
-    .config-copy-btn:hover { background: var(--color-primary-light); color: var(--color-primary-dark); border-color: var(--color-primary); }
-    .config-copy-btn.copied { background: var(--color-success); border-color: var(--color-success); color: #fff; }
+    .url-preset:hover { border-color: var(--color-primary); color: var(--color-primary-dark); }
+    .url-preset.active {
+      background: var(--color-primary-light); border-color: var(--color-primary);
+      color: var(--color-primary-dark); font-weight: 600;
+    }
 
     .configurator-actions {
       display: flex; gap: 10px; flex-wrap: wrap; margin-top: 20px;
@@ -417,6 +436,15 @@
           <button class="nav-link" data-section="faq">常见问题</button>
         </div>
       </nav>
+      <div class="sidebar-footer">
+        <a href="#" id="contactLink" class="sidebar-contact" target="_blank" rel="noopener">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg>
+          <div class="sidebar-contact-text">
+            <strong>联系客服</strong>
+            <span id="contactDesc">加载中…</span>
+          </div>
+        </a>
+      </div>
     </aside>
 
     <main class="main">
@@ -455,6 +483,14 @@
               </div>
               <div class="step-flow-item">
                 <div class="step-flow-num">2</div>
+                <div class="step-flow-title">获取 API Key</div>
+                <div class="step-flow-desc">注册服务商<br>创建密钥</div>
+              </div>
+              <div class="step-flow-arrow">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
+              </div>
+              <div class="step-flow-item">
+                <div class="step-flow-num">3</div>
                 <div class="step-flow-title">配置大模型</div>
                 <div class="step-flow-desc">填入 API<br>测试连接</div>
               </div>
@@ -462,7 +498,7 @@
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
               </div>
               <div class="step-flow-item">
-                <div class="step-flow-num">3</div>
+                <div class="step-flow-num">4</div>
                 <div class="step-flow-title">开始对话</div>
                 <div class="step-flow-desc">打开 WhatsApp<br>即可使用</div>
               </div>
@@ -477,131 +513,8 @@
             </a>
 
             <!-- 第二步 -->
-            <h2 class="doc-h2">第二步 · 配置大模型</h2>
-            <p class="doc-p">ChatGenius 需要连接一个大语言模型。你需要准备三样东西：<span class="doc-strong">API URL、API Key、模型名称</span>。</p>
-
-            <div class="callout callout-blue">
-              <div class="callout-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b52cc" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
-              </div>
-              <div class="callout-body">
-                <div class="callout-title">什么是 API Key？</div>
-                API Key 是访问大模型服务的「通行证」。你在服务商官网注册账号后，在控制台创建一个 Key。Key 仅保存在本地浏览器，不会上传服务器。
-              </div>
-            </div>
-
-            <p class="doc-p">具体配置方法请查看 <a href="#" data-navigate="providers" style="color:var(--color-primary);font-weight:500;">大模型接入</a> 章节，里面有详细的获取步骤和配置说明。</p>
-
-            <!-- 第三步 -->
-            <h2 class="doc-h2">第三步 · 开始使用</h2>
-            <p class="doc-p">配置完成后，打开 WhatsApp、Messenger 或 Facebook 网页版，点击浏览器右上角的 ChatGenius 图标，即可开始 AI 对话。</p>
-
-            <div class="info-box">
-              <div class="info-box-title">试试这些用法</div>
-              <ul class="doc-ul" style="margin-bottom:0;">
-                <li class="doc-li">帮我回复这条消息</li>
-                <li class="doc-li">总结上面的对话内容</li>
-                <li class="doc-li">把这句话翻译成英文</li>
-                <li class="doc-li">帮我写一段产品介绍</li>
-              </ul>
-            </div>
-          </div>
-
-          <!-- ==================== 大模型接入 ==================== -->
-          <div class="doc-section" id="section-providers">
-
-            <div class="page-title-block">
-              <div class="page-eyebrow">大模型接入</div>
-              <h1 class="page-title">配置大模型 API</h1>
-              <p class="page-subtitle">所有服务商的配置方式相同：填入 API URL、API Key、模型名称三项即可。</p>
-            </div>
-
-            <h2 class="doc-h2">通用配置方法</h2>
-            <p class="doc-p">无论选择哪家服务商，配置步骤都是一样的：</p>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">三步配置</div>
-                1. 在服务商官网注册账号并创建 API Key<br>
-                2. 在服务商文档中找到 API URL 和可用模型名称<br>
-                3. 将这三项填入下方配置器，测试通过后复制到插件设置页
-              </div>
-            </div>
-
-            <!-- 配置器 -->
-            <div class="configurator">
-              <div class="configurator-header">
-                <div class="configurator-title">API 配置器</div>
-                <div class="configurator-subtitle">填写后可测试连接，并复制到插件中使用</div>
-              </div>
-              <div class="configurator-body">
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <span>API URL</span>
-                    <span class="config-field-hint">服务商接口地址</span>
-                  </div>
-                  <div class="config-input-wrap">
-                    <input type="text" class="config-input" id="configUrl" value="" placeholder="https://api.example.com/v1">
-                    <button class="config-copy-btn" data-copy-target="configUrl">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                      复制
-                    </button>
-                  </div>
-                </div>
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <span>API Key</span>
-                    <span class="config-field-hint">在服务商控制台创建</span>
-                  </div>
-                  <div class="config-input-wrap">
-                    <input type="text" class="config-input" id="configKey" value="" placeholder="sk-xxxxxxxxxxxxxxxx">
-                    <button class="config-copy-btn" data-copy-target="configKey">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                      复制
-                    </button>
-                  </div>
-                </div>
-                <div class="config-field">
-                  <div class="config-field-label">
-                    <span>模型名称</span>
-                    <span class="config-field-hint">从服务商文档查询</span>
-                  </div>
-                  <div class="config-input-wrap">
-                    <input type="text" class="config-input" id="configModel" value="" placeholder="model-name">
-                    <button class="config-copy-btn" data-copy-target="configModel">
-                      <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                      复制
-                    </button>
-                  </div>
-                </div>
-
-                <div class="configurator-actions">
-                  <button class="config-action-primary" id="testConnectionBtn">
-                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
-                    测试连接
-                  </button>
-                  <button class="config-action-secondary" id="copyAllConfig">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
-                    复制全部
-                  </button>
-                </div>
-
-                <div class="test-result" id="testResult"></div>
-              </div>
-            </div>
-
-            <div class="callout callout-amber">
-              <div class="callout-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
-              </div>
-              <div class="callout-body">
-                <div class="callout-title">配置后如何使用？</div>
-                复制上方的 URL、Key、模型名称，打开 ChatGenius 插件设置页，粘贴到对应输入框并保存即可。
-              </div>
-            </div>
-
-            <!-- 服务商入口（使用真实 SVG logo） -->
-            <h2 class="doc-h2">获取 API Key</h2>
-            <p class="doc-p">选择一家服务商，注册账号后在控制台创建 API Key。点击下方卡片跳转至对应官网。</p>
+            <h2 class="doc-h2">第二步 · 获取 API Key</h2>
+            <p class="doc-p">选择一家大模型服务商，注册账号后在控制台创建 API Key。点击下方卡片跳转至对应官网。</p>
 
             <div class="provider-links">
               <a href="https://platform.deepseek.com/" target="_blank" class="provider-link">
@@ -670,6 +583,16 @@
               </a>
             </div>
 
+            <div class="callout callout-blue">
+              <div class="callout-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#3b52cc" stroke-width="2"><circle cx="12" cy="12" r="10"/><line x1="12" y1="16" x2="12" y2="12"/><line x1="12" y1="8" x2="12.01" y2="8"/></svg>
+              </div>
+              <div class="callout-body">
+                <div class="callout-title">什么是 API Key？</div>
+                API Key 是访问大模型服务的「通行证」。你在服务商官网注册账号后，在控制台创建一个 Key。Key 仅保存在本地浏览器，不会上传服务器。
+              </div>
+            </div>
+
             <div class="callout callout-amber">
               <div class="callout-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
@@ -679,6 +602,111 @@
                 登录服务商控制台后，在「模型列表」或「文档」中查看当前可用的模型 ID。模型会不定期更新，请以服务商官网为准。
               </div>
             </div>
+
+            <!-- 第三步 -->
+            <h2 class="doc-h2">第三步 · 配置大模型</h2>
+            <p class="doc-p">准备好 API Key 后，你需要填写三项信息：<span class="doc-strong">API URL、API Key、模型名称</span>。</p>
+            <p class="doc-p">前往 <a href="#" data-navigate="providers" style="color:var(--color-primary);font-weight:500;">大模型接入</a> 章节使用配置器，可在线测试连接是否成功，再复制到插件设置页。</p>
+
+            <!-- 第四步 -->
+            <h2 class="doc-h2">第四步 · 开始使用</h2>
+            <p class="doc-p">配置完成后，打开 WhatsApp、Messenger 或 Facebook 网页版，点击浏览器右上角的 ChatGenius 图标，即可开始 AI 对话。</p>
+
+            <div class="info-box">
+              <div class="info-box-title">试试这些用法</div>
+              <ul class="doc-ul" style="margin-bottom:0;">
+                <li class="doc-li">帮我回复这条消息</li>
+                <li class="doc-li">总结上面的对话内容</li>
+                <li class="doc-li">把这句话翻译成英文</li>
+                <li class="doc-li">帮我写一段产品介绍</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ==================== 大模型接入 ==================== -->
+          <div class="doc-section" id="section-providers">
+
+            <div class="page-title-block">
+              <div class="page-eyebrow">大模型接入</div>
+              <h1 class="page-title">配置大模型 API</h1>
+              <p class="page-subtitle">所有服务商的配置方式相同：填入 API URL、API Key、模型名称三项即可。</p>
+            </div>
+
+            <h2 class="doc-h2">通用配置方法</h2>
+            <p class="doc-p">无论选择哪家服务商，配置步骤都是一样的：</p>
+            <div class="callout callout-blue">
+              <div class="callout-body">
+                <div class="callout-title">三步配置</div>
+                1. 在服务商官网注册账号并创建 API Key<br>
+                2. 在服务商文档中找到 API URL 和可用模型名称<br>
+                3. 将这三项填入下方配置器，测试通过后复制到插件设置页
+              </div>
+            </div>
+
+            <!-- 配置器 -->
+            <div class="configurator">
+              <div class="configurator-header">
+                <div class="configurator-title">API 配置器</div>
+                <div class="configurator-subtitle">填写后可测试连接，并复制到插件中使用</div>
+              </div>
+              <div class="configurator-body">
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <span>API URL</span>
+                    <span class="config-field-hint">服务商接口地址</span>
+                  </div>
+                  <div class="url-presets">
+                    <button class="url-preset active" data-url="https://api.openai.com/v1">OpenAI 兼容</button>
+                    <button class="url-preset" data-url="">自定义</button>
+                  </div>
+                  <div class="config-input-wrap">
+                    <input type="text" class="config-input" id="configUrl" value="https://api.openai.com/v1" placeholder="https://api.example.com/v1">
+                  </div>
+                </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <span>API Key</span>
+                    <span class="config-field-hint">在服务商控制台创建</span>
+                  </div>
+                  <div class="config-input-wrap">
+                    <input type="text" class="config-input" id="configKey" value="" placeholder="sk-xxxxxxxxxxxxxxxx">
+                  </div>
+                </div>
+                <div class="config-field">
+                  <div class="config-field-label">
+                    <span>模型名称</span>
+                    <span class="config-field-hint">从服务商文档查询</span>
+                  </div>
+                  <div class="config-input-wrap">
+                    <input type="text" class="config-input" id="configModel" value="" placeholder="model-name">
+                  </div>
+                </div>
+
+                <div class="configurator-actions">
+                  <button class="config-action-primary" id="testConnectionBtn">
+                    <svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                    测试连接
+                  </button>
+                  <button class="config-action-secondary" id="copyAllConfig">
+                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                    复制全部
+                  </button>
+                </div>
+
+                <div class="test-result" id="testResult"></div>
+              </div>
+            </div>
+
+            <div class="callout callout-amber">
+              <div class="callout-icon">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
+              </div>
+              <div class="callout-body">
+                <div class="callout-title">配置后如何使用？</div>
+                复制上方的 URL、Key、模型名称，打开 ChatGenius 插件设置页，粘贴到对应输入框并保存即可。
+              </div>
+            </div>
+
           </div>
 
           <!-- ==================== 常见问题 ==================== -->
@@ -777,22 +805,45 @@
     });
   });
 
-  // 复制按钮
-  document.querySelectorAll('.config-copy-btn').forEach(function(btn) {
+  // API URL 预设选择器
+  var urlInput = document.getElementById('configUrl');
+  document.querySelectorAll('.url-preset').forEach(function(btn) {
     btn.addEventListener('click', function() {
-      var targetId = btn.getAttribute('data-copy-target');
-      var input = document.getElementById(targetId);
-      if (!input) return;
-      var text = input.value || input.placeholder;
-      navigator.clipboard.writeText(text).then(function() {
-        btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="20 6 9 17 4 12"/></svg> 已复制';
-        btn.classList.add('copied');
-        setTimeout(function() {
-          btn.innerHTML = '<svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 复制';
-          btn.classList.remove('copied');
-        }, 2000);
-      }).catch(function() {});
+      document.querySelectorAll('.url-preset').forEach(function(b) { b.classList.remove('active'); });
+      btn.classList.add('active');
+      var url = btn.getAttribute('data-url');
+      if (urlInput) {
+        urlInput.value = url;
+        urlInput.focus();
+        if (url) urlInput.blur();
+      }
     });
+  });
+  // 用户手动编辑 URL 时取消预设高亮
+  if (urlInput) {
+    urlInput.addEventListener('input', function() {
+      document.querySelectorAll('.url-preset').forEach(function(b) { b.classList.remove('active'); });
+    });
+  }
+
+  // 动态获取客服 QQ 群信息（无需鉴权的公开接口）
+  var contactLink = document.getElementById('contactLink');
+  var contactDesc = document.getElementById('contactDesc');
+  fetch('/api/admin/public-settings').then(function(r) { return r.json(); }).then(function(data) {
+    var qqGroup = (data && data['contact.qqGroup']) || '';
+    var qqGroupLink = (data && data['contact.qqGroupLink']) || '';
+    if (qqGroupLink) {
+      contactLink.href = qqGroupLink;
+      contactDesc.textContent = qqGroup ? ('QQ 群 ' + qqGroup) : '点击加入群聊';
+    } else if (qqGroup) {
+      contactLink.href = 'https://qm.qq.com/q/' + qqGroup;
+      contactDesc.textContent = 'QQ 群 ' + qqGroup;
+    } else {
+      contactDesc.textContent = '暂未配置';
+      contactLink.style.pointerEvents = 'none';
+    }
+  }).catch(function() {
+    contactDesc.textContent = '联系客服';
   });
 
   // 复制全部配置
