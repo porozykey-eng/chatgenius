@@ -1484,6 +1484,20 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     }
 
+    // 更新配置引导小字
+    const guideEl = document.getElementById(context === 'onboarding' ? 'onboardingProviderGuide' : 'settingsProviderGuide');
+    const guideLinkEl = document.getElementById(context === 'onboarding' ? 'onboardingGuideLink' : 'settingsGuideLink');
+    if (guideEl && guideLinkEl) {
+      guideEl.style.display = '';
+      guideLinkEl.textContent = provider.name + ' 官方平台';
+      if (provider.getKey) {
+        guideLinkEl.href = provider.getKey;
+        guideEl.style.display = '';
+      } else {
+        guideEl.style.display = 'none';
+      }
+    }
+
     // 更新隐藏的 apiProvider select（用于高级模式同步）
     const apiProviderSelect = document.getElementById('apiProvider');
     if (apiProviderSelect) apiProviderSelect.value = providerId;

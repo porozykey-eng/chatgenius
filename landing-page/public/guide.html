@@ -1,12 +1,1107 @@
 <!DOCTYPE html>
-<html>
+<html lang="zh-CN">
 <head>
   <meta charset="UTF-8">
-  <meta http-equiv="refresh" content="0;url=https://chat.sopie.cc/docs/guide/getting-started">
-  <title>ChatGenius AI - 配置指南</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>配置指南 — ChatGenius AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
+  <style>
+    /* ===== Reset & Base ===== */
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: #fff; color: #1a1a1a; line-height: 1.7;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ===== Layout ===== */
+    .page { display: flex; min-height: 100vh; }
+
+    /* ===== Sidebar ===== */
+    .sidebar {
+      width: 260px; flex-shrink: 0; background: #fafafa;
+      border-right: 1px solid #eaeaea; position: fixed;
+      top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100;
+    }
+    .sidebar::-webkit-scrollbar { width: 3px; }
+    .sidebar::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
+    .sidebar-header {
+      padding: 24px 20px 16px; border-bottom: 1px solid #eaeaea;
+    }
+    .sidebar-logo {
+      display: flex; align-items: center; gap: 10px;
+      text-decoration: none; color: #1a1a1a; font-weight: 700; font-size: 15px;
+    }
+    .sidebar-logo-icon {
+      width: 28px; height: 28px; border-radius: 6px;
+      background: #111;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .sidebar-logo-icon svg { width: 14px; height: 14px; color: #fff; }
+    .sidebar-doc-label {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.08em; color: #999; margin-top: 10px;
+    }
+    .sidebar-nav { padding: 12px 12px 24px; }
+    .nav-group { margin-bottom: 16px; }
+    .nav-group-title {
+      font-size: 11px; font-weight: 600; text-transform: uppercase;
+      letter-spacing: 0.06em; color: #999; padding: 6px 12px 4px;
+    }
+    .nav-link {
+      display: block;
+      padding: 6px 12px; border-radius: 4px; font-size: 13px;
+      color: #666; text-decoration: none; cursor: pointer;
+      transition: all 0.15s; border: none; background: none;
+      width: 100%; text-align: left; font-family: inherit;
+    }
+    .nav-link:hover { background: #f0f0f0; color: #333; }
+    .nav-link.active { background: #f0f0f0; color: #111; font-weight: 600; }
+    .nav-sep { height: 1px; background: #eaeaea; margin: 8px 12px; }
+
+    /* ===== Main ===== */
+    .main { flex: 1; margin-left: 260px; min-width: 0; }
+    .main-inner { max-width: 720px; margin: 0 auto; padding: 48px 48px 120px; }
+
+    /* ===== Content Sections ===== */
+    .doc-section { display: none; animation: fadeUp 0.3s ease; }
+    .doc-section.active { display: block; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(12px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ===== Typography ===== */
+    .doc-title {
+      font-size: 32px; font-weight: 700; letter-spacing: -0.03em;
+      line-height: 1.2; margin-bottom: 8px; color: #111;
+    }
+    .doc-subtitle {
+      font-size: 16px; color: #666; line-height: 1.6; margin-bottom: 40px;
+    }
+    .doc-h2 {
+      font-size: 20px; font-weight: 700; letter-spacing: -0.02em;
+      margin: 40px 0 14px; color: #111; padding-top: 16px;
+      border-top: 1px solid #eee;
+    }
+    .doc-h2:first-of-type { border-top: none; padding-top: 0; margin-top: 0; }
+    .doc-h3 { font-size: 15px; font-weight: 600; margin: 24px 0 8px; color: #222; }
+    .doc-p { font-size: 14px; color: #444; margin-bottom: 14px; }
+    .doc-p a { color: #4f46e5; text-decoration: underline; text-underline-offset: 2px; }
+    .doc-p a:hover { color: #4338ca; }
+    .doc-strong { font-weight: 600; color: #111; }
+    .doc-code {
+      font-family: 'SF Mono', 'Fira Code', Menlo, monospace; font-size: 0.85em;
+      background: #f4f4f5; padding: 2px 6px; border-radius: 3px; color: #6d28d9;
+      border: 1px solid #eee;
+    }
+    .doc-ul, .doc-ol { padding-left: 20px; margin-bottom: 14px; }
+    .doc-li { font-size: 14px; color: #444; margin-bottom: 6px; padding-left: 4px; }
+    .doc-li::marker { color: #ccc; }
+
+    /* ===== Callout ===== */
+    .callout {
+      padding: 14px 18px;
+      border-radius: 6px; margin: 20px 0; font-size: 13px;
+      border: 1px solid;
+    }
+    .callout-title { font-weight: 600; margin-bottom: 4px; font-size: 13px; }
+    .callout-text { line-height: 1.6; }
+    .callout-blue { background: #f8f9ff; border-color: #e0e4f5; }
+    .callout-blue .callout-title { color: #1e40af; }
+    .callout-blue .callout-text { color: #3b5998; }
+    .callout-amber { background: #fffdf5; border-color: #f0e6c0; }
+    .callout-amber .callout-title { color: #92400e; }
+    .callout-amber .callout-text { color: #78350f; }
+    .callout-green { background: #f7fdf9; border-color: #d0f0de; }
+    .callout-green .callout-title { color: #166534; }
+    .callout-green .callout-text { color: #15803d; }
+
+    /* ===== Steps ===== */
+    .steps { position: relative; margin: 24px 0; padding-left: 28px; }
+    .steps::before {
+      content: ''; position: absolute; left: 9px; top: 8px; bottom: 8px;
+      width: 1px; background: #ddd;
+    }
+    .step-item { position: relative; padding: 0 0 28px; }
+    .step-item:last-child { padding-bottom: 0; }
+    .step-dot {
+      position: absolute; left: -28px; top: 2px;
+      width: 20px; height: 20px; border-radius: 50%;
+      background: #fff; border: 2px solid #ddd;
+      display: flex; align-items: center; justify-content: center;
+      font-size: 10px; font-weight: 700; color: #666; z-index: 1;
+    }
+    .step-item:hover .step-dot { border-color: #111; color: #111; }
+    .step-title { font-size: 15px; font-weight: 600; color: #111; margin-bottom: 4px; }
+    .step-desc { font-size: 13px; color: #666; line-height: 1.6; }
+    .step-action { margin-top: 10px; }
+    .btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 8px 16px; background: #111; color: #fff; border: none;
+      border-radius: 6px; font-size: 12px; font-weight: 500;
+      cursor: pointer; text-decoration: none; font-family: inherit;
+      transition: all 0.15s;
+    }
+    .btn-primary:hover { background: #333; text-decoration: none; }
+
+    /* ===== Comparison Table ===== */
+    .comparison-table {
+      width: 100%; border-collapse: collapse; margin: 20px 0; font-size: 13px;
+    }
+    .comparison-table th {
+      text-align: left; padding: 10px 12px; font-weight: 600; font-size: 12px;
+      color: #666; border-bottom: 2px solid #eee; white-space: nowrap;
+    }
+    .comparison-table td {
+      padding: 10px 12px; border-bottom: 1px solid #f0f0f0; color: #444;
+    }
+    .comparison-table tr:hover td { background: #fafafa; }
+    .comparison-table .highlight { color: #166534; font-weight: 600; }
+    .comparison-table .tag {
+      display: inline-block; padding: 1px 6px; border-radius: 3px;
+      font-size: 11px; font-weight: 500;
+    }
+    .tag-free { background: #f0fdf4; color: #166534; }
+    .tag-paid { background: #f8f9fa; color: #666; }
+    .tag-direct { background: #f0f4ff; color: #1e40af; }
+    .tag-proxy { background: #fff8f0; color: #92400e; }
+
+    /* ===== Provider Info Box ===== */
+    .info-box {
+      background: #fafafa; border: 1px solid #eaeaea; border-radius: 6px;
+      padding: 20px; margin: 20px 0;
+    }
+    .info-box-title {
+      font-size: 14px; font-weight: 600; margin-bottom: 12px; color: #333;
+    }
+    .info-table {
+      width: 100%; border-collapse: collapse; font-size: 13px;
+    }
+    .info-table td {
+      padding: 6px 0; color: #444; vertical-align: top;
+    }
+    .info-table td:first-child {
+      width: 100px; color: #888; font-weight: 500; white-space: nowrap;
+      padding-right: 16px;
+    }
+
+    /* ===== Recommended Cards ===== */
+    .rec-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 12px; margin: 20px 0;
+    }
+    .rec-card {
+      padding: 18px; background: #fafafa; border: 1px solid #eaeaea;
+      border-radius: 6px; transition: border-color 0.15s;
+    }
+    .rec-card:hover { border-color: #ccc; }
+    .rec-card-tag {
+      display: inline-block; padding: 2px 8px; border-radius: 3px;
+      font-size: 11px; font-weight: 600; margin-bottom: 8px;
+    }
+    .rec-card-title { font-size: 15px; font-weight: 600; color: #111; margin-bottom: 4px; }
+    .rec-card-desc { font-size: 13px; color: #666; line-height: 1.5; }
+
+    /* ===== FAQ ===== */
+    .faq-list { margin: 20px 0; }
+    .faq-item {
+      border-bottom: 1px solid #eee; padding: 14px 0;
+    }
+    .faq-q {
+      font-size: 14px; font-weight: 600; color: #222;
+      cursor: pointer; display: flex; align-items: center; justify-content: space-between;
+      gap: 12px; user-select: none; background: none; border: none;
+      width: 100%; text-align: left; font-family: inherit; padding: 0;
+    }
+    .faq-q:hover { color: #111; }
+    .faq-arrow {
+      width: 16px; height: 16px; color: #bbb; flex-shrink: 0;
+      transition: transform 0.2s ease;
+    }
+    .faq-item.open .faq-arrow { transform: rotate(180deg); }
+    .faq-a {
+      max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
+      font-size: 13px; color: #555; line-height: 1.7;
+    }
+    .faq-item.open .faq-a { max-height: 500px; padding-top: 10px; }
+
+    /* ===== Contact ===== */
+    .contact-grid {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 12px; margin: 20px 0;
+    }
+    .contact-card {
+      padding: 24px; background: #fafafa; border: 1px solid #eaeaea;
+      border-radius: 6px; text-align: center; transition: border-color 0.15s;
+    }
+    .contact-card:hover { border-color: #ccc; }
+    .contact-card-title { font-size: 14px; font-weight: 600; margin-bottom: 4px; }
+    .contact-card-desc { font-size: 12px; color: #888; }
+    .contact-card a { color: #4f46e5; text-decoration: none; font-weight: 500; }
+    .contact-card a:hover { text-decoration: underline; }
+
+    /* ===== Top Bar (mobile) ===== */
+    .topbar {
+      display: none; position: fixed; top: 0; left: 0; right: 0;
+      height: 52px; background: #fff; border-bottom: 1px solid #eaeaea;
+      z-index: 200; align-items: center; padding: 0 16px;
+      justify-content: space-between;
+    }
+    .topbar-left { display: flex; align-items: center; gap: 10px; }
+    .topbar-logo {
+      display: flex; align-items: center; gap: 8px;
+      text-decoration: none; color: #111; font-weight: 700; font-size: 14px;
+    }
+    .topbar-logo-icon {
+      width: 24px; height: 24px; border-radius: 5px;
+      background: #111;
+      display: flex; align-items: center; justify-content: center;
+    }
+    .topbar-logo-icon svg { width: 12px; height: 12px; color: #fff; }
+    .menu-btn {
+      width: 32px; height: 32px; border: 1px solid #eaeaea; border-radius: 6px;
+      background: #fff; cursor: pointer; display: flex; align-items: center;
+      justify-content: center; color: #666; transition: all 0.15s;
+    }
+    .menu-btn:hover { background: #f5f5f5; }
+    .back-link {
+      font-size: 12px; color: #666; text-decoration: none;
+      display: flex; align-items: center; gap: 4px;
+    }
+    .back-link:hover { color: #111; }
+
+    /* ===== Overlay ===== */
+    .overlay {
+      display: none; position: fixed; inset: 0; background: rgba(0,0,0,0.2);
+      z-index: 90;
+    }
+
+    /* ===== Responsive ===== */
+    @media (max-width: 860px) {
+      .topbar { display: flex; }
+      .sidebar {
+        transform: translateX(-100%); transition: transform 0.2s ease;
+        z-index: 300; top: 0;
+      }
+      .sidebar.open { transform: translateX(0); }
+      .overlay.open { display: block; }
+      .main { margin-left: 0; padding-top: 52px; }
+      .main-inner { padding: 24px 20px 80px; }
+      .doc-title { font-size: 26px; }
+      .doc-subtitle { font-size: 14px; margin-bottom: 28px; }
+      .rec-grid { grid-template-columns: 1fr; }
+      .contact-grid { grid-template-columns: 1fr; }
+      .doc-h2 { font-size: 18px; margin-top: 32px; }
+      .comparison-table { font-size: 11px; }
+      .comparison-table th, .comparison-table td { padding: 6px 8px; }
+    }
+  </style>
 </head>
 <body>
-  <p>正在跳转到新的文档页面...</p>
-  <p>如果没有自动跳转，请 <a href="https://chat.sopie.cc/docs/guide/getting-started">点击这里</a>。</p>
+
+<!-- Top Bar (mobile) -->
+<div class="topbar">
+  <div class="topbar-left">
+    <button class="menu-btn" id="menuBtn" aria-label="菜单">
+      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M4 6h16M4 12h16M4 18h16"/></svg>
+    </button>
+    <a href="/" class="topbar-logo">
+      <div class="topbar-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+      ChatGenius
+    </a>
+  </div>
+  <a href="/" class="back-link">
+    <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M19 12H5m7-7l-7 7 7 7"/></svg>
+    首页
+  </a>
+</div>
+<div class="overlay" id="overlay"></div>
+
+<div class="page">
+  <!-- Sidebar -->
+  <aside class="sidebar" id="sidebar">
+    <div class="sidebar-header">
+      <a href="/" class="sidebar-logo">
+        <div class="sidebar-logo-icon"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/></svg></div>
+        ChatGenius AI
+      </a>
+      <div class="sidebar-doc-label">配置指南</div>
+    </div>
+    <nav class="sidebar-nav">
+      <div class="nav-group">
+        <div class="nav-group-title">开始</div>
+        <button class="nav-link active" data-section="quickstart">快速配置</button>
+        <button class="nav-link" data-section="choose">选择服务商</button>
+      </div>
+      <div class="nav-sep"></div>
+      <div class="nav-group">
+        <div class="nav-group-title">国内服务商</div>
+        <button class="nav-link" data-section="deepseek">DeepSeek</button>
+        <button class="nav-link" data-section="tongyi">通义千问</button>
+        <button class="nav-link" data-section="zhipu">智谱 AI</button>
+        <button class="nav-link" data-section="wenxin">百度文心</button>
+        <button class="nav-link" data-section="volcengine">火山引擎</button>
+        <button class="nav-link" data-section="moonshot">Moonshot</button>
+      </div>
+      <div class="nav-sep"></div>
+      <div class="nav-group">
+        <div class="nav-group-title">国际服务商</div>
+        <button class="nav-link" data-section="openai">OpenAI</button>
+        <button class="nav-link" data-section="anthropic">Anthropic</button>
+        <button class="nav-link" data-section="gemini">Google Gemini</button>
+      </div>
+      <div class="nav-sep"></div>
+      <div class="nav-group">
+        <button class="nav-link" data-section="faq">常见问题</button>
+        <button class="nav-link" data-section="contact">联系客服</button>
+      </div>
+    </nav>
+  </aside>
+
+  <!-- Main Content -->
+  <main class="main">
+    <div class="main-inner">
+
+      <!-- ==================== 快速配置 ==================== -->
+      <div class="doc-section active" id="section-quickstart">
+        <h1 class="doc-title">快速配置</h1>
+        <p class="doc-subtitle">只需 3 步，即可让 ChatGenius 连接到大语言模型。整个过程不超过 2 分钟。</p>
+
+        <h2 class="doc-h2">什么是 API Key？</h2>
+        <p class="doc-p">
+          API Key 是您访问大模型服务的「通行证」。您可以把它理解为一个专属密码——有了它，ChatGenius 就能代替您向 AI 服务商发送请求并获取回答。
+        </p>
+        <p class="doc-p">
+          <span class="doc-strong">费用说明：</span>API 调用按实际使用量计费（通常按 token 计费）。日常聊天每 1000 条消息约 1-5 元人民币，远低于人工成本。大多数服务商提供免费试用额度。
+        </p>
+        <p class="doc-p">
+          <span class="doc-strong">安全性：</span>您的 API Key 仅保存在浏览器本地存储中，不会上传到 ChatGenius 服务器。您可以随时在插件设置中删除或更换。
+        </p>
+
+        <h2 class="doc-h2">三步完成配置</h2>
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-title">注册 AI 服务商账号</div>
+            <div class="step-desc">选择一个 AI 服务商（推荐从 DeepSeek 或通义千问开始），在其官网注册账号并完成实名认证。大多数服务商支持手机号快速注册。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-title">创建并复制 API Key</div>
+            <div class="step-desc">登录服务商控制台，找到「API Key 管理」页面，点击「创建 Key」。创建成功后立即复制保存——部分服务商只在创建时显示一次 Key。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-title">在插件中粘贴 Key</div>
+            <div class="step-desc">打开 ChatGenius 设置页，选择对应的服务商，将复制的 API Key 粘贴到输入框中，点击「测试连接」验证成功即可。</div>
+            <div class="step-action">
+              <a href="/guide.html" class="btn-primary">查看各服务商详细教程</a>
+            </div>
+          </div>
+        </div>
+
+        <div class="callout callout-blue">
+          <div class="callout-title">NOTE</div>
+          <div class="callout-text">首次配置建议选择国内服务商（如 DeepSeek），注册简单、无需信用卡、支持国内网络直连，1 分钟即可完成。</div>
+        </div>
+      </div>
+
+      <!-- ==================== 选择服务商 ==================== -->
+      <div class="doc-section" id="section-choose">
+        <h1 class="doc-title">选择服务商</h1>
+        <p class="doc-subtitle">根据您的需求和网络环境，选择最适合的 AI 服务商。</p>
+
+        <h2 class="doc-h2">服务商对比</h2>
+        <div style="overflow-x:auto;">
+          <table class="comparison-table">
+            <thead>
+              <tr>
+                <th>服务商</th>
+                <th>类型</th>
+                <th>代表模型</th>
+                <th>价格水平</th>
+                <th>免费额度</th>
+                <th>国内直连</th>
+                <th>适合场景</th>
+              </tr>
+            </thead>
+            <tbody>
+              <tr>
+                <td><span class="doc-strong">DeepSeek</span></td>
+                <td>国产</td>
+                <td>DeepSeek-V3 / R1</td>
+                <td class="highlight">极低</td>
+                <td><span class="tag tag-free">注册送额度</span></td>
+                <td><span class="tag tag-direct">直连</span></td>
+                <td>日常对话、代码、长文本</td>
+              </tr>
+              <tr>
+                <td><span class="doc-strong">通义千问</span></td>
+                <td>国产</td>
+                <td>Qwen-Max / Plus</td>
+                <td>低</td>
+                <td><span class="tag tag-free">免费额度</span></td>
+                <td><span class="tag tag-direct">直连</span></td>
+                <td>中文理解、企业应用</td>
+              </tr>
+              <tr>
+                <td><span class="doc-strong">智谱 AI</span></td>
+                <td>国产</td>
+                <td>GLM-4-Plus</td>
+                <td>中</td>
+                <td><span class="tag tag-free">免费额度</span></td>
+                <td><span class="tag tag-direct">直连</span></td>
+                <td>知识问答、文档分析</td>
+              </tr>
+              <tr>
+                <td><span class="doc-strong">百度文心</span></td>
+                <td>国产</td>
+                <td>ERNIE-4.0-Turbo</td>
+                <td>中</td>
+                <td><span class="tag tag-free">免费额度</span></td>
+                <td><span class="tag tag-direct">直连</span></td>
+                <td>中文写作、营销文案</td>
+              </tr>
+              <tr>
+                <td><span class="doc-strong">火山引擎</span></td>
+                <td>国产</td>
+                <td>Doubao-Pro</td>
+                <td class="highlight">极低</td>
+                <td><span class="tag tag-free">免费额度</span></td>
+                <td><span class="tag tag-direct">直连</span></td>
+                <td>低成本批量调用</td>
+              </tr>
+              <tr>
+                <td><span class="doc-strong">Moonshot</span></td>
+                <td>国产</td>
+                <td>Moonshot-v1-128k</td>
+                <td>中</td>
+                <td><span class="tag tag-free">注册送额度</span></td>
+                <td><span class="tag tag-direct">直连</span></td>
+                <td>超长文本、文档总结</td>
+              </tr>
+              <tr>
+                <td><span class="doc-strong">OpenAI</span></td>
+                <td>国际</td>
+                <td>GPT-4o / o1</td>
+                <td>高</td>
+                <td><span class="tag tag-paid">需充值</span></td>
+                <td><span class="tag tag-proxy">需代理</span></td>
+                <td>复杂推理、英文场景</td>
+              </tr>
+              <tr>
+                <td><span class="doc-strong">Anthropic</span></td>
+                <td>国际</td>
+                <td>Claude Sonnet 4</td>
+                <td>高</td>
+                <td><span class="tag tag-paid">需充值</span></td>
+                <td><span class="tag tag-proxy">需代理</span></td>
+                <td>长文本、分析、写作</td>
+              </tr>
+              <tr>
+                <td><span class="doc-strong">Google Gemini</span></td>
+                <td>国际</td>
+                <td>Gemini 2.5 Pro</td>
+                <td>中高</td>
+                <td><span class="tag tag-free">免费额度</span></td>
+                <td><span class="tag tag-proxy">需代理</span></td>
+                <td>多模态、代码生成</td>
+              </tr>
+            </tbody>
+          </table>
+        </div>
+
+        <h2 class="doc-h2">推荐方案</h2>
+        <div class="rec-grid">
+          <div class="rec-card">
+            <div class="rec-card-tag" style="background:#f0fdf4;color:#166534;">推荐</div>
+            <div class="rec-card-title">国内用户首选</div>
+            <div class="rec-card-desc">DeepSeek 或通义千问。注册简单、价格低、国内直连，中文能力出色。适合绝大多数日常使用场景。</div>
+          </div>
+          <div class="rec-card">
+            <div class="rec-card-tag" style="background:#f0f4ff;color:#1e40af;">进阶</div>
+            <div class="rec-card-title">追求最强模型</div>
+            <div class="rec-card-desc">OpenAI GPT-4o 或 Claude Sonnet 4。需要海外网络环境，价格较高，但在复杂推理和英文场景中表现最佳。</div>
+          </div>
+          <div class="rec-card">
+            <div class="rec-card-tag" style="background:#fff8f0;color:#92400e;">低成本</div>
+            <div class="rec-card-title">批量调用场景</div>
+            <div class="rec-card-desc">火山引擎 Doubao 或 DeepSeek。Token 单价极低，适合需要大量调用的自动化场景。</div>
+          </div>
+          <div class="rec-card">
+            <div class="rec-card-tag" style="background:#f8f0ff;color:#6d28d9;">长文本</div>
+            <div class="rec-card-title">处理超长文档</div>
+            <div class="rec-card-desc">Moonshot 128K 或通义千问长上下文版。支持超长上下文窗口，适合文档总结、代码分析。</div>
+          </div>
+        </div>
+
+        <div class="callout callout-amber">
+          <div class="callout-title">WARN</div>
+          <div class="callout-text">国内用户选择国际服务商（OpenAI、Anthropic、Google）时，需要自行解决网络代理问题。如果不确定网络环境，建议优先选择国内服务商。</div>
+        </div>
+      </div>
+
+      <!-- ==================== DeepSeek ==================== -->
+      <div class="doc-section" id="section-deepseek">
+        <h1 class="doc-title">DeepSeek</h1>
+        <p class="doc-subtitle">国产高性能大模型，性价比极高，支持国内直连。DeepSeek-V3 在多项评测中表现优异，R1 推理模型更是业界领先。</p>
+
+        <h2 class="doc-h2">服务概览</h2>
+        <div class="info-box">
+          <table class="info-table">
+            <tr><td>服务商</td><td>深度求索（DeepSeek）</td></tr>
+            <tr><td>代表模型</td><td>DeepSeek-V3、DeepSeek-R1（推理模型）</td></tr>
+            <tr><td>价格</td><td>输入 1元/百万token，输出 2元/百万token（业界最低水平）</td></tr>
+            <tr><td>免费额度</td><td>新用户注册赠送额度，可直接使用</td></tr>
+            <tr><td>支付方式</td><td>支付宝充值</td></tr>
+            <tr><td>Key 格式</td><td><span class="doc-code">sk-xxxxxxxxxxxxxxxx</span></td></tr>
+            <tr><td>网络要求</td><td>国内直连，无需代理</td></tr>
+            <tr><td>官网</td><td><a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a></td></tr>
+          </table>
+        </div>
+
+        <h2 class="doc-h2">配置步骤</h2>
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-title">注册账号</div>
+            <div class="step-desc">访问 <a href="https://platform.deepseek.com" target="_blank">platform.deepseek.com</a>，使用手机号注册并完成验证。注册后自动获得免费试用额度。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-title">创建 API Key</div>
+            <div class="step-desc">登录后进入左侧菜单「API Keys」页面，点击「创建 API Key」。为 Key 添加一个便于识别的名称（如"ChatGenius"），创建后立即复制。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-title">粘贴到 ChatGenius</div>
+            <div class="step-desc">打开 ChatGenius 设置页 → 选择 DeepSeek → 粘贴 API Key → 点击「测试连接」。</div>
+          </div>
+        </div>
+
+        <h2 class="doc-h2">模型选择建议</h2>
+        <p class="doc-p"><span class="doc-strong">DeepSeek-V3：</span>通用对话模型，响应速度快，适合日常聊天、写作、翻译等场景。推荐作为默认模型使用。</p>
+        <p class="doc-p"><span class="doc-strong">DeepSeek-R1：</span>推理增强模型，在数学、代码、逻辑推理等需要深度思考的场景中表现更优。响应时间较长，但输出质量更高。</p>
+
+        <div class="callout callout-green">
+          <div class="callout-title">TIP</div>
+          <div class="callout-text">DeepSeek 是目前性价比最高的国产大模型之一，非常适合初次使用 API 的用户。注册即送额度，无需绑定信用卡。</div>
+        </div>
+      </div>
+
+      <!-- ==================== 通义千问 ==================== -->
+      <div class="doc-section" id="section-tongyi">
+        <h1 class="doc-title">通义千问</h1>
+        <p class="doc-subtitle">阿里巴巴旗下大语言模型，中文理解能力强，企业级稳定性，支持多种模型规格。</p>
+
+        <h2 class="doc-h2">服务概览</h2>
+        <div class="info-box">
+          <table class="info-table">
+            <tr><td>服务商</td><td>阿里云（通义千问）</td></tr>
+            <tr><td>代表模型</td><td>Qwen-Max、Qwen-Plus、Qwen-Turbo</td></tr>
+            <tr><td>价格</td><td>Turbo 极低价，Plus 中等，Max 较高（按需选择）</td></tr>
+            <tr><td>免费额度</td><td>部分模型提供免费调用额度</td></tr>
+            <tr><td>支付方式</td><td>支付宝（阿里云账号体系）</td></tr>
+            <tr><td>Key 格式</td><td><span class="doc-code">sk-xxxxxxxxxxxxxxxx</span></td></tr>
+            <tr><td>网络要求</td><td>国内直连，无需代理</td></tr>
+            <tr><td>官网</td><td><a href="https://dashscope.console.aliyun.com" target="_blank">dashscope.console.aliyun.com</a></td></tr>
+          </table>
+        </div>
+
+        <h2 class="doc-h2">配置步骤</h2>
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-title">注册阿里云账号</div>
+            <div class="step-desc">访问阿里云官网，使用支付宝或手机号注册。如已有淘宝/支付宝账号可直接登录。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-title">开通 DashScope 服务</div>
+            <div class="step-desc">进入 <a href="https://dashscope.console.aliyun.com" target="_blank">DashScope 控制台</a>，开通模型服务。在「API-KEY 管理」中创建新的 API Key。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-title">粘贴到 ChatGenius</div>
+            <div class="step-desc">打开 ChatGenius 设置页 → 选择通义千问 → 粘贴 API Key → 点击「测试连接」。</div>
+          </div>
+        </div>
+
+        <h2 class="doc-h2">模型选择建议</h2>
+        <p class="doc-p"><span class="doc-strong">Qwen-Turbo：</span>响应最快、价格最低，适合日常简单对话和高频调用场景。</p>
+        <p class="doc-p"><span class="doc-strong">Qwen-Plus：</span>性能与速度均衡，适合大多数日常使用场景。推荐作为默认选择。</p>
+        <p class="doc-p"><span class="doc-strong">Qwen-Max：</span>最强能力，适合复杂推理、长文本分析等高质量输出需求。</p>
+      </div>
+
+      <!-- ==================== 智谱 AI ==================== -->
+      <div class="doc-section" id="section-zhipu">
+        <h1 class="doc-title">智谱 AI</h1>
+        <p class="doc-subtitle">清华大学技术背景，GLM 系列模型在知识问答和文档分析领域表现突出。</p>
+
+        <h2 class="doc-h2">服务概览</h2>
+        <div class="info-box">
+          <table class="info-table">
+            <tr><td>服务商</td><td>智谱 AI（ChatGLM）</td></tr>
+            <tr><td>代表模型</td><td>GLM-4-Plus、GLM-4-Flash（免费）</td></tr>
+            <tr><td>价格</td><td>Flash 模型免费，Plus 按量计费</td></tr>
+            <tr><td>免费额度</td><td>GLM-4-Flash 完全免费，其他模型有免费额度</td></tr>
+            <tr><td>支付方式</td><td>支付宝、微信</td></tr>
+            <tr><td>Key 格式</td><td><span class="doc-code">xxxxxxxxxxxxxxxx.xxxxxxxxxxxxxxxx</span>（注意中间的点号）</td></tr>
+            <tr><td>网络要求</td><td>国内直连，无需代理</td></tr>
+            <tr><td>官网</td><td><a href="https://open.bigmodel.cn" target="_blank">open.bigmodel.cn</a></td></tr>
+          </table>
+        </div>
+
+        <h2 class="doc-h2">配置步骤</h2>
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-title">注册账号</div>
+            <div class="step-desc">访问 <a href="https://open.bigmodel.cn" target="_blank">open.bigmodel.cn</a>，使用手机号注册。完成实名认证可获得更多额度。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-title">创建 API Key</div>
+            <div class="step-desc">进入控制台 → 「API Keys」→ 创建新的 Key。智谱的 Key 格式特殊，包含中间的点号，请确保完整复制。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-title">粘贴到 ChatGenius</div>
+            <div class="step-desc">打开 ChatGenius 设置页 → 选择智谱 AI → 粘贴 API Key → 点击「测试连接」。</div>
+          </div>
+        </div>
+
+        <div class="callout callout-blue">
+          <div class="callout-title">NOTE</div>
+          <div class="callout-text">GLM-4-Flash 模型完全免费且不限量，适合预算有限的用户。但能力弱于 Plus 模型，复杂任务建议升级。</div>
+        </div>
+      </div>
+
+      <!-- ==================== 百度文心 ==================== -->
+      <div class="doc-section" id="section-wenxin">
+        <h1 class="doc-title">百度文心</h1>
+        <p class="doc-subtitle">百度旗下大语言模型，中文写作和营销文案能力突出，与百度生态深度整合。</p>
+
+        <h2 class="doc-h2">服务概览</h2>
+        <div class="info-box">
+          <table class="info-table">
+            <tr><td>服务商</td><td>百度（文心一言）</td></tr>
+            <tr><td>代表模型</td><td>ERNIE-4.0-Turbo、ERNIE-3.5</td></tr>
+            <tr><td>价格</td><td>3.5 低价，4.0 中等</td></tr>
+            <tr><td>免费额度</td><td>新用户赠送调用额度</td></tr>
+            <tr><td>支付方式</td><td>百度钱包、支付宝</td></tr>
+            <tr><td>Key 格式</td><td>需要同时提供 API Key 和 Secret Key</td></tr>
+            <tr><td>网络要求</td><td>国内直连，无需代理</td></tr>
+            <tr><td>官网</td><td><a href="https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application" target="_blank">百度千帆平台</a></td></tr>
+          </table>
+        </div>
+
+        <h2 class="doc-h2">配置步骤</h2>
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-title">注册百度账号</div>
+            <div class="step-desc">访问百度千帆平台，使用百度账号登录。如无账号需先注册并完成实名认证。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-title">创建应用并获取 Key</div>
+            <div class="step-desc">在千帆平台创建应用，获取 <span class="doc-code">API Key</span> 和 <span class="doc-code">Secret Key</span>。两个 Key 都需要保存。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-title">在 ChatGenius 中配置</div>
+            <div class="step-desc">打开 ChatGenius 设置页 → 选择百度文心 → 将 API Key 和 Secret Key 按格式粘贴 → 点击「测试连接」。</div>
+          </div>
+        </div>
+
+        <div class="callout callout-amber">
+          <div class="callout-title">WARN</div>
+          <div class="callout-text">百度文心需要同时配置 API Key 和 Secret Key，与其他服务商不同。请确保两个 Key 都正确填写。</div>
+        </div>
+      </div>
+
+      <!-- ==================== 火山引擎 ==================== -->
+      <div class="doc-section" id="section-volcengine">
+        <h1 class="doc-title">火山引擎</h1>
+        <p class="doc-subtitle">字节跳动旗下云服务平台，Doubao 系列模型价格极低，适合大规模调用场景。</p>
+
+        <h2 class="doc-h2">服务概览</h2>
+        <div class="info-box">
+          <table class="info-table">
+            <tr><td>服务商</td><td>火山引擎（字节跳动）</td></tr>
+            <tr><td>代表模型</td><td>Doubao-Pro、Doubao-Lite</td></tr>
+            <tr><td>价格</td><td class="highlight">极低（业界最低水平之一）</td></tr>
+            <tr><td>免费额度</td><td>新用户赠送大量免费 Token</td></tr>
+            <tr><td>支付方式</td><td>支付宝、微信</td></tr>
+            <tr><td>Key 格式</td><td><span class="doc-code">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</span></td></tr>
+            <tr><td>网络要求</td><td>国内直连，无需代理</td></tr>
+            <tr><td>官网</td><td><a href="https://console.volcengine.com/ark" target="_blank">console.volcengine.com/ark</a></td></tr>
+          </table>
+        </div>
+
+        <h2 class="doc-h2">配置步骤</h2>
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-title">注册火山引擎账号</div>
+            <div class="step-desc">访问火山引擎官网，使用手机号注册并完成实名认证。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-title">开通模型服务并创建 Key</div>
+            <div class="step-desc">进入「火山方舟」控制台，开通模型推理服务。在「API Key 管理」中创建 Key。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-title">粘贴到 ChatGenius</div>
+            <div class="step-desc">打开 ChatGenius 设置页 → 选择火山引擎 → 粘贴 API Key → 点击「测试连接」。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== Moonshot ==================== -->
+      <div class="doc-section" id="section-moonshot">
+        <h1 class="doc-title">Moonshot</h1>
+        <p class="doc-subtitle">月之暗面旗下模型，以超长上下文窗口著称，适合处理长文档和复杂对话。</p>
+
+        <h2 class="doc-h2">服务概览</h2>
+        <div class="info-box">
+          <table class="info-table">
+            <tr><td>服务商</td><td>月之暗面（Moonshot AI）</td></tr>
+            <tr><td>代表模型</td><td>Moonshot-v1-128k、Moonshot-v1-32k、Moonshot-v1-8k</td></tr>
+            <tr><td>价格</td><td>中等，按上下文长度分档</td></tr>
+            <tr><td>免费额度</td><td>注册赠送额度</td></tr>
+            <tr><td>支付方式</td><td>支付宝</td></tr>
+            <tr><td>Key 格式</td><td><span class="doc-code">sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span></td></tr>
+            <tr><td>网络要求</td><td>国内直连，无需代理</td></tr>
+            <tr><td>官网</td><td><a href="https://platform.moonshot.cn" target="_blank">platform.moonshot.cn</a></td></tr>
+          </table>
+        </div>
+
+        <h2 class="doc-h2">配置步骤</h2>
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-title">注册账号</div>
+            <div class="step-desc">访问 <a href="https://platform.moonshot.cn" target="_blank">platform.moonshot.cn</a>，使用手机号注册。注册后自动获得免费试用额度。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-title">创建 API Key</div>
+            <div class="step-desc">进入控制台 → 「API Key 管理」→ 创建新 Key。请妥善保存，后续无法再次查看。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-title">粘贴到 ChatGenius</div>
+            <div class="step-desc">打开 ChatGenius 设置页 → 选择 Moonshot → 粘贴 API Key → 点击「测试连接」。</div>
+          </div>
+        </div>
+
+        <h2 class="doc-h2">模型选择建议</h2>
+        <p class="doc-p"><span class="doc-strong">8k：</span>价格最低，适合短对话和简单任务。</p>
+        <p class="doc-p"><span class="doc-strong">32k：</span>中等上下文，适合大多数日常场景。</p>
+        <p class="doc-p"><span class="doc-strong">128k：</span>超长上下文（约 10 万字），适合长文档总结、代码库分析等场景。价格较高但能力独特。</p>
+      </div>
+
+      <!-- ==================== OpenAI ==================== -->
+      <div class="doc-section" id="section-openai">
+        <h1 class="doc-title">OpenAI</h1>
+        <p class="doc-subtitle">全球领先的大语言模型服务商，GPT 系列在各评测中持续领先。需要海外网络环境。</p>
+
+        <h2 class="doc-h2">服务概览</h2>
+        <div class="info-box">
+          <table class="info-table">
+            <tr><td>服务商</td><td>OpenAI</td></tr>
+            <tr><td>代表模型</td><td>GPT-4o、GPT-4o-mini、o1、o3</td></tr>
+            <tr><td>价格</td><td>GPT-4o-mini 低价，GPT-4o 中高，o1/o3 较高</td></tr>
+            <tr><td>免费额度</td><td>新用户赠送 $5 额度</td></tr>
+            <tr><td>支付方式</td><td>国际信用卡（Visa/Mastercard）</td></tr>
+            <tr><td>Key 格式</td><td><span class="doc-code">sk-proj-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span></td></tr>
+            <tr><td>网络要求</td><td>需要海外网络环境（VPN/代理）</td></tr>
+            <tr><td>官网</td><td><a href="https://platform.openai.com" target="_blank">platform.openai.com</a></td></tr>
+          </table>
+        </div>
+
+        <h2 class="doc-h2">配置步骤</h2>
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-title">注册 OpenAI 账号</div>
+            <div class="step-desc">访问 <a href="https://platform.openai.com" target="_blank">platform.openai.com</a>，使用邮箱注册。需要海外手机号验证（可使用接码平台）。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-title">充值并创建 Key</div>
+            <div class="step-desc">进入「Billing」充值（最低 $5），然后在「API Keys」页面创建 Key。注意：Key 只在创建时显示一次。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-title">在 ChatGenius 中配置</div>
+            <div class="step-desc">打开 ChatGenius 设置页 → 选择 OpenAI → 粘贴 API Key → 点击「测试连接」。如需使用自定义 Base URL（如中转站），请在高级设置中配置。</div>
+          </div>
+        </div>
+
+        <div class="callout callout-amber">
+          <div class="callout-title">WARN</div>
+          <div class="callout-text">OpenAI 对中国大陆 IP 进行了限制，请确保您的网络环境可以正常访问 platform.openai.com。如果直接访问不稳定，可以考虑使用中转服务或选择国内替代方案。</div>
+        </div>
+
+        <h2 class="doc-h2">模型选择建议</h2>
+        <p class="doc-p"><span class="doc-strong">GPT-4o-mini：</span>性价比最高，速度快、价格低，适合日常对话。推荐作为 OpenAI 的默认选择。</p>
+        <p class="doc-p"><span class="doc-strong">GPT-4o：</span>多模态旗舰模型，综合能力强，适合复杂任务。</p>
+        <p class="doc-p"><span class="doc-strong">o1 / o3：</span>推理增强模型，适合数学、编程、逻辑推理等需要深度思考的场景。价格较高，响应较慢。</p>
+      </div>
+
+      <!-- ==================== Anthropic ==================== -->
+      <div class="doc-section" id="section-anthropic">
+        <h1 class="doc-title">Anthropic</h1>
+        <p class="doc-subtitle">Claude 系列模型，在长文本理解、分析写作方面表现卓越。需要海外网络环境。</p>
+
+        <h2 class="doc-h2">服务概览</h2>
+        <div class="info-box">
+          <table class="info-table">
+            <tr><td>服务商</td><td>Anthropic</td></tr>
+            <tr><td>代表模型</td><td>Claude Sonnet 4、Claude Opus 4、Claude Haiku</td></tr>
+            <tr><td>价格</td><td>Haiku 低，Sonnet 中，Opus 高</td></tr>
+            <tr><td>免费额度</td><td>无免费额度，需绑定信用卡</td></tr>
+            <tr><td>支付方式</td><td>国际信用卡（Visa/Mastercard）</td></tr>
+            <tr><td>Key 格式</td><td><span class="doc-code">sk-ant-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span></td></tr>
+            <tr><td>网络要求</td><td>需要海外网络环境（VPN/代理）</td></tr>
+            <tr><td>官网</td><td><a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a></td></tr>
+          </table>
+        </div>
+
+        <h2 class="doc-h2">配置步骤</h2>
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-title">注册 Anthropic 账号</div>
+            <div class="step-desc">访问 <a href="https://console.anthropic.com" target="_blank">console.anthropic.com</a>，使用邮箱注册。需要海外手机号验证。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-title">充值并创建 Key</div>
+            <div class="step-desc">进入「Billing」绑定信用卡并充值，然后在「API Keys」页面创建 Key。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-title">在 ChatGenius 中配置</div>
+            <div class="step-desc">打开 ChatGenius 设置页 → 选择 Anthropic → 粘贴 API Key → 点击「测试连接」。</div>
+          </div>
+        </div>
+
+        <h2 class="doc-h2">模型选择建议</h2>
+        <p class="doc-p"><span class="doc-strong">Claude Haiku：</span>速度最快、价格最低，适合简单对话和批量处理。</p>
+        <p class="doc-p"><span class="doc-strong">Claude Sonnet 4：</span>能力与速度的最佳平衡，推荐作为日常使用。在写作、分析、编程方面表现出色。</p>
+        <p class="doc-p"><span class="doc-strong">Claude Opus 4：</span>最强能力，适合最复杂的推理和创作任务。价格较高，建议仅在需要时使用。</p>
+      </div>
+
+      <!-- ==================== Google Gemini ==================== -->
+      <div class="doc-section" id="section-gemini">
+        <h1 class="doc-title">Google Gemini</h1>
+        <p class="doc-subtitle">Google 旗下多模态大模型，支持文本、图片、代码等多种输入。部分模型提供免费额度。</p>
+
+        <h2 class="doc-h2">服务概览</h2>
+        <div class="info-box">
+          <table class="info-table">
+            <tr><td>服务商</td><td>Google（Gemini）</td></tr>
+            <tr><td>代表模型</td><td>Gemini 2.5 Pro、Gemini 2.5 Flash</td></tr>
+            <tr><td>价格</td><td>Flash 低价，Pro 中高</td></tr>
+            <tr><td>免费额度</td><td>Flash 模型提供免费调用额度</td></tr>
+            <tr><td>支付方式</td><td>国际信用卡</td></tr>
+            <tr><td>Key 格式</td><td><span class="doc-code">AIzaSyxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</span></td></tr>
+            <tr><td>网络要求</td><td>需要海外网络环境（VPN/代理）</td></tr>
+            <tr><td>官网</td><td><a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a></td></tr>
+          </table>
+        </div>
+
+        <h2 class="doc-h2">配置步骤</h2>
+        <div class="steps">
+          <div class="step-item">
+            <div class="step-dot">1</div>
+            <div class="step-title">登录 Google 账号</div>
+            <div class="step-desc">访问 <a href="https://aistudio.google.com" target="_blank">aistudio.google.com</a>，使用 Google 账号登录。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">2</div>
+            <div class="step-title">获取 API Key</div>
+            <div class="step-desc">在 AI Studio 页面点击「Get API Key」，创建新的 Key。免费额度无需绑定信用卡。</div>
+          </div>
+          <div class="step-item">
+            <div class="step-dot">3</div>
+            <div class="step-title">在 ChatGenius 中配置</div>
+            <div class="step-desc">打开 ChatGenius 设置页 → 选择 Google Gemini → 粘贴 API Key → 点击「测试连接」。</div>
+          </div>
+        </div>
+
+        <div class="callout callout-green">
+          <div class="callout-title">TIP</div>
+          <div class="callout-text">Gemini Flash 模型提供免费额度，且能力不弱。适合想要免费体验的用户。注意需要稳定的海外网络环境。</div>
+        </div>
+      </div>
+
+      <!-- ==================== FAQ ==================== -->
+      <div class="doc-section" id="section-faq">
+        <h1 class="doc-title">常见问题</h1>
+        <p class="doc-subtitle">使用过程中遇到问题？这里可能有您需要的答案。</p>
+
+        <div class="faq-list">
+          <div class="faq-item">
+            <button class="faq-q">
+              <span>API 调用每月大概花多少钱？</span>
+              <svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a">日常聊天（每天 50-100 条消息），使用 DeepSeek 约 3-5 元/月，使用通义千问约 5-10 元/月，使用 GPT-4o-mini 约 10-20 元/月。重度使用（每天 500+ 条）费用约为上述的 5-10 倍。大多数服务商提供免费额度，足够初期体验。</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q">
+              <span>API Key 保存在哪里？安全吗？</span>
+              <svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a">API Key 保存在浏览器的本地存储（localStorage）中，仅存在于您的设备上，不会上传到 ChatGenius 服务器或任何第三方。您可以随时在设置页面删除或更换 Key。建议定期检查 API 调用记录，确保没有异常使用。</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q">
+              <span>不同服务商的 Key 格式有什么区别？</span>
+              <svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a">各家的 Key 格式不同：DeepSeek 以 <code class="doc-code">sk-</code> 开头；智谱 AI 的 Key 中间有一个点号；OpenAI 新 Key 以 <code class="doc-code">sk-proj-</code> 开头；Anthropic 以 <code class="doc-code">sk-ant-</code> 开头。插件会自动校验 Key 格式，如果格式不匹配会提示。</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q">
+              <span>可以在手机上使用吗？</span>
+              <svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a">ChatGenius 是 Chrome 浏览器扩展，支持在手机版 Chrome（Android）上使用。iOS 的 Safari 不支持 Chrome 扩展。手机端配置方式与电脑端相同，进入扩展设置页即可配置 API Key。</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q">
+              <span>应该选国内还是国际服务商？</span>
+              <svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a">如果您在中国大陆使用，强烈建议优先选择国内服务商（DeepSeek、通义千问、智谱等）。优势：注册简单（手机号即可）、无需信用卡、国内直连速度快、价格低、中文能力强。国际服务商（OpenAI、Anthropic、Google）虽然模型能力更强，但需要海外网络环境和国际信用卡，使用门槛较高。</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q">
+              <span>测试连接失败怎么办？</span>
+              <svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a">常见原因：1) API Key 复制不完整或包含多余空格；2) 账户余额不足；3) 网络问题（国际服务商需要代理）；4) Key 已过期或被删除。解决方法：重新复制 Key → 检查账户余额 → 确认网络连接 → 如仍失败，尝试重新创建 Key。</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q">
+              <span>可以同时配置多个服务商吗？</span>
+              <svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a">可以。您可以为每个服务商分别配置 API Key，但同一时间只能选择一个服务商作为当前使用。切换服务商时，之前的配置会保留，无需重新输入 Key。</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q">
+              <span>切换服务商后，之前的对话还在吗？</span>
+              <svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a">对话历史保存在浏览器本地，切换服务商不会丢失。但切换模型后，新的对话将使用新模型生成，之前对话的上下文不会传递给新模型。</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q">
+              <span>如何更换已配置的 API Key？</span>
+              <svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a">进入 ChatGenius 设置页 → 选择对应的服务商 → 清除输入框中的旧 Key → 粘贴新 Key → 点击「测试连接」验证成功后保存。旧 Key 会立即失效。</div>
+          </div>
+          <div class="faq-item">
+            <button class="faq-q">
+              <span>API 调用有频率限制吗？</span>
+              <svg class="faq-arrow" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M6 9l6 6 6-6"/></svg>
+            </button>
+            <div class="faq-a">各服务商都有调用频率限制（RPM - 每分钟请求数）。免费账户通常限制较严（如 3-5 RPM），充值后可提升。日常使用一般不会触发限制。如果遇到「频率限制」错误，稍等几秒后重试即可。</div>
+          </div>
+        </div>
+      </div>
+
+      <!-- ==================== 联系客服 ==================== -->
+      <div class="doc-section" id="section-contact">
+        <h1 class="doc-title">联系客服</h1>
+        <p class="doc-subtitle">如果以上文档无法解决您的问题，请通过以下方式联系我们，我们会在 24 小时内回复。</p>
+
+        <div class="contact-grid">
+          <div class="contact-card">
+            <div class="contact-card-title">微信客服</div>
+            <div class="contact-card-desc">扫描官网底部二维码，添加微信客服好友</div>
+          </div>
+          <div class="contact-card">
+            <div class="contact-card-title">邮件支持</div>
+            <div class="contact-card-desc"><a href="mailto:support@chatgenius.ai">support@chatgenius.ai</a></div>
+          </div>
+        </div>
+
+        <h2 class="doc-h2">提交问题时请包含</h2>
+        <ul class="doc-ul">
+          <li class="doc-li">您使用的服务商和模型名称</li>
+          <li class="doc-li">具体的错误提示信息（截图更佳）</li>
+          <li class="doc-li">您尝试过的解决方法</li>
+          <li class="doc-li">浏览器版本和操作系统信息</li>
+        </ul>
+
+        <div class="callout callout-blue">
+          <div class="callout-title">NOTE</div>
+          <div class="callout-text">大多数配置问题可以通过重新创建 API Key 解决。在联系客服前，建议先尝试：1) 清除旧 Key 并重新粘贴；2) 在服务商控制台重新创建 Key；3) 检查账户余额是否充足。</div>
+        </div>
+      </div>
+
+    </div>
+  </main>
+</div>
+
+<script>
+  // ===== Sidebar Navigation =====
+  const navLinks = document.querySelectorAll('.nav-link[data-section]');
+  const sections = document.querySelectorAll('.doc-section');
+
+  navLinks.forEach(link => {
+    link.addEventListener('click', () => {
+      const sectionId = link.getAttribute('data-section');
+
+      navLinks.forEach(l => l.classList.remove('active'));
+      link.classList.add('active');
+
+      sections.forEach(s => s.classList.remove('active'));
+      const target = document.getElementById('section-' + sectionId);
+      if (target) target.classList.add('active');
+
+      // Close mobile sidebar
+      sidebar.classList.remove('open');
+      overlay.classList.remove('open');
+    });
+  });
+
+  // ===== FAQ Toggle =====
+  document.querySelectorAll('.faq-q').forEach(btn => {
+    btn.addEventListener('click', () => {
+      const item = btn.closest('.faq-item');
+      item.classList.toggle('open');
+    });
+  });
+
+  // ===== Mobile Sidebar =====
+  const menuBtn = document.getElementById('menuBtn');
+  const sidebar = document.getElementById('sidebar');
+  const overlay = document.getElementById('overlay');
+
+  menuBtn.addEventListener('click', () => {
+    sidebar.classList.toggle('open');
+    overlay.classList.toggle('open');
+  });
+
+  overlay.addEventListener('click', () => {
+    sidebar.classList.remove('open');
+    overlay.classList.remove('open');
+  });
+</script>
 </body>
 </html>
