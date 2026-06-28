@@ -31,7 +31,7 @@
       --color-error: #ef4444;
       --color-error-bg: #fef2f2;
       --color-error-border: #fecaca;
-      --sidebar-width: 240px;
+      --sidebar-width: 220px;
       --radius-sm: 6px;
       --radius: 10px;
       --radius-lg: 14px;
@@ -55,10 +55,11 @@
       width: var(--sidebar-width); flex-shrink: 0; background: var(--color-bg-subtle);
       border-right: 1px solid var(--color-border); position: fixed;
       top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100;
+      padding-top: 32px;
     }
     .sidebar::-webkit-scrollbar { width: 3px; }
     .sidebar::-webkit-scrollbar-thumb { background: #ddd; border-radius: 3px; }
-    .sidebar-header { padding: 28px 20px 20px; border-bottom: 1px solid var(--color-border); }
+    .sidebar-header { padding: 0 20px 20px; border-bottom: 1px solid var(--color-border); }
     .sidebar-logo {
       display: flex; align-items: center; gap: 10px;
       text-decoration: none; color: var(--color-text); font-weight: 700; font-size: 15px;
@@ -85,11 +86,13 @@
     .nav-link.active {
       background: var(--color-primary-light); color: var(--color-primary-dark); font-weight: 600;
     }
-    .nav-sep { height: 1px; background: var(--color-border); margin: 8px 12px; }
 
     /* ============ Main ============ */
     .main { flex: 1; margin-left: var(--sidebar-width); min-width: 0; }
-    .main-inner { max-width: 820px; margin: 0 auto; padding: 0 40px 120px; }
+    /* 顶部留白 + 视觉协调：内容区靠左，减小 max-width 和 padding */
+    .main-inner {
+      max-width: 680px; margin: 0; padding: 48px 56px 120px;
+    }
     .content-area { flex: 1; min-width: 0; }
 
     .doc-section { display: none; animation: fadeUp 0.35s ease; }
@@ -100,43 +103,23 @@
     }
     @keyframes spin { to { transform: rotate(360deg); } }
 
-    /* ============ Hero ============ */
-    .hero {
-      background: linear-gradient(135deg, #312e81 0%, #4f46e5 40%, #7c3aed 70%, #a855f7 100%);
-      padding: 56px 40px 48px; margin: 0 -40px 40px; position: relative; overflow: hidden;
+    /* ============ Page Title (替代 Hero，更克制) ============ */
+    .page-title-block { margin-bottom: 40px; }
+    .page-eyebrow {
+      font-size: 12px; font-weight: 600; color: var(--color-primary);
+      text-transform: uppercase; letter-spacing: 0.08em; margin-bottom: 12px;
     }
-    .hero::before {
-      content: ''; position: absolute; inset: 0;
-      background: radial-gradient(ellipse at 30% 50%, rgba(255,255,255,0.08) 0%, transparent 60%),
-                  radial-gradient(ellipse at 80% 20%, rgba(168,85,247,0.3) 0%, transparent 50%);
+    .page-title {
+      font-size: 34px; font-weight: 800; letter-spacing: -0.03em;
+      line-height: 1.15; color: var(--color-text); margin-bottom: 12px;
     }
-    .hero::after {
-      content: ''; position: absolute; bottom: 0; left: 0; right: 0; height: 1px;
-      background: linear-gradient(90deg, transparent, rgba(255,255,255,0.2), transparent);
-    }
-    .hero-content { position: relative; z-index: 1; max-width: 600px; }
-    .hero-badge {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 5px 12px; background: rgba(255,255,255,0.15); border: 1px solid rgba(255,255,255,0.2);
-      border-radius: 20px; font-size: 12px; font-weight: 600; color: rgba(255,255,255,0.9);
-      margin-bottom: 20px; backdrop-filter: blur(4px);
-    }
-    .hero-badge-dot {
-      width: 6px; height: 6px; border-radius: 50%; background: #34d399;
-      animation: pulse-dot 2s ease-in-out infinite;
-    }
-    @keyframes pulse-dot { 0%,100% { opacity: 1; } 50% { opacity: 0.4; } }
-    .hero-title {
-      font-size: 40px; font-weight: 800; letter-spacing: -0.04em;
-      line-height: 1.1; color: #fff; margin-bottom: 16px;
-    }
-    .hero-subtitle {
-      font-size: 17px; color: rgba(255,255,255,0.75); line-height: 1.7; font-weight: 400;
+    .page-subtitle {
+      font-size: 16px; color: var(--color-text-secondary); line-height: 1.7;
     }
 
     /* ============ Typography ============ */
     .doc-h2 {
-      font-size: 24px; font-weight: 700; letter-spacing: -0.02em;
+      font-size: 22px; font-weight: 700; letter-spacing: -0.02em;
       margin: 48px 0 16px; color: var(--color-text); padding-top: 24px;
       border-top: 1px solid var(--color-border-light);
     }
@@ -180,7 +163,7 @@
       border-radius: var(--radius-lg); overflow: hidden;
     }
     .step-flow-item {
-      flex: 1; padding: 24px 20px; text-align: center; position: relative;
+      flex: 1; padding: 22px 16px; text-align: center; position: relative;
       transition: background 0.2s;
     }
     .step-flow-item:hover { background: var(--color-bg-muted); }
@@ -222,29 +205,12 @@
       box-shadow: var(--shadow);
     }
     .configurator-header {
-      padding: 18px 24px; background: linear-gradient(135deg, #f0f4ff, #faf5ff);
+      padding: 16px 22px; background: linear-gradient(135deg, #f0f4ff, #faf5ff);
       border-bottom: 1px solid var(--color-border);
-      display: flex; align-items: center; justify-content: space-between; flex-wrap: wrap; gap: 12px;
     }
-    .configurator-title { font-size: 16px; font-weight: 700; color: var(--color-text); }
-    .configurator-subtitle { font-size: 13px; color: var(--color-text-muted); margin-top: 2px; }
-    .configurator-presets {
-      display: flex; gap: 8px; flex-wrap: wrap;
-    }
-    .preset-chip {
-      display: inline-flex; align-items: center; gap: 6px;
-      padding: 6px 12px; background: var(--color-bg); border: 1px solid var(--color-border);
-      border-radius: 20px; font-size: 12px; font-weight: 500; color: var(--color-text-secondary);
-      cursor: pointer; transition: all 0.2s; font-family: inherit;
-    }
-    .preset-chip:hover { border-color: var(--color-primary); color: var(--color-primary-dark); }
-    .preset-chip.active {
-      background: var(--color-primary); border-color: var(--color-primary); color: #fff;
-    }
-    .preset-chip-dot {
-      width: 6px; height: 6px; border-radius: 50%; background: currentColor;
-    }
-    .configurator-body { padding: 24px; }
+    .configurator-title { font-size: 15px; font-weight: 700; color: var(--color-text); }
+    .configurator-subtitle { font-size: 12px; color: var(--color-text-muted); margin-top: 2px; }
+    .configurator-body { padding: 22px; }
     .config-field { margin-bottom: 18px; }
     .config-field:last-child { margin-bottom: 0; }
     .config-field-label {
@@ -252,9 +218,7 @@
       font-size: 13px; font-weight: 600; color: var(--color-text); margin-bottom: 8px;
     }
     .config-field-hint { font-size: 12px; font-weight: 400; color: var(--color-text-muted); }
-    .config-input-wrap {
-      display: flex; gap: 8px; align-items: stretch;
-    }
+    .config-input-wrap { display: flex; gap: 8px; align-items: stretch; }
     .config-input {
       flex: 1; padding: 11px 14px; border: 1px solid var(--color-border);
       border-radius: var(--radius); font-size: 14px; font-family: 'JetBrains Mono', 'SF Mono', Menlo, monospace;
@@ -279,7 +243,7 @@
       padding-top: 20px; border-top: 1px solid var(--color-border-light);
     }
     .config-action-primary {
-      flex: 1; min-width: 180px; padding: 12px 20px;
+      flex: 1; min-width: 160px; padding: 12px 20px;
       background: var(--color-primary-dark); color: #fff; border: none;
       border-radius: var(--radius); font-size: 14px; font-weight: 600;
       cursor: pointer; font-family: inherit; transition: all 0.2s;
@@ -304,71 +268,30 @@
     .test-result.error { background: var(--color-error-bg); border: 1px solid var(--color-error-border); color: #991b1b; }
     .test-result.loading { background: #f0f4ff; border: 1px solid #c7d7fe; color: #3b52cc; }
 
-    /* ============ Provider Cards ============ */
-    .provider-section-header {
-      margin: 40px 0 16px; display: flex; align-items: center; gap: 12px;
+    /* ============ Provider Link List (精简版，无模型名) ============ */
+    .provider-links {
+      display: grid; grid-template-columns: repeat(2, 1fr);
+      gap: 10px; margin: 20px 0;
     }
-    .provider-section-title {
-      font-size: 18px; font-weight: 700; color: var(--color-text);
-      display: flex; align-items: center; gap: 8px;
+    .provider-link {
+      display: flex; align-items: center; gap: 12px;
+      padding: 14px 16px; background: var(--color-bg); border: 1px solid var(--color-border);
+      border-radius: var(--radius); text-decoration: none; color: var(--color-text);
+      transition: all 0.2s;
     }
-    .provider-section-badge {
-      padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 600;
+    .provider-link:hover {
+      border-color: var(--color-primary); transform: translateY(-1px);
+      box-shadow: var(--shadow-sm);
     }
-    .badge-domestic { background: var(--color-success-bg); color: #166534; }
-    .badge-intl { background: var(--color-warn-bg); color: #92400e; }
-    .provider-section-desc { font-size: 13px; color: var(--color-text-muted); }
-
-    .provider-cards {
-      display: grid; grid-template-columns: repeat(3, 1fr);
-      gap: 12px; margin: 16px 0;
-    }
-    .provider-card {
-      padding: 20px; background: var(--color-bg); border: 1px solid var(--color-border);
-      border-radius: var(--radius-lg); cursor: pointer;
-      transition: all 0.25s ease; position: relative;
-    }
-    .provider-card:hover {
-      border-color: var(--color-primary); transform: translateY(-2px);
-      box-shadow: var(--shadow);
-    }
-    .provider-card-header {
-      display: flex; align-items: center; gap: 12px; margin-bottom: 10px;
-    }
-    .provider-card-logo {
-      width: 36px; height: 36px; border-radius: 8px;
+    .provider-link-logo {
+      width: 32px; height: 32px; border-radius: 8px;
       display: flex; align-items: center; justify-content: center;
-      color: #fff; font-size: 13px; font-weight: 700;
+      color: #fff; font-size: 12px; font-weight: 700; flex-shrink: 0;
     }
-    .provider-card-name { font-size: 15px; font-weight: 600; color: var(--color-text); }
-    .provider-card-desc {
-      font-size: 12px; color: var(--color-text-muted); line-height: 1.5; margin-bottom: 10px;
-    }
-    .provider-card-tags { display: flex; gap: 6px; flex-wrap: wrap; }
-    .provider-tag {
-      padding: 2px 8px; border-radius: 5px; font-size: 11px; font-weight: 600;
-    }
-    .provider-tag-green { background: var(--color-success-bg); color: #166534; }
-    .provider-tag-blue { background: #f0f4ff; color: #3b52cc; }
-    .provider-tag-amber { background: var(--color-warn-bg); color: #92400e; }
-
-    /* ============ Service Overview Table ============ */
-    .overview-table {
-      width: 100%; border-collapse: separate; border-spacing: 0; margin: 20px 0; font-size: 13px;
-      border: 1px solid var(--color-border); border-radius: var(--radius-lg); overflow: hidden;
-    }
-    .overview-table th {
-      text-align: left; padding: 12px 16px; font-weight: 600; font-size: 11px;
-      color: var(--color-text-muted); border-bottom: 1px solid var(--color-border);
-      white-space: nowrap; text-transform: uppercase; letter-spacing: 0.05em;
-      background: var(--color-bg-subtle);
-    }
-    .overview-table td {
-      padding: 12px 16px; border-bottom: 1px solid var(--color-border-light);
-      color: var(--color-text-secondary);
-    }
-    .overview-table tr:last-child td { border-bottom: none; }
-    .overview-table tr:hover td { background: var(--color-bg-subtle); }
+    .provider-link-info { flex: 1; min-width: 0; }
+    .provider-link-name { font-size: 14px; font-weight: 600; color: var(--color-text); }
+    .provider-link-desc { font-size: 12px; color: var(--color-text-muted); }
+    .provider-link-arrow { color: var(--color-text-muted); flex-shrink: 0; }
 
     /* ============ FAQ ============ */
     .faq-list { margin: 24px 0; }
@@ -392,11 +315,6 @@
       padding: 0 20px; font-size: 14px; color: var(--color-text-secondary); line-height: 1.8;
     }
     .faq-item.open .faq-a { max-height: 500px; padding: 0 20px 16px; }
-
-    /* ============ Section Divider ============ */
-    .section-divider {
-      height: 1px; background: var(--color-border-light); margin: 48px 0;
-    }
 
     /* ============ Info Box ============ */
     .info-box {
@@ -426,13 +344,11 @@
       }
       .sidebar.open { transform: translateX(0); }
       .main { margin-left: 0; }
-      .main-inner { padding: 0 20px 80px; }
+      .main-inner { padding: 64px 20px 80px; max-width: 100%; }
       .menu-btn { display: flex; }
-      .hero { padding: 64px 24px 40px; margin: 0 -20px 32px; }
-      .hero-title { font-size: 30px; }
-      .provider-cards { grid-template-columns: 1fr; }
       .step-flow { flex-direction: column; }
       .step-flow-arrow { transform: rotate(90deg); padding: 4px 0; }
+      .provider-links { grid-template-columns: 1fr; }
       .configurator-actions { flex-direction: column; }
       .config-action-primary { width: 100%; }
     }
@@ -454,27 +370,11 @@
       </div>
       <nav class="sidebar-nav">
         <div class="nav-group">
-          <div class="nav-group-title">入门</div>
-          <button class="nav-link active" data-section="getting-started">使用教程</button>
+          <button class="nav-link active" data-section="getting-started">入门配置</button>
         </div>
-        <div class="nav-sep"></div>
         <div class="nav-group">
-          <div class="nav-group-title">国内服务商</div>
-          <button class="nav-link" data-section="deepseek">DeepSeek</button>
-          <button class="nav-link" data-section="tongyi">通义千问</button>
-          <button class="nav-link" data-section="zhipu">智谱 AI</button>
-          <button class="nav-link" data-section="wenxin">百度文心</button>
-          <button class="nav-link" data-section="volcengine">火山引擎</button>
-          <button class="nav-link" data-section="moonshot">Moonshot</button>
+          <button class="nav-link" data-section="providers">大模型接入</button>
         </div>
-        <div class="nav-sep"></div>
-        <div class="nav-group">
-          <div class="nav-group-title">国际服务商</div>
-          <button class="nav-link" data-section="openai">OpenAI</button>
-          <button class="nav-link" data-section="anthropic">Anthropic</button>
-          <button class="nav-link" data-section="gemini">Google Gemini</button>
-        </div>
-        <div class="nav-sep"></div>
         <div class="nav-group">
           <button class="nav-link" data-section="faq">常见问题</button>
         </div>
@@ -485,18 +385,13 @@
       <div class="main-inner">
         <div class="content-area">
 
-          <!-- ==================== Getting Started ==================== -->
+          <!-- ==================== 入门配置 ==================== -->
           <div class="doc-section active" id="section-getting-started">
 
-            <div class="hero">
-              <div class="hero-content">
-                <div class="hero-badge">
-                  <span class="hero-badge-dot"></span>
-                  3 分钟快速上手
-                </div>
-                <h1 class="hero-title">开始使用 ChatGenius</h1>
-                <p class="hero-subtitle">安装插件，配置 API Key，立即在 WhatsApp / Messenger 中使用 AI 助手。整个过程不超过 3 分钟。</p>
-              </div>
+            <div class="page-title-block">
+              <div class="page-eyebrow">使用教程</div>
+              <h1 class="page-title">3 分钟开始使用 ChatGenius</h1>
+              <p class="page-subtitle">安装插件、配置大模型 API，立即在 WhatsApp / Messenger 中使用 AI 助手。</p>
             </div>
 
             <!-- 流程总览 -->
@@ -511,8 +406,8 @@
               </div>
               <div class="step-flow-item">
                 <div class="step-flow-num">2</div>
-                <div class="step-flow-title">配置 API</div>
-                <div class="step-flow-desc">填入 URL / Key<br>测试连接</div>
+                <div class="step-flow-title">配置大模型</div>
+                <div class="step-flow-desc">填入 API<br>测试连接</div>
               </div>
               <div class="step-flow-arrow">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="9 18 15 12 9 6"/></svg>
@@ -533,8 +428,8 @@
             </a>
 
             <!-- 第二步 -->
-            <h2 class="doc-h2">第二步 · 配置 API</h2>
-            <p class="doc-p">ChatGenius 需要连接一个大语言模型服务商。选择下方推荐的服务商，<span class="doc-strong">点击预设按钮自动填充配置</span>，然后填入你的 API Key 即可。</p>
+            <h2 class="doc-h2">第二步 · 配置大模型</h2>
+            <p class="doc-p">ChatGenius 需要连接一个大语言模型。你需要准备三样东西：<span class="doc-strong">API URL、API Key、模型名称</span>。</p>
 
             <div class="callout callout-blue">
               <div class="callout-icon">
@@ -542,34 +437,52 @@
               </div>
               <div class="callout-body">
                 <div class="callout-title">什么是 API Key？</div>
-                API Key 是访问大模型服务的「通行证」。您在服务商官网注册账号后，在控制台创建一个 Key，把它粘贴到下方即可。Key 仅保存在本地浏览器，不会上传服务器。
+                API Key 是访问大模型服务的「通行证」。你在服务商官网注册账号后，在控制台创建一个 Key。Key 仅保存在本地浏览器，不会上传服务器。
               </div>
             </div>
 
-            <!-- 核心交互区：配置器 -->
+            <p class="doc-p">具体配置方法请查看 <a href="#" data-navigate="providers" style="color:var(--color-primary);font-weight:500;">大模型接入</a> 章节，里面有详细的获取步骤和配置说明。</p>
+
+            <!-- 第三步 -->
+            <h2 class="doc-h2">第三步 · 开始使用</h2>
+            <p class="doc-p">配置完成后，打开 WhatsApp、Messenger 或 Facebook 网页版，点击浏览器右上角的 ChatGenius 图标，即可开始 AI 对话。</p>
+
+            <div class="info-box">
+              <div class="info-box-title">试试这些用法</div>
+              <ul class="doc-ul" style="margin-bottom:0;">
+                <li class="doc-li">帮我回复这条消息</li>
+                <li class="doc-li">总结上面的对话内容</li>
+                <li class="doc-li">把这句话翻译成英文</li>
+                <li class="doc-li">帮我写一段产品介绍</li>
+              </ul>
+            </div>
+          </div>
+
+          <!-- ==================== 大模型接入 ==================== -->
+          <div class="doc-section" id="section-providers">
+
+            <div class="page-title-block">
+              <div class="page-eyebrow">大模型接入</div>
+              <h1 class="page-title">配置大模型 API</h1>
+              <p class="page-subtitle">所有服务商的配置方式相同：填入 API URL、API Key、模型名称三项即可。</p>
+            </div>
+
+            <h2 class="doc-h2">通用配置方法</h2>
+            <p class="doc-p">无论选择哪家服务商，配置步骤都是一样的：</p>
+            <div class="callout callout-blue">
+              <div class="callout-body">
+                <div class="callout-title">三步配置</div>
+                1. 在服务商官网注册账号并创建 API Key<br>
+                2. 在服务商文档中找到 API URL 和可用模型名称<br>
+                3. 将这三项填入下方配置器，测试通过后复制到插件设置页
+              </div>
+            </div>
+
+            <!-- 配置器 -->
             <div class="configurator">
               <div class="configurator-header">
-                <div>
-                  <div class="configurator-title">API 配置</div>
-                  <div class="configurator-subtitle">选择服务商预设，或自定义配置</div>
-                </div>
-                <div class="configurator-presets">
-                  <button class="preset-chip active" data-preset='{"url":"https://api.deepseek.com/v1","model":"deepseek-chat","name":"DeepSeek"}'>
-                    <span class="preset-chip-dot"></span>DeepSeek
-                  </button>
-                  <button class="preset-chip" data-preset='{"url":"https://dashscope.aliyuncs.com/compatible-mode/v1","model":"qwen-plus","name":"通义千问"}'>
-                    <span class="preset-chip-dot"></span>通义千问
-                  </button>
-                  <button class="preset-chip" data-preset='{"url":"https://open.bigmodel.cn/api/paas/v4","model":"glm-4-flash","name":"智谱"}'>
-                    <span class="preset-chip-dot"></span>智谱
-                  </button>
-                  <button class="preset-chip" data-preset='{"url":"https://api.moonshot.cn/v1","model":"moonshot-v1-8k","name":"Moonshot"}'>
-                    <span class="preset-chip-dot"></span>Moonshot
-                  </button>
-                  <button class="preset-chip" data-preset='{"url":"https://api.openai.com/v1","model":"gpt-4o-mini","name":"OpenAI"}'>
-                    <span class="preset-chip-dot"></span>OpenAI
-                  </button>
-                </div>
+                <div class="configurator-title">API 配置器</div>
+                <div class="configurator-subtitle">填写后可测试连接，并复制到插件中使用</div>
               </div>
               <div class="configurator-body">
                 <div class="config-field">
@@ -578,7 +491,7 @@
                     <span class="config-field-hint">服务商接口地址</span>
                   </div>
                   <div class="config-input-wrap">
-                    <input type="text" class="config-input" id="configUrl" value="https://api.deepseek.com/v1" placeholder="https://api.deepseek.com/v1">
+                    <input type="text" class="config-input" id="configUrl" value="" placeholder="https://api.example.com/v1">
                     <button class="config-copy-btn" data-copy-target="configUrl">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                       复制
@@ -601,10 +514,10 @@
                 <div class="config-field">
                   <div class="config-field-label">
                     <span>模型名称</span>
-                    <span class="config-field-hint">对话使用的模型 ID</span>
+                    <span class="config-field-hint">从服务商文档查询</span>
                   </div>
                   <div class="config-input-wrap">
-                    <input type="text" class="config-input" id="configModel" value="deepseek-chat" placeholder="deepseek-chat">
+                    <input type="text" class="config-input" id="configModel" value="" placeholder="model-name">
                     <button class="config-copy-btn" data-copy-target="configModel">
                       <svg width="13" height="13" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
                       复制
@@ -633,560 +546,129 @@
               </div>
               <div class="callout-body">
                 <div class="callout-title">配置后如何使用？</div>
-                复制上方的 URL、Key、模型名称，打开 ChatGenius 插件设置页，粘贴到对应输入框并保存即可。或点击「复制全部」一次性复制所有配置。
+                复制上方的 URL、Key、模型名称，打开 ChatGenius 插件设置页，粘贴到对应输入框并保存即可。
               </div>
             </div>
 
-            <!-- 第三步 -->
-            <h2 class="doc-h2">第三步 · 开始使用</h2>
-            <p class="doc-p">配置完成后，打开 WhatsApp、Messenger 或 Facebook 网页版，点击浏览器右上角的 ChatGenius 图标，即可开始 AI 对话。</p>
+            <!-- 服务商入口（仅链接，无模型名） -->
+            <h2 class="doc-h2">获取 API Key</h2>
+            <p class="doc-p">选择一家服务商，注册账号后在控制台创建 API Key。点击下方卡片跳转至对应官网。</p>
 
-            <div class="info-box">
-              <div class="info-box-title">试试这些用法</div>
-              <ul class="doc-ul" style="margin-bottom:0;">
-                <li class="doc-li">帮我回复这条消息</li>
-                <li class="doc-li">总结上面的对话内容</li>
-                <li class="doc-li">把这句话翻译成英文</li>
-                <li class="doc-li">帮我写一段产品介绍</li>
-              </ul>
+            <div class="provider-links">
+              <a href="https://platform.deepseek.com/" target="_blank" class="provider-link">
+                <div class="provider-link-logo" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">DS</div>
+                <div class="provider-link-info">
+                  <div class="provider-link-name">DeepSeek</div>
+                  <div class="provider-link-desc">国产 · 性价比高 · 国内直连</div>
+                </div>
+                <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+              <a href="https://dashscope.console.aliyun.com/" target="_blank" class="provider-link">
+                <div class="provider-link-logo" style="background:linear-gradient(135deg,#f97316,#ef4444);">通义</div>
+                <div class="provider-link-info">
+                  <div class="provider-link-name">通义千问</div>
+                  <div class="provider-link-desc">阿里 · 中文能力强 · 国内直连</div>
+                </div>
+                <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+              <a href="https://open.bigmodel.cn/" target="_blank" class="provider-link">
+                <div class="provider-link-logo" style="background:linear-gradient(135deg,#0ea5e9,#06b6d4);">智谱</div>
+                <div class="provider-link-info">
+                  <div class="provider-link-name">智谱 AI</div>
+                  <div class="provider-link-desc">清华背景 · 有免费模型 · 国内直连</div>
+                </div>
+                <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+              <a href="https://console.volcengine.com/ark" target="_blank" class="provider-link">
+                <div class="provider-link-logo" style="background:linear-gradient(135deg,#ef4444,#dc2626);">火山</div>
+                <div class="provider-link-info">
+                  <div class="provider-link-name">火山引擎</div>
+                  <div class="provider-link-desc">字节跳动 · 价格极低 · 国内直连</div>
+                </div>
+                <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+              <a href="https://platform.moonshot.cn/" target="_blank" class="provider-link">
+                <div class="provider-link-logo" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">M</div>
+                <div class="provider-link-info">
+                  <div class="provider-link-name">Moonshot</div>
+                  <div class="provider-link-desc">长文本能力 · 国内直连</div>
+                </div>
+                <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+              <a href="https://platform.openai.com/" target="_blank" class="provider-link">
+                <div class="provider-link-logo" style="background:linear-gradient(135deg,#22c55e,#16a34a);">AI</div>
+                <div class="provider-link-info">
+                  <div class="provider-link-name">OpenAI</div>
+                  <div class="provider-link-desc">国际 · GPT 系列 · 需代理</div>
+                </div>
+                <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+              <a href="https://console.anthropic.com/" target="_blank" class="provider-link">
+                <div class="provider-link-logo" style="background:linear-gradient(135deg,#d97706,#b45309);">An</div>
+                <div class="provider-link-info">
+                  <div class="provider-link-name">Anthropic</div>
+                  <div class="provider-link-desc">国际 · Claude 系列 · 需代理</div>
+                </div>
+                <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
+              <a href="https://aistudio.google.com/" target="_blank" class="provider-link">
+                <div class="provider-link-logo" style="background:linear-gradient(135deg,#4285f4,#ea4335);">G</div>
+                <div class="provider-link-info">
+                  <div class="provider-link-name">Google Gemini</div>
+                  <div class="provider-link-desc">国际 · 多模态 · 需代理</div>
+                </div>
+                <svg class="provider-link-arrow" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
+              </a>
             </div>
 
-            <div class="section-divider"></div>
-
-            <!-- 服务商选择 -->
-            <h2 class="doc-h2">选择服务商</h2>
-            <p class="doc-p">不确定选哪个？<span class="doc-strong">推荐 DeepSeek</span>——国内直连、注册即送额度、性价比最高。</p>
-
-            <div class="provider-section-header">
-              <div class="provider-section-title">
-                国内服务商
-                <span class="provider-section-badge badge-domestic">国内直连</span>
-              </div>
-            </div>
-            <div class="provider-cards">
-              <div class="provider-card" data-navigate="deepseek">
-                <div class="provider-card-header">
-                  <div class="provider-card-logo" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">DS</div>
-                  <div class="provider-card-name">DeepSeek</div>
-                </div>
-                <div class="provider-card-desc">性价比极高，多项评测表现优异</div>
-                <div class="provider-card-tags">
-                  <span class="provider-tag provider-tag-green">推荐</span>
-                  <span class="provider-tag provider-tag-green">免费额度</span>
-                </div>
-              </div>
-              <div class="provider-card" data-navigate="tongyi">
-                <div class="provider-card-header">
-                  <div class="provider-card-logo" style="background:linear-gradient(135deg,#f97316,#ef4444);">通义</div>
-                  <div class="provider-card-name">通义千问</div>
-                </div>
-                <div class="provider-card-desc">阿里旗下，中文理解能力强</div>
-                <div class="provider-card-tags">
-                  <span class="provider-tag provider-tag-green">免费额度</span>
-                </div>
-              </div>
-              <div class="provider-card" data-navigate="zhipu">
-                <div class="provider-card-header">
-                  <div class="provider-card-logo" style="background:linear-gradient(135deg,#0ea5e9,#06b6d4);">智谱</div>
-                  <div class="provider-card-name">智谱 AI</div>
-                </div>
-                <div class="provider-card-desc">清华技术背景，知识问答突出</div>
-                <div class="provider-card-tags">
-                  <span class="provider-tag provider-tag-green">免费模型</span>
-                </div>
-              </div>
-              <div class="provider-card" data-navigate="wenxin">
-                <div class="provider-card-header">
-                  <div class="provider-card-logo" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">文心</div>
-                  <div class="provider-card-name">百度文心</div>
-                </div>
-                <div class="provider-card-desc">中文写作和营销文案能力强</div>
-                <div class="provider-card-tags">
-                  <span class="provider-tag provider-tag-green">免费额度</span>
-                </div>
-              </div>
-              <div class="provider-card" data-navigate="volcengine">
-                <div class="provider-card-header">
-                  <div class="provider-card-logo" style="background:linear-gradient(135deg,#ef4444,#dc2626);">火山</div>
-                  <div class="provider-card-name">火山引擎</div>
-                </div>
-                <div class="provider-card-desc">字节跳动旗下，Doubao 价格极低</div>
-                <div class="provider-card-tags">
-                  <span class="provider-tag provider-tag-green">免费额度</span>
-                </div>
-              </div>
-              <div class="provider-card" data-navigate="moonshot">
-                <div class="provider-card-header">
-                  <div class="provider-card-logo" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">M</div>
-                  <div class="provider-card-name">Moonshot</div>
-                </div>
-                <div class="provider-card-desc">128K 超长上下文，适合长文档</div>
-                <div class="provider-card-tags">
-                  <span class="provider-tag provider-tag-blue">长文本</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="provider-section-header" style="margin-top: 32px;">
-              <div class="provider-section-title">
-                国际服务商
-                <span class="provider-section-badge badge-intl">需网络代理</span>
-              </div>
-            </div>
-            <div class="provider-cards">
-              <div class="provider-card" data-navigate="openai">
-                <div class="provider-card-header">
-                  <div class="provider-card-logo" style="background:linear-gradient(135deg,#22c55e,#16a34a);">AI</div>
-                  <div class="provider-card-name">OpenAI</div>
-                </div>
-                <div class="provider-card-desc">GPT-4o / o1，业界领先</div>
-                <div class="provider-card-tags">
-                  <span class="provider-tag provider-tag-amber">需代理</span>
-                </div>
-              </div>
-              <div class="provider-card" data-navigate="anthropic">
-                <div class="provider-card-header">
-                  <div class="provider-card-logo" style="background:linear-gradient(135deg,#d97706,#b45309);">An</div>
-                  <div class="provider-card-name">Anthropic</div>
-                </div>
-                <div class="provider-card-desc">Claude 系列，写作分析卓越</div>
-                <div class="provider-card-tags">
-                  <span class="provider-tag provider-tag-amber">需代理</span>
-                </div>
-              </div>
-              <div class="provider-card" data-navigate="gemini">
-                <div class="provider-card-header">
-                  <div class="provider-card-logo" style="background:linear-gradient(135deg,#4285f4,#ea4335);">G</div>
-                  <div class="provider-card-name">Google Gemini</div>
-                </div>
-                <div class="provider-card-desc">多模态模型，Flash 免费额度</div>
-                <div class="provider-card-tags">
-                  <span class="provider-tag provider-tag-amber">需代理</span>
-                </div>
-              </div>
-            </div>
-
-            <div class="callout callout-amber" style="margin-top:32px;">
+            <div class="callout callout-amber">
               <div class="callout-icon">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="#92400e" stroke-width="2"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"/><line x1="12" y1="9" x2="12" y2="13"/><line x1="12" y1="17" x2="12.01" y2="17"/></svg>
               </div>
               <div class="callout-body">
-                <div class="callout-title">国内用户建议</div>
-                优先选择国内服务商——注册简单（手机号即可）、无需信用卡、国内网络直连速度快、价格低。国际服务商模型更强，但需要海外网络和信用卡。
+                <div class="callout-title">如何找到模型名称？</div>
+                登录服务商控制台后，在「模型列表」或「文档」中查看当前可用的模型 ID。模型会不定期更新，请以服务商官网为准。
               </div>
             </div>
           </div>
 
-          <!-- ==================== DeepSeek ==================== -->
-          <div class="doc-section" id="section-deepseek">
-            <h2 class="doc-h2">DeepSeek</h2>
-            <p class="doc-p">国产高性能大模型，性价比极高，支持国内直连。DeepSeek-V3 在多项评测中表现优异，R1 推理模型业界领先。</p>
-
-            <table class="overview-table">
-              <tr><th>项目</th><th>说明</th></tr>
-              <tr><td>代表模型</td><td>DeepSeek-V3、DeepSeek-R1（推理）</td></tr>
-              <tr><td>价格</td><td>输入 1元/百万token，输出 2元/百万token</td></tr>
-              <tr><td>免费额度</td><td>新用户注册赠送</td></tr>
-              <tr><td>Key 格式</td><td><code class="doc-code">sk-xxxxxxxxxxxxxxxx</code></td></tr>
-              <tr><td>网络</td><td>国内直连，无需代理</td></tr>
-              <tr><td>官网</td><td><a href="https://platform.deepseek.com/" target="_blank">platform.deepseek.com</a></td></tr>
-            </table>
-
-            <h3 class="doc-h3">配置步骤</h3>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">1 · 注册账号</div>
-                访问 <a href="https://platform.deepseek.com/" target="_blank">platform.deepseek.com</a>，手机号注册即可，注册后自动获得免费额度。
-              </div>
-            </div>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">2 · 创建 API Key</div>
-                登录后进入左侧「API Keys」页面 → 点击「创建 API Key」→ 命名后复制保存（仅显示一次）。
-              </div>
-            </div>
-            <div class="callout callout-green">
-              <div class="callout-body">
-                <div class="callout-title">3 · 在 ChatGenius 中配置</div>
-                回到上方配置区，点击「DeepSeek」预设按钮，填入你的 API Key，点击「测试连接」验证即可。
-              </div>
-            </div>
-
-            <h3 class="doc-h3">模型选择建议</h3>
-            <p class="doc-p"><span class="doc-strong">deepseek-chat</span>（V3）：通用对话，响应快，适合日常聊天、写作、翻译。推荐作为默认。</p>
-            <p class="doc-p"><span class="doc-strong">deepseek-reasoner</span>（R1）：推理增强，适合数学、代码、逻辑推理。响应较慢但质量更高。</p>
-          </div>
-
-          <!-- ==================== 通义千问 ==================== -->
-          <div class="doc-section" id="section-tongyi">
-            <h2 class="doc-h2">通义千问</h2>
-            <p class="doc-p">阿里巴巴旗下大语言模型，中文理解能力强，企业级稳定性，支持多种模型规格。</p>
-
-            <table class="overview-table">
-              <tr><th>项目</th><th>说明</th></tr>
-              <tr><td>代表模型</td><td>Qwen-Max、Qwen-Plus、Qwen-Turbo</td></tr>
-              <tr><td>价格</td><td>Turbo 极低，Plus 中等，Max 较高</td></tr>
-              <tr><td>免费额度</td><td>部分模型提供免费调用</td></tr>
-              <tr><td>Key 格式</td><td><code class="doc-code">sk-xxxxxxxxxxxxxxxx</code></td></tr>
-              <tr><td>网络</td><td>国内直连，无需代理</td></tr>
-              <tr><td>官网</td><td><a href="https://dashscope.console.aliyun.com/" target="_blank">dashscope.console.aliyun.com</a></td></tr>
-            </table>
-
-            <h3 class="doc-h3">配置步骤</h3>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">1 · 注册阿里云账号</div>
-                访问阿里云官网，用支付宝或手机号注册。已有淘宝/支付宝账号可直接登录。
-              </div>
-            </div>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">2 · 开通 DashScope 并创建 Key</div>
-                进入 <a href="https://dashscope.console.aliyun.com/" target="_blank">DashScope 控制台</a>，开通服务后在「API-KEY 管理」中创建 Key。
-              </div>
-            </div>
-            <div class="callout callout-green">
-              <div class="callout-body">
-                <div class="callout-title">3 · 在 ChatGenius 中配置</div>
-                回到上方配置区，点击「通义千问」预设按钮，填入 API Key，测试连接。
-              </div>
-            </div>
-
-            <h3 class="doc-h3">模型选择建议</h3>
-            <p class="doc-p"><span class="doc-strong">qwen-turbo</span>：响应最快、价格最低，适合简单对话和高频调用。</p>
-            <p class="doc-p"><span class="doc-strong">qwen-plus</span>：性能与速度均衡，推荐作为默认。</p>
-            <p class="doc-p"><span class="doc-strong">qwen-max</span>：最强能力，适合复杂推理和长文本分析。</p>
-          </div>
-
-          <!-- ==================== 智谱 AI ==================== -->
-          <div class="doc-section" id="section-zhipu">
-            <h2 class="doc-h2">智谱 AI</h2>
-            <p class="doc-p">清华大学技术背景，GLM 系列模型在知识问答和文档分析领域表现突出。</p>
-
-            <table class="overview-table">
-              <tr><th>项目</th><th>说明</th></tr>
-              <tr><td>代表模型</td><td>GLM-4-Plus、GLM-4-Flash（免费）</td></tr>
-              <tr><td>价格</td><td>Flash 完全免费，Plus 按量计费</td></tr>
-              <tr><td>Key 格式</td><td><code class="doc-code">xxxxxxxx.xxxxxxxx</code>（中间有点号）</td></tr>
-              <tr><td>网络</td><td>国内直连，无需代理</td></tr>
-              <tr><td>官网</td><td><a href="https://open.bigmodel.cn/" target="_blank">open.bigmodel.cn</a></td></tr>
-            </table>
-
-            <h3 class="doc-h3">配置步骤</h3>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">1 · 注册账号</div>
-                访问 <a href="https://open.bigmodel.cn/" target="_blank">open.bigmodel.cn</a>，手机号注册并完成实名认证。
-              </div>
-            </div>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">2 · 创建 API Key</div>
-                进入控制台 →「API Keys」→ 创建新 Key。注意 Key 格式特殊，中间有点号，需完整复制。
-              </div>
-            </div>
-            <div class="callout callout-green">
-              <div class="callout-body">
-                <div class="callout-title">3 · 在 ChatGenius 中配置</div>
-                回到上方配置区，点击「智谱」预设按钮，填入 API Key，测试连接。
-              </div>
-            </div>
-
-            <div class="callout callout-amber">
-              <div class="callout-body">
-                <div class="callout-title">免费模型提示</div>
-                GLM-4-Flash 完全免费且不限量，适合预算有限的用户。复杂任务建议用 GLM-4-Plus。
-              </div>
-            </div>
-          </div>
-
-          <!-- ==================== 百度文心 ==================== -->
-          <div class="doc-section" id="section-wenxin">
-            <h2 class="doc-h2">百度文心</h2>
-            <p class="doc-p">百度旗下大语言模型，中文写作和营销文案能力突出，与百度生态深度整合。</p>
-
-            <table class="overview-table">
-              <tr><th>项目</th><th>说明</th></tr>
-              <tr><td>代表模型</td><td>ERNIE-4.0-Turbo、ERNIE-3.5</td></tr>
-              <tr><td>价格</td><td>3.5 低价，4.0 中等</td></tr>
-              <tr><td>免费额度</td><td>新用户赠送调用额度</td></tr>
-              <tr><td>Key 格式</td><td>需同时提供 API Key 和 Secret Key</td></tr>
-              <tr><td>网络</td><td>国内直连，无需代理</td></tr>
-              <tr><td>官网</td><td><a href="https://console.bce.baidu.com/qianfan/ais/console/applicationConsole/application" target="_blank">百度千帆平台</a></td></tr>
-            </table>
-
-            <h3 class="doc-h3">配置步骤</h3>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">1 · 注册百度账号</div>
-                访问百度千帆平台，用百度账号登录，完成实名认证。
-              </div>
-            </div>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">2 · 创建应用获取 Key</div>
-                在千帆平台创建应用，获取 API Key 和 Secret Key，两个 Key 都需保存。
-              </div>
-            </div>
-            <div class="callout callout-green">
-              <div class="callout-body">
-                <div class="callout-title">3 · 在 ChatGenius 中配置</div>
-                在插件设置页选择百度文心，按格式粘贴 API Key 和 Secret Key，测试连接。
-              </div>
-            </div>
-
-            <div class="callout callout-amber">
-              <div class="callout-body">
-                <div class="callout-title">注意</div>
-                百度文心需要同时配置 API Key 和 Secret Key，与其他服务商不同。请确保两个 Key 都正确填写。
-              </div>
-            </div>
-          </div>
-
-          <!-- ==================== 火山引擎 ==================== -->
-          <div class="doc-section" id="section-volcengine">
-            <h2 class="doc-h2">火山引擎</h2>
-            <p class="doc-p">字节跳动旗下云服务平台，Doubao 系列模型价格极低，适合大规模调用场景。</p>
-
-            <table class="overview-table">
-              <tr><th>项目</th><th>说明</th></tr>
-              <tr><td>代表模型</td><td>Doubao-Pro、Doubao-Lite</td></tr>
-              <tr><td>价格</td><td>极低（业界最低水平之一）</td></tr>
-              <tr><td>免费额度</td><td>新用户赠送大量免费 Token</td></tr>
-              <tr><td>Key 格式</td><td><code class="doc-code">xxxxxxxx-xxxx-xxxx-xxxx-xxxxxxxxxxxx</code></td></tr>
-              <tr><td>网络</td><td>国内直连，无需代理</td></tr>
-              <tr><td>官网</td><td><a href="https://console.volcengine.com/ark" target="_blank">console.volcengine.com/ark</a></td></tr>
-            </table>
-
-            <h3 class="doc-h3">配置步骤</h3>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">1 · 注册火山引擎账号</div>
-                访问火山引擎官网，手机号注册并完成实名认证。
-              </div>
-            </div>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">2 · 开通服务并创建 Key</div>
-                进入「火山方舟」控制台，开通模型推理服务，在「API Key 管理」中创建 Key。
-              </div>
-            </div>
-            <div class="callout callout-green">
-              <div class="callout-body">
-                <div class="callout-title">3 · 在 ChatGenius 中配置</div>
-                在插件设置页选择火山引擎，粘贴 API Key，测试连接。
-              </div>
-            </div>
-          </div>
-
-          <!-- ==================== Moonshot ==================== -->
-          <div class="doc-section" id="section-moonshot">
-            <h2 class="doc-h2">Moonshot</h2>
-            <p class="doc-p">月之暗面旗下模型，以超长上下文窗口著称，适合处理长文档和复杂对话。</p>
-
-            <table class="overview-table">
-              <tr><th>项目</th><th>说明</th></tr>
-              <tr><td>代表模型</td><td>Moonshot-v1-8k、32k、128k</td></tr>
-              <tr><td>价格</td><td>中等，按上下文长度分档</td></tr>
-              <tr><td>免费额度</td><td>注册赠送额度</td></tr>
-              <tr><td>Key 格式</td><td><code class="doc-code">sk-xxxxxxxxxxxxxxxxxxxxxxxxxxxxxxxx</code></td></tr>
-              <tr><td>网络</td><td>国内直连，无需代理</td></tr>
-              <tr><td>官网</td><td><a href="https://platform.moonshot.cn/" target="_blank">platform.moonshot.cn</a></td></tr>
-            </table>
-
-            <h3 class="doc-h3">配置步骤</h3>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">1 · 注册账号</div>
-                访问 <a href="https://platform.moonshot.cn/" target="_blank">platform.moonshot.cn</a>，手机号注册即可获得免费额度。
-              </div>
-            </div>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">2 · 创建 API Key</div>
-                进入控制台 →「API Key 管理」→ 创建新 Key。请妥善保存，后续无法再次查看。
-              </div>
-            </div>
-            <div class="callout callout-green">
-              <div class="callout-body">
-                <div class="callout-title">3 · 在 ChatGenius 中配置</div>
-                回到上方配置区，点击「Moonshot」预设按钮，填入 API Key，测试连接。
-              </div>
-            </div>
-
-            <h3 class="doc-h3">模型选择建议</h3>
-            <p class="doc-p"><span class="doc-strong">moonshot-v1-8k</span>：价格最低，适合短对话和简单任务。</p>
-            <p class="doc-p"><span class="doc-strong">moonshot-v1-32k</span>：中等上下文，适合大多数日常场景。</p>
-            <p class="doc-p"><span class="doc-strong">moonshot-v1-128k</span>：超长上下文（约 10 万字），适合长文档总结、代码库分析。</p>
-          </div>
-
-          <!-- ==================== OpenAI ==================== -->
-          <div class="doc-section" id="section-openai">
-            <h2 class="doc-h2">OpenAI</h2>
-            <p class="doc-p">全球领先的大语言模型服务商，GPT 系列在各评测中持续领先。需要海外网络环境。</p>
-
-            <table class="overview-table">
-              <tr><th>项目</th><th>说明</th></tr>
-              <tr><td>代表模型</td><td>GPT-4o、GPT-4o-mini、o1、o3</td></tr>
-              <tr><td>价格</td><td>4o-mini 低价，4o 中高，o1/o3 较高</td></tr>
-              <tr><td>免费额度</td><td>新用户赠送 $5 额度</td></tr>
-              <tr><td>Key 格式</td><td><code class="doc-code">sk-proj-xxxx...</code></td></tr>
-              <tr><td>网络</td><td><strong>需海外网络环境</strong></td></tr>
-              <tr><td>官网</td><td><a href="https://platform.openai.com/" target="_blank">platform.openai.com</a></td></tr>
-            </table>
-
-            <h3 class="doc-h3">配置步骤</h3>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">1 · 注册 OpenAI 账号</div>
-                访问 <a href="https://platform.openai.com/" target="_blank">platform.openai.com</a>，邮箱注册，需海外手机号验证。
-              </div>
-            </div>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">2 · 充值并创建 Key</div>
-                进入「Billing」充值（最低 $5），在「API Keys」页面创建 Key。Key 仅创建时显示一次。
-              </div>
-            </div>
-            <div class="callout callout-green">
-              <div class="callout-body">
-                <div class="callout-title">3 · 在 ChatGenius 中配置</div>
-                回到上方配置区，点击「OpenAI」预设按钮，填入 API Key，测试连接。如使用中转站，请修改 API URL。
-              </div>
-            </div>
-
-            <div class="callout callout-amber">
-              <div class="callout-body">
-                <div class="callout-title">网络要求</div>
-                OpenAI 对中国大陆 IP 限制访问，请确保网络环境可正常访问 platform.openai.com。如不稳定，建议选择国内服务商或使用中转服务。
-              </div>
-            </div>
-
-            <h3 class="doc-h3">模型选择建议</h3>
-            <p class="doc-p"><span class="doc-strong">gpt-4o-mini</span>：性价比最高，速度快、价格低，推荐作为 OpenAI 默认。</p>
-            <p class="doc-p"><span class="doc-strong">gpt-4o</span>：多模态旗舰，综合能力强，适合复杂任务。</p>
-            <p class="doc-p"><span class="doc-strong">o1 / o3</span>：推理增强，适合数学、编程、逻辑推理。价格较高，响应较慢。</p>
-          </div>
-
-          <!-- ==================== Anthropic ==================== -->
-          <div class="doc-section" id="section-anthropic">
-            <h2 class="doc-h2">Anthropic</h2>
-            <p class="doc-p">Claude 系列模型，在长文本理解、分析写作方面表现卓越。需要海外网络环境。</p>
-
-            <table class="overview-table">
-              <tr><th>项目</th><th>说明</th></tr>
-              <tr><td>代表模型</td><td>Claude Sonnet 4、Claude Opus 4、Claude Haiku</td></tr>
-              <tr><td>价格</td><td>Haiku 低，Sonnet 中，Opus 高</td></tr>
-              <tr><td>免费额度</td><td>无免费额度，需绑定信用卡</td></tr>
-              <tr><td>Key 格式</td><td><code class="doc-code">sk-ant-xxxx...</code></td></tr>
-              <tr><td>网络</td><td><strong>需海外网络环境</strong></td></tr>
-              <tr><td>官网</td><td><a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a></td></tr>
-            </table>
-
-            <h3 class="doc-h3">配置步骤</h3>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">1 · 注册 Anthropic 账号</div>
-                访问 <a href="https://console.anthropic.com/" target="_blank">console.anthropic.com</a>，邮箱注册，需海外手机号验证。
-              </div>
-            </div>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">2 · 充值并创建 Key</div>
-                进入「Billing」绑定信用卡并充值，在「API Keys」页面创建 Key。
-              </div>
-            </div>
-            <div class="callout callout-green">
-              <div class="callout-body">
-                <div class="callout-title">3 · 在 ChatGenius 中配置</div>
-                在插件设置页选择 Anthropic，粘贴 API Key，测试连接。
-              </div>
-            </div>
-
-            <h3 class="doc-h3">模型选择建议</h3>
-            <p class="doc-p"><span class="doc-strong">claude-haiku</span>：速度最快、价格最低，适合简单对话和批量处理。</p>
-            <p class="doc-p"><span class="doc-strong">claude-sonnet-4</span>：能力与速度最佳平衡，推荐日常使用。</p>
-            <p class="doc-p"><span class="doc-strong">claude-opus-4</span>：最强能力，适合最复杂的推理和创作。价格较高。</p>
-          </div>
-
-          <!-- ==================== Google Gemini ==================== -->
-          <div class="doc-section" id="section-gemini">
-            <h2 class="doc-h2">Google Gemini</h2>
-            <p class="doc-p">Google 旗下多模态大模型，支持文本、图片、代码等多种输入。部分模型提供免费额度。</p>
-
-            <table class="overview-table">
-              <tr><th>项目</th><th>说明</th></tr>
-              <tr><td>代表模型</td><td>Gemini 2.5 Pro、Gemini 2.5 Flash</td></tr>
-              <tr><td>价格</td><td>Flash 低价，Pro 中高</td></tr>
-              <tr><td>免费额度</td><td>Flash 模型提供免费调用</td></tr>
-              <tr><td>Key 格式</td><td><code class="doc-code">AIzaSyxxxx...</code></td></tr>
-              <tr><td>网络</td><td><strong>需海外网络环境</strong></td></tr>
-              <tr><td>官网</td><td><a href="https://aistudio.google.com/" target="_blank">aistudio.google.com</a></td></tr>
-            </table>
-
-            <h3 class="doc-h3">配置步骤</h3>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">1 · 登录 Google 账号</div>
-                访问 <a href="https://aistudio.google.com/" target="_blank">aistudio.google.com</a>，用 Google 账号登录。
-              </div>
-            </div>
-            <div class="callout callout-blue">
-              <div class="callout-body">
-                <div class="callout-title">2 · 获取 API Key</div>
-                在 AI Studio 页面点击「Get API Key」创建新 Key。免费额度无需绑定信用卡。
-              </div>
-            </div>
-            <div class="callout callout-green">
-              <div class="callout-body">
-                <div class="callout-title">3 · 在 ChatGenius 中配置</div>
-                在插件设置页选择 Google Gemini，粘贴 API Key，测试连接。
-              </div>
-            </div>
-
-            <div class="callout callout-amber">
-              <div class="callout-body">
-                <div class="callout-title">免费模型提示</div>
-                Gemini Flash 模型提供免费额度且能力不弱，适合想免费体验的用户。需稳定的海外网络环境。
-              </div>
-            </div>
-          </div>
-
-          <!-- ==================== FAQ ==================== -->
+          <!-- ==================== 常见问题 ==================== -->
           <div class="doc-section" id="section-faq">
-            <h2 class="doc-h2">常见问题</h2>
+
+            <div class="page-title-block">
+              <div class="page-eyebrow">常见问题</div>
+              <h1 class="page-title">使用疑问解答</h1>
+              <p class="page-subtitle">关于配置、费用、安全的常见问题。</p>
+            </div>
+
             <div class="faq-list">
               <div class="faq-item">
                 <button class="faq-q">API 调用每月大概花多少钱？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
-                <div class="faq-a">日常聊天（每天 50-100 条消息）：DeepSeek 约 3-5 元/月，通义千问约 5-10 元/月，GPT-4o-mini 约 10-20 元/月。重度使用约为上述的 5-10 倍。大多数服务商提供免费额度，足够初期体验。</div>
+                <div class="faq-a">日常聊天（每天 50-100 条消息）使用国产模型约 3-10 元/月，国际模型约 10-30 元/月。多数服务商提供免费额度，足够初期体验。重度使用约为上述的 5-10 倍。</div>
               </div>
               <div class="faq-item">
                 <button class="faq-q">API Key 保存在哪里？安全吗？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
-                <div class="faq-a">API Key 保存在浏览器本地存储（localStorage）中，仅存在于您的设备上，不会上传到 ChatGenius 服务器或任何第三方。您可随时在设置页删除或更换 Key。</div>
+                <div class="faq-a">API Key 保存在浏览器本地存储中，仅存在于您的设备上，不会上传到 ChatGenius 服务器或任何第三方。您可随时在设置页删除或更换 Key。</div>
               </div>
               <div class="faq-item">
-                <button class="faq-q">不同服务商的 Key 格式有什么区别？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
-                <div class="faq-a">DeepSeek 以 <code class="doc-code">sk-</code> 开头；智谱 AI 的 Key 中间有 点号；OpenAI 新 Key 以 <code class="doc-code">sk-proj-</code> 开头；Anthropic 以 <code class="doc-code">sk-ant-</code> 开头。插件会自动校验格式。</div>
+                <button class="faq-q">应该选国内还是国际服务商？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <div class="faq-a">中国大陆用户建议优先选择国内服务商（DeepSeek、通义千问、智谱等）：注册简单、无需信用卡、国内直连速度快、价格低、中文能力强。国际服务商模型更强，但需海外网络和信用卡。</div>
+              </div>
+              <div class="faq-item">
+                <button class="faq-q">测试连接失败怎么办？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <div class="faq-a">常见原因：1) API Key 复制不完整或含多余空格；2) 账户余额不足；3) 网络问题（国际服务商需代理）；4) 模型名称写错或已下架；5) API URL 格式不正确。解决：重新复制 Key → 检查余额 → 确认网络 → 核对模型名称 → 检查 URL 是否以 /v1 结尾。</div>
               </div>
               <div class="faq-item">
                 <button class="faq-q">可以在手机上使用吗？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
                 <div class="faq-a">ChatGenius 是 Chrome 浏览器扩展，支持在手机版 Chrome（Android）上使用。iOS 的 Safari 不支持 Chrome 扩展。手机端配置方式与电脑端相同。</div>
               </div>
               <div class="faq-item">
-                <button class="faq-q">应该选国内还是国际服务商？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
-                <div class="faq-a">中国大陆用户强烈建议优先选择国内服务商（DeepSeek、通义千问、智谱等）。优势：注册简单、无需信用卡、国内直连速度快、价格低、中文能力强。国际服务商模型更强，但需海外网络和信用卡，门槛较高。</div>
-              </div>
-              <div class="faq-item">
-                <button class="faq-q">测试连接失败怎么办？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
-                <div class="faq-a">常见原因：1) API Key 复制不完整或含多余空格；2) 账户余额不足；3) 网络问题（国际服务商需代理）；4) Key 已过期或被删除。解决：重新复制 Key → 检查余额 → 确认网络 → 如仍失败，尝试重新创建 Key。</div>
-              </div>
-              <div class="faq-item">
                 <button class="faq-q">可以同时配置多个服务商吗？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
                 <div class="faq-a">可以。为每个服务商分别配置 API Key，但同一时间只能选择一个作为当前使用。切换服务商时，之前的配置会保留，无需重新输入 Key。</div>
               </div>
               <div class="faq-item">
-                <button class="faq-q">如何更换已配置的 API Key？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
-                <div class="faq-a">进入 ChatGenius 设置页 → 选择对应服务商 → 清除旧 Key → 粘贴新 Key → 点击「测试连接」验证成功后保存。</div>
+                <button class="faq-q">模型名称从哪里找？<svg class="faq-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="6 9 12 15 18 9"/></svg></button>
+                <div class="faq-a">登录服务商控制台后，在「模型列表」「模型广场」或「API 文档」中查看当前可用的模型 ID。模型会不定期更新迭代，请以服务商官网最新列表为准，无需记忆。</div>
               </div>
             </div>
           </div>
@@ -1238,26 +720,11 @@
   });
 
   document.querySelectorAll('[data-navigate]').forEach(function(el) {
-    el.addEventListener('click', function() {
+    el.addEventListener('click', function(e) {
+      e.preventDefault();
       switchSection(el.getAttribute('data-navigate'));
       sidebar.classList.remove('open');
       overlay.classList.remove('open');
-    });
-  });
-
-  // 预设按钮：点击自动填充配置
-  document.querySelectorAll('.preset-chip').forEach(function(chip) {
-    chip.addEventListener('click', function() {
-      document.querySelectorAll('.preset-chip').forEach(function(c) { c.classList.remove('active'); });
-      chip.classList.add('active');
-
-      var preset;
-      try { preset = JSON.parse(chip.getAttribute('data-preset')); } catch(e) { return; }
-
-      var urlInput = document.getElementById('configUrl');
-      var modelInput = document.getElementById('configModel');
-      if (preset.url) urlInput.value = preset.url;
-      if (preset.model) modelInput.value = preset.model;
     });
   });
 
