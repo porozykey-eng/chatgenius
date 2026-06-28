@@ -349,7 +349,7 @@
     .faq-list { margin: 24px 0; }
     .faq-item {
       border: 1px solid var(--color-border); border-radius: var(--radius);
-      margin-bottom: 8px; overflow: hidden; transition: all 0.2s;
+      margin-bottom: 8px; overflow: hidden; transition: border-color 0.2s;
     }
     .faq-item:hover { border-color: var(--color-text-muted); }
     .faq-item.open { border-color: var(--color-primary); }
@@ -362,11 +362,14 @@
     .faq-q:hover { background: var(--color-bg-subtle); }
     .faq-icon { transition: transform 0.2s; color: var(--color-text-muted); flex-shrink: 0; }
     .faq-item.open .faq-icon { transform: rotate(180deg); }
+    /* max-height 由 JS 动态精确设置，避免固定 500px 空跑导致关闭卡顿 */
     .faq-a {
-      max-height: 0; overflow: hidden; transition: max-height 0.3s ease;
-      padding: 0 20px; font-size: 14px; color: var(--color-text-secondary); line-height: 1.8;
+      max-height: 0; overflow: hidden;
+      transition: max-height 0.28s cubic-bezier(0.4, 0, 0.2, 1), padding 0.28s cubic-bezier(0.4, 0, 0.2, 1), opacity 0.2s ease;
+      padding: 0 20px; opacity: 0;
+      font-size: 14px; color: var(--color-text-secondary); line-height: 1.8;
     }
-    .faq-item.open .faq-a { max-height: 500px; padding: 0 20px 16px; }
+    .faq-item.open .faq-a { padding: 0 20px 16px; opacity: 1; }
 
     /* ============ Info Box ============ */
     .info-box {
@@ -782,9 +785,37 @@
     });
   });
 
+  // FAQ 折叠：用 scrollHeight 精确控制 max-height，避免固定值空跑导致关闭卡顿
   document.querySelectorAll('.faq-q').forEach(function(btn) {
-    btn.addEventListener('click', function() { btn.closest('.faq-item').classList.toggle('open'); });
+    btn.addEventListener('click', function() {
+      var item = btn.closest('.faq-item');
+      var answer = item.querySelector('.faq-a');
+      var isOpen = item.classList.contains('open');
+      if (isOpen) {
+        // 关闭：先固定到当前实际高度，强制 reflow，再过渡到 0
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+        void answer.offsetHeight;
+        answer.style.maxHeight = '0px';
+        item.classList.remove('open');
+      } else {
+        // 打开：从 0 过渡到实际高度，结束后清除 inline style 避免内容被截
+        item.classList.add('open');
+        answer.style.maxHeight = answer.scrollHeight + 'px';
+      }
+    });
+    // 过渡结束后清理 inline max-height（打开态下让内容自适应）
+    var answer = btn.closest('.faq-item').querySelector('.faq-a');
+    answer.addEventListener('transitionend', function(e) {
+      if (e.propertyName === 'max-height') {
+        if (item_open(answer)) {
+          answer.style.maxHeight = 'none';
+        }
+      }
+    });
   });
+  function item_open(answer) {
+    return answer.closest('.faq-item').classList.contains('open');
+  }
 
   menuBtn.addEventListener('click', function() {
     sidebar.classList.toggle('open');
