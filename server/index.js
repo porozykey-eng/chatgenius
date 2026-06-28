@@ -149,9 +149,12 @@ app.get('/docs/*', (req, res, next) => {
   }
 });
 
-// Redirect old guide paths to docs
-app.get('/guide.html', (req, res) => res.redirect(301, '/docs/guide/getting-started'));
-app.get('/guide', (req, res) => res.redirect(301, '/docs/guide/getting-started'));
+// Serve guide.html directly (配置指南)
+const guidePath = __dirname + '/../landing-page/public/guide.html';
+app.get('/guide.html', (req, res) => {
+  res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
+  res.sendFile(guidePath);
+});
 
 // Serve landing page static files
 const landingPath = __dirname + '/../landing-page/dist';
