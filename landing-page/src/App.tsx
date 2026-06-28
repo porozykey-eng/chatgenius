@@ -2090,9 +2090,15 @@ function App() {
     sessionStorage.setItem('lastDownloadTime', Date.now().toString())
 
     try {
-      // 5. 使用 window.location 直接触发下载（浏览器原生，比 fetch+blob 更可靠）
-      //    服务端已对 /extension.zip 设置 no-store + download 触发，无需前端处理 blob
-      window.location.href = `/extension.zip?t=${Date.now()}`
+      // 5. 用动态 <a download> 触发下载，不触发页面导航，UI 不卡顿
+      //    download 属性同时指定本地保存文件名（与服务端 Content-Disposition 双保险）
+      const link = document.createElement('a')
+      link.href = `/extension.zip?t=${Date.now()}`
+      link.download = 'ChatGenius-AI-Extension.zip'
+      link.style.display = 'none'
+      document.body.appendChild(link)
+      link.click()
+      document.body.removeChild(link)
     } catch (error) {
       console.error('[Download] 下载失败:', error)
     } finally {

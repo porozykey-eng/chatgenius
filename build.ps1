@@ -3,7 +3,7 @@ $ErrorActionPreference = "Stop"
 # Define paths
 $ScriptDir = Split-Path -Parent $MyInvocation.MyCommand.Path
 $BuildDir = Join-Path $ScriptDir "dist"
-$ZipFile = Join-Path $ScriptDir "chatgenius_extension.zip"
+$ZipFile = Join-Path $ScriptDir "ChatGenius-AI-Extension.zip"
 
 Write-Host "Cleaning up old build..."
 if (Test-Path $BuildDir) { Remove-Item -Recurse -Force $BuildDir }
@@ -50,7 +50,7 @@ Compress-Archive -Path "$BuildDir\*" -DestinationPath $ZipFile -Force
 $PublicDir = Join-Path $ScriptDir "landing-page\public"
 if (-not (Test-Path $PublicDir)) { New-Item -ItemType Directory -Path $PublicDir | Out-Null }
 Copy-Item $ZipFile (Join-Path $PublicDir "extension.zip") -Force
-Write-Host "ZIP copied to landing-page/public/extension.zip"
+Write-Host "ZIP copied to landing-page/public/extension.zip (downloaded as ChatGenius-AI-Extension.zip)"
 
 Write-Host "Cleaning up build directory..."
 Remove-Item -Recurse -Force $BuildDir
