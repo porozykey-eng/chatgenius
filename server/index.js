@@ -137,7 +137,8 @@ app.get('/api/config/providers', (req, res) => {
 
 
 // Serve guide.html directly (配置指南) - 统一使用 /guide/ 路径
-const guidePath = __dirname + '/../landing-page/public/guide.html';
+const path = require('path');
+const guidePath = path.resolve(__dirname, '../landing-page/public/guide.html');
 app.get('/guide/', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.sendFile(guidePath);
