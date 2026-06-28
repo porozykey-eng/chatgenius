@@ -16,6 +16,7 @@ $Files = @(
     "manifest.json",
     "background.js",
     "content.js",
+    "fingerprint.js",
     "options.html",
     "options.js",
     "popup.html",

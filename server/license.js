@@ -6,22 +6,30 @@ const { pool } = require('./config');
 const router = express.Router();
 
 // 防刷系统配置
-const LICENSE_HMAC_SECRET = process.env.LICENSE_HMAC_SECRET || 'chatgenius-license-hmac-secret-2026-v3';
+// 注意：客户端密钥已公开，HMAC 签名无实际安全价值，仅保留 timestamp 校验防重放
+const LICENSE_HMAC_SECRET = process.env.LICENSE_HMAC_SECRET;
+if (!LICENSE_HMAC_SECRET) {
+  console.warn('⚠️ LICENSE_HMAC_SECRET 未配置，HMAC 签名校验将被跳过（仅依赖 timestamp 防重放）');
+}
 const MAX_UNBIND_PER_MONTH = 2;
 const MAX_ACTIVATION_ERRORS = 5;
 const IP_BAN_HOURS = 24;
 
-// 签名验证：HMAC-SHA256(code + timestamp, SECRET)，时间戳 5 分钟内有效
+// 签名验证：timestamp 5 分钟内有效（防重放）；HMAC 签名可选（客户端密钥已公开）
 function verifySignature(code, timestamp, signature) {
   const now = Date.now();
   const ts = parseInt(timestamp);
   if (Math.abs(now - ts) > 5 * 60 * 1000) {
     return { valid: false, reason: 'timestamp_expired' };
   }
-  const expected = crypto.createHmac('sha256', LICENSE_HMAC_SECRET)
-    .update(code + timestamp).digest('hex');
-  if (signature !== expected) {
-    return { valid: false, reason: 'invalid_signature' };
+  // 签名校验改为可选：客户端密钥已公开，HMAC 签名无实际安全价值
+  // 保留 timestamp 校验作为防重放措施；如提供签名则校验并记录日志（不拒绝）
+  if (signature && LICENSE_HMAC_SECRET) {
+    const expected = crypto.createHmac('sha256', LICENSE_HMAC_SECRET)
+      .update(code + timestamp).digest('hex');
+    if (signature !== expected) {
+      console.warn('License signature mismatch (possibly old client), allowing based on timestamp');
+    }
   }
   return { valid: true };
 }

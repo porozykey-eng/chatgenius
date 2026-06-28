@@ -24,6 +24,7 @@ const REFRESH_TOKEN_EXPIRY = '7d';
 const loginAttempts = new Map();
 const LOGIN_WINDOW_MS = 5 * 60 * 1000;
 const LOGIN_MAX_ATTEMPTS = 5;
+const LOGIN_MAP_MAX_SIZE = 10000; // LRU 上限，防止海量 IP 攻击撑大内存
 
 function checkLoginLimit(ip) {
   const now = Date.now();
@@ -44,6 +45,11 @@ function recordLoginAttempt(ip) {
   const now = Date.now();
   const record = loginAttempts.get(ip);
   if (!record || now - record.firstAttempt > LOGIN_WINDOW_MS) {
+    // LRU 保护：超过上限时删除最旧的条目
+    if (loginAttempts.size >= LOGIN_MAP_MAX_SIZE) {
+      const oldestKey = loginAttempts.keys().next().value;
+      loginAttempts.delete(oldestKey);
+    }
     loginAttempts.set(ip, { firstAttempt: now, count: 1 });
   } else {
     record.count++;
@@ -331,15 +337,17 @@ router.post('/change-password', requireAdmin, async (req, res) => {
 
   const newHash = await bcrypt.hash(newPassword, 12);
 
-  // Update .env file
+  // Update .env file（原子写入：先写临时文件再 rename，避免写入中断导致配置损坏）
   const envPath = path.resolve(__dirname, '.env');
+  const tmpPath = envPath + '.tmp';
   let envContent = fs.readFileSync(envPath, 'utf8');
   if (envContent.includes('ADMIN_PASSWORD=')) {
     envContent = envContent.replace(/ADMIN_PASSWORD=.*/, `ADMIN_PASSWORD=${newHash}`);
   } else {
     envContent += `\nADMIN_PASSWORD=${newHash}\n`;
   }
-  fs.writeFileSync(envPath, envContent);
+  fs.writeFileSync(tmpPath, envContent, 'utf8');
+  fs.renameSync(tmpPath, envPath);
 
   // Update in-memory variable so current session works immediately
   ADMIN_PASSWORD_HASH = newHash;

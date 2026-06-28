@@ -81,13 +81,73 @@ function generateAuthorization(method, url, body) {
 // 解密微信支付回调数据
 function decryptGCM(ciphertext, nonce, associatedData) {
   const key = Buffer.from(WECHAT_API_V3_KEY, 'utf8');
-  const decipher = crypto.createDecipheriv('aes-256-gcm', nonce, null);
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, nonce);
   decipher.setAuthTag(Buffer.from(ciphertext.slice(-16), 'base64'));
   decipher.setAAD(Buffer.from(associatedData));
-  
+
   const decrypted = decipher.update(Buffer.from(ciphertext.slice(0, -16), 'base64'), 'binary', 'utf8');
   decipher.final('utf8');
   return JSON.parse(decrypted);
+}
+
+// ================================
+// 微信平台证书管理（用于回调验签）
+// ================================
+const platformCertificates = new Map(); // serial_no -> certificate PEM
+let platformCertLastFetch = 0;
+const PLATFORM_CERT_REFRESH_MS = 12 * 60 * 60 * 1000; // 12 小时刷新一次
+
+// 解密平台证书（与回调数据解密逻辑一致，但返回字符串而非 JSON）
+function decryptCertificate(encryptCertificate) {
+  const key = Buffer.from(WECHAT_API_V3_KEY, 'utf8');
+  const nonce = Buffer.from(encryptCertificate.nonce, 'utf8');
+  const ciphertext = Buffer.from(encryptCertificate.ciphertext, 'base64');
+  const associatedData = Buffer.from(encryptCertificate.associated_data || '', 'utf8');
+
+  const decipher = crypto.createDecipheriv('aes-256-gcm', key, nonce);
+  decipher.setAuthTag(ciphertext.slice(-16));
+  decipher.setAAD(associatedData);
+
+  const decrypted = Buffer.concat([
+    decipher.update(ciphertext.slice(0, -16)),
+    decipher.final(),
+  ]);
+  return decrypted.toString('utf8');
+}
+
+// 从微信服务器下载并缓存所有平台证书
+async function downloadPlatformCertificates() {
+  const urlPath = '/v3/certificates';
+  const authorization = generateAuthorization('GET', urlPath, '');
+  const response = await fetch(`${WECHAT_API_BASE}${urlPath}`, {
+    method: 'GET',
+    headers: {
+      'Authorization': authorization,
+      'Accept': 'application/json',
+    },
+  });
+
+  if (!response.ok) {
+    throw new Error(`Failed to download platform certificates: ${response.status}`);
+  }
+
+  const data = await response.json();
+  platformCertificates.clear();
+  for (const cert of data.data) {
+    const certContent = decryptCertificate(cert.encrypt_certificate);
+    platformCertificates.set(cert.serial_no, certContent);
+  }
+  platformCertLastFetch = Date.now();
+  console.log(`✅ Downloaded ${platformCertificates.size} WeChat platform certificates`);
+}
+
+// 根据 serial 获取平台证书（必要时自动刷新）
+async function getPlatformCertificate(serial) {
+  // 如果缓存为空或过期，重新下载
+  if (platformCertificates.size === 0 || Date.now() - platformCertLastFetch > PLATFORM_CERT_REFRESH_MS) {
+    await downloadPlatformCertificates();
+  }
+  return platformCertificates.get(serial);
 }
 
 // 创建 Native 支付订单（PC 端扫码支付）
@@ -173,7 +233,7 @@ router.post('/create-order', async (req, res) => {
   } catch (error) {
     console.error('WeChat create order error:', error.message);
     console.error('Error stack:', error.stack);
-    res.status(500).json({ success: false, error: '创建支付订单失败: ' + error.message });
+    res.status(500).json({ success: false, error: '创建支付订单失败' });
   }
 });
 
@@ -197,7 +257,7 @@ router.get('/query-order/:orderNo', async (req, res) => {
     res.json({ paid: isPaid, status: order.status });
   } catch (error) {
     console.error('WeChat query order error:', error);
-    res.json({ paid: false, error: error.message });
+    res.json({ paid: false, error: '查询订单状态失败' });
   }
 });
 
@@ -209,28 +269,42 @@ router.post('/notify', async (req, res) => {
 
     console.log('WeChat notify received:', JSON.stringify(body));
 
-    // 验证签名
+    // 验证签名（使用微信平台证书，而非商户证书）
     const timestamp = req.headers['wechatpay-timestamp'];
     const nonce = req.headers['wechatpay-nonce'];
     const signature = req.headers['wechatpay-signature'];
     const serial = req.headers['wechatpay-serial'];
 
-    if (!timestamp || !nonce || !signature) {
-      console.warn('WeChat notify: missing headers');
+    if (!timestamp || !nonce || !signature || !serial) {
+      console.warn('WeChat notify: missing signature headers');
       return res.status(400).json({ code: 'FAIL', message: '缺少签名参数' });
+    }
+
+    // 根据 serial 获取对应的微信平台证书
+    let platformCert;
+    try {
+      platformCert = await getPlatformCertificate(serial);
+    } catch (certError) {
+      console.error('WeChat notify: failed to fetch platform certificate:', certError.message);
+      return res.status(400).json({ code: 'FAIL', message: '证书获取失败' });
+    }
+
+    if (!platformCert) {
+      console.warn('WeChat notify: platform certificate not found for serial:', serial);
+      return res.status(400).json({ code: 'FAIL', message: '证书验证失败：未知序列号' });
     }
 
     const message = `${timestamp}\n${nonce}\n${rawBody}\n`;
     const verify = crypto.createVerify('RSA-SHA256');
     verify.update(message);
-    const isValid = verify.verify(merchantCertificate, signature, 'base64');
+    const isValid = verify.verify(platformCert, signature, 'base64');
 
     if (!isValid) {
-      console.warn('WeChat notify: signature verification FAILED');
+      console.warn('WeChat notify: signature verification FAILED for serial:', serial);
       return res.status(400).json({ code: 'FAIL', message: '签名验证失败' });
     }
 
-    console.log('WeChat notify signature verified');
+    console.log('WeChat notify signature verified (platform cert, serial:', serial + ')');
 
     // 解密回调数据
     const resource = body.resource;
@@ -283,62 +357,7 @@ router.post('/notify', async (req, res) => {
     res.json({ code: 'SUCCESS', message: '成功' });
   } catch (error) {
     console.error('WeChat notify error:', error);
-    res.status(500).json({ code: 'FAIL', message: error.message });
-  }
-});
-
-// ================================
-// 临时接口：获取您的 OpenID（获取后可删除此段）
-// ================================
-const WECHAT_APP_SECRET = process.env.WECHAT_APP_SECRET;
-
-// 一个接口处理两种情况：无 code 时跳转授权，有 code 时换取 openid
-router.get('/get-openid', async (req, res) => {
-  const { code } = req.query;
-
-  // 情况1：没有 code，跳转到微信授权页
-  if (!code) {
-    if (!WECHAT_APPID || !WECHAT_APP_SECRET) {
-      return res.send('<h2>请先在 .env 配置 WECHAT_APPID 和 WECHAT_APP_SECRET</h2>');
-    }
-    const redirectUri = encodeURIComponent('https://chat.sopie.cc/api/wechat/get-openid');
-    const scope = 'snsapi_userinfo';
-    const state = 'chatgenius';
-    const authUrl = `https://open.weixin.qq.com/connect/oauth2/authorize?appid=${WECHAT_APPID}&redirect_uri=${redirectUri}&response_type=code&scope=${scope}&state=${state}#wechat_redirect`;
-    return res.redirect(authUrl);
-  }
-
-  // 情况2：有 code，用 code 换取 openid
-  try {
-    const tokenUrl = `https://api.weixin.qq.com/sns/oauth2/access_token?appid=${WECHAT_APPID}&secret=${WECHAT_APP_SECRET}&code=${code}&grant_type=authorization_code`;
-    const fetch = (await import('node-fetch')).default;
-    const resp = await fetch(tokenUrl);
-    const data = await resp.json();
-
-    if (data.errcode) {
-      return res.send(`<h2>获取失败：${data.errmsg}（错误码：${data.errcode}）</h2>`);
-    }
-
-    const { openid } = data;
-    res.send(`
-      <!DOCTYPE html>
-      <html>
-      <head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
-      <body style="font-family:-apple-system,sans-serif;padding:40px;background:#fafafa;">
-        <div style="max-width:500px;margin:0 auto;background:#fff;padding:32px;border-radius:8px;border:1px solid #e5e7eb;">
-          <h2 style="margin:0 0 16px;color:#111827;">✅ 获取成功</h2>
-          <p style="color:#6b7280;font-size:14px;margin-bottom:24px;">您的 OpenID 已获取，请复制下方内容：</p>
-          <div style="background:#f5f5f5;padding:16px;border-radius:4px;border:1px solid #e5e7eb;margin-bottom:16px;">
-            <p style="margin:0 0 8px;font-size:12px;color:#9ca3af;">OpenID:</p>
-            <p style="margin:0;font-family:monospace;font-size:14px;color:#111827;word-break:break-all;">${openid}</p>
-          </div>
-          <button onclick="navigator.clipboard.writeText('${openid}');alert('已复制到剪贴板')" style="width:100%;padding:10px;background:#111827;color:#fff;border:none;border-radius:4px;cursor:pointer;font-size:14px;">复制 OpenID</button>
-        </div>
-      </body>
-      </html>
-    `);
-  } catch (error) {
-    res.send(`<h2>错误：${error.message}</h2>`);
+    res.status(500).json({ code: 'FAIL', message: '服务器内部错误' });
   }
 });
 

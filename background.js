@@ -9,8 +9,8 @@ const DAILY_LIMIT = 20;
 // SYNC: Backend API base URL - must match across all files (background.js, options.js)
 const API_BASE_URL = 'https://chat.sopie.cc';
 
-// SYNC: HMAC secret for license request signing - must match backend .env LICENSE_HMAC_SECRET
-const LICENSE_HMAC_SECRET = 'chatgenius-license-hmac-secret-2026-v3';
+// 注意：LICENSE_HMAC_SECRET 已移除 — 客户端密钥本就公开，HMAC 签名无安全价值
+// 防重放改由服务端 timestamp 校验（5分钟窗口）保障
 
 // Heartbeat detection constants
 const HEARTBEAT_INTERVAL_HOURS = 6;
@@ -138,9 +138,8 @@ async function sendHeartbeat() {
       return;
     }
 
-    // Sign request (HMAC-SHA256)
+    // 请求时间戳（服务端用于防重放校验）
     const timestamp = Date.now().toString();
-    const signature = await signRequestInBackground(licenseCode.toUpperCase(), timestamp, LICENSE_HMAC_SECRET);
 
     const response = await fetch(`${API_BASE_URL}/api/license/heartbeat`, {
       method: 'POST',
@@ -148,8 +147,7 @@ async function sendHeartbeat() {
       body: JSON.stringify({
         code: licenseCode.toUpperCase(),
         fingerprint,
-        timestamp,
-        signature
+        timestamp
       })
     });
 
@@ -248,26 +246,6 @@ async function generateFingerprintInBackground() {
   } catch (e) {
     console.warn('Background fingerprint generation failed:', e);
     return null;
-  }
-}
-
-// HMAC-SHA256 signature for background requests
-async function signRequestInBackground(code, timestamp, secret) {
-  try {
-    const key = await crypto.subtle.importKey(
-      'raw',
-      new TextEncoder().encode(secret),
-      { name: 'HMAC', hash: 'SHA-256' },
-      false,
-      ['sign']
-    );
-    const data = new TextEncoder().encode(code + timestamp);
-    const sig = await crypto.subtle.sign('HMAC', key, data);
-    const arr = Array.from(new Uint8Array(sig));
-    return arr.map(b => b.toString(16).padStart(2, '0')).join('');
-  } catch (e) {
-    console.warn('Background signing failed:', e);
-    return '';
   }
 }
 

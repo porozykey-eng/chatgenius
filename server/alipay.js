@@ -257,7 +257,7 @@ router.post('/create-order', async (req, res) => {
   } catch (error) {
     console.error('Alipay create order error:', error.message);
     console.error('Error stack:', error.stack);
-    res.status(500).json({ success: false, error: '创建支付订单失败: ' + error.message });
+    res.status(500).json({ success: false, error: '创建支付订单失败' });
   }
 });
 
@@ -284,7 +284,7 @@ router.get('/query-order/:orderNo', async (req, res) => {
     });
   } catch (error) {
     console.error('Alipay query order error:', error);
-    res.json({ paid: false, error: error.message });
+    res.json({ paid: false, error: '查询订单状态失败' });
   }
 });
 
@@ -350,15 +350,19 @@ router.post('/notify', async (req, res) => {
         return res.send('success');
       }
       
-      // Verify amount
-      if (order.price && total_amount && String(total_amount) !== String(order.price)) {
-        console.error('Alipay notify: amount mismatch!', { 
-          orderNo: out_trade_no, 
-          expected: order.price, 
-          received: total_amount 
-        });
-        await conn.rollback();
-        return res.send('success');
+      // Verify amount（使用 parseFloat 数值比较，容差 0.01 元）
+      if (order.price && total_amount) {
+        const expected = parseFloat(order.price);
+        const received = parseFloat(total_amount);
+        if (isNaN(expected) || isNaN(received) || Math.abs(expected - received) > 0.01) {
+          console.error('Alipay notify: amount mismatch!', {
+            orderNo: out_trade_no,
+            expected: order.price,
+            received: total_amount
+          });
+          await conn.rollback();
+          return res.send('success');
+        }
       }
       
       // 更新订单状态

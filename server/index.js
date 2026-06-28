@@ -38,15 +38,18 @@ app.use(express.urlencoded({ extended: true, limit: '50kb' }));
 
 // CORS with whitelist
 const allowedOrigins = (process.env.CORS_ORIGINS || '').split(',').filter(Boolean);
+if (allowedOrigins.length === 0) {
+  console.warn('⚠️ CORS_ORIGINS 未配置，跨域请求将被拒绝！请在 .env 中配置允许的来源。');
+}
 app.use(cors({
   origin: function (origin, callback) {
     // Allow requests without Origin header (curl, server-to-server, direct navigation)
     if (!origin) {
       return callback(null, true);
     }
-    // If no whitelist configured, allow all origins
+    // 未配置白名单时拒绝所有跨域请求（生产环境安全策略）
     if (allowedOrigins.length === 0) {
-      return callback(null, true);
+      return callback(new Error('Not allowed by CORS'));
     }
     // Check against whitelist
     if (allowedOrigins.includes(origin)) {
@@ -108,7 +111,11 @@ app.use('/api/license', licenseLimiter, licenseRouter);
 app.use('/api/invoice', invoiceLimiter, invoiceRouter);
 
 // Admin dashboard (route obfuscated via ADMIN_ROUTE env var)
-const adminRoute = process.env.ADMIN_ROUTE || '/admin-cg7x9k';
+const adminRoute = process.env.ADMIN_ROUTE;
+if (!adminRoute) {
+  console.error('❌ ADMIN_ROUTE 必须在 .env 中配置为随机不可猜测的路径！');
+  process.exit(1);
+}
 app.get(adminRoute, (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate');
   res.setHeader('X-Frame-Options', 'DENY');
@@ -185,7 +192,7 @@ app.listen(PORT, () => {
   console.log(`📍 API Base: http://localhost:${PORT}/api`);
   console.log(`💚 Alipay: http://localhost:${PORT}/api/alipay`);
   console.log(`🔑 License: http://localhost:${PORT}/api/license`);
-  console.log(`🔧 Admin: http://localhost:${PORT}${adminRoute}`);
+  console.log(`🔧 Admin: configured (path hidden for security)`);
 });
 
 module.exports = app;

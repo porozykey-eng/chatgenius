@@ -9,9 +9,8 @@ const DAILY_LIMIT = 20;
 // Upgrade URL
 const UPGRADE_URL = 'https://chatgenius.ai/#pricing';
 
-// SYNC: HMAC secret for license request signing - must match backend .env LICENSE_HMAC_SECRET
-// Note: This key is public on the client; used for replay prevention, not encryption.
-const LICENSE_HMAC_SECRET = 'chatgenius-license-hmac-secret-2026-v3';
+// 注意：LICENSE_HMAC_SECRET 已移除 — 客户端密钥本就公开，HMAC 签名无安全价值
+// 防重放改由服务端 timestamp 校验（5分钟窗口）保障
 
 // Chrome API compatibility layer for standalone preview
 if (typeof chrome === 'undefined' || !chrome.storage) {
@@ -1802,12 +1801,11 @@ document.addEventListener('DOMContentLoaded', () => {
         // 获取设备指纹
         const fingerprint = await FingerprintUtil.getDeviceFingerprint();
         const timestamp = Date.now().toString();
-        const signature = await FingerprintUtil.signRequest(code.toUpperCase(), timestamp, LICENSE_HMAC_SECRET);
 
         const response = await fetch(API_BASE_URL + '/api/license/activate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code: code.toUpperCase(), fingerprint, timestamp, signature })
+          body: JSON.stringify({ code: code.toUpperCase(), fingerprint, timestamp })
         });
         const result = await response.json();
 
@@ -1831,7 +1829,7 @@ document.addEventListener('DOMContentLoaded', () => {
             `该激活码已在其他设备使用，是否强制在此设备登录？\n本月剩余换绑次数：${result.remainingCount}`
           );
           if (confirmed) {
-            await doRebind(code.toUpperCase(), fingerprint, timestamp, signature);
+            await doRebind(code.toUpperCase(), fingerprint, timestamp);
           }
         } else {
           if (activationError) {
@@ -1851,7 +1849,7 @@ document.addEventListener('DOMContentLoaded', () => {
     });
 
     // 换绑函数
-    async function doRebind(code, fingerprint, timestamp, signature) {
+    async function doRebind(code, fingerprint, timestamp) {
       activateBtn.disabled = true;
       activateBtn.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="40"></circle></svg><span>换绑中...</span>';
       if (activationError) activationError.style.display = 'none';
@@ -1859,7 +1857,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch(API_BASE_URL + '/api/license/rebind', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, fingerprint, timestamp, signature })
+          body: JSON.stringify({ code, fingerprint, timestamp })
         });
         const result = await response.json();
         if (result.valid && result.type) {
@@ -2362,76 +2360,6 @@ document.addEventListener('DOMContentLoaded', () => {
       chrome.storage.sync.set({ onboardingCompleted: true }, () => {
         loadSettings();
       });
-    });
-  }
-
-  // Onboarding Test Connection
-  const onboardingTestBtn = document.getElementById('onboardingTestBtn');
-  if (onboardingTestBtn) {
-    onboardingTestBtn.addEventListener('click', async () => {
-      const providerSelect = document.getElementById('onboardingProviderSelect');
-      const keyInput = document.getElementById('onboardingApiKeyInput');
-      const resultEl = document.getElementById('onboardingTestResult');
-      const provider = providerSelect?.value || 'openai';
-      const key = keyInput?.value.trim();
-      if (!key) {
-        if (resultEl) resultEl.textContent = currentLang === 'zh' ? '请输入 API Key' : 'Please enter API Key';
-        return;
-      }
-      if (resultEl) resultEl.textContent = I18N[currentLang].apiTesting || 'Testing...';
-      try {
-        const providerConfig = modelsConfig?.providers?.find(p => p.id === provider);
-        let testUrl, headers, body;
-        if (provider === 'anthropic') {
-          testUrl = providerConfig?.url || 'https://api.anthropic.com/v1/messages';
-          headers = { 'Content-Type': 'application/json', 'x-api-key': key, 'anthropic-version': '2023-06-01' };
-          body = JSON.stringify({ model: 'claude-3-haiku-20240307', max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] });
-        } else if (provider === 'google') {
-          testUrl = providerConfig?.url || ('https://generativelanguage.googleapis.com/v1/models/gemini-pro:generateContent?key=' + key);
-          headers = { 'Content-Type': 'application/json' };
-          body = JSON.stringify({ contents: [{ parts: [{ text: 'Hi' }] }] });
-        } else {
-          testUrl = providerConfig?.url || 'https://api.openai.com/v1/chat/completions';
-          headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + key };
-          body = JSON.stringify({ model: 'gpt-3.5-turbo', messages: [{ role: 'user', content: 'Hi' }], max_tokens: 10 });
-        }
-        const response = await fetch(testUrl, { method: 'POST', headers, body });
-        if (response.ok) {
-          if (resultEl) resultEl.textContent = I18N[currentLang].apiTestSuccess || 'Connection successful!';
-        } else {
-          let errMsg;
-          if (response.status === 401 || response.status === 403) {
-            errMsg = currentLang === 'zh' ? 'API Key 无效或权限不足' : 'API Key invalid';
-          } else if (response.status === 429) {
-            errMsg = currentLang === 'zh' ? '请求频率过高或额度不足' : 'Rate limit exceeded';
-          } else {
-            const errData = await response.json().catch(() => ({}));
-            errMsg = errData.error?.message || errData.message || 'HTTP ' + response.status;
-          }
-          if (resultEl) resultEl.textContent = (I18N[currentLang].apiTestFail || 'Connection failed: ') + errMsg;
-        }
-      } catch (error) {
-        const errMsg = currentLang === 'zh' ? '网络连接失败，请检查网络' : 'Network error';
-        if (resultEl) resultEl.textContent = (I18N[currentLang].apiTestFail || 'Connection failed: ') + errMsg;
-      }
-    });
-  }
-
-  // Onboarding provider change → update "Get Key" link
-  const onboardingProviderSelectEl = document.getElementById('onboardingProviderSelect');
-  if (onboardingProviderSelectEl) {
-    onboardingProviderSelectEl.addEventListener('change', () => {
-      const providerId = onboardingProviderSelectEl.value;
-      const provider = modelsConfig?.providers?.find(p => p.id === providerId);
-      const getKeyLink = document.getElementById('onboardingGetKeyLink');
-      if (getKeyLink && provider) {
-        if (provider.getKey) {
-          getKeyLink.href = provider.getKey;
-          getKeyLink.style.display = '';
-        } else {
-          getKeyLink.style.display = 'none';
-        }
-      }
     });
   }
 
