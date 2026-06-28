@@ -49,13 +49,16 @@
       -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
     }
 
-    .page { display: flex; min-height: 100vh; }
+    /* 整体最大宽度居中：sidebar + 内容作为一块，参考智谱文档布局 */
+    .page { display: flex; min-height: 100vh; max-width: 1440px; margin: 0 auto; }
 
     /* ============ Sidebar ============ */
+    /* sticky 定位：跟随 .page 容器，滚动时吸顶，不再贴屏幕左边 */
     .sidebar {
       width: var(--sidebar-width); flex-shrink: 0; background: var(--color-bg-subtle);
-      border-right: 1px solid var(--color-border); position: fixed;
-      top: 0; left: 0; bottom: 0; overflow-y: auto; z-index: 100;
+      border-right: 1px solid var(--color-border);
+      position: sticky; top: 0; align-self: flex-start;
+      height: 100vh; overflow-y: auto; z-index: 100;
       padding-top: 32px;
     }
     .sidebar::-webkit-scrollbar { width: 3px; }
@@ -89,7 +92,7 @@
     }
 
     /* ============ Main ============ */
-    .main { flex: 1; margin-left: var(--sidebar-width); min-width: 0; }
+    .main { flex: 1; min-width: 0; }
     /* 内容居中：使用 auto margin 水平居中，max-width 控制最佳阅读宽度 */
     .main-inner {
       max-width: var(--content-width);
@@ -368,7 +371,9 @@
     .overlay.open { display: block; opacity: 1; }
 
     @media (max-width: 900px) {
+      .page { max-width: 100%; }
       .sidebar {
+        position: fixed; top: 0; left: 0; bottom: 0; height: auto;
         transform: translateX(-100%); transition: transform 0.3s ease;
         box-shadow: var(--shadow-lg);
       }
