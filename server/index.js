@@ -5,6 +5,7 @@ const cors = require('cors');
 const helmet = require('helmet');
 const rateLimit = require('express-rate-limit');
 const morgan = require('morgan');
+const fs = require('fs');
 
 const alipayRouter = require('./alipay');
 const wechatRouter = require('./wechat');
@@ -166,14 +167,29 @@ app.use(express.static(landingPath, {
 
 // extension.zip 必须实时刷新，禁止缓存（确保用户下载到最新版本插件）
 // 优先从 public 目录读取（git 跟踪，始终存在），避免依赖 dist 构建产物
-app.get('/extension.zip', (req, res) => {
-  const fs = require('fs');
-  const publicZip = __dirname + '/../landing-page/public/extension.zip';
-  const distZip = landingPath + '/extension.zip';
-  const zipPath = fs.existsSync(publicZip) ? publicZip : (fs.existsSync(distZip) ? distZip : null);
+// 82KB 小文件直接读入内存缓存，避免每次请求的磁盘 I/O 和 sendFile 开销
+const publicZipPath = path.join(__dirname, '..', 'landing-page', 'public', 'extension.zip');
+const distZipPath = path.join(landingPath, 'extension.zip');
 
+// 内存缓存 zip 文件 Buffer，首次请求加载，文件更新后清除缓存
+function getZipBuffer() {
+  if (app.locals.zipBuffer && app.locals.zipMtime) {
+    return app.locals.zipBuffer;
+  }
+  const zipPath = fs.existsSync(publicZipPath) ? publicZipPath : (fs.existsSync(distZipPath) ? distZipPath : null);
   if (!zipPath) {
-    console.error('[extension.zip] 文件不存在: ', publicZip, distZip);
+    console.error('[extension.zip] 文件不存在: ', publicZipPath, distZipPath);
+    return null;
+  }
+  app.locals.zipBuffer = fs.readFileSync(zipPath);
+  app.locals.zipMtime = fs.statSync(zipPath).mtimeMs;
+  console.log('[extension.zip] 已加载到内存:', zipPath, Math.round(app.locals.zipBuffer.length / 1024) + 'KB');
+  return app.locals.zipBuffer;
+}
+
+app.get('/extension.zip', (req, res) => {
+  const buf = getZipBuffer();
+  if (!buf) {
     return res.status(404).json({ error: '下载文件未找到，请联系管理员' });
   }
 
@@ -181,12 +197,10 @@ app.get('/extension.zip', (req, res) => {
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
   res.setHeader('Content-Disposition', 'attachment; filename="ChatGenius-AI-Extension.zip"');
-  res.sendFile(zipPath, (err) => {
-    if (err) {
-      console.error('[extension.zip] 发送失败:', err.message);
-      if (!res.headersSent) res.status(500).json({ error: '下载失败' });
-    }
-  });
+  res.setHeader('Content-Type', 'application/zip');
+  res.setHeader('Content-Length', buf.length);
+  // 直接发送内存中的 Buffer，无磁盘 I/O，响应头立即发送
+  res.end(buf);
 });
 
 app.get('*', (req, res) => {

@@ -2090,20 +2090,32 @@ function App() {
     sessionStorage.setItem('lastDownloadTime', Date.now().toString())
 
     try {
-      // 5. 用动态 <a download> 触发下载，不触发页面导航，UI 不卡顿
-      //    download 属性同时指定本地保存文件名（与服务端 Content-Disposition 双保险）
+      // 5. 用 fetch + blob 下载：fetch 完成后立即同步触发下载，响应更快
+      //    82KB 文件极小，blob 内存开销可忽略；比 <a> 标签原生下载条显示更快
+      const t0 = performance.now()
+      const response = await fetch(`/extension.zip?t=${Date.now()}`)
+      if (!response.ok) throw new Error(`HTTP ${response.status}`)
+      const blob = await response.blob()
+      const t1 = performance.now()
+      console.log(`[Download] fetch 完成: ${Math.round(t1 - t0)}ms, ${Math.round(blob.size / 1024)}KB`)
+
+      const url = window.URL.createObjectURL(blob)
       const link = document.createElement('a')
-      link.href = `/extension.zip?t=${Date.now()}`
+      link.href = url
       link.download = 'ChatGenius-AI-Extension.zip'
       link.style.display = 'none'
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
+      // 延迟释放 blob URL，确保下载已启动
+      setTimeout(() => window.URL.revokeObjectURL(url), 1000)
     } catch (error) {
       console.error('[Download] 下载失败:', error)
+      // 回退方案：直接跳转下载
+      window.location.href = `/extension.zip?t=${Date.now()}`
     } finally {
-      // 6. 短暂延迟后重置状态（让浏览器开始下载后再恢复按钮）
-      setTimeout(() => setIsDownloading(false), 1500)
+      // 6. 快速恢复按钮（300ms 防抖即可，无需长时间禁用）
+      setTimeout(() => setIsDownloading(false), 300)
     }
   }
 
