@@ -2237,6 +2237,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chrome.runtime.lastError) return;
         if (!localData.apiKey && syncData.onboardingCompleted !== true) {
           showOnboarding();
+        } else if (!localData.apiKey && syncData.onboardingCompleted === true) {
+          // 用户已跳过 onboarding 但未配置 API，自动切换到设置 tab 引导配置
+          switchTab('settings');
         }
       });
     });
