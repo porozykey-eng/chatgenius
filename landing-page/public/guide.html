@@ -82,6 +82,10 @@
       from { opacity: 0; transform: translateY(16px); }
       to { opacity: 1; transform: translateY(0); }
     }
+    @keyframes spin {
+      from { transform: rotate(0deg); }
+      to { transform: rotate(360deg); }
+    }
 
     .hero {
       background: linear-gradient(135deg, #312e81 0%, #4f46e5 40%, #7c3aed 70%, #a855f7 100%);
@@ -433,6 +437,80 @@
       display: flex; align-items: center; justify-content: center;
       font-size: 18px; font-weight: 700; color: #fff; flex-shrink: 0;
     }
+    .provider-detail-logo img {
+      width: 36px; height: 36px; border-radius: 8px; object-fit: contain;
+      background: rgba(255,255,255,0.15); padding: 3px;
+    }
+
+    .config-block {
+      background: #f0f9ff; border: 1px solid #bae6fd; border-radius: 12px;
+      padding: 28px; margin: 32px 0;
+    }
+    .config-block-title {
+      font-size: 18px; font-weight: 700; color: var(--color-text); margin-bottom: 8px;
+    }
+    .config-block-desc {
+      font-size: 14px; color: var(--color-text-secondary); margin-bottom: 20px; line-height: 1.7;
+    }
+    .config-input-group {
+      display: flex; align-items: center; gap: 10px; margin-bottom: 14px;
+    }
+    .config-input-label {
+      font-size: 13px; font-weight: 600; color: var(--color-text); min-width: 90px; flex-shrink: 0;
+    }
+    .config-input {
+      flex: 1; padding: 10px 14px; background: #fff; border: 1px solid var(--color-border);
+      border-radius: 8px; font-size: 14px; font-family: 'SF Mono', 'Fira Code', Menlo, monospace;
+      color: var(--color-text); outline: none; transition: border-color 0.2s;
+    }
+    .config-input:focus { border-color: var(--color-primary); }
+    .config-input::placeholder { color: var(--color-text-muted); }
+    .config-copy-btn {
+      padding: 8px 14px; background: #fff; border: 1px solid var(--color-border); border-radius: 8px;
+      font-size: 12px; font-weight: 600; color: var(--color-text-secondary); cursor: pointer;
+      font-family: inherit; transition: all 0.2s; white-space: nowrap;
+    }
+    .config-copy-btn:hover { background: var(--color-bg-muted); color: var(--color-text); border-color: #cbd5e1; }
+    .config-copy-btn.copied { background: #f0fdf4; border-color: #86efac; color: #166534; }
+    .config-action-row { margin-top: 20px; display: flex; gap: 12px; }
+    .config-btn-primary {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 10px 20px; background: var(--color-primary-dark); color: #fff; border: none;
+      border-radius: 8px; font-size: 13px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .config-btn-primary:hover {
+      background: var(--color-primary-darker); transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(79,70,229,0.3);
+    }
+    .config-btn-primary.copied { background: #166534; }
+
+    .test-block {
+      background: #f0fdf4; border: 1px solid #bbf7d0; border-radius: 12px;
+      padding: 28px; margin: 32px 0;
+    }
+    .test-block-title {
+      font-size: 18px; font-weight: 700; color: var(--color-text); margin-bottom: 8px;
+    }
+    .test-block-desc {
+      font-size: 14px; color: var(--color-text-secondary); margin-bottom: 20px; line-height: 1.7;
+    }
+    .test-btn {
+      display: inline-flex; align-items: center; gap: 8px;
+      padding: 10px 24px; background: #16a34a; color: #fff; border: none;
+      border-radius: 8px; font-size: 14px; font-weight: 600; cursor: pointer;
+      font-family: inherit; transition: all 0.2s;
+    }
+    .test-btn:hover { background: #15803d; transform: translateY(-1px); box-shadow: 0 4px 12px rgba(22,163,74,0.3); }
+    .test-btn:disabled { opacity: 0.6; cursor: not-allowed; transform: none; box-shadow: none; }
+    .test-result {
+      margin-top: 16px; padding: 14px 18px; border-radius: 8px; font-size: 14px;
+      font-weight: 600; display: none;
+    }
+    .test-result.show { display: block; animation: fadeUp 0.3s ease; }
+    .test-result.success { background: #dcfce7; color: #166534; border: 1px solid #86efac; }
+    .test-result.error { background: #fef2f2; color: #991b1b; border: 1px solid #fecaca; }
+    .test-result.loading { background: #f0f4ff; color: #3b52cc; border: 1px solid #c7d7fe; }
 
     @media (max-width: 1100px) {
       .main-inner { max-width: 720px; }
@@ -463,6 +541,11 @@
       .step-dot { width: 36px; height: 36px; left: 20px; font-size: 14px; border-radius: 8px; }
       .provider-detail-title { font-size: 26px; flex-direction: column; align-items: flex-start; gap: 12px; }
       .info-table td:first-child { width: 80px; }
+      .config-block, .test-block { padding: 20px 16px; }
+      .config-input-group { flex-wrap: wrap; }
+      .config-input-label { min-width: 100%; margin-bottom: 4px; }
+      .config-copy-btn { flex-shrink: 0; }
+      .config-action-row { flex-direction: column; }
     }
   </style>
 </head>
@@ -605,6 +688,56 @@
               <div class="step-title">在 ChatGenius 中粘贴</div>
               <div class="step-desc">打开设置页 → 选择服务商 → 粘贴 Key → 点击「测试连接」。</div>
             </div>
+          </div>
+
+          <div class="config-block">
+            <div class="config-block-title">💡 推荐：通用配置方案</div>
+            <div class="config-block-desc">确定好 API URL、API Key 和模型名称后，使用自定义方式配置最方便。以下配置适用于大多数兼容 OpenAI 格式的服务商。</div>
+            <div class="config-input-group">
+              <span class="config-input-label">API URL</span>
+              <input type="text" class="config-input" id="configUrl" value="https://api.deepseek.com/v1" placeholder="https://api.deepseek.com/v1">
+              <button class="config-copy-btn" data-copy-target="configUrl">复制</button>
+            </div>
+            <div class="config-input-group">
+              <span class="config-input-label">API Key</span>
+              <input type="text" class="config-input" id="configKey" value="" placeholder="sk-xxxxxxxxxxxxxxxx">
+              <button class="config-copy-btn" data-copy-target="configKey">复制</button>
+            </div>
+            <div class="config-input-group">
+              <span class="config-input-label">模型名称</span>
+              <input type="text" class="config-input" id="configModel" value="deepseek-chat" placeholder="deepseek-chat">
+              <button class="config-copy-btn" data-copy-target="configModel">复制</button>
+            </div>
+            <div class="config-action-row">
+              <button class="config-btn-primary" id="copyAllConfig">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg>
+                一键复制全部配置
+              </button>
+            </div>
+          </div>
+
+          <div class="test-block">
+            <div class="test-block-title">🧪 测试连接</div>
+            <div class="test-block-desc">配置完成后，点击测试按钮验证 API 是否可用。将发送一条简单的测试消息进行验证。</div>
+            <div class="config-input-group">
+              <span class="config-input-label">API URL</span>
+              <input type="text" class="config-input" id="testUrl" value="https://api.deepseek.com/v1" placeholder="https://api.deepseek.com/v1">
+            </div>
+            <div class="config-input-group">
+              <span class="config-input-label">API Key</span>
+              <input type="text" class="config-input" id="testKey" value="" placeholder="sk-xxxxxxxxxxxxxxxx">
+            </div>
+            <div class="config-input-group">
+              <span class="config-input-label">模型名称</span>
+              <input type="text" class="config-input" id="testModel" value="deepseek-chat" placeholder="deepseek-chat">
+            </div>
+            <div class="config-action-row">
+              <button class="test-btn" id="testConnectionBtn">
+                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg>
+                测试连接
+              </button>
+            </div>
+            <div class="test-result" id="testResult"></div>
           </div>
 
           <div class="section-divider"></div>
@@ -884,7 +1017,7 @@
         <!-- ==================== DeepSeek ==================== -->
         <div class="doc-section" id="section-deepseek">
           <div class="provider-detail-title">
-            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);">DS</div>
+            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#6366f1,#8b5cf6);"><img src="https://www.google.com/s2/favicons?domain=deepseek.com&sz=128" alt="DeepSeek" onerror="this.style.display='none'"></div>
             DeepSeek
           </div>
           <p class="doc-subtitle">国产高性能大模型，性价比极高，国内直连。V3 多项评测优异，R1 推理模型业界领先。</p>
@@ -934,7 +1067,7 @@
         <!-- ==================== 通义千问 ==================== -->
         <div class="doc-section" id="section-tongyi">
           <div class="provider-detail-title">
-            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#f97316,#ef4444);">通义</div>
+            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#f97316,#ef4444);"><img src="https://www.google.com/s2/favicons?domain=aliyun.com&sz=128" alt="通义千问" onerror="this.style.display='none'"></div>
             通义千问
           </div>
           <p class="doc-subtitle">阿里巴巴旗下大语言模型，中文理解能力强，企业级稳定性。</p>
@@ -984,7 +1117,7 @@
         <!-- ==================== 智谱 AI ==================== -->
         <div class="doc-section" id="section-zhipu">
           <div class="provider-detail-title">
-            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#0ea5e9,#06b6d4);">智谱</div>
+            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#0ea5e9,#06b6d4);"><img src="https://www.google.com/s2/favicons?domain=bigmodel.cn&sz=128" alt="智谱AI" onerror="this.style.display='none'"></div>
             智谱 AI
           </div>
           <p class="doc-subtitle">清华技术背景，GLM 系列模型在知识问答领域突出。</p>
@@ -1033,7 +1166,7 @@
         <!-- ==================== 百度文心 ==================== -->
         <div class="doc-section" id="section-wenxin">
           <div class="provider-detail-title">
-            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);">文心</div>
+            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#3b82f6,#1d4ed8);"><img src="https://www.google.com/s2/favicons?domain=baidu.com&sz=128" alt="百度文心" onerror="this.style.display='none'"></div>
             百度文心
           </div>
           <p class="doc-subtitle">百度旗下大语言模型，中文写作和营销文案能力突出。</p>
@@ -1083,7 +1216,7 @@
         <!-- ==================== 火山引擎 ==================== -->
         <div class="doc-section" id="section-volcengine">
           <div class="provider-detail-title">
-            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#ef4444,#dc2626);">火山</div>
+            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#ef4444,#dc2626);"><img src="https://www.google.com/s2/favicons?domain=volcengine.com&sz=128" alt="火山引擎" onerror="this.style.display='none'"></div>
             火山引擎
           </div>
           <p class="doc-subtitle">字节跳动云平台，Doubao 系列模型价格极低，适合大规模调用。</p>
@@ -1132,7 +1265,7 @@
         <!-- ==================== Moonshot ==================== -->
         <div class="doc-section" id="section-moonshot">
           <div class="provider-detail-title">
-            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);">M</div>
+            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#8b5cf6,#6d28d9);"><img src="https://www.google.com/s2/favicons?domain=moonshot.cn&sz=128" alt="Moonshot" onerror="this.style.display='none'"></div>
             Moonshot
           </div>
           <p class="doc-subtitle">月之暗面旗下模型，以超长上下文窗口著称，适合长文档处理。</p>
@@ -1182,7 +1315,7 @@
         <!-- ==================== OpenAI ==================== -->
         <div class="doc-section" id="section-openai">
           <div class="provider-detail-title">
-            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#22c55e,#16a34a);">AI</div>
+            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#22c55e,#16a34a);"><img src="https://www.google.com/s2/favicons?domain=openai.com&sz=128" alt="OpenAI" onerror="this.style.display='none'"></div>
             OpenAI
           </div>
           <p class="doc-subtitle">全球领先，GPT 系列各评测持续领先。需要海外网络环境。</p>
@@ -1232,7 +1365,7 @@
         <!-- ==================== Anthropic ==================== -->
         <div class="doc-section" id="section-anthropic">
           <div class="provider-detail-title">
-            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#d97706,#b45309);">An</div>
+            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#d97706,#b45309);"><img src="https://www.google.com/s2/favicons?domain=anthropic.com&sz=128" alt="Anthropic" onerror="this.style.display='none'"></div>
             Anthropic
           </div>
           <p class="doc-subtitle">Claude 系列模型，长文本理解和分析写作表现卓越。需要海外网络。</p>
@@ -1282,7 +1415,7 @@
         <!-- ==================== Google Gemini ==================== -->
         <div class="doc-section" id="section-gemini">
           <div class="provider-detail-title">
-            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#06b6d4,#0891b2);">G</div>
+            <div class="provider-detail-logo" style="background:linear-gradient(135deg,#06b6d4,#0891b2);"><img src="https://www.google.com/s2/favicons?domain=google.com&sz=128" alt="Google Gemini" onerror="this.style.display='none'"></div>
             Google Gemini
           </div>
           <p class="doc-subtitle">Google 多模态大模型，支持文本、图片、代码。部分模型有免费额度。</p>
@@ -1473,6 +1606,115 @@
       }).catch(function() {});
     });
   });
+
+  document.querySelectorAll('.config-copy-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var targetId = btn.getAttribute('data-copy-target');
+      var input = document.getElementById(targetId);
+      if (!input) return;
+      var text = input.value || input.placeholder;
+      navigator.clipboard.writeText(text).then(function() {
+        btn.textContent = '已复制';
+        btn.classList.add('copied');
+        setTimeout(function() { btn.textContent = '复制'; btn.classList.remove('copied'); }, 2000);
+      }).catch(function() {});
+    });
+  });
+
+  var copyAllBtn = document.getElementById('copyAllConfig');
+  if (copyAllBtn) {
+    copyAllBtn.addEventListener('click', function() {
+      var url = document.getElementById('configUrl').value || 'https://api.deepseek.com/v1';
+      var key = document.getElementById('configKey').value || 'sk-xxxxxxxxxxxxxxxx';
+      var model = document.getElementById('configModel').value || 'deepseek-chat';
+      var allConfig = 'API URL: ' + url + '\nAPI Key: ' + key + '\n模型名称: ' + model;
+      navigator.clipboard.writeText(allConfig).then(function() {
+        copyAllBtn.textContent = '已复制全部配置！';
+        copyAllBtn.classList.add('copied');
+        setTimeout(function() {
+          copyAllBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"/><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"/></svg> 一键复制全部配置';
+          copyAllBtn.classList.remove('copied');
+        }, 2000);
+      }).catch(function() {});
+    });
+  }
+
+  var configUrl = document.getElementById('configUrl');
+  var configKey = document.getElementById('configKey');
+  var configModel = document.getElementById('configModel');
+  var testUrl = document.getElementById('testUrl');
+  var testKey = document.getElementById('testKey');
+  var testModel = document.getElementById('testModel');
+
+  function syncConfigToTest() {
+    if (testUrl) testUrl.value = configUrl.value;
+    if (testKey) testKey.value = configKey.value;
+    if (testModel) testModel.value = configModel.value;
+  }
+
+  if (configUrl) configUrl.addEventListener('change', syncConfigToTest);
+  if (configKey) configKey.addEventListener('change', syncConfigToTest);
+  if (configModel) configModel.addEventListener('change', syncConfigToTest);
+
+  var testBtn = document.getElementById('testConnectionBtn');
+  var testResult = document.getElementById('testResult');
+
+  if (testBtn) {
+    testBtn.addEventListener('click', function() {
+      var url = testUrl.value.replace(/\/+$/, '');
+      var key = testKey.value.trim();
+      var model = testModel.value.trim();
+
+      if (!url || !key || !model) {
+        testResult.className = 'test-result show error';
+        testResult.textContent = '✗ 请填写完整的 API URL、API Key 和模型名称';
+        return;
+      }
+
+      testBtn.disabled = true;
+      testBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" style="animation:spin 1s linear infinite"><path d="M21 12a9 9 0 1 1-6.219-8.56"/></svg> 测试中...';
+      testResult.className = 'test-result show loading';
+      testResult.textContent = '正在连接 API...';
+
+      var apiUrl = url + '/chat/completions';
+
+      fetch(apiUrl, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': 'Bearer ' + key
+        },
+        body: JSON.stringify({
+          model: model,
+          messages: [{ role: 'user', content: 'Hi' }],
+          max_tokens: 5
+        })
+      })
+      .then(function(response) {
+        if (response.ok) {
+          return response.json().then(function() {
+            testResult.className = 'test-result show success';
+            testResult.textContent = '✓ API 连接成功！配置正确，可以开始使用。';
+          });
+        } else {
+          return response.text().then(function(text) {
+            var msg = '';
+            try { msg = JSON.parse(text).error.message; } catch(e) { msg = text; }
+            testResult.className = 'test-result show error';
+            testResult.textContent = '✗ 连接失败（HTTP ' + response.status + '）：' + (msg || '请检查配置');
+          });
+        }
+      })
+      .catch(function(err) {
+        testResult.className = 'test-result show error';
+        testResult.textContent = '✗ 连接失败，请检查配置。错误：' + err.message;
+      })
+      .finally(function() {
+        testBtn.disabled = false;
+        testBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"/><polyline points="22 4 12 14.01 9 11.01"/></svg> 测试连接';
+      });
+    });
+  }
 </script>
 </body>
 </html>
