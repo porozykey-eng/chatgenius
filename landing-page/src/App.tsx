@@ -2090,25 +2090,18 @@ function App() {
     sessionStorage.setItem('lastDownloadTime', Date.now().toString())
 
     try {
-      // 5. 用 fetch + blob 下载：fetch 完成后立即同步触发下载，响应更快
-      //    82KB 文件极小，blob 内存开销可忽略；比 <a> 标签原生下载条显示更快
-      const t0 = performance.now()
-      const response = await fetch(`/extension.zip?t=${Date.now()}`)
-      if (!response.ok) throw new Error(`HTTP ${response.status}`)
-      const blob = await response.blob()
-      const t1 = performance.now()
-      console.log(`[Download] fetch 完成: ${Math.round(t1 - t0)}ms, ${Math.round(blob.size / 1024)}KB`)
-
-      const url = window.URL.createObjectURL(blob)
+      // 5. 用 <a download target=_blank> 触发下载，浏览器原生处理最快
+      //    target=_blank 在新标签页打开，主页面 UI 不被阻塞；download 属性指定文件名
+      //    服务端已设 Content-Disposition: attachment，新标签会立即触发下载后自动关闭
       const link = document.createElement('a')
-      link.href = url
+      link.href = `/extension.zip?t=${Date.now()}`
       link.download = 'ChatGenius-AI-Extension.zip'
+      link.target = '_blank'
+      link.rel = 'noopener'
       link.style.display = 'none'
       document.body.appendChild(link)
       link.click()
       document.body.removeChild(link)
-      // 延迟释放 blob URL，确保下载已启动
-      setTimeout(() => window.URL.revokeObjectURL(url), 1000)
     } catch (error) {
       console.error('[Download] 下载失败:', error)
       // 回退方案：直接跳转下载
