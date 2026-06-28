@@ -169,6 +169,7 @@ app.get('/extension.zip', (req, res) => {
   res.setHeader('Cache-Control', 'no-store, no-cache, must-revalidate, max-age=0');
   res.setHeader('Pragma', 'no-cache');
   res.setHeader('Expires', '0');
+  res.setHeader('Content-Disposition', 'attachment; filename="ChatGenius-AI-Extension.zip"');
   res.sendFile(landingPath + '/extension.zip');
 });
 

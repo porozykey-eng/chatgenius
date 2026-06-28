@@ -2067,49 +2067,37 @@ function App() {
     if (isDownloading) {
       return
     }
-    
-    // 2. 下载频率限制检查
+
+    // 2. 下载频率限制检查（用 sessionStorage，关闭标签即清除，不跨会话残留）
     if (downloadCount >= MAX_DOWNLOADS_PER_SESSION) {
-      alert('您已达到本次访问的最大下载次数，请稍后再试')
+      console.warn('[Download] 已达本次会话下载上限')
       return
     }
-    
-    // 3. 简单的人机验证（检查点击间隔）
-    const lastDownloadTime = localStorage.getItem('lastDownloadTime')
+
+    // 3. 冷却时间检查（sessionStorage，避免 localStorage 跨会话残留导致首次点击无反应）
+    const lastDownloadTime = sessionStorage.getItem('lastDownloadTime')
     if (lastDownloadTime) {
       const timeDiff = Date.now() - parseInt(lastDownloadTime)
       if (timeDiff < DOWNLOAD_COOLDOWN) {
-        const remainingTime = Math.ceil((DOWNLOAD_COOLDOWN - timeDiff) / 1000)
-        alert(`下载过于频繁，请 ${remainingTime} 秒后再试`)
+        console.warn(`[Download] 冷却中，剩余 ${Math.ceil((DOWNLOAD_COOLDOWN - timeDiff) / 1000)}s`)
         return
       }
     }
-    
+
     // 4. 设置下载状态和记录
     setIsDownloading(true)
     setDownloadCount(prev => prev + 1)
-    localStorage.setItem('lastDownloadTime', Date.now().toString())
-    
+    sessionStorage.setItem('lastDownloadTime', Date.now().toString())
+
     try {
-      // 5. 使用 fetch 下载文件（加时间戳参数绕过浏览器缓存，确保下载最新版本）
-      const response = await fetch(`/extension.zip?t=${Date.now()}`)
-      if (!response.ok) throw new Error('下载失败')
-      
-      const blob = await response.blob()
-      const url = window.URL.createObjectURL(blob)
-      const link = document.createElement('a')
-      link.href = url
-      link.download = 'ChatGenius-AI-Extension.zip'
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-      
+      // 5. 使用 window.location 直接触发下载（浏览器原生，比 fetch+blob 更可靠）
+      //    服务端已对 /extension.zip 设置 no-store + download 触发，无需前端处理 blob
+      window.location.href = `/extension.zip?t=${Date.now()}`
     } catch (error) {
-      alert('下载失败，请重试')
+      console.error('[Download] 下载失败:', error)
     } finally {
-      // 6. 重置下载状态
-      setIsDownloading(false)
+      // 6. 短暂延迟后重置状态（让浏览器开始下载后再恢复按钮）
+      setTimeout(() => setIsDownloading(false), 1500)
     }
   }
 
