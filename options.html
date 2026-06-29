@@ -21,20 +21,20 @@
        极简工业风：克制、专业、高效
        ================================ */
 
-    /* Light Theme (默认) — 纯净白底 + 品牌紫强调（与首页统一） */
+    /* Light Theme (默认) — 柔和暖白 + 品牌紫强调 + 微阴影层次 */
     :root[data-theme="light"] {
       color-scheme: light;
       --bg-primary: #ffffff;
-      --bg-secondary: #fafafa;
+      --bg-secondary: #f8fafc;
       --bg-elevated: #ffffff;
-      --bg-hover: #f5f5f5;
-      --bg-active: #ededed;
-      --bg-tertiary: #f5f5f5;
+      --bg-hover: #f1f5f9;
+      --bg-active: #e2e8f0;
+      --bg-tertiary: #f1f5f9;
 
-      --text-primary: #111827;
-      --text-secondary: #6b7280;
-      --text-tertiary: #9ca3af;
-      --text-placeholder: #d1d5db;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-tertiary: #94a3b8;
+      --text-placeholder: #cbd5e1;
 
       /* 强调色：品牌紫 violet-600（与首页统一） */
       --accent: #7c3aed;
@@ -44,23 +44,23 @@
       --accent-text: #7c3aed;
 
       --success: #16a34a;
-      --success-bg: rgba(22, 163, 74, 0.06);
+      --success-bg: rgba(22, 163, 74, 0.08);
       --success-text: #15803d;
       --warning: #d97706;
-      --warning-bg: rgba(217, 119, 6, 0.06);
+      --warning-bg: rgba(217, 119, 6, 0.08);
       --error: #dc2626;
-      --error-bg: rgba(220, 38, 38, 0.05);
+      --error-bg: rgba(220, 38, 38, 0.06);
 
-      /* 无阴影设计：用细边框区隔 */
-      --shadow-xs: none;
-      --shadow-sm: none;
-      --shadow-md: none;
-      --shadow-lg: none;
-      --shadow-xl: none;
+      /* 微阴影：增加卡片层次感（替代纯无阴影） */
+      --shadow-xs: 0 1px 2px rgba(15, 23, 42, 0.04);
+      --shadow-sm: 0 1px 3px rgba(15, 23, 42, 0.05), 0 1px 2px rgba(15, 23, 42, 0.03);
+      --shadow-md: 0 4px 6px -1px rgba(15, 23, 42, 0.06), 0 2px 4px -2px rgba(15, 23, 42, 0.04);
+      --shadow-lg: 0 10px 15px -3px rgba(15, 23, 42, 0.08), 0 4px 6px -4px rgba(15, 23, 42, 0.05);
+      --shadow-xl: 0 20px 25px -5px rgba(15, 23, 42, 0.1), 0 8px 10px -6px rgba(15, 23, 42, 0.06);
 
-      --border-subtle: #f3f4f6;
-      --border-default: #e5e7eb;
-      --border-strong: #d1d5db;
+      --border-subtle: #f1f5f9;
+      --border-default: #e2e8f0;
+      --border-strong: #cbd5e1;
       --border-focus: #7c3aed;
 
       /* 小圆角：工业风锐利感 */
@@ -92,45 +92,46 @@
       --spacing-16: 64px;
     }
 
-    /* Dark Theme — 深邃沉静黑 + 品牌紫强调（与首页统一） */
+    /* Dark Theme — 深邃石墨灰 + 品牌紫强调 + 微光层次 */
     :root[data-theme="dark"] {
       color-scheme: dark;
-      --bg-primary: #0a0a0a;
-      --bg-secondary: #171717;
-      --bg-elevated: #171717;
-      --bg-hover: #1f1f1f;
-      --bg-active: #262626;
-      --bg-tertiary: #1f1f1f;
+      --bg-primary: #0f0f11;
+      --bg-secondary: #18181b;
+      --bg-elevated: #1c1c1f;
+      --bg-hover: #27272a;
+      --bg-active: #3f3f46;
+      --bg-tertiary: #27272a;
 
-      --text-primary: #fafafa;
-      --text-secondary: #a3a3a3;
-      --text-tertiary: #737373;
-      --text-placeholder: #404040;
+      --text-primary: #f4f4f5;
+      --text-secondary: #a1a1aa;
+      --text-tertiary: #71717a;
+      --text-placeholder: #52525b;
 
       /* 强调色：品牌紫 violet-500（暗色模式略亮以保证对比度） */
       --accent: #8b5cf6;
       --accent-hover: #a78bfa;
-      --accent-light: #1f1a2e;
-      --accent-glow: rgba(139, 92, 246, 0.18);
+      --accent-light: #1e1530;
+      --accent-glow: rgba(139, 92, 246, 0.2);
       --accent-text: #a78bfa;
 
       --success: #22c55e;
-      --success-bg: rgba(34, 197, 94, 0.08);
+      --success-bg: rgba(34, 197, 94, 0.1);
       --success-text: #4ade80;
       --warning: #f59e0b;
-      --warning-bg: rgba(245, 158, 11, 0.08);
+      --warning-bg: rgba(245, 158, 11, 0.1);
       --error: #ef4444;
-      --error-bg: rgba(239, 68, 68, 0.08);
+      --error-bg: rgba(239, 68, 68, 0.1);
 
-      --shadow-xs: none;
-      --shadow-sm: none;
-      --shadow-md: none;
-      --shadow-lg: none;
-      --shadow-xl: none;
+      /* 微阴影：暗色模式用更深的黑增加层次 */
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.4), 0 2px 4px -2px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.5), 0 4px 6px -4px rgba(0, 0, 0, 0.3);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.6), 0 8px 10px -6px rgba(0, 0, 0, 0.4);
 
-      --border-subtle: #1f1f1f;
-      --border-default: #262626;
-      --border-strong: #404040;
+      --border-subtle: #27272a;
+      --border-default: #3f3f46;
+      --border-strong: #52525b;
       --border-focus: #8b5cf6;
 
       --radius-sm: 4px;
@@ -535,11 +536,13 @@
     }
     
     .panel {
-      background: var(--bg-secondary);
+      background: var(--bg-elevated);
       border-radius: var(--radius-lg);
       padding: var(--spacing-6);
       border: 1px solid var(--border-default);
-      transition: border-color var(--duration-base) var(--ease-out);
+      box-shadow: var(--shadow-sm);
+      transition: border-color var(--duration-base) var(--ease-out),
+                  box-shadow var(--duration-base) var(--ease-out);
       animation: slideUp 0.2s var(--ease-out) backwards;
     }
 
@@ -549,6 +552,7 @@
 
     .panel:hover {
       border-color: var(--border-strong);
+      box-shadow: var(--shadow-md);
     }
     
     .panel-header {
@@ -607,15 +611,18 @@
       margin-bottom: var(--spacing-4);
     }
 
+    /* ================================
+       Persona Card (重新设计)
+       ================================ */
     .persona-card {
-      background: var(--bg-secondary);
-      border-radius: var(--radius-md);
+      background: var(--bg-elevated);
+      border-radius: var(--radius-lg);
       padding: var(--spacing-5);
       border: 1px solid var(--border-default);
+      box-shadow: var(--shadow-xs);
       transition: all var(--duration-base) var(--ease-out);
       position: relative;
       overflow: hidden;
-      cursor: pointer;
     }
 
     .persona-card::before {
@@ -631,55 +638,44 @@
 
     .persona-card:hover {
       border-color: var(--border-strong);
+      box-shadow: var(--shadow-sm);
     }
 
     .persona-card.active {
       border-color: var(--accent);
+      background: var(--accent-light);
     }
 
     .persona-card.active::before {
       background: var(--accent);
     }
 
-    .persona-card.active::after {
-      content: '✓';
-      position: absolute;
-      top: 12px;
-      right: 12px;
-      width: 18px;
-      height: 18px;
-      background: var(--accent);
-      color: var(--bg-primary);
-      border-radius: 50%;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 11px;
-      font-weight: bold;
-      z-index: 1;
-    }
-
     .persona-card-header {
       display: flex;
-      align-items: flex-start;
+      align-items: center;
       gap: var(--spacing-3);
       margin-bottom: var(--spacing-4);
     }
 
     .persona-avatar {
-      width: 40px;
-      height: 40px;
-      border-radius: var(--radius-sm);
-      background: var(--accent-light);
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-md);
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
       display: flex;
       align-items: center;
       justify-content: center;
-      font-size: 20px;
+      font-size: 18px;
+      font-weight: 700;
+      color: #fff;
       flex-shrink: 0;
+      text-transform: uppercase;
+      letter-spacing: -0.02em;
     }
 
-    .persona-card.active .persona-avatar {
-      background: var(--accent);
+    .persona-card:not(.active) .persona-avatar {
+      background: var(--bg-hover);
+      color: var(--text-secondary);
     }
 
     .persona-info {
@@ -692,12 +688,17 @@
       background: transparent;
       border: 1px solid transparent;
       border-radius: var(--radius-sm);
-      padding: 4px 8px;
-      font-size: 14px;
+      padding: 5px 10px;
+      font-size: 15px;
       font-weight: 600;
       color: var(--text-primary);
-      margin-bottom: var(--spacing-2);
+      margin-bottom: 4px;
       transition: all var(--duration-fast) var(--ease-out);
+    }
+
+    .persona-name-input::placeholder {
+      color: var(--text-placeholder);
+      font-weight: 500;
     }
 
     .persona-name-input:hover {
@@ -712,24 +713,28 @@
       outline: none;
     }
 
-    .persona-status {
+    .persona-badge {
       display: inline-flex;
       align-items: center;
-      gap: var(--spacing-1);
-      font-size: 12px;
-      font-weight: 500;
-      padding: var(--spacing-1) var(--spacing-2);
+      gap: 5px;
+      font-size: 11px;
+      font-weight: 600;
+      padding: 2px 8px;
       border-radius: var(--radius-full);
-      background: var(--bg-secondary);
-      color: var(--text-tertiary);
+      letter-spacing: 0.01em;
     }
 
-    .persona-status.active {
+    .persona-badge.active {
       background: var(--success-bg);
       color: var(--success);
     }
 
-    .persona-status-dot {
+    .persona-badge.inactive {
+      background: var(--bg-hover);
+      color: var(--text-tertiary);
+    }
+
+    .persona-badge-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
@@ -743,8 +748,8 @@
     }
 
     .persona-action-btn {
-      width: 32px;
-      height: 32px;
+      width: 34px;
+      height: 34px;
       border-radius: var(--radius-sm);
       border: none;
       background: transparent;
@@ -766,20 +771,34 @@
       color: var(--error);
     }
 
+    .persona-prompt-label {
+      display: block;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 6px;
+    }
+
     .persona-prompt-input {
       width: 100%;
-      min-height: 100px;
+      min-height: 110px;
       background: var(--bg-primary);
       border: 1px solid var(--border-default);
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-md);
       padding: var(--spacing-3);
       font-size: 13px;
-      line-height: 1.6;
+      line-height: 1.7;
       color: var(--text-primary);
       resize: vertical;
       font-family: var(--font-sans);
       transition: border-color var(--duration-fast) var(--ease-out),
                   box-shadow var(--duration-fast) var(--ease-out);
+    }
+
+    .persona-prompt-input::placeholder {
+      color: var(--text-placeholder);
     }
 
     .persona-prompt-input:focus {
@@ -789,8 +808,8 @@
     }
 
     .persona-prompt-collapsed {
-      max-height: 60px !important;
-      min-height: 60px !important;
+      max-height: 54px !important;
+      min-height: 54px !important;
       overflow-y: auto !important;
       transition: max-height 0.3s ease, min-height 0.3s ease;
     }
@@ -798,8 +817,8 @@
     .persona-toggle-btn {
       width: 100%;
       margin-top: var(--spacing-3);
-      height: 34px;
-      border-radius: var(--radius-sm);
+      height: 36px;
+      border-radius: var(--radius-md);
       border: 1px solid var(--border-default);
       background: transparent;
       color: var(--text-secondary);
@@ -807,18 +826,22 @@
       font-weight: 500;
       cursor: pointer;
       transition: all var(--duration-fast) var(--ease-out);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
     }
 
     .persona-toggle-btn:hover {
       background: var(--bg-hover);
-      border-color: var(--border-strong);
-      color: var(--text-primary);
+      border-color: var(--accent);
+      color: var(--accent);
     }
 
     .persona-card.active .persona-toggle-btn {
-      background: var(--accent);
-      border-color: var(--accent);
-      color: #ffffff;
+      background: var(--success-bg);
+      border-color: var(--success);
+      color: var(--success);
       cursor: default;
     }
 
@@ -1913,63 +1936,79 @@
     }
 
     /* ================================
-       API Guide Bar
+       API Status Bar (顶部 API 状态提醒)
        ================================ */
-    .api-guide-bar {
+    .api-status-bar {
       display: flex;
       align-items: center;
+      justify-content: space-between;
       gap: var(--spacing-3);
-      padding: var(--spacing-3) var(--spacing-4);
-      background: var(--bg-hover);
-      color: var(--text-secondary);
+      padding: 10px 14px;
       border: 1px solid var(--border-default);
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-md);
       font-size: 13px;
-      font-weight: 500;
       margin-bottom: var(--spacing-4);
+      transition: background var(--duration-base) var(--ease-out),
+                  border-color var(--duration-base) var(--ease-out);
     }
-
-    .api-guide-bar > span {
-      flex: 1;
+    .api-status-bar.unconfigured {
+      background: var(--warning-bg);
+      border-color: var(--warning);
     }
-
-    .api-guide-close {
-      background: none;
-      border: none;
-      color: var(--text-tertiary);
-      font-size: 20px;
-      line-height: 1;
-      cursor: pointer;
-      padding: 0 var(--spacing-1);
-      opacity: 0.7;
-      transition: opacity var(--duration-fast) var(--ease-out);
+    .api-status-bar.connected {
+      background: var(--success-bg);
+      border-color: var(--success);
     }
-
-    .api-guide-close:hover {
-      opacity: 1;
+    .api-status-bar.failed {
+      background: var(--error-bg);
+      border-color: var(--error);
     }
-
-    .api-guide-content {
+    .api-status-bar.testing {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+    .api-status-left {
       display: flex;
       align-items: center;
-      gap: var(--spacing-3);
+      gap: 8px;
       flex: 1;
+      min-width: 0;
     }
-
-    .api-guide-steps {
-      display: flex;
-      gap: var(--spacing-2);
-      margin: 0 var(--spacing-2);
+    .api-status-indicator {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+      background: var(--text-tertiary);
     }
-
-    .api-guide-step {
+    .api-status-bar.unconfigured .api-status-indicator { background: var(--warning); }
+    .api-status-bar.connected .api-status-indicator { background: var(--success); }
+    .api-status-bar.failed .api-status-indicator { background: var(--error); }
+    .api-status-bar.testing .api-status-indicator {
       background: var(--accent);
-      color: var(--bg-primary);
-      padding: 2px 8px;
-      border-radius: 4px;
-      font-size: 11px;
+      animation: pulse 1s ease-in-out infinite;
+    }
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.4; transform: scale(0.8); }
+    }
+    .api-status-icon {
+      display: flex;
+      align-items: center;
+      flex-shrink: 0;
+    }
+    .api-status-icon svg { width: 16px; height: 16px; }
+    .api-status-text {
+      color: var(--text-primary);
       font-weight: 500;
+      overflow: hidden;
+      text-overflow: ellipsis;
       white-space: nowrap;
+    }
+    .api-status-actions {
+      display: flex;
+      gap: 8px;
+      flex-shrink: 0;
     }
 
     /* ================================
@@ -2130,28 +2169,17 @@
       </button>
     </header>
 
-    <!-- API Guide Bar - 智能引导 -->
-    <div id="apiGuideBar" class="api-guide-bar" style="display:none;">
-      <!-- 完整引导（未配置任何内容） -->
-      <div id="apiGuideComplete" class="api-guide-content" style="display:none;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--accent);"><path d="M4.5 16.5c-1.5 1.26-2 5-2 5s3.74-.5 5-2c.71-.84.7-2.13-.09-2.91a2.18 2.18 0 0 0-2.91-.09z"></path><path d="m12 15-3-3a22 22 0 0 1 2-3.95A12.88 12.88 0 0 1 22 2c0 2.72-.78 7.5-6 11a22.35 22.35 0 0 1-4 2z"></path><path d="M9 12H4s.55-3.03 2-4c1.62-1.08 5 0 5 0"></path><path d="M12 15v5s3.03-.55 4-2c1.08-1.62 0-5 0-5"></path></svg>
-        <span>3步快速配置 API，开始使用 AI 助手</span>
-        <div class="api-guide-steps">
-          <span class="api-guide-step">1. 选择服务商</span>
-          <span class="api-guide-step">2. 获取 API Key</span>
-          <span class="api-guide-step">3. 测试连接</span>
-        </div>
-        <a href="https://chat.sopie.cc/guide/" target="_blank" class="btn btn-sm btn-secondary" style="margin-right:8px;">查看详细指南</a>
-        <button class="btn btn-sm btn-primary" id="apiGuideConfigBtn">立即配置</button>
+    <!-- API Status Bar - 顶部 API 状态提醒 -->
+    <div id="apiStatusBar" class="api-status-bar" style="display:none;">
+      <div class="api-status-left">
+        <span class="api-status-indicator" id="apiStatusIndicator"></span>
+        <span class="api-status-icon" id="apiStatusIcon"></span>
+        <span class="api-status-text" id="apiStatusText"></span>
       </div>
-      <!-- Key引导（有服务商但无Key） -->
-      <div id="apiGuideKeyOnly" class="api-guide-content" style="display:none;">
-        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="flex-shrink:0;color:var(--accent);"><path d="M21 2l-2 2m-7.61 7.61a5.5 5.5 0 1 1-7.778 7.778 5.5 5.5 0 0 1 7.777-7.777zm0 0L15.5 7.5m0 0l3 3L22 7l-3-3m-3.5 3.5L19 4"></path></svg>
-        <span>请获取 API Key 以激活 AI 功能</span>
-        <a id="apiGuideGetKeyLink" href="#" target="_blank" class="btn btn-sm btn-secondary" style="margin-right:8px;">获取 API Key</a>
-        <button class="btn btn-sm btn-primary" id="apiGuideConfigBtn2">去配置</button>
+      <div class="api-status-actions">
+        <button class="btn btn-sm btn-secondary" id="apiStatusTestBtn" style="display:none;">测试连接</button>
+        <button class="btn btn-sm btn-primary" id="apiStatusConfigBtn" style="display:none;">去配置</button>
       </div>
-      <button class="api-guide-close" id="apiGuideCloseBtn">×</button>
     </div>
 
     <!-- Free Tier Notification Bar -->
@@ -2240,8 +2268,8 @@
           </div>
           <p class="panel-desc" data-i18n="previewHelp">测试当前激活角色的回复效果。</p>
           <div class="preview-chat" id="previewChat">
-            <div class="chat-bubble user">你好，我想咨询一下产品详情。</div>
-            <div class="chat-bubble ai">您好！很高兴为您服务。请问您想了解哪款产品的具体信息呢？</div>
+            <div class="chat-bubble user">Hi, I'd like to ask about your product details.</div>
+            <div class="chat-bubble ai">Hello! I'd be happy to help. Which product would you like to know more about?</div>
           </div>
           <div class="preview-input-row">
             <input type="text" class="form-input" id="previewInput" data-i18n="previewPlaceholder" placeholder="输入测试消息...">

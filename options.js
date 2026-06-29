@@ -480,8 +480,8 @@ document.addEventListener('DOMContentLoaded', () => {
       updateSaveStatus('saved');
     });
 
-    // Re-check API guide bar visibility after save
-    checkApiGuideBar();
+    // 刷新 API 状态栏
+    updateApiStatusBar();
   }
 
   function updateSaveStatus(status) {
@@ -661,7 +661,7 @@ document.addEventListener('DOMContentLoaded', () => {
     if (personas.length === 0) {
       const empty = document.createElement('div');
       empty.className = 'empty-state';
-      empty.innerHTML = '<div class="empty-state-icon">🤖</div>' +
+      empty.innerHTML = '<div class="empty-state-icon"><svg width="48" height="48" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg></div>' +
         '<div class="empty-state-title">' +
         escapeHtml(I18N[currentLang].emptyPersonas || 'No custom personas yet') + '</div>' +
         '<div class="empty-state-desc">' + escapeHtml(I18N[currentLang].personaHelp || 'Click "Add Persona" to create one.') + '</div>';
@@ -699,9 +699,15 @@ document.addEventListener('DOMContentLoaded', () => {
       const header = document.createElement('div');
       header.className = 'persona-card-header';
 
+      // 头像：取名字首字母，无名字时用默认图标
       const avatar = document.createElement('div');
       avatar.className = 'persona-avatar';
-      avatar.textContent = '🤖';
+      const firstChar = (persona.name || '').trim().charAt(0);
+      if (firstChar) {
+        avatar.textContent = firstChar;
+      } else {
+        avatar.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+      }
 
       const info = document.createElement('div');
       info.className = 'persona-info';
@@ -711,18 +717,27 @@ document.addEventListener('DOMContentLoaded', () => {
       nameInput.className = 'persona-name-input';
       nameInput.placeholder = I18N[currentLang].personaNamePlaceholder || 'Persona Name';
       nameInput.value = persona.name;
-      nameInput.addEventListener('input', (e) => { personas[index].name = e.target.value; scheduleSave(); });
+      nameInput.addEventListener('input', (e) => {
+        personas[index].name = e.target.value;
+        // 实时更新头像首字母
+        const ch = e.target.value.trim().charAt(0);
+        if (ch) {
+          avatar.textContent = ch;
+        } else {
+          avatar.innerHTML = '<svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path><circle cx="12" cy="7" r="4"></circle></svg>';
+        }
+        scheduleSave();
+      });
       nameInput.addEventListener('click', (e) => e.stopPropagation());
       nameInput.addEventListener('mousedown', (e) => e.stopPropagation());
 
-      const status = document.createElement('div');
-      status.className = 'persona-status' + (isActive ? ' active' : '');
-      status.innerHTML = '<span class="persona-status-dot"></span><span>' +
-        escapeHtml(isActive ? (I18N[currentLang].statusActive || 'Active') : (I18N[currentLang].statusInactive || 'Inactive')) +
-        '</span>';
+      const badge = document.createElement('div');
+      badge.className = 'persona-badge ' + (isActive ? 'active' : 'inactive');
+      badge.innerHTML = '<span class="persona-badge-dot"></span>' +
+        escapeHtml(isActive ? (I18N[currentLang].statusActive || 'Active') : (I18N[currentLang].statusInactive || 'Inactive'));
 
       info.appendChild(nameInput);
-      info.appendChild(status);
+      info.appendChild(badge);
 
       const actions = document.createElement('div');
       actions.className = 'persona-actions';
@@ -794,7 +809,11 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       });
 
-      // Prompt textarea
+      // Prompt label + textarea
+      const promptLabel = document.createElement('label');
+      promptLabel.className = 'persona-prompt-label';
+      promptLabel.textContent = currentLang === 'zh' ? '系统提示词' : 'System Prompt';
+
       const promptInput = document.createElement('textarea');
       promptInput.className = 'persona-prompt-input' + (!isActive ? ' persona-prompt-collapsed' : '');
       promptInput.placeholder = I18N[currentLang].personaPromptPlaceholder || 'System Prompt...';
@@ -806,10 +825,11 @@ document.addEventListener('DOMContentLoaded', () => {
       // Toggle active button
       const toggleBtn = document.createElement('button');
       toggleBtn.className = 'persona-toggle-btn';
-      toggleBtn.textContent = isActive
-        ? (I18N[currentLang].toggleActive || 'Active')
-        : (I18N[currentLang].toggleSetAsActive || 'Set as Active');
-      if (!isActive) {
+      if (isActive) {
+        toggleBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg> ' +
+          (I18N[currentLang].statusActive || 'Active');
+      } else {
+        toggleBtn.textContent = I18N[currentLang].toggleSetAsActive || 'Set as Active';
         toggleBtn.addEventListener('click', (e) => {
           e.stopPropagation();
           activePersonaId = persona.id;
@@ -819,6 +839,7 @@ document.addEventListener('DOMContentLoaded', () => {
       }
 
       card.appendChild(header);
+      card.appendChild(promptLabel);
       card.appendChild(promptInput);
       card.appendChild(toggleBtn);
       personaList.appendChild(card);
@@ -969,7 +990,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         const response = await Promise.race([
           chrome.runtime.sendMessage({ action: 'previewChat', messages: historyMessages }),
-          new Promise((_, reject) => setTimeout(() => reject(new Error('请求超时，请重试')), 35000))
+          new Promise((_, reject) => setTimeout(() => reject(new Error('Request timed out, please try again')), 35000))
         ]);
 
         if (response?.success && response.reply) {
@@ -2144,56 +2165,99 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ---- API Guide Bar - 智能引导 ----
-  function checkApiGuideBar() {
-    const bar = document.getElementById('apiGuideBar');
-    if (!bar) return;
-    if (sessionStorage.getItem('apiGuideClosed') === 'true') {
-      bar.style.display = 'none';
-      return;
+  // ---- API Status Bar - 顶部 API 状态提醒 ----
+  const apiStatusBar = document.getElementById('apiStatusBar');
+  const apiStatusIconEl = document.getElementById('apiStatusIcon');
+  const apiStatusTextEl = document.getElementById('apiStatusText');
+  const apiStatusTestBtn = document.getElementById('apiStatusTestBtn');
+  const apiStatusConfigBtn = document.getElementById('apiStatusConfigBtn');
+
+  // SVG 图标定义
+  const STATUS_ICONS = {
+    warning: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>',
+    success: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round"><polyline points="20 6 9 17 4 12"></polyline></svg>',
+    error: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"></circle><line x1="15" y1="9" x2="9" y2="15"></line><line x1="9" y1="9" x2="15" y2="15"></line></svg>',
+    testing: '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="12" y1="2" x2="12" y2="6"></line><line x1="12" y1="18" x2="12" y2="22"></line><line x1="4.93" y1="4.93" x2="7.76" y2="7.76"></line><line x1="16.24" y1="16.24" x2="19.07" y2="19.07"></line><line x1="2" y1="12" x2="6" y2="12"></line><line x1="18" y1="12" x2="22" y2="12"></line><line x1="4.93" y1="19.07" x2="7.76" y2="16.24"></line><line x1="16.24" y1="7.76" x2="19.07" y2="4.93"></line></svg>'
+  };
+
+  function setApiStatusBarState(state, text, iconKey) {
+    if (!apiStatusBar) return;
+    apiStatusBar.className = 'api-status-bar ' + state;
+    apiStatusBar.style.display = 'flex';
+    if (apiStatusTextEl && text) apiStatusTextEl.textContent = text;
+    if (apiStatusIconEl && iconKey && STATUS_ICONS[iconKey]) {
+      apiStatusIconEl.innerHTML = STATUS_ICONS[iconKey];
     }
-    
+    // 按钮显示控制
+    if (apiStatusTestBtn) {
+      apiStatusTestBtn.style.display = (state === 'connected' || state === 'failed') ? '' : 'none';
+    }
+    if (apiStatusConfigBtn) {
+      apiStatusConfigBtn.style.display = (state === 'unconfigured') ? '' : 'none';
+    }
+  }
+
+  function updateApiStatusBar() {
+    if (!apiStatusBar) return;
     chrome.storage.local.get(['apiKey', 'apiProvider'], (data) => {
       if (chrome.runtime.lastError) return;
-      
       const hasApiKey = !!data.apiKey;
       const hasProvider = !!data.apiProvider;
-      
-      const completeGuide = document.getElementById('apiGuideComplete');
-      const keyOnlyGuide = document.getElementById('apiGuideKeyOnly');
-      
-      if (!hasApiKey && !hasProvider) {
-        // 状态1：完全未配置 - 显示完整引导
-        bar.style.display = 'flex';
-        if (completeGuide) completeGuide.style.display = 'flex';
-        if (keyOnlyGuide) keyOnlyGuide.style.display = 'none';
-      } else if (hasProvider && !hasApiKey) {
-        // 状态2：有服务商但无Key - 显示Key获取引导
-        bar.style.display = 'flex';
-        if (completeGuide) completeGuide.style.display = 'none';
-        if (keyOnlyGuide) {
-          keyOnlyGuide.style.display = 'flex';
-          // 更新获取Key链接
-          const getKeyLink = document.getElementById('apiGuideGetKeyLink');
-          if (getKeyLink) {
-            const provider = (modelsConfig?.providers || []).find(p => p.id === data.apiProvider);
-            if (provider?.getKey) {
-              getKeyLink.href = provider.getKey;
-              getKeyLink.textContent = `获取 ${provider.name} API Key`;
-            }
-          }
-        }
+      const zh = currentLang === 'zh';
+
+      if (!hasApiKey) {
+        // 未配置：显示警告 + 去配置按钮
+        const msg = (!hasProvider)
+          ? (zh ? '尚未配置大模型 API，点击右侧按钮开始' : 'AI model API not configured. Click to set up.')
+          : (zh ? '已选择服务商，请填入 API Key' : 'Provider selected. Please enter your API Key.');
+        setApiStatusBarState('unconfigured', msg, 'warning');
+        // 图标颜色随状态
+        if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--warning)';
       } else {
-        // 状态3：已配置完成 - 隐藏引导
-        bar.style.display = 'none';
+        // 已配置：读取上次连接状态，显示并自动测试
+        chrome.storage.sync.get(['connectionValid'], (syncData) => {
+          const provider = (modelsConfig?.providers || []).find(p => p.id === data.apiProvider);
+          const providerName = provider?.name || (data.apiProvider || 'API');
+          if (syncData.connectionValid === true) {
+            setApiStatusBarState('connected',
+              (zh ? '已连接 · ' : 'Connected · ') + providerName,
+              'success');
+            if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--success)';
+          } else if (syncData.connectionValid === false) {
+            setApiStatusBarState('failed',
+              (zh ? '连接失败 · ' : 'Connection failed · ') + providerName,
+              'error');
+            if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--error)';
+          } else {
+            // 已配置但未测试过，显示"已配置"待测试状态
+            setApiStatusBarState('testing',
+              (zh ? '已配置 · ' : 'Configured · ') + providerName + (zh ? ' · 点击测试' : ' · Click to test'),
+              'testing');
+            if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--accent)';
+          }
+        });
       }
     });
   }
 
-  // 配置按钮事件（完整引导）
-  const apiGuideConfigBtn = document.getElementById('apiGuideConfigBtn');
-  if (apiGuideConfigBtn) {
-    apiGuideConfigBtn.addEventListener('click', () => {
+  // 测试连接按钮（状态栏）
+  if (apiStatusTestBtn) {
+    apiStatusTestBtn.addEventListener('click', async () => {
+      const data = await chrome.storage.local.get(['apiKey', 'apiProvider']);
+      if (!data.apiKey) return;
+      const zh = currentLang === 'zh';
+      setApiStatusBarState('testing', zh ? '正在测试连接...' : 'Testing connection...', 'testing');
+      if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--accent)';
+      // 复用 doTestConnection，传空 resultEl（状态栏自己更新）
+      await doTestConnection(data.apiProvider || 'openai', data.apiKey, null, null);
+      // 测试完成后刷新状态栏
+      updateApiStatusBar();
+    });
+  }
+
+  // 去配置按钮（状态栏）
+  if (apiStatusConfigBtn) {
+    apiStatusConfigBtn.addEventListener('click', () => {
       switchTab('settings');
       const apiPanel = document.getElementById('apiPanel');
       if (apiPanel) {
@@ -2202,30 +2266,6 @@ document.addEventListener('DOMContentLoaded', () => {
         const panel = apiProvider.closest('.panel');
         if (panel) panel.scrollIntoView({ behavior: 'smooth' });
       }
-    });
-  }
-  
-  // 配置按钮事件（Key引导）
-  const apiGuideConfigBtn2 = document.getElementById('apiGuideConfigBtn2');
-  if (apiGuideConfigBtn2) {
-    apiGuideConfigBtn2.addEventListener('click', () => {
-      switchTab('settings');
-      const apiPanel = document.getElementById('apiPanel');
-      if (apiPanel) {
-        apiPanel.scrollIntoView({ behavior: 'smooth' });
-      } else if (apiProvider) {
-        const panel = apiProvider.closest('.panel');
-        if (panel) panel.scrollIntoView({ behavior: 'smooth' });
-      }
-    });
-  }
-
-  const apiGuideCloseBtn = document.getElementById('apiGuideCloseBtn');
-  if (apiGuideCloseBtn) {
-    apiGuideCloseBtn.addEventListener('click', () => {
-      const bar = document.getElementById('apiGuideBar');
-      if (bar) bar.style.display = 'none';
-      sessionStorage.setItem('apiGuideClosed', 'true');
     });
   }
 
@@ -2471,7 +2511,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
         // Check onboarding and API guide bar
         checkOnboarding();
-        checkApiGuideBar();
+        updateApiStatusBar();
       });
     });
   }
