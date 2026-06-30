@@ -16,6 +16,11 @@ const invoiceRouter = require('./invoice');
 const app = express();
 const PORT = process.env.PORT || 3010;
 
+// Trust proxy：Nginx 反向代理时需要开启，否则 express-rate-limit 会因
+// X-Forwarded-For 头未识别而抛 ERR_ERL_UNEXPECTED_X_FORWARDED_FOR 错误，
+// 导致激活码验证等限流接口返回 500
+app.set('trust proxy', 1);
+
 // Security headers
 app.use(helmet({
   contentSecurityPolicy: {
