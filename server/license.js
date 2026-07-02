@@ -504,22 +504,23 @@ router.get('/status/:code', async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT expires_at, is_active FROM licenses WHERE activation_code = ? AND is_active = TRUE',
+      'SELECT type, expires_at, is_active FROM licenses WHERE activation_code = ? AND is_active = TRUE',
       [code.toUpperCase()]
     );
 
     if (rows.length === 0) {
-      return res.json({ valid: false });
+      return res.json({ valid: false, active: false });
     }
 
     const license = rows[0];
     const isExpired = license.expires_at && new Date(license.expires_at) < new Date();
 
     if (isExpired) {
-      return res.json({ valid: false });
+      return res.json({ valid: false, active: false });
     }
 
-    res.json({ valid: true });
+    // 返回兼容前端的字段：active/type 供 background.js 使用，不返回 expiresAt 等敏感细节
+    res.json({ valid: true, active: true, type: license.type });
   } catch (error) {
     console.error('License status error:', error);
     res.status(500).json({ valid: false });
