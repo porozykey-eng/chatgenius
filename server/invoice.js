@@ -58,7 +58,7 @@ router.post('/submit', invoiceLimiter, async (req, res) => {
   try {
     // 验证订单存在且已完成
     const [orders] = await pool.query(
-      'SELECT order_no, price, status, activation_code FROM orders WHERE order_no = ?',
+      'SELECT order_no, price, status, activation_code, type FROM orders WHERE order_no = ?',
       [orderNo]
     );
 
@@ -72,11 +72,24 @@ router.post('/submit', invoiceLimiter, async (req, res) => {
     }
 
     // P1-2 修复：校验订单归属（激活码必须属于此订单，通过 orders.activation_code 关联）
+    // C2 修复：在线支付自动完成的订单 activation_code 可能为 NULL，需反查 licenses 表
     if (!licenseCode) {
       return res.status(400).json({ success: false, error: '请提供激活码以验证订单归属' });
     }
-    if (!order.activation_code || String(order.activation_code).toUpperCase() !== String(licenseCode).toUpperCase()) {
-      return res.status(403).json({ success: false, error: '激活码与订单不匹配' });
+    if (order.activation_code) {
+      // 有 activation_code：直接比对
+      if (String(order.activation_code).toUpperCase() !== String(licenseCode).toUpperCase()) {
+        return res.status(403).json({ success: false, error: '激活码与订单不匹配' });
+      }
+    } else {
+      // 无 activation_code（在线支付自动完成的订单）：反查 licenses 表
+      const [licenseRows] = await pool.query(
+        'SELECT id FROM licenses WHERE activation_code = ? AND type = ?',
+        [String(licenseCode).toUpperCase(), order.type]
+      );
+      if (licenseRows.length === 0) {
+        return res.status(403).json({ success: false, error: '激活码与订单不匹配' });
+      }
     }
 
     // 检查是否已有发票申请（pending 或 issued 状态不可重复申请）

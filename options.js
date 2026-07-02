@@ -1831,9 +1831,9 @@ document.addEventListener('DOMContentLoaded', () => {
         const result = await response.json();
 
         if (result.valid && result.type) {
-          // 激活成功
+          // 激活成功（licenseCode 写入 local，licenseType/activatedAt 写入 sync）
+          await chrome.storage.local.set({ licenseCode: code.toUpperCase() });
           await chrome.storage.sync.set({
-            licenseCode: code.toUpperCase(),
             licenseType: result.type,
             activatedAt: result.activatedAt || new Date().toISOString()
           });
@@ -1882,8 +1882,8 @@ document.addEventListener('DOMContentLoaded', () => {
         });
         const result = await response.json();
         if (result.valid && result.type) {
+          await chrome.storage.local.set({ licenseCode: code });
           await chrome.storage.sync.set({
-            licenseCode: code,
             licenseType: result.type,
             activatedAt: result.activatedAt || new Date().toISOString()
           });
@@ -1996,31 +1996,34 @@ document.addEventListener('DOMContentLoaded', () => {
           showToast(I18N[currentLang].exportSettingsNone || 'No settings to export', true);
           return;
         }
-        const settings = {
-          personas: data.personas || [],
-          activePersonaId: data.activePersonaId,
-          tone: data.tone,
-          replyLength: data.replyLength,
-          faqData: data.faqData || [],
-          btnTheme: data.btnTheme,
-          shortcut: data.shortcut,
-          apiProvider: data.apiProvider,
-          licenseType: data.licenseType,
-          licenseCode: data.licenseCode,
-          activatedAt: data.activatedAt,
-          exportDate: new Date().toISOString()
-        };
-        const dataStr = JSON.stringify(settings, null, 2);
-        const blob = new Blob([dataStr], { type: 'application/json' });
-        const url = URL.createObjectURL(blob);
-        const a = document.createElement('a');
-        a.href = url;
-        a.download = 'chatgenius-settings-' + new Date().toISOString().slice(0, 10) + '.json';
-        document.body.appendChild(a);
-        a.click();
-        document.body.removeChild(a);
-        URL.revokeObjectURL(url);
-        showToast(I18N[currentLang].exportSettingsSuccess || 'Settings exported!');
+        // licenseCode 已迁移至 local，需单独读取
+        chrome.storage.local.get(['licenseCode'], (localData) => {
+          const settings = {
+            personas: data.personas || [],
+            activePersonaId: data.activePersonaId,
+            tone: data.tone,
+            replyLength: data.replyLength,
+            faqData: data.faqData || [],
+            btnTheme: data.btnTheme,
+            shortcut: data.shortcut,
+            apiProvider: data.apiProvider,
+            licenseType: data.licenseType,
+            licenseCode: localData.licenseCode,
+            activatedAt: data.activatedAt,
+            exportDate: new Date().toISOString()
+          };
+          const dataStr = JSON.stringify(settings, null, 2);
+          const blob = new Blob([dataStr], { type: 'application/json' });
+          const url = URL.createObjectURL(blob);
+          const a = document.createElement('a');
+          a.href = url;
+          a.download = 'chatgenius-settings-' + new Date().toISOString().slice(0, 10) + '.json';
+          document.body.appendChild(a);
+          a.click();
+          document.body.removeChild(a);
+          URL.revokeObjectURL(url);
+          showToast(I18N[currentLang].exportSettingsSuccess || 'Settings exported!');
+        });
       });
     });
   }
@@ -2075,7 +2078,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
           const settingsToSave = {};
-          const keys = ['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'btnTheme', 'shortcut', 'apiProvider', 'licenseType', 'licenseCode', 'activatedAt'];
+          const keys = ['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'btnTheme', 'shortcut', 'apiProvider', 'licenseType', 'activatedAt'];
           keys.forEach(key => { if (imported[key] !== undefined) settingsToSave[key] = imported[key]; });
 
           chrome.storage.sync.set(settingsToSave, () => {
@@ -2084,13 +2087,21 @@ document.addEventListener('DOMContentLoaded', () => {
               showToast(I18N[currentLang].importSettingsFail || 'Failed to import settings', true);
               return;
             }
-            // Reload state
-            if (imported.personas) { personas = imported.personas; activePersonaId = imported.activePersonaId || (personas.length > 0 ? personas[0].id : null); }
-            if (imported.faqData) faqData = imported.faqData;
-            renderPersonas();
-            renderFaq();
-            updateLicenseDisplay(imported.licenseType || 'free');
-            showToast(I18N[currentLang].importSettingsSuccess || 'Settings imported successfully!');
+            // licenseCode 写入 local（与其他字段分离）
+            const finishImport = () => {
+              // Reload state
+              if (imported.personas) { personas = imported.personas; activePersonaId = imported.activePersonaId || (personas.length > 0 ? personas[0].id : null); }
+              if (imported.faqData) faqData = imported.faqData;
+              renderPersonas();
+              renderFaq();
+              updateLicenseDisplay(imported.licenseType || 'free');
+              showToast(I18N[currentLang].importSettingsSuccess || 'Settings imported successfully!');
+            };
+            if (imported.licenseCode !== undefined) {
+              chrome.storage.local.set({ licenseCode: imported.licenseCode }, finishImport);
+            } else {
+              finishImport();
+            }
           });
         } catch (err) {
           showToast(I18N[currentLang].importSettingsFail || 'Failed to import settings', true);
@@ -2160,6 +2171,24 @@ document.addEventListener('DOMContentLoaded', () => {
         } else if (syncData.apiKey && localData.apiKey) {
           // Local already has key, clean up sync
           chrome.storage.sync.remove('apiKey', () => {});
+        }
+      });
+    });
+  }
+
+  // ---- License Code Storage Migration (sync → local) ----
+  function migrateLicenseCodeToLocal() {
+    chrome.storage.sync.get(['licenseCode'], (syncData) => {
+      if (chrome.runtime.lastError) { console.error(chrome.runtime.lastError); return; }
+      if (!syncData.licenseCode) return;
+      chrome.storage.local.get(['licenseCode'], (localData) => {
+        if (chrome.runtime.lastError) { console.error(chrome.runtime.lastError); return; }
+        if (!localData.licenseCode) {
+          chrome.storage.local.set({ licenseCode: syncData.licenseCode }, () => {
+            chrome.storage.sync.remove('licenseCode', () => {});
+          });
+        } else {
+          chrome.storage.sync.remove('licenseCode', () => {});
         }
       });
     });
@@ -2409,7 +2438,8 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- Load Settings ----
   function loadSettings() {
     migrateApiKeyToLocal();
-    chrome.storage.local.get({ apiKey: '', apiProvider: 'openai' }, (localData) => {
+    migrateLicenseCodeToLocal();
+    chrome.storage.local.get({ apiKey: '', apiProvider: 'openai', licenseCode: null }, (localData) => {
       chrome.storage.sync.get({
         personas: [{ id: 'default', name: '默认角色 (Default)', prompt: '你是一个专业的AI助手。请根据用户的消息上下文进行专业、礼貌的回复。' }],
         activePersonaId: 'default',
@@ -2420,7 +2450,6 @@ document.addEventListener('DOMContentLoaded', () => {
         btnTheme: 'gradient',
         lang: 'zh',
         licenseType: 'free',
-        licenseCode: null,
         activatedAt: null,
         onboardingCompleted: false
       }, (data) => {
@@ -2491,8 +2520,8 @@ document.addEventListener('DOMContentLoaded', () => {
         renderFaq();
         updateLicenseDisplay(data.licenseType || 'free');
 
-        // Check existing license
-        if (data.licenseCode && data.licenseType && data.licenseType !== 'free') {
+        // Check existing license（licenseCode 从 local 读取）
+        if (localData.licenseCode && data.licenseType && data.licenseType !== 'free') {
           if (activationSuccess) activationSuccess.style.display = 'flex';
           if (licenseTypeDisplay) {
             const typeNames = { 'lifetime': I18N[currentLang].statProLifetime, 'year': I18N[currentLang].statProYear };

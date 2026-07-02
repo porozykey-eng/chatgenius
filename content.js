@@ -1804,8 +1804,23 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (regenBtn && request.disabled) {
       regenBtn.style.display = 'none';
     }
-    sendResponse({ success: true });
+  } else if (request.action === 'LICENSE_REVOKED') {
+    // 强制下线：移除 AI 按钮与快捷菜单
+    const btn = document.getElementById('wa-ai-reply-btn');
+    if (btn) btn.remove();
+    const menu = document.getElementById('wa-ai-quick-menu');
+    if (menu) menu.remove();
+    const regenBtn = document.getElementById('wa-ai-regen-btn');
+    if (regenBtn) regenBtn.remove();
+    // 显示提示
+    if (typeof showToast === 'function') {
+      showToast('您的许可证已被撤销，如需继续使用请重新激活。', 'error');
+    } else {
+      console.warn('License revoked: AI button removed.');
+    }
   }
+  sendResponse({ success: true });
+  return true;
 });
 
 // Check initial AI button disabled state

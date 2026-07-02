@@ -81,11 +81,12 @@ function generateAuthorization(method, url, body) {
 // 解密微信支付回调数据
 function decryptGCM(ciphertext, nonce, associatedData) {
   const key = Buffer.from(WECHAT_API_V3_KEY, 'utf8');
+  const ciphertextBuf = Buffer.from(ciphertext, 'base64'); // 先转 Buffer
   const decipher = crypto.createDecipheriv('aes-256-gcm', key, nonce);
-  decipher.setAuthTag(Buffer.from(ciphertext.slice(-16), 'base64'));
+  decipher.setAuthTag(ciphertextBuf.slice(-16));           // Buffer 切片 = 16 字节
   decipher.setAAD(Buffer.from(associatedData));
 
-  const decrypted = decipher.update(Buffer.from(ciphertext.slice(0, -16), 'base64'), 'binary', 'utf8');
+  const decrypted = decipher.update(ciphertextBuf.slice(0, -16), 'binary', 'utf8');
   decipher.final('utf8');
   return JSON.parse(decrypted);
 }

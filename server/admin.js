@@ -1052,16 +1052,17 @@ router.post('/orders/:orderNo/complete', requireAdmin, async (req, res) => {
   const { orderNo } = req.params;
 
   try {
-    const [rows] = await pool.query('SELECT id, status, type FROM orders WHERE order_no = ?', [orderNo]);
+    const [rows] = await pool.query('SELECT id, status, type, activation_code FROM orders WHERE order_no = ?', [orderNo]);
 
     if (rows.length === 0) {
       return res.status(404).json({ error: '订单不存在' });
     }
 
     const order = rows[0];
-    if (order.status === 'completed') {
-      return res.status(400).json({ error: '订单已完成' });
+    if (order.status === 'completed' && order.activation_code) {
+      return res.status(400).json({ error: '订单已完成且已分配激活码' });
     }
+    // 若已完成但无 activation_code，继续执行生成逻辑
 
     const type = order.type || 'year';
     const prefixMap = { year: 'YEAR', lifetime: 'PRO' };
