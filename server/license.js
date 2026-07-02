@@ -354,6 +354,11 @@ router.post('/heartbeat', async (req, res) => {
     return res.status(401).json({ valid: false, reason: sigResult.reason });
   }
 
+  // P1-7 修复：记录心跳 IP，异常多 IP 告警
+  const clientIp = req.ip || (req.connection && req.connection.remoteAddress);
+  console.log(`License heartbeat: code=${normalizedCode}, ip=${clientIp}, fingerprint=${fingerprint}`);
+  // TODO: 可扩展为对比历史 IP，短期内多 IP 切换则告警
+
   let conn;
   try {
     conn = await pool.getConnection();
@@ -425,9 +430,14 @@ router.post('/heartbeat', async (req, res) => {
   }
 });
 
+// P1-4 修复：/validate 无签名时更严格限流（3 次/分钟），有签名则校验签名
+const validateNoSigStore = new Map(); // key: ip -> { count, resetAt }
+const VALIDATE_NO_SIG_LIMIT = 3;
+const VALIDATE_NO_SIG_WINDOW = 60 * 1000;
+
 // 验证激活码 (read-only check，landing-page 只验证不消耗，不需要指纹)
 router.post('/validate', async (req, res) => {
-  const { code } = req.body;
+  const { code, timestamp, signature } = req.body;
 
   if (!code) {
     return res.status(400).json({ valid: false, error: '激活码不能为空' });
@@ -437,10 +447,32 @@ router.post('/validate', async (req, res) => {
     return res.status(400).json({ valid: false, error: '激活码格式无效' });
   }
 
+  const normalizedCode = code.toUpperCase();
+
+  // P1-4 修复：信息预言机防护 —— 有签名则校验，无签名则降级为更严格限流（3 次/分钟）
+  if (timestamp && signature) {
+    const sigResult = verifySignature(normalizedCode, timestamp, signature);
+    if (!sigResult.valid) {
+      return res.status(401).json({ valid: false, error: '签名校验失败' });
+    }
+  } else {
+    const ip = req.ip || (req.connection && req.connection.remoteAddress) || 'unknown';
+    const now = Date.now();
+    let entry = validateNoSigStore.get(ip);
+    if (!entry || entry.resetAt < now) {
+      entry = { count: 0, resetAt: now + VALIDATE_NO_SIG_WINDOW };
+      validateNoSigStore.set(ip, entry);
+    }
+    entry.count++;
+    if (entry.count > VALIDATE_NO_SIG_LIMIT) {
+      return res.status(429).json({ valid: false, error: '请求过于频繁，请提供签名或稍后再试' });
+    }
+  }
+
   try {
     const [rows] = await pool.query(
       'SELECT code, type, status FROM activation_codes WHERE code = ?',
-      [code.toUpperCase()]
+      [normalizedCode]
     );
 
     if (rows.length === 0) {
@@ -462,38 +494,35 @@ router.post('/validate', async (req, res) => {
 });
 
 // 查询许可证状态
+// P1-4 修复：信息最小化，不返回 type/expiresAt 等细节，只返回 valid 布尔值
 router.get('/status/:code', async (req, res) => {
   const { code } = req.params;
 
   if (!code || typeof code !== 'string' || code.length > 64 || !/^[A-Za-z0-9\-]+$/.test(code)) {
-    return res.status(400).json({ error: '无效的许可证编码' });
+    return res.status(400).json({ valid: false });
   }
 
   try {
     const [rows] = await pool.query(
-      'SELECT type, expires_at, is_active FROM licenses WHERE activation_code = ? AND is_active = TRUE',
+      'SELECT expires_at, is_active FROM licenses WHERE activation_code = ? AND is_active = TRUE',
       [code.toUpperCase()]
     );
 
     if (rows.length === 0) {
-      return res.json({ active: false });
+      return res.json({ valid: false });
     }
 
     const license = rows[0];
     const isExpired = license.expires_at && new Date(license.expires_at) < new Date();
 
     if (isExpired) {
-      return res.json({ active: false, reason: '许可证已过期' });
+      return res.json({ valid: false });
     }
 
-    res.json({
-      active: true,
-      type: license.type,
-      expiresAt: license.expires_at ? new Date(license.expires_at).toISOString() : null,
-    });
+    res.json({ valid: true });
   } catch (error) {
     console.error('License status error:', error);
-    res.status(500).json({ error: '查询失败' });
+    res.status(500).json({ valid: false });
   }
 });
 

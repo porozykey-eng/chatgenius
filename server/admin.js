@@ -102,10 +102,24 @@ function generateSecureCode(prefix) {
   return `${prefix}-${segment(4)}-${segment(4)}-${segment(4)}`;
 }
 
+// P2-4 修复：generateBatchId 改用 crypto.randomBytes 替代 Math.random()
 function generateBatchId() {
   const date = new Date().toISOString().slice(0, 10).replace(/-/g, '');
-  const seq = Math.floor(Math.random() * 1000).toString().padStart(3, '0');
+  const bytes = crypto.randomBytes(8);
+  const seq = bytes.toString('hex').toUpperCase();
   return `BATCH-${date}-${seq}`;
+}
+
+// P2-1 修复：CSV 公式注入防护
+function csvEscape(value) {
+  const s = String(value == null ? '' : value);
+  // 转义内部双引号
+  const escaped = s.replace(/"/g, '""');
+  // 公式注入防护：以 = + - @ | % 开头则前缀单引号
+  if (/^[=+\-@|%]/.test(escaped)) {
+    return "'" + escaped;
+  }
+  return escaped;
 }
 
 // ==================== Session Management ====================
@@ -147,14 +161,18 @@ async function requireAdmin(req, res, next) {
   try {
     const decoded = jwt.verify(token, JWT_SECRET);
     if (decoded.sessionId) {
+      // P2-6 修复：session 过期校验（创建超过 7 天视为过期）
       const [sessions] = await pool.query(
-        'SELECT revoked FROM admin_sessions WHERE session_id = ?',
+        'SELECT revoked FROM admin_sessions WHERE session_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)',
         [decoded.sessionId]
       );
       if (sessions.length === 0 || sessions[0].revoked) {
         return res.status(401).json({ error: '会话已失效，请重新登录' });
       }
-      updateSessionActivity(decoded.sessionId);
+      // P3-5 修复：捕获 updateSessionActivity 的 Promise rejection
+      updateSessionActivity(decoded.sessionId).catch(err =>
+        console.warn('updateSessionActivity failed:', err.message)
+      );
     }
     req.adminSession = decoded;
     next();
@@ -337,17 +355,24 @@ router.post('/change-password', requireAdmin, async (req, res) => {
 
   const newHash = await bcrypt.hash(newPassword, 12);
 
-  // Update .env file（原子写入：先写临时文件再 rename，避免写入中断导致配置损坏）
-  const envPath = path.resolve(__dirname, '.env');
-  const tmpPath = envPath + '.tmp';
-  let envContent = fs.readFileSync(envPath, 'utf8');
-  if (envContent.includes('ADMIN_PASSWORD=')) {
-    envContent = envContent.replace(/ADMIN_PASSWORD=.*/, `ADMIN_PASSWORD=${newHash}`);
-  } else {
-    envContent += `\nADMIN_PASSWORD=${newHash}\n`;
+  // P2-5 修复：.env 写入失败不影响密码更新（密码 hash 已在内存中更新）
+  let envWriteWarning = null;
+  try {
+    // Update .env file（原子写入：先写临时文件再 rename，避免写入中断导致配置损坏）
+    const envPath = path.resolve(__dirname, '.env');
+    const tmpPath = envPath + '.tmp';
+    let envContent = fs.readFileSync(envPath, 'utf8');
+    if (envContent.includes('ADMIN_PASSWORD=')) {
+      envContent = envContent.replace(/ADMIN_PASSWORD=.*/, `ADMIN_PASSWORD=${newHash}`);
+    } else {
+      envContent += `\nADMIN_PASSWORD=${newHash}\n`;
+    }
+    fs.writeFileSync(tmpPath, envContent, 'utf8');
+    fs.renameSync(tmpPath, envPath);
+  } catch (envError) {
+    console.warn('Failed to update .env file (password updated in memory only):', envError.message);
+    envWriteWarning = '注意：.env 文件更新失败，密码仅在内存中生效，重启服务后需重新设置。';
   }
-  fs.writeFileSync(tmpPath, envContent, 'utf8');
-  fs.renameSync(tmpPath, envPath);
 
   // Update in-memory variable so current session works immediately
   ADMIN_PASSWORD_HASH = newHash;
@@ -356,7 +381,7 @@ router.post('/change-password', requireAdmin, async (req, res) => {
 
   res.json({
     success: true,
-    message: '密码已修改成功，无需重启服务'
+    message: envWriteWarning || '密码已修改成功，无需重启服务'
   });
 });
 
@@ -602,7 +627,7 @@ router.get('/audit-logs/export', requireAdmin, async (req, res) => {
     const header = '时间,操作,IP,User-Agent,方法,路径,详情\n';
     const rows = logs.map(log => {
       const time = log.created_at ? new Date(log.created_at).toLocaleString('zh-CN') : '';
-      return `"${time}","${log.action}","${log.admin_ip}","${log.user_agent || ''}","${log.method || ''}","${log.path || ''}","${log.details || ''}"`;
+      return `"${csvEscape(time)}","${csvEscape(log.action)}","${csvEscape(log.admin_ip)}","${csvEscape(log.user_agent || '')}","${csvEscape(log.method || '')}","${csvEscape(log.path || '')}","${csvEscape(log.details || '')}"`;
     }).join('\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -704,7 +729,7 @@ router.get('/codes/export', requireAdmin, async (req, res) => {
     const typeMap = { year: '年付', lifetime: '永久', free: '免费' };
     const statusMap = { unused: '未使用', used: '已使用' };
     const rows = codes.map(code => {
-      return `"${code.code}","${typeMap[code.type] || code.type}","${statusMap[code.status] || code.status}","${code.batch_id || ''}","${code.note || ''}","${code.created_at ? new Date(code.created_at).toLocaleString('zh-CN') : ''}","${code.used_at ? new Date(code.used_at).toLocaleString('zh-CN') : ''}"`;
+      return `"${csvEscape(code.code)}","${csvEscape(typeMap[code.type] || code.type)}","${csvEscape(statusMap[code.status] || code.status)}","${csvEscape(code.batch_id || '')}","${csvEscape(code.note || '')}","${csvEscape(code.created_at ? new Date(code.created_at).toLocaleString('zh-CN') : '')}","${csvEscape(code.used_at ? new Date(code.used_at).toLocaleString('zh-CN') : '')}"`;
     }).join('\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -1011,7 +1036,7 @@ router.get('/orders/export', requireAdmin, async (req, res) => {
     const statusNames = { pending: '待支付', completed: '已完成', refunded: '已退款', cancelled: '已取消' };
     const formatDate = (d) => d ? new Date(d).toLocaleString('zh-CN') : '';
     const rows = orders.map(o => {
-      return `"${o.order_no}","${o.plan || ''}","${o.price || ''}","${typeNames[o.type] || o.type}","${channelNames[o.channel] || o.channel}","${statusNames[o.status] || o.status}","${formatDate(o.created_at)}","${formatDate(o.completed_at)}","${o.user_email || ''}","${o.alipay_trade_no || ''}","${o.wechat_trade_no || ''}"`;
+      return `"${csvEscape(o.order_no)}","${csvEscape(o.plan || '')}","${csvEscape(o.price || '')}","${csvEscape(typeNames[o.type] || o.type)}","${csvEscape(channelNames[o.channel] || o.channel)}","${csvEscape(statusNames[o.status] || o.status)}","${csvEscape(formatDate(o.created_at))}","${csvEscape(formatDate(o.completed_at))}","${csvEscape(o.user_email || '')}","${csvEscape(o.alipay_trade_no || '')}","${csvEscape(o.wechat_trade_no || '')}"`;
     }).join('\n');
 
     res.setHeader('Content-Type', 'text/csv; charset=utf-8');
@@ -1090,7 +1115,12 @@ router.post('/orders/:orderNo/refund', requireAdmin, async (req, res) => {
     }
 
     await auditLog('order_refunded', req, `退款订单 ${orderNo}，原因: ${reason || '未提供'}`);
-    res.json({ success: true });
+    // P2-3 修复：退款逻辑提示 —— 当前仅改 DB 状态不调退款 API，需提示管理员手动发起实际退款
+    res.json({
+      success: true,
+      message: '订单已标记为已退款，许可证已撤销。请注意：需在支付宝/微信商户后台手动发起实际退款。',
+      orderNo: orderNo
+    });
   } catch (err) {
     console.error('Refund order error:', err);
     res.status(500).json({ error: '退款失败' });
@@ -1381,6 +1411,21 @@ router.put('/settings', requireAdmin, async (req, res) => {
 
   if (!key || value === undefined) {
     return res.status(400).json({ error: '请提供键和值' });
+  }
+
+  // P2-2 修复：设置键名白名单（与 admin.html 实际使用的键保持一致）
+  const ALLOWED_SETTING_KEYS = new Set([
+    'contact.qqGroup',
+    'contact.qqGroupLink',
+    'payment.productName',
+    'payment.priceYear',
+    'payment.priceLifetime',
+    'pricing.year',
+    'pricing.lifetime',
+    'security.ipWhitelist',
+  ]);
+  if (!ALLOWED_SETTING_KEYS.has(key)) {
+    return res.status(400).json({ error: '不支持的设置项: ' + key });
   }
 
   try {

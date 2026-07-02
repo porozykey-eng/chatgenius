@@ -248,6 +248,11 @@ router.post('/create-order', async (req, res) => {
 router.get('/query-order/:orderNo', async (req, res) => {
   const { orderNo } = req.params;
 
+  // P1-5 修复：orderNo 格式白名单校验，防止注入
+  if (!/^[A-Za-z0-9\-]{1,64}$/.test(orderNo)) {
+    return res.status(400).json({ success: false, error: '订单号格式无效' });
+  }
+
   try {
     const [rows] = await pool.query(
       'SELECT status FROM orders WHERE order_no = ?',

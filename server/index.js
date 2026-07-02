@@ -19,7 +19,8 @@ const PORT = process.env.PORT || 3010;
 // Trust proxy：Nginx 反向代理时需要开启，否则 express-rate-limit 会因
 // X-Forwarded-For 头未识别而抛 ERR_ERL_UNEXPECTED_X_FORWARDED_FOR 错误，
 // 导致激活码验证等限流接口返回 500
-app.set('trust proxy', 1);
+// P2-8 修复：精确配置可信代理（仅信任 loopback/linklocal/uniquelocal 地址）
+app.set('trust proxy', 'loopback, linklocal, uniquelocal');
 
 // Security headers
 app.use(helmet({

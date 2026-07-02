@@ -271,7 +271,12 @@ router.post('/create-order', async (req, res) => {
 // 查询订单状态
 router.get('/query-order/:orderNo', async (req, res) => {
   const { orderNo } = req.params;
-  
+
+  // P1-5 修复：orderNo 格式白名单校验，防止注入
+  if (!/^[A-Za-z0-9\-]{1,64}$/.test(orderNo)) {
+    return res.status(400).json({ success: false, error: '订单号格式无效' });
+  }
+
   try {
     const result = await alipaySdk.exec(
       'alipay.trade.query',
@@ -357,15 +362,15 @@ router.post('/notify', async (req, res) => {
         return res.send('success');
       }
       
-      // Verify amount（使用 parseFloat 数值比较，容差 0.01 元）
+      // P2-9 修复：金额精确匹配（浮点数用字符串比较避免精度问题）
       if (order.price && total_amount) {
-        const expected = parseFloat(order.price);
-        const received = parseFloat(total_amount);
-        if (isNaN(expected) || isNaN(received) || Math.abs(expected - received) > 0.01) {
+        const expectedStr = parseFloat(order.price).toFixed(2);
+        const receivedStr = parseFloat(total_amount).toFixed(2);
+        if (isNaN(parseFloat(expectedStr)) || isNaN(parseFloat(receivedStr)) || expectedStr !== receivedStr) {
           console.error('Alipay notify: amount mismatch!', {
             orderNo: out_trade_no,
-            expected: order.price,
-            received: total_amount
+            expected: expectedStr,
+            received: receivedStr
           });
           await conn.rollback();
           return res.send('success');
