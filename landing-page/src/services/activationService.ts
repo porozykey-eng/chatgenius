@@ -63,7 +63,8 @@ export const activationService = {
       const res = await fetch(`${API_BASE}${apiPath}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ orderNo, amount: cleanPrice, subject, type }),
+        // H4 修复：服务器依据 orderNo+type 从数据库读取价格与商品名，前端不再传 amount/subject（死代码）
+        body: JSON.stringify({ orderNo, type }),
       });
 
       const data = await res.json();
@@ -86,9 +87,11 @@ export const activationService = {
   },
 
   // 查询支付状态
-  async queryPaymentStatus(orderNo: string): Promise<{ paid: boolean; status?: string; error?: string }> {
+  // H5 修复：根据 channel 调用对应渠道端点，避免微信订单走支付宝端点导致查询失败
+  async queryPaymentStatus(orderNo: string, channel: 'alipay' | 'wechat' = 'alipay'): Promise<{ paid: boolean; status?: string; error?: string }> {
     try {
-      const res = await fetch(`${API_BASE}/alipay/query-order/${encodeURIComponent(orderNo)}`);
+      const endpoint = channel === 'wechat' ? '/wechat/query-order/' : '/alipay/query-order/';
+      const res = await fetch(`${API_BASE}${endpoint}${encodeURIComponent(orderNo)}`);
       const data = await res.json();
       return { paid: data.paid, status: data.status, error: data.error };
     } catch (err) {

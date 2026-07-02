@@ -171,6 +171,8 @@ function PaymentModal({
       setOrderNo(result.orderNo || '')
       if (result.orderNo) {
         sessionStorage.setItem('chatgenius_pending_order', result.orderNo)
+        // H5 同步：保存 channel 以便支付返回后轮询调用对应渠道端点
+        sessionStorage.setItem('chatgenius_pending_channel', channel)
       }
 
       if (channel === 'wechat' && result.codeUrl) {
@@ -2025,6 +2027,8 @@ function App() {
       setPaymentOrderNo(pendingOrder)
       setPaymentStatus('pending')
       sessionStorage.removeItem('chatgenius_pending_order')
+      // H5 同步：恢复 channel，默认 alipay；查询完毕清理
+      const pendingChannel = (sessionStorage.getItem('chatgenius_pending_channel') as 'alipay' | 'wechat') || 'alipay'
 
       // 轮询订单状态
       const checkPayment = async () => {
@@ -2033,7 +2037,7 @@ function App() {
 
         const poll = async () => {
           try {
-            const status = await activationService.queryPaymentStatus(pendingOrder)
+            const status = await activationService.queryPaymentStatus(pendingOrder, pendingChannel)
             if (status.paid) {
               setPaymentStatus('success')
               return

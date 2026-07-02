@@ -1050,18 +1050,15 @@ router.get('/orders/export', requireAdmin, async (req, res) => {
 
 router.post('/orders/:orderNo/complete', requireAdmin, async (req, res) => {
   const { orderNo } = req.params;
-
+  let conn;
   try {
-    const [rows] = await pool.query('SELECT id, status, type, activation_code FROM orders WHERE order_no = ?', [orderNo]);
-
-    if (rows.length === 0) {
-      return res.status(404).json({ error: '订单不存在' });
-    }
-
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    // H1 修复：FOR UPDATE 锁定订单行，INSERT activation_codes + UPDATE orders 在同一事务，避免产生孤立激活码
+    const [rows] = await conn.query('SELECT id, status, type, activation_code FROM orders WHERE order_no = ? FOR UPDATE', [orderNo]);
+    if (rows.length === 0) { await conn.rollback(); return res.status(404).json({ error: '订单不存在' }); }
     const order = rows[0];
-    if (order.status === 'completed' && order.activation_code) {
-      return res.status(400).json({ error: '订单已完成且已分配激活码' });
-    }
+    if (order.status === 'completed' && order.activation_code) { await conn.rollback(); return res.status(400).json({ error: '订单已完成且已分配激活码' }); }
     // 若已完成但无 activation_code，继续执行生成逻辑
 
     const type = order.type || 'year';
@@ -1069,21 +1066,25 @@ router.post('/orders/:orderNo/complete', requireAdmin, async (req, res) => {
     const prefix = prefixMap[type] || 'YEAR';
     const code = generateSecureCode(prefix);
 
-    await pool.query(
+    await conn.query(
       'INSERT INTO activation_codes (code, type, status, batch_id) VALUES (?, ?, ?, ?)',
       [code, type, 'unused', generateBatchId()]
     );
 
-    await pool.query(
+    await conn.query(
       'UPDATE orders SET status = ?, completed_at = ?, activation_code = ? WHERE id = ?',
       ['completed', new Date(), code, order.id]
     );
 
+    await conn.commit();
     await auditLog('order_completed', req, `手动完成订单 ${orderNo}，生成激活码 ${code}`);
     res.json({ success: true, activationCode: code });
   } catch (err) {
+    if (conn) await conn.rollback();
     console.error('Complete order error:', err);
     res.status(500).json({ error: '完成订单失败' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
@@ -1236,17 +1237,20 @@ router.post('/licenses/:id/reactivate', requireAdmin, async (req, res) => {
   const { id } = req.params;
 
   try {
-    const [rows] = await pool.query('SELECT activation_code, is_active, type FROM licenses WHERE id = ?', [id]);
+    // H3 修复：SELECT 增加 expires_at，并检查过期；已激活且未过期才报错
+    const [rows] = await pool.query('SELECT activation_code, is_active, type, expires_at FROM licenses WHERE id = ?', [id]);
     if (rows.length === 0) return res.status(404).json({ error: '许可证不存在' });
 
-    if (rows[0].is_active) {
+    const lic = rows[0];
+    const isExpired = lic.type === 'year' && lic.expires_at && new Date(lic.expires_at) < new Date();
+    if (lic.is_active && !isExpired) {
       return res.status(400).json({ error: '许可证已有效' });
     }
 
     let updateSQL = 'UPDATE licenses SET is_active = TRUE WHERE id = ?';
     const updateParams = [id];
 
-    if (rows[0].type === 'year') {
+    if (lic.type === 'year') {
       const expiresAt = new Date();
       expiresAt.setFullYear(expiresAt.getFullYear() + 1);
       updateSQL = 'UPDATE licenses SET is_active = TRUE, expires_at = ? WHERE id = ?';
@@ -1254,7 +1258,7 @@ router.post('/licenses/:id/reactivate', requireAdmin, async (req, res) => {
     }
 
     await pool.query(updateSQL, updateParams);
-    await auditLog('license_reactivated', req, `重新激活许可证 ${rows[0].activation_code}`);
+    await auditLog('license_reactivated', req, `重新激活许可证 ${lic.activation_code}`);
     res.json({ success: true });
   } catch (err) {
     console.error('Reactivate license error:', err);
@@ -1324,7 +1328,9 @@ router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
             successCount++;
           }
         } else if (action === 'reactivate') {
-          if (!license.is_active) {
+          // H2 修复：检查 expires_at 过期；暂停或过期都应允许重新激活
+          const isExpired = license.type === 'year' && license.expires_at && new Date(license.expires_at) < new Date();
+          if (!license.is_active || isExpired) {
             if (license.type === 'year') {
               const expiresAt = new Date();
               expiresAt.setFullYear(expiresAt.getFullYear() + 1);
@@ -1335,10 +1341,13 @@ router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
             successCount++;
           }
         } else if (action === 'extend') {
+          // H2 修复：移除 license.is_active 限制，让暂停的 license 也能续期；以 max(当前到期, now) 为基准
           const days = parseInt(params?.days);
-          if (days > 0 && license.type !== 'lifetime' && license.is_active) {
-            const currentExpiry = license.expires_at || new Date();
-            const newExpiry = new Date(currentExpiry);
+          if (days > 0 && license.type !== 'lifetime') {
+            const now = new Date();
+            const currentExpiry = license.expires_at ? new Date(license.expires_at) : now;
+            const base = currentExpiry > now ? currentExpiry : now;
+            const newExpiry = new Date(base);
             newExpiry.setDate(newExpiry.getDate() + days);
             await pool.query('UPDATE licenses SET expires_at = ? WHERE id = ?', [newExpiry, id]);
             successCount++;

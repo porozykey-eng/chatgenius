@@ -17,20 +17,29 @@ const IP_BAN_HOURS = 24;
 
 // 签名验证：timestamp 5 分钟内有效（防重放）；HMAC 签名校验
 function verifySignature(code, timestamp, signature) {
-  const strict = process.env.LICENSE_STRICT_SIGNATURE !== 'false';
+  // H6 修复：客户端 background.js 不生成签名（密钥本就公开），strict 默认 false 保持向后兼容；
+  // 要启用严格模式需设 LICENSE_STRICT_SIGNATURE=true 并同步更新客户端生成签名
+  const strict = process.env.LICENSE_STRICT_SIGNATURE === 'true';
   const now = Date.now();
   const ts = parseInt(timestamp);
-  if (Math.abs(now - ts) > 5 * 60 * 1000) {
+  if (!timestamp || Math.abs(now - ts) > 5 * 60 * 1000) {
     return { valid: false, reason: 'timestamp_expired' };
   }
-  // P1-1 修复：HMAC 签名校验改强制（strict 模式默认开启）；兼容旧客户端可设置 LICENSE_STRICT_SIGNATURE=false
-  if (signature && LICENSE_HMAC_SECRET) {
+  if (strict) {
+    // strict 模式：signature 必须存在且匹配，否则拒绝（防止不传 signature 绕过校验）
+    if (!signature || !LICENSE_HMAC_SECRET) {
+      return { valid: false, error: 'missing_signature' };
+    }
     const expected = crypto.createHmac('sha256', LICENSE_HMAC_SECRET)
       .update(code + timestamp).digest('hex');
     if (signature !== expected) {
-      if (strict) {
-        return { valid: false, error: 'invalid_signature' };
-      }
+      return { valid: false, error: 'invalid_signature' };
+    }
+  } else if (signature && LICENSE_HMAC_SECRET) {
+    // 非 strict 模式：传了 signature 就校验，不匹配仅告警不拒绝
+    const expected = crypto.createHmac('sha256', LICENSE_HMAC_SECRET)
+      .update(code + timestamp).digest('hex');
+    if (signature !== expected) {
       console.warn('License signature mismatch (non-strict mode)');
       return { valid: true, warning: 'signature_mismatch' };
     }
