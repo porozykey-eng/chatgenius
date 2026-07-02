@@ -9,6 +9,13 @@ try {
 
 let transporter = null;
 
+// P1-3 修复：HTML 转义工具函数，防止邮件模板 XSS
+function escapeHtml(s) {
+  return String(s || '').replace(/[&<>"']/g, c => ({
+    '&': '&amp;', '<': '&lt;', '>': '&gt;', '"': '&quot;', "'": '&#39;'
+  }[c]));
+}
+
 /**
  * 初始化邮件 transporter
  * 需要在 .env 中配置 SMTP 相关变量
@@ -79,6 +86,8 @@ async function sendMail(to, subject, html, attachments = []) {
  * @param {object} invoice - 发票信息 {title, orderNo, amount, invoiceUrl}
  */
 async function sendInvoiceIssuedEmail(to, invoice) {
+  // P1-3 修复：校验发票链接协议，仅允许 http/https
+  const safeUrl = /^https?:\/\//.test(invoice.invoiceUrl) ? invoice.invoiceUrl : '#';
   const html = `
     <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
       <div style="background: #1a73e8; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
@@ -89,19 +98,19 @@ async function sendInvoiceIssuedEmail(to, invoice) {
         <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
           <tr>
             <td style="padding: 8px 0; color: #6b7280; width: 100px;">发票抬头</td>
-            <td style="padding: 8px 0; color: #111827; font-weight: 500;">${invoice.title}</td>
+            <td style="padding: 8px 0; color: #111827; font-weight: 500;">${escapeHtml(invoice.title)}</td>
           </tr>
           <tr>
             <td style="padding: 8px 0; color: #6b7280;">订单号</td>
-            <td style="padding: 8px 0; color: #111827;">${invoice.orderNo}</td>
+            <td style="padding: 8px 0; color: #111827;">${escapeHtml(invoice.orderNo)}</td>
           </tr>
           <tr>
             <td style="padding: 8px 0; color: #6b7280;">金额</td>
-            <td style="padding: 8px 0; color: #111827;">¥${parseFloat(invoice.amount).toFixed(2)}</td>
+            <td style="padding: 8px 0; color: #111827;">¥${escapeHtml(parseFloat(invoice.amount).toFixed(2))}</td>
           </tr>
         </table>
         ${invoice.invoiceUrl ? `
-          <a href="${invoice.invoiceUrl}" style="display: inline-block; background: #1a73e8; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; margin-top: 8px;">下载发票</a>
+          <a href="${escapeHtml(safeUrl)}" style="display: inline-block; background: #1a73e8; color: white; padding: 12px 24px; border-radius: 6px; text-decoration: none; font-weight: 500; margin-top: 8px;">下载发票</a>
         ` : ''}
         <p style="color: #9ca3af; font-size: 13px; margin-top: 24px;">如有疑问，请回复此邮件或联系 support@chatgenius.ai</p>
       </div>

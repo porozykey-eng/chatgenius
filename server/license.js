@@ -15,20 +15,24 @@ const MAX_UNBIND_PER_MONTH = 2;
 const MAX_ACTIVATION_ERRORS = 5;
 const IP_BAN_HOURS = 24;
 
-// 签名验证：timestamp 5 分钟内有效（防重放）；HMAC 签名可选（客户端密钥已公开）
+// 签名验证：timestamp 5 分钟内有效（防重放）；HMAC 签名校验
 function verifySignature(code, timestamp, signature) {
+  const strict = process.env.LICENSE_STRICT_SIGNATURE !== 'false';
   const now = Date.now();
   const ts = parseInt(timestamp);
   if (Math.abs(now - ts) > 5 * 60 * 1000) {
     return { valid: false, reason: 'timestamp_expired' };
   }
-  // 签名校验改为可选：客户端密钥已公开，HMAC 签名无实际安全价值
-  // 保留 timestamp 校验作为防重放措施；如提供签名则校验并记录日志（不拒绝）
+  // P1-1 修复：HMAC 签名校验改强制（strict 模式默认开启）；兼容旧客户端可设置 LICENSE_STRICT_SIGNATURE=false
   if (signature && LICENSE_HMAC_SECRET) {
     const expected = crypto.createHmac('sha256', LICENSE_HMAC_SECRET)
       .update(code + timestamp).digest('hex');
     if (signature !== expected) {
-      console.warn('License signature mismatch (possibly old client), allowing based on timestamp');
+      if (strict) {
+        return { valid: false, error: 'invalid_signature' };
+      }
+      console.warn('License signature mismatch (non-strict mode)');
+      return { valid: true, warning: 'signature_mismatch' };
     }
   }
   return { valid: true };
@@ -528,7 +532,8 @@ router.post('/verify-token', async (req, res) => {
     res.json({ allowed: true, type: license.type, remaining: -1 });
   } catch (error) {
     console.error('Verify token error:', error);
-    res.json({ allowed: true, type: 'free', remaining: 20, warning: 'server_error' });
+    // P1-6 修复：fail-closed，服务器异常时不放行付费功能
+    return res.json({ allowed: false, type: 'free', remaining: 0, error: 'server_error' });
   }
 });
 

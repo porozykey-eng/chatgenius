@@ -150,25 +150,32 @@ async function getPlatformCertificate(serial) {
   return platformCertificates.get(serial);
 }
 
+// P0-1 修复：套餐价格白名单（服务端决定金额，前端传入的 amount 不可信）
+const PLAN_PRICES = {
+  year: Number(process.env.PRICE_YEAR || 99),
+  lifetime: Number(process.env.PRICE_LIFETIME || 299),
+};
+const PLAN_SUBJECTS = {
+  year: process.env.PLAN_SUBJECT_YEAR || '出海工作台效率插件-年付版',
+  lifetime: process.env.PLAN_SUBJECT_LIFETIME || '出海工作台效率插件-终身版',
+};
+
 // 创建 Native 支付订单（PC 端扫码支付）
 router.post('/create-order', async (req, res) => {
-  const { orderNo, amount, subject, type } = req.body;
+  const { orderNo, type } = req.body;
 
-  if (!orderNo || !amount || !subject) {
+  if (!orderNo || !type) {
     return res.status(400).json({ success: false, error: '参数不完整' });
   }
 
-  const numAmount = Number(amount);
-  if (isNaN(numAmount) || numAmount <= 0 || numAmount > 10000) {
-    return res.status(400).json({ success: false, error: '金额无效' });
+  if (!PLAN_PRICES[type]) {
+    return res.status(400).json({ success: false, error: '套餐类型无效' });
   }
+  const numAmount = PLAN_PRICES[type];
+  const subject = PLAN_SUBJECTS[type];
 
   if (!/^[a-zA-Z0-9\-]{1,64}$/.test(orderNo)) {
     return res.status(400).json({ success: false, error: '订单号格式无效' });
-  }
-
-  if (typeof subject !== 'string' || subject.length > 127) {
-    return res.status(400).json({ success: false, error: '订单描述过长' });
   }
 
   try {
@@ -178,7 +185,7 @@ router.post('/create-order', async (req, res) => {
       return res.status(400).json({ success: false, error: '订单号已存在' });
     }
 
-    console.log('Creating WeChat Native pay order:', { orderNo, amount, subject });
+    console.log('Creating WeChat Native pay order:', { orderNo, amount: numAmount, subject });
 
     // 金额转为分
     const totalFee = Math.round(numAmount * 100);
@@ -218,7 +225,7 @@ router.post('/create-order', async (req, res) => {
       // 保存订单到数据库
       await pool.query(
         'INSERT INTO orders (order_no, plan, price, type, channel, status) VALUES (?, ?, ?, ?, ?, ?)',
-        [orderNo, subject, numAmount, type === 'year' ? 'year' : 'lifetime', 'wechat', 'pending']
+        [orderNo, subject, numAmount, type, 'wechat', 'pending']
       );
 
       res.json({
@@ -312,7 +319,7 @@ router.post('/notify', async (req, res) => {
 
     console.log('WeChat notify decrypted:', JSON.stringify(decrypted));
 
-    const { out_trade_no, trade_state, transaction_id } = decrypted;
+    const { out_trade_no, trade_state, transaction_id, amount: paidAmount, appid, mchid } = decrypted;
 
     if (trade_state === 'SUCCESS') {
       let conn;
@@ -334,6 +341,20 @@ router.post('/notify', async (req, res) => {
         const order = rows[0];
 
         if (order.status === 'completed') {
+          await conn.rollback();
+          return res.json({ code: 'SUCCESS', message: '成功' });
+        }
+
+        // P0-2 修复：校验 appid 和 mchid
+        if (appid !== WECHAT_APPID || mchid !== WECHAT_MCHID) {
+          console.warn('wechat notify: appid/mchid mismatch', { received_appid: appid, received_mchid: mchid });
+          await conn.rollback();
+          return res.json({ code: 'SUCCESS', message: '成功' });
+        }
+        // P0-2 修复：校验支付金额（paidAmount.total 单位为分）
+        const expectedFen = Math.round(parseFloat(order.price) * 100);
+        if (!paidAmount || paidAmount.total !== expectedFen) {
+          console.error('wechat notify: amount mismatch!', { expected: expectedFen, received: paidAmount?.total });
           await conn.rollback();
           return res.json({ code: 'SUCCESS', message: '成功' });
         }

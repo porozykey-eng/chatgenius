@@ -194,26 +194,33 @@ if (process.env.ALIPAY_APP_ID && privateKey && alipayPublicKey) {
   console.warn('⚠️  支付宝配置不完整，支付功能将不可用');
 }
 
+// P0-1 修复：套餐价格白名单（服务端决定金额，前端传入的 amount 不可信）
+const PLAN_PRICES = {
+  year: Number(process.env.PRICE_YEAR || 99),
+  lifetime: Number(process.env.PRICE_LIFETIME || 299),
+};
+const PLAN_SUBJECTS = {
+  year: process.env.PLAN_SUBJECT_YEAR || '出海工作台效率插件-年付版',
+  lifetime: process.env.PLAN_SUBJECT_LIFETIME || '出海工作台效率插件-终身版',
+};
+
 // 创建支付订单（电脑网站支付 - alipay.trade.page.pay）
 // 返回支付宝支付页面 URL，前端跳转过去完成支付
 router.post('/create-order', async (req, res) => {
-  const { orderNo, amount, subject, type } = req.body;
+  const { orderNo, type } = req.body;
 
-  if (!orderNo || !amount || !subject) {
+  if (!orderNo || !type) {
     return res.status(400).json({ success: false, error: '参数不完整' });
   }
 
-  const numAmount = Number(amount);
-  if (isNaN(numAmount) || numAmount <= 0 || numAmount > 10000) {
-    return res.status(400).json({ success: false, error: '金额无效' });
+  if (!PLAN_PRICES[type]) {
+    return res.status(400).json({ success: false, error: '套餐类型无效' });
   }
+  const numAmount = PLAN_PRICES[type];
+  const subject = PLAN_SUBJECTS[type];
 
   if (!/^[a-zA-Z0-9\-]{1,64}$/.test(orderNo)) {
     return res.status(400).json({ success: false, error: '订单号格式无效' });
-  }
-
-  if (typeof subject !== 'string' || subject.length > 256) {
-    return res.status(400).json({ success: false, error: '订单描述过长' });
   }
 
   try {
@@ -223,12 +230,12 @@ router.post('/create-order', async (req, res) => {
       return res.status(400).json({ success: false, error: '订单号已存在' });
     }
 
-    console.log('Creating Alipay page pay order:', { orderNo, amount, subject });
+    console.log('Creating Alipay page pay order:', { orderNo, amount: numAmount, subject });
 
     // 保存订单到数据库
     await pool.query(
       'INSERT INTO orders (order_no, plan, price, type, channel, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [orderNo, subject, numAmount, type || 'lifetime', 'alipay', 'pending']
+      [orderNo, subject, numAmount, type, 'alipay', 'pending']
     );
 
     // 支付宝电脑网站支付：使用 pageExec 生成支付表单 HTML（v3 SDK）
@@ -237,7 +244,7 @@ router.post('/create-order', async (req, res) => {
       {
         bizContent: {
           out_trade_no: orderNo,
-          total_amount: amount,
+          total_amount: numAmount.toFixed(2),
           subject: subject,
           product_code: 'FAST_INSTANT_TRADE_PAY',
         },

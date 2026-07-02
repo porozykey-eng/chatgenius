@@ -35,8 +35,10 @@ chrome.runtime.onStartup.addListener(async () => {
 // License verification function
 async function verifyLicenseOnStartup() {
   try {
-    const { licenseCode, licenseType } = await chrome.storage.sync.get(['licenseCode', 'licenseType']);
-    
+    // P1-8 修复：licenseCode 改存 chrome.storage.local（敏感凭据不进 sync）
+    const { licenseType } = await chrome.storage.sync.get(['licenseType']);
+    const { licenseCode } = await chrome.storage.local.get(['licenseCode']);
+
     if (licenseCode) {
       // Cloud verification - call backend API
       try {
@@ -62,11 +64,11 @@ async function verifyLicenseOnStartup() {
         } else {
           // License invalid/expired, downgrade to free
           console.warn('License expired, downgrading to free');
-          await chrome.storage.sync.set({ 
+          await chrome.storage.sync.set({
             licenseType: 'free',
-            licenseCode: null,
             licenseInvalid: true
           });
+          await chrome.storage.local.set({ licenseCode: null });
         }
       } catch (cloudError) {
         // Cloud verification failed, use local license
@@ -106,7 +108,9 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // Send heartbeat to server — verifies fingerprint consistency
 async function sendHeartbeat() {
   try {
-    const { licenseCode, licenseType } = await chrome.storage.sync.get(['licenseCode', 'licenseType']);
+    // P1-8 修复：licenseCode 改存 chrome.storage.local
+    const { licenseType } = await chrome.storage.sync.get(['licenseType']);
+    const { licenseCode } = await chrome.storage.local.get(['licenseCode']);
 
     // Only heartbeat for activated (non-free) licenses
     if (!licenseCode || licenseType === 'free') {
@@ -178,9 +182,10 @@ async function forceLogout(reason) {
     // Downgrade to free
     await chrome.storage.sync.set({
       licenseType: 'free',
-      licenseCode: null,
       licenseInvalid: true
     });
+    // P1-8 修复：licenseCode 改存 chrome.storage.local
+    await chrome.storage.local.set({ licenseCode: null });
 
     // Clear sensitive API credentials
     await chrome.storage.sync.remove(['apiKey', 'apiProvider']);
@@ -551,7 +556,10 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       // Validate request.context is an array (defensive against malformed messages)
       const context = Array.isArray(request.context) ? request.context : [];
       
-      const data = await chrome.storage.sync.get(['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'totalReplies', 'fallbackModels', 'fallbackEnabled', 'licenseType', 'licenseCode']);
+      const data = await chrome.storage.sync.get(['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'totalReplies', 'fallbackModels', 'fallbackEnabled', 'licenseType']);
+      // P1-8 修复：licenseCode 改存 chrome.storage.local
+      const { licenseCode } = await chrome.storage.local.get(['licenseCode']);
+      data.licenseCode = licenseCode;
       await loadApiSettings(data);
       try {
         if (!data.apiKey) {

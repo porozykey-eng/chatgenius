@@ -26,7 +26,7 @@ function isValidTaxNumber(tax) {
 
 // POST /api/invoice/submit - 提交发票申请
 router.post('/submit', invoiceLimiter, async (req, res) => {
-  const { orderNo, invoiceType, title, taxNumber, email } = req.body;
+  const { orderNo, invoiceType, title, taxNumber, email, licenseCode } = req.body;
 
   // 参数校验
   if (!orderNo || !invoiceType || !title || !email) {
@@ -58,7 +58,7 @@ router.post('/submit', invoiceLimiter, async (req, res) => {
   try {
     // 验证订单存在且已完成
     const [orders] = await pool.query(
-      'SELECT order_no, price, status FROM orders WHERE order_no = ?',
+      'SELECT order_no, price, status, activation_code FROM orders WHERE order_no = ?',
       [orderNo]
     );
 
@@ -69,6 +69,14 @@ router.post('/submit', invoiceLimiter, async (req, res) => {
     const order = orders[0];
     if (order.status !== 'completed') {
       return res.status(400).json({ success: false, error: '订单未完成，无法申请发票' });
+    }
+
+    // P1-2 修复：校验订单归属（激活码必须属于此订单，通过 orders.activation_code 关联）
+    if (!licenseCode) {
+      return res.status(400).json({ success: false, error: '请提供激活码以验证订单归属' });
+    }
+    if (!order.activation_code || String(order.activation_code).toUpperCase() !== String(licenseCode).toUpperCase()) {
+      return res.status(403).json({ success: false, error: '激活码与订单不匹配' });
     }
 
     // 检查是否已有发票申请（pending 或 issued 状态不可重复申请）
