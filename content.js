@@ -562,6 +562,11 @@ function showFirstUseBubble(btn) {
     if (data.guideBubbleShown) return;
     // Wait for button to be visible
     const waitForVisible = setInterval(() => {
+      // M1 修复：按钮被移除时停止轮询，避免 setInterval 永不清理
+      if (!document.body.contains(btn)) {
+        clearInterval(waitForVisible);
+        return;
+      }
       if (btn.offsetWidth > 0) {
         clearInterval(waitForVisible);
         const c = getInjectUIColors();
@@ -605,6 +610,8 @@ function showFirstUseBubble(btn) {
         setTimeout(dismiss, 5000);
       }
     }, 200);
+    // M1 修复：超时保护，30 秒后自动停止，避免按钮永远不可见时 setInterval 永不清理
+    setTimeout(() => clearInterval(waitForVisible), 30000);
   });
 }
 
@@ -1436,6 +1443,13 @@ function createPreviewModal() {
       ta.disabled = true;
       chrome.runtime.sendMessage({ action: 'generateReply', context: lastContext }, (response) => {
         ta.disabled = false;
+        // M3 修复：检查 lastError，避免连接断开时访问 undefined response
+        if (chrome.runtime.lastError) {
+          console.warn('Message error:', chrome.runtime.lastError.message);
+          ta.value = lastGeneratedReply || '';
+          showToast('插件连接错误: ' + chrome.runtime.lastError.message, 'error', 5000);
+          return;
+        }
         if (response && response.success) {
           ta.value = response.reply;
           lastGeneratedReply = response.reply;

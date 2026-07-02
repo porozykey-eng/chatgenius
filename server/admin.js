@@ -1235,34 +1235,42 @@ router.post('/licenses/:id/unbind', requireAdmin, async (req, res) => {
 
 router.post('/licenses/:id/reactivate', requireAdmin, async (req, res) => {
   const { id } = req.params;
-
+  let conn;
   try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
     // H3 修复：SELECT 增加 expires_at，并检查过期；已激活且未过期才报错
-    const [rows] = await pool.query('SELECT activation_code, is_active, type, expires_at FROM licenses WHERE id = ?', [id]);
-    if (rows.length === 0) return res.status(404).json({ error: '许可证不存在' });
+    // M5 修复：加事务和行锁 FOR UPDATE 防并发竞态
+    const [rows] = await conn.query('SELECT activation_code, is_active, type, expires_at FROM licenses WHERE id = ? FOR UPDATE', [id]);
+    if (rows.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ error: '许可证不存在' });
+    }
 
     const lic = rows[0];
     const isExpired = lic.type === 'year' && lic.expires_at && new Date(lic.expires_at) < new Date();
     if (lic.is_active && !isExpired) {
+      await conn.rollback();
       return res.status(400).json({ error: '许可证已有效' });
     }
-
-    let updateSQL = 'UPDATE licenses SET is_active = TRUE WHERE id = ?';
-    const updateParams = [id];
 
     if (lic.type === 'year') {
       const expiresAt = new Date();
       expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-      updateSQL = 'UPDATE licenses SET is_active = TRUE, expires_at = ? WHERE id = ?';
-      updateParams.unshift(expiresAt);
+      await conn.query('UPDATE licenses SET is_active = TRUE, expires_at = ? WHERE id = ?', [expiresAt, id]);
+    } else {
+      await conn.query('UPDATE licenses SET is_active = TRUE WHERE id = ?', [id]);
     }
 
-    await pool.query(updateSQL, updateParams);
+    await conn.commit();
     await auditLog('license_reactivated', req, `重新激活许可证 ${lic.activation_code}`);
     res.json({ success: true });
   } catch (err) {
+    if (conn) await conn.rollback();
     console.error('Reactivate license error:', err);
     res.status(500).json({ error: '重新激活失败' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 

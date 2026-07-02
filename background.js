@@ -631,7 +631,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
               } catch (err) {
                 reject(err);
               }
-            });
+            }).catch(() => {}); // M4 修复：防御性 catch，防止链断裂
           });
         }
 

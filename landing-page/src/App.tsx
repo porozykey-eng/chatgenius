@@ -151,6 +151,8 @@ function PaymentModal({
   const [orderNo, setOrderNo] = useState('')
   const [qrCode, setQrCode] = useState('')
   const [pollingTimer, setPollingTimer] = useState<ReturnType<typeof setInterval> | null>(null)
+  // M2 修复：追踪支付轮询的所有 setTimeout ID，组件卸载时清理
+  const pollTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
 
   // Handle payment channel selection - create order via server API
   const handlePayment = async (channel: 'alipay' | 'wechat') => {
@@ -2044,7 +2046,8 @@ function App() {
             }
             attempts++
             if (attempts < maxAttempts) {
-              setTimeout(poll, 3000) // 每 3 秒轮询一次
+              const _t = setTimeout(poll, 3000)
+              pollTimersRef.current.add(_t) // 每 3 秒轮询一次
             } else {
               setPaymentStatus('failed')
             }
@@ -2052,7 +2055,8 @@ function App() {
             console.error('Payment status check error:', error)
             attempts++
             if (attempts < maxAttempts) {
-              setTimeout(poll, 3000)
+              const _t = setTimeout(poll, 3000)
+              pollTimersRef.current.add(_t)
             } else {
               setPaymentStatus('failed')
             }
@@ -2063,6 +2067,12 @@ function App() {
       }
 
       checkPayment()
+    }
+
+    // M2 修复：组件卸载时清理所有轮询定时器，避免内存泄漏和卸载后 setState
+    return () => {
+      pollTimersRef.current.forEach(t => clearTimeout(t))
+      pollTimersRef.current.clear()
     }
   }, [])
 

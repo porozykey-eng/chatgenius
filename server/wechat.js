@@ -96,6 +96,7 @@ function decryptGCM(ciphertext, nonce, associatedData) {
 // ================================
 const platformCertificates = new Map(); // serial_no -> certificate PEM
 let platformCertLastFetch = 0;
+let platformCertFetchPromise = null; // M6 修复：并发控制锁，避免多次并发触发下载
 const PLATFORM_CERT_REFRESH_MS = 12 * 60 * 60 * 1000; // 12 小时刷新一次
 
 // 解密平台证书（与回调数据解密逻辑一致，但返回字符串而非 JSON）
@@ -144,9 +145,14 @@ async function downloadPlatformCertificates() {
 
 // 根据 serial 获取平台证书（必要时自动刷新）
 async function getPlatformCertificate(serial) {
-  // 如果缓存为空或过期，重新下载
+  // 如果缓存为空或过期，重新下载（M6 修复：并发控制，避免多次并发同时触发下载）
   if (platformCertificates.size === 0 || Date.now() - platformCertLastFetch > PLATFORM_CERT_REFRESH_MS) {
-    await downloadPlatformCertificates();
+    if (!platformCertFetchPromise) {
+      platformCertFetchPromise = downloadPlatformCertificates().finally(() => {
+        platformCertFetchPromise = null;
+      });
+    }
+    await platformCertFetchPromise;
   }
   return platformCertificates.get(serial);
 }
