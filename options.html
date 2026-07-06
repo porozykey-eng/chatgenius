@@ -3014,71 +3014,67 @@
           <p class="onboarding-desc" data-i18n="onboardingStep1Desc">选择一个角色模板，快速开始（可稍后自定义）：</p>
           <div id="onboardingTemplateGrid" class="onboarding-template-grid"></div>
         </div>
-        <!-- 步骤 2: 配置 API（卡片式导购） -->
+        <!-- 步骤 2: 配置 API（用户自定义 URL/Key/模型名） -->
         <div id="onboardingStep2" class="onboarding-step" style="display:none;">
-          <p class="onboarding-desc">选择一个 AI 服务商，30 秒开始使用</p>
+          <p class="onboarding-desc">填写你的大模型 API 信息，30 秒开始使用</p>
 
-          <!-- 推荐卡片区域 -->
-          <div id="onboardingProviderCards" class="provider-cards-grid"></div>
-
-          <!-- 选中后展开的 Key 输入区 -->
-          <div id="onboardingKeySection" style="display:none;">
-            <div class="selected-provider-bar">
-              <span id="onboardingSelectedIcon" class="provider-card-icon"></span>
-              <span id="onboardingSelectedName" class="provider-card-name"></span>
-              <a id="onboardingGetKeyLink" href="#" target="_blank">获取 Key →</a>
+          <div class="custom-api-form">
+            <div class="form-grid">
+              <div class="form-group full-width">
+                <label class="form-label" for="onboardingApiUrlInput">API 地址 (URL)</label>
+                <input type="text" class="form-input" id="onboardingApiUrlInput" placeholder="https://api.deepseek.com/v1/chat/completions" autocomplete="off" spellcheck="false" autocapitalize="off">
+                <div class="form-hint">OpenAI 兼容格式，通常以 /chat/completions 结尾</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="onboardingApiKeyInput">API Key</label>
+                <div class="api-key-wrapper">
+                  <input type="password" class="form-input" id="onboardingApiKeyInput" placeholder="粘贴您的 API Key" autocomplete="off" spellcheck="false" autocapitalize="off">
+                  <button type="button" class="api-key-toggle" id="onboardingApiKeyToggle" title="显示/隐藏">
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                      <circle cx="12" cy="12" r="3"></circle>
+                    </svg>
+                  </button>
+                </div>
+                <div class="key-privacy-note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 仅保存在浏览器本地，不会上传</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="onboardingModelNameInput">模型名称</label>
+                <input type="text" class="form-input" id="onboardingModelNameInput" placeholder="deepseek-chat" autocomplete="off" spellcheck="false" autocapitalize="off">
+                <div class="form-hint">如 gpt-4o、deepseek-chat、glm-4-flash</div>
+              </div>
             </div>
-            <div id="onboardingProviderGuide" style="display:none;margin-bottom:var(--spacing-3);font-size:12px;color:var(--text-tertiary);line-height:1.5;">
-              <span>首次使用？前往</span>
-              <a id="onboardingGuideLink" href="#" target="_blank" style="color:var(--accent-text);text-decoration:none;font-weight:500;"></a>
-              <span>注册账号，在控制台创建 API Key，然后粘贴到下方即可。</span>
-            </div>
-            <div class="api-key-wrapper">
-              <input type="password" class="form-input" id="onboardingApiKeyInput" placeholder="粘贴您的 API Key" autocomplete="off" spellcheck="false" autocapitalize="off">
-              <button type="button" class="api-key-toggle" id="onboardingApiKeyToggle" title="显示/隐藏">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                  <circle cx="12" cy="12" r="3"></circle>
-                </svg>
-              </button>
-            </div>
-            <div id="onboardingKeyValidation" class="key-validation-hint"></div>
-            <div class="key-privacy-note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 您的 API Key 仅保存在浏览器本地，不会上传到任何服务器</div>
-            <button class="btn btn-primary" id="onboardingTestBtn" type="button" style="width:100%;margin-top:12px;">验证并激活</button>
+            <button class="btn btn-primary" id="onboardingTestBtn" type="button" style="width:100%;margin-top:12px;">测试连接</button>
             <span id="onboardingTestResult" style="font-size:13px;display:block;margin-top:8px;"></span>
 
-            <!-- 内嵌教程 -->
+            <!-- 内嵌示例教程 -->
             <details class="key-tutorial">
-              <summary>如何获取 API Key？</summary>
+              <summary>不知道怎么填？查看常见示例</summary>
               <div class="tutorial-content">
-                <ol>
-                  <li>点击上方"获取 Key"链接，注册并登录</li>
-                  <li>在控制台找到 <strong>API Keys</strong> 页面</li>
-                  <li>点击"创建 Key"，复制生成的密钥</li>
-                  <li>回到此处粘贴即可</li>
-                </ol>
-                <p class="tutorial-note">Key 只保存在您的浏览器本地，不会上传到任何服务器</p>
+                <p style="margin-bottom:6px;"><strong>DeepSeek（深度求索）</strong></p>
+                <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);margin-bottom:12px;line-height:1.6;">
+                  URL: https://api.deepseek.com/v1/chat/completions<br>
+                  模型: deepseek-chat
+                </p>
+                <p style="margin-bottom:6px;"><strong>智谱清言 (GLM)</strong></p>
+                <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);margin-bottom:12px;line-height:1.6;">
+                  URL: https://open.bigmodel.cn/api/paas/v4/chat/completions<br>
+                  模型: glm-4-flash
+                </p>
+                <p style="margin-bottom:6px;"><strong>通义千问 (Qwen)</strong></p>
+                <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);margin-bottom:12px;line-height:1.6;">
+                  URL: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions<br>
+                  模型: qwen-plus
+                </p>
+                <p style="margin-bottom:6px;"><strong>OpenAI</strong></p>
+                <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);line-height:1.6;">
+                  URL: https://api.openai.com/v1/chat/completions<br>
+                  模型: gpt-4o-mini
+                </p>
+                <p class="tutorial-note">模型名称会随厂商更新而变化，请以厂商控制台为准。Key 只保存在您的浏览器本地。</p>
               </div>
             </details>
           </div>
-
-          <!-- 折叠：已有 Key 的高级用户 -->
-          <details class="advanced-config-toggle">
-            <summary>已有 Key？自定义配置</summary>
-            <div class="advanced-config-body">
-              <div class="form-group" style="margin-bottom: var(--spacing-3);">
-                <label class="form-label">API 服务商</label>
-                <select class="form-select" id="onboardingProviderSelect"></select>
-              </div>
-              <div class="form-group" style="margin-bottom: var(--spacing-3);">
-                <label class="form-label">API Key</label>
-                <input type="password" class="form-input" id="onboardingAdvancedApiKeyInput" placeholder="输入你的 API Key" autocomplete="off" spellcheck="false">
-                <a id="onboardingAdvancedGetKeyLink" href="#" target="_blank" style="font-size:12px;">如何获取 API Key？</a>
-              </div>
-              <button class="btn btn-secondary btn-sm" id="onboardingAdvancedTestBtn" type="button">测试连接</button>
-              <span id="onboardingAdvancedTestResult" style="font-size:13px;margin-left:8px;"></span>
-            </div>
-          </details>
 
           <!-- 配置指南入口 -->
           <div style="margin-top:var(--spacing-4);text-align:center;">

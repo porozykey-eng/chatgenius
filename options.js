@@ -1801,44 +1801,19 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // Onboarding test connection — 卡片模式
+  // Onboarding test connection — 自定义模型表单
   const onboardingTestBtn = document.getElementById('onboardingTestBtn');
   if (onboardingTestBtn) {
     onboardingTestBtn.addEventListener('click', () => {
-      const provider = selectedCardProviderId || 'openai';
+      const url = document.getElementById('onboardingApiUrlInput')?.value.trim() || '';
       const key = document.getElementById('onboardingApiKeyInput')?.value.trim() || '';
+      const model = document.getElementById('onboardingModelNameInput')?.value.trim() || '';
       const resultEl = document.getElementById('onboardingTestResult');
-      doTestConnection(provider, key, resultEl, onboardingTestBtn);
+      doTestConnectionCustom(url, key, model, resultEl, onboardingTestBtn);
     });
   }
 
-  // Onboarding test connection — 高级模式
-  const onboardingAdvancedTestBtn = document.getElementById('onboardingAdvancedTestBtn');
-  if (onboardingAdvancedTestBtn) {
-    onboardingAdvancedTestBtn.addEventListener('click', () => {
-      const provider = document.getElementById('onboardingProviderSelect')?.value || 'openai';
-      const key = document.getElementById('onboardingAdvancedApiKeyInput')?.value.trim() || '';
-      const resultEl = document.getElementById('onboardingAdvancedTestResult');
-      doTestConnection(provider, key, resultEl, onboardingAdvancedTestBtn);
-    });
-  }
-
-  // Onboarding 高级模式的下拉菜单联动
-  const onboardingProviderSelect = document.getElementById('onboardingProviderSelect');
-  if (onboardingProviderSelect) {
-    onboardingProviderSelect.addEventListener('change', () => {
-      const provider = (modelsConfig?.providers || []).find(p => p.id === onboardingProviderSelect.value);
-      const link = document.getElementById('onboardingAdvancedGetKeyLink');
-      if (link && provider?.getKey) {
-        link.href = provider.getKey;
-        link.style.display = '';
-      } else if (link) {
-        link.style.display = 'none';
-      }
-    });
-  }
-
-  // Onboarding 高级模式 Key 输入 show/hide toggle
+  // Onboarding Key 输入 show/hide toggle
   const onboardingApiKeyToggle = document.getElementById('onboardingApiKeyToggle');
   const onboardingApiKeyInput = document.getElementById('onboardingApiKeyInput');
   if (onboardingApiKeyToggle && onboardingApiKeyInput) {
@@ -2369,12 +2344,10 @@ document.addEventListener('DOMContentLoaded', () => {
   if (apiStatusConfigBtn) {
     apiStatusConfigBtn.addEventListener('click', () => {
       switchTab('settings');
-      const apiPanel = document.getElementById('apiPanel');
-      if (apiPanel) {
-        apiPanel.scrollIntoView({ behavior: 'smooth' });
-      } else if (apiProvider) {
-        const panel = apiProvider.closest('.panel');
-        if (panel) panel.scrollIntoView({ behavior: 'smooth' });
+      // 滚动到自定义模型表单
+      const apiForm = document.querySelector('.custom-api-form');
+      if (apiForm) {
+        apiForm.scrollIntoView({ behavior: 'smooth', block: 'center' });
       }
     });
   }
@@ -2457,11 +2430,6 @@ document.addEventListener('DOMContentLoaded', () => {
         renderPersonas();
         scheduleSave();
         showOnboardingStep(2);
-        // 渲染推荐厂商卡片 + 高级模式下拉菜单
-        renderProviderCards('onboardingProviderCards', 'onboarding');
-        const providerSelect = document.getElementById('onboardingProviderSelect');
-        if (providerSelect) loadApiProviders(providerSelect);
-        setupCardKeyValidation('onboarding');
       });
       grid.appendChild(card);
     });
@@ -2482,22 +2450,19 @@ document.addEventListener('DOMContentLoaded', () => {
   if (onboardingNextBtn) {
     onboardingNextBtn.addEventListener('click', () => {
       if (onboardingCurrentStep === 2) {
-        let provider, key;
-        if (selectedCardProviderId) {
-          // 卡片模式：使用选中的卡片厂商
-          provider = selectedCardProviderId;
-          key = document.getElementById('onboardingApiKeyInput')?.value || '';
-        } else {
-          // 高级模式：使用下拉菜单
-          provider = document.getElementById('onboardingProviderSelect')?.value || 'openai';
-          key = document.getElementById('onboardingAdvancedApiKeyInput')?.value || '';
-        }
-        // 同时保存 apiUrl 和 modelName
-        const providerConf = (modelsConfig?.providers || []).find(p => p.id === provider);
-        const apiUrl = providerConf?.url || '';
-        const modelName = (providerConf?.models || []).find(m => m.recommended)?.id
-          || (providerConf?.models || [])[0]?.id || '';
-        chrome.storage.local.set({ apiProvider: provider, apiKey: key, apiUrl, modelName }, () => {
+        // 用户自定义：直接读取 URL / Key / 模型名
+        const apiUrl = document.getElementById('onboardingApiUrlInput')?.value.trim() || '';
+        const key = document.getElementById('onboardingApiKeyInput')?.value || '';
+        const modelName = document.getElementById('onboardingModelNameInput')?.value.trim() || '';
+        chrome.storage.local.set({ apiProvider: 'custom', apiKey: key, apiUrl, modelName }, () => {
+          // 同步设置页表单
+          const settingsUrl = document.getElementById('apiUrlInput');
+          const settingsKey = document.getElementById('apiKey');
+          const settingsModel = document.getElementById('modelNameInput');
+          if (settingsUrl) settingsUrl.value = apiUrl;
+          if (settingsKey) settingsKey.value = key;
+          if (settingsModel) settingsModel.value = modelName;
+          updateApiStatusBar();
           showOnboardingStep(3);
         });
       }
@@ -2553,9 +2518,8 @@ document.addEventListener('DOMContentLoaded', () => {
         if (replyLengthSelect) replyLengthSelect.value = data.replyLength || 'auto';
         if (btnThemeSelect) btnThemeSelect.value = data.btnTheme || 'gradient';
 
-        // 加载 models-config.json（onboarding 仍需使用），异步拉取远程推荐配置
-        const onboardingSelect = document.getElementById('onboardingProviderSelect');
-        loadApiProviders(onboardingSelect).then(() => {
+        // 加载 models-config.json（保留兼容），异步拉取远程推荐配置
+        loadApiProviders().then(() => {
           fetchRemoteProviderConfig();
         });
 
