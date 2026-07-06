@@ -151,8 +151,6 @@ function PaymentModal({
   const [orderNo, setOrderNo] = useState('')
   const [qrCode, setQrCode] = useState('')
   const [pollingTimer, setPollingTimer] = useState<ReturnType<typeof setInterval> | null>(null)
-  // M2 修复：追踪支付轮询的所有 setTimeout ID，组件卸载时清理
-  const pollTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
 
   // Handle payment channel selection - create order via server API
   const handlePayment = async (channel: 'alipay' | 'wechat') => {
@@ -2003,6 +2001,8 @@ function Footer() {
 function App() {
   const [isDownloading, setIsDownloading] = useState(false)
   const [downloadCount, setDownloadCount] = useState(0)
+  // 追踪支付轮询的所有 setTimeout ID，组件卸载时清理
+  const pollTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed' | null>(null)
   const [paymentOrderNo, setPaymentOrderNo] = useState('')
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)

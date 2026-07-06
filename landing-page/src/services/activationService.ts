@@ -34,29 +34,13 @@ export const activationService = {
   // 创建支付订单（调用服务器支付 API）
   async createOrder(
     _plan: string,
-    price: string,
+    _price: string,
     type: 'year' | 'lifetime',
     channel: 'alipay' | 'wechat' | 'paypal',
     _userEmail?: string
   ): Promise<{ success: boolean; payForm?: string; codeUrl?: string; orderNo?: string; error?: string }> {
     try {
       const orderNo = `CG${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-
-      // 从后台读取风控合规的商品名称，避免使用敏感词导致商户号被冻结
-      let subject = `出海工作台效率插件-${type === 'year' ? '年付版' : '终身版'}`;
-      try {
-        const settingsRes = await fetch(`${API_BASE}/admin/public-settings`);
-        if (settingsRes.ok) {
-          const settings = await settingsRes.json();
-          if (settings['payment.productName']) {
-            subject = settings['payment.productName'];
-          }
-        }
-      } catch {
-        // 读取失败使用默认名称
-      }
-
-      const cleanPrice = price.replace(/[^0-9.]/g, '');
 
       // 根据渠道调用不同的 API
       const apiPath = channel === 'wechat' ? '/wechat/create-order' : '/alipay/create-order';
