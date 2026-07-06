@@ -447,16 +447,14 @@ document.addEventListener('DOMContentLoaded', () => {
     const tone = document.getElementById('tone')?.value || 'auto';
     const replyLength = document.getElementById('replyLength')?.value || 'auto';
     const btnTheme = document.getElementById('btnTheme')?.value || 'gradient';
-    const apiProvider = document.getElementById('apiProvider')?.value || 'openai';
+    // 用户直接配置：URL + Key + 模型名（不再依赖预设服务商）
+    const apiUrl = document.getElementById('apiUrlInput')?.value.trim() || '';
     const apiKey = document.getElementById('apiKey')?.value || '';
+    const modelName = document.getElementById('modelNameInput')?.value.trim() || '';
 
-    // API Key and Provider go to local storage (migrated from sync)
-    // 同时保存 apiUrl 和 modelName，供 background.js fallback 使用
-    const providerConf = (modelsConfig?.providers || []).find(p => p.id === apiProvider);
-    const apiUrl = providerConf?.url || '';
-    const modelName = (providerConf?.models || []).find(m => m.recommended)?.id
-      || (providerConf?.models || [])[0]?.id || '';
-    chrome.storage.local.set({ apiProvider, apiKey, apiUrl, modelName }, () => {
+    // API 配置保存到 local storage：用户直接填写的 URL / Key / 模型名
+    // apiProvider 保留为 'custom' 作为"已配置"信号，兼容状态栏与 background.js
+    chrome.storage.local.set({ apiProvider: 'custom', apiKey, apiUrl, modelName }, () => {
       if (chrome.runtime.lastError) {
         console.error('Local save failed:', chrome.runtime.lastError);
       }
@@ -1635,6 +1633,69 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // ================================
+  // 自定义模型测试连接（设置页：用户直接填写 URL + Key + 模型名）
+  // ================================
+
+  // 规范化 API 端点：补全 /chat/completions 或 /messages 后缀
+  function buildTestEndpoint(apiUrl) {
+    let url = (apiUrl || '').trim().replace(/\/+$/, '');
+    if (!url) return url;
+    if (url.includes('api.anthropic.com')) {
+      return url.endsWith('/messages') ? url : url + '/messages';
+    }
+    return (url.endsWith('/chat/completions') || url.endsWith('/messages')) ? url : url + '/chat/completions';
+  }
+
+  async function doTestConnectionCustom(apiUrl, apiKey, modelName, resultEl, btnEl) {
+    if (!apiUrl || !apiKey) {
+      if (resultEl) {
+        resultEl.textContent = currentLang === 'zh' ? '请填写 API 地址和 API Key' : 'Please fill API URL and Key';
+        resultEl.style.color = 'var(--error)';
+      }
+      return;
+    }
+    if (!modelName) modelName = 'gpt-3.5-turbo';
+
+    if (btnEl) { btnEl.disabled = true; btnEl.textContent = currentLang === 'zh' ? '测试中...' : 'Testing...'; }
+    if (resultEl) { resultEl.textContent = currentLang === 'zh' ? '正在测试连接...' : 'Testing connection...'; resultEl.style.color = 'var(--text-secondary)'; }
+
+    try {
+      const testUrl = buildTestEndpoint(apiUrl);
+      const isAnthropic = testUrl.includes('api.anthropic.com');
+      let headers, body;
+      if (isAnthropic) {
+        headers = { 'Content-Type': 'application/json', 'x-api-key': apiKey, 'anthropic-version': '2023-06-01' };
+        body = JSON.stringify({ model: modelName, max_tokens: 10, messages: [{ role: 'user', content: 'Hi' }] });
+      } else {
+        headers = { 'Content-Type': 'application/json', 'Authorization': 'Bearer ' + apiKey };
+        body = JSON.stringify({ model: modelName, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 10 });
+      }
+
+      const response = await fetch(testUrl, { method: 'POST', headers, body });
+      if (response.ok) {
+        if (resultEl) { resultEl.textContent = '✓ ' + (currentLang === 'zh' ? '连接成功！' : 'Connection successful!'); resultEl.style.color = 'var(--success)'; }
+        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator connected'; }
+        if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
+        chrome.storage.sync.set({ connectionValid: true });
+      } else {
+        const errMsg = getFriendlyError(response.status, modelName);
+        if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
+        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
+        if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
+        chrome.storage.sync.set({ connectionValid: false });
+      }
+    } catch (error) {
+      const errMsg = currentLang === 'zh' ? '网络连接失败，请检查网络或 API 地址' : 'Network connection failed';
+      if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
+      if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
+      if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
+      chrome.storage.sync.set({ connectionValid: false });
+    } finally {
+      if (btnEl) { btnEl.disabled = false; btnEl.textContent = currentLang === 'zh' ? '测试连接' : 'Test Connection'; }
+    }
+  }
+
   // 为卡片模式的 Key 输入框绑定校验事件
   function setupCardKeyValidation(context) {
     const inputId = context === 'onboarding' ? 'onboardingApiKeyInput' : 'apiKey';
@@ -1675,12 +1736,15 @@ document.addEventListener('DOMContentLoaded', () => {
   }
   if (apiKeyInput) {
     apiKeyInput.addEventListener('input', () => {
-      // 同步到高级模式输入框
-      const advInput = document.getElementById('apiKeyAdvanced');
-      if (advInput && advInput.value !== apiKeyInput.value) advInput.value = apiKeyInput.value;
       scheduleSave();
     });
   }
+
+  // 自定义模型表单：URL / 模型名输入自动保存
+  const apiUrlInputEl = document.getElementById('apiUrlInput');
+  const modelNameInputEl = document.getElementById('modelNameInput');
+  if (apiUrlInputEl) apiUrlInputEl.addEventListener('input', scheduleSave);
+  if (modelNameInputEl) modelNameInputEl.addEventListener('input', scheduleSave);
 
   // 高级模式 API Key 输入同步
   const apiKeyAdvancedInput = document.getElementById('apiKeyAdvanced');
@@ -1719,10 +1783,11 @@ document.addEventListener('DOMContentLoaded', () => {
   // Settings page test connection — 卡片模式
   if (testApiBtn) {
     testApiBtn.addEventListener('click', () => {
-      const provider = selectedCardProviderId || document.getElementById('apiProvider')?.value || 'openai';
+      const url = document.getElementById('apiUrlInput')?.value.trim() || '';
       const key = document.getElementById('apiKey')?.value.trim() || '';
+      const model = document.getElementById('modelNameInput')?.value.trim() || '';
       const resultEl = document.getElementById('settingsKeyValidation');
-      doTestConnection(provider, key, resultEl, testApiBtn);
+      doTestConnectionCustom(url, key, model, resultEl, testApiBtn);
     });
   }
 
@@ -1997,21 +2062,23 @@ document.addEventListener('DOMContentLoaded', () => {
           return;
         }
         // licenseCode 已迁移至 local，需单独读取
-        chrome.storage.local.get(['licenseCode'], (localData) => {
-          const settings = {
-            personas: data.personas || [],
-            activePersonaId: data.activePersonaId,
-            tone: data.tone,
-            replyLength: data.replyLength,
-            faqData: data.faqData || [],
-            btnTheme: data.btnTheme,
-            shortcut: data.shortcut,
-            apiProvider: data.apiProvider,
-            licenseType: data.licenseType,
-            licenseCode: localData.licenseCode,
-            activatedAt: data.activatedAt,
-            exportDate: new Date().toISOString()
-          };
+        chrome.storage.local.get(['licenseCode', 'apiUrl', 'apiKey', 'modelName'], (localData) => {
+        const settings = {
+          personas: data.personas || [],
+          activePersonaId: data.activePersonaId,
+          tone: data.tone,
+          replyLength: data.replyLength,
+          faqData: data.faqData || [],
+          btnTheme: data.btnTheme,
+          shortcut: data.shortcut,
+          apiUrl: localData.apiUrl || '',
+          apiKey: localData.apiKey || '',
+          modelName: localData.modelName || '',
+          licenseType: data.licenseType,
+          licenseCode: localData.licenseCode,
+          activatedAt: data.activatedAt,
+          exportDate: new Date().toISOString()
+        };
           const dataStr = JSON.stringify(settings, null, 2);
           const blob = new Blob([dataStr], { type: 'application/json' });
           const url = URL.createObjectURL(blob);
@@ -2049,7 +2116,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      const stringFields = ['tone', 'replyLength', 'btnTheme', 'shortcut', 'apiProvider', 'apiKey', 'licenseType', 'licenseCode'];
+      const stringFields = ['tone', 'replyLength', 'btnTheme', 'shortcut', 'apiProvider', 'apiKey', 'apiUrl', 'modelName', 'licenseType', 'licenseCode'];
       for (const field of stringFields) {
         if (field in data && typeof data[field] !== 'string') return false;
       }
@@ -2078,7 +2145,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
           const settingsToSave = {};
-          const keys = ['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'btnTheme', 'shortcut', 'apiProvider', 'licenseType', 'activatedAt'];
+          const keys = ['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'btnTheme', 'shortcut', 'licenseType', 'activatedAt'];
           keys.forEach(key => { if (imported[key] !== undefined) settingsToSave[key] = imported[key]; });
 
           chrome.storage.sync.set(settingsToSave, () => {
@@ -2087,7 +2154,16 @@ document.addEventListener('DOMContentLoaded', () => {
               showToast(I18N[currentLang].importSettingsFail || 'Failed to import settings', true);
               return;
             }
-            // licenseCode 写入 local（与其他字段分离）
+            // licenseCode / apiUrl / apiKey / modelName 写入 local（与其他字段分离）
+            const localFields = {};
+            if (imported.licenseCode !== undefined) localFields.licenseCode = imported.licenseCode;
+            if (imported.apiUrl !== undefined) localFields.apiUrl = imported.apiUrl;
+            if (imported.apiKey !== undefined) localFields.apiKey = imported.apiKey;
+            if (imported.modelName !== undefined) localFields.modelName = imported.modelName;
+            if (imported.apiUrl !== undefined || imported.apiKey !== undefined) {
+              localFields.apiProvider = 'custom';
+            }
+
             const finishImport = () => {
               // Reload state
               if (imported.personas) { personas = imported.personas; activePersonaId = imported.activePersonaId || (personas.length > 0 ? personas[0].id : null); }
@@ -2095,10 +2171,17 @@ document.addEventListener('DOMContentLoaded', () => {
               renderPersonas();
               renderFaq();
               updateLicenseDisplay(imported.licenseType || 'free');
+              // 刷新自定义模型表单
+              const apiUrlInputField = document.getElementById('apiUrlInput');
+              const modelNameInputField = document.getElementById('modelNameInput');
+              if (apiUrlInputField) apiUrlInputField.value = imported.apiUrl || '';
+              if (modelNameInputField) modelNameInputField.value = imported.modelName || '';
+              if (apiKeyInput) apiKeyInput.value = imported.apiKey || '';
+              updateApiStatusBar();
               showToast(I18N[currentLang].importSettingsSuccess || 'Settings imported successfully!');
             };
-            if (imported.licenseCode !== undefined) {
-              chrome.storage.local.set({ licenseCode: imported.licenseCode }, finishImport);
+            if (Object.keys(localFields).length > 0) {
+              chrome.storage.local.set(localFields, finishImport);
             } else {
               finishImport();
             }
@@ -2228,39 +2311,37 @@ document.addEventListener('DOMContentLoaded', () => {
 
   function updateApiStatusBar() {
     if (!apiStatusBar) return;
-    chrome.storage.local.get(['apiKey', 'apiProvider'], (data) => {
+    chrome.storage.local.get(['apiKey', 'apiUrl', 'modelName'], (data) => {
       if (chrome.runtime.lastError) return;
       const hasApiKey = !!data.apiKey;
-      const hasProvider = !!data.apiProvider;
+      const hasUrl = !!data.apiUrl;
       const zh = currentLang === 'zh';
 
-      if (!hasApiKey) {
-        // 未配置：显示警告 + 去配置按钮
-        const msg = (!hasProvider)
-          ? (zh ? '尚未配置大模型 API，点击右侧按钮开始' : 'AI model API not configured. Click to set up.')
-          : (zh ? '已选择服务商，请填入 API Key' : 'Provider selected. Please enter your API Key.');
+      if (!hasApiKey || !hasUrl) {
+        // 未配置或配置不完整：显示警告 + 去配置按钮
+        const msg = (!hasUrl && !hasApiKey)
+          ? (zh ? '尚未配置大模型 API，请填写地址、Key 和模型名' : 'AI model API not configured. Please fill URL, Key and model.')
+          : (zh ? 'API 配置不完整，请填写地址、Key 和模型名' : 'API config incomplete. Please fill URL, Key and model.');
         setApiStatusBarState('unconfigured', msg, 'warning');
-        // 图标颜色随状态
         if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--warning)';
       } else {
-        // 已配置：读取上次连接状态，显示并自动测试
+        // 已配置：读取上次连接状态
         chrome.storage.sync.get(['connectionValid'], (syncData) => {
-          const provider = (modelsConfig?.providers || []).find(p => p.id === data.apiProvider);
-          const providerName = provider?.name || (data.apiProvider || 'API');
+          const label = data.modelName || 'API';
           if (syncData.connectionValid === true) {
             setApiStatusBarState('connected',
-              (zh ? '已连接 · ' : 'Connected · ') + providerName,
+              (zh ? '已连接 · ' : 'Connected · ') + label,
               'success');
             if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--success)';
           } else if (syncData.connectionValid === false) {
             setApiStatusBarState('failed',
-              (zh ? '连接失败 · ' : 'Connection failed · ') + providerName,
+              (zh ? '连接失败 · ' : 'Connection failed · ') + label,
               'error');
             if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--error)';
           } else {
             // 已配置但未测试过，显示"已配置"待测试状态
             setApiStatusBarState('testing',
-              (zh ? '已配置 · ' : 'Configured · ') + providerName + (zh ? ' · 点击测试' : ' · Click to test'),
+              (zh ? '已配置 · ' : 'Configured · ') + label + (zh ? ' · 点击测试' : ' · Click to test'),
               'testing');
             if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--accent)';
           }
@@ -2272,13 +2353,13 @@ document.addEventListener('DOMContentLoaded', () => {
   // 测试连接按钮（状态栏）
   if (apiStatusTestBtn) {
     apiStatusTestBtn.addEventListener('click', async () => {
-      const data = await chrome.storage.local.get(['apiKey', 'apiProvider']);
-      if (!data.apiKey) return;
+      const data = await chrome.storage.local.get(['apiKey', 'apiUrl', 'modelName']);
+      if (!data.apiKey || !data.apiUrl) return;
       const zh = currentLang === 'zh';
       setApiStatusBarState('testing', zh ? '正在测试连接...' : 'Testing connection...', 'testing');
       if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--accent)';
-      // 复用 doTestConnection，传空 resultEl（状态栏自己更新）
-      await doTestConnection(data.apiProvider || 'openai', data.apiKey, null, null);
+      // 复用自定义测试逻辑，传空 resultEl（状态栏自己更新）
+      await doTestConnectionCustom(data.apiUrl, data.apiKey, data.modelName, null, null);
       // 测试完成后刷新状态栏
       updateApiStatusBar();
     });
@@ -2439,7 +2520,7 @@ document.addEventListener('DOMContentLoaded', () => {
   function loadSettings() {
     migrateApiKeyToLocal();
     migrateLicenseCodeToLocal();
-    chrome.storage.local.get({ apiKey: '', apiProvider: 'openai', licenseCode: null }, (localData) => {
+    chrome.storage.local.get({ apiKey: '', apiProvider: 'openai', apiUrl: '', modelName: '', licenseCode: null }, (localData) => {
       chrome.storage.sync.get({
         personas: [{ id: 'default', name: '默认角色 (Default)', prompt: '你是一个专业的AI助手。请根据用户的消息上下文进行专业、礼貌的回复。' }],
         activePersonaId: 'default',
@@ -2472,44 +2553,18 @@ document.addEventListener('DOMContentLoaded', () => {
         if (replyLengthSelect) replyLengthSelect.value = data.replyLength || 'auto';
         if (btnThemeSelect) btnThemeSelect.value = data.btnTheme || 'gradient';
 
-        // Load API providers dynamically, then set saved values from local storage
-        loadApiProviders().then(() => {
-          const savedProvider = localData.apiProvider || 'openai';
-          if (apiProvider) apiProvider.value = savedProvider;
-          if (apiKeyInput) apiKeyInput.value = localData.apiKey || '';
-          // 同步到高级模式输入框
-          const advKeyInput = document.getElementById('apiKeyAdvanced');
-          if (advKeyInput) advKeyInput.value = localData.apiKey || '';
-          updateApiProviderUI(savedProvider);
-
-          // 拉取远程推荐配置（异步，不阻塞渲染）
-          fetchRemoteProviderConfig().then(() => {
-            // 远程配置合并后，重新渲染卡片
-            renderProviderCards('settingsProviderCards', 'settings');
-            const isRecommended = (modelsConfig?.providers || []).find(
-              p => p.id === savedProvider && p.recommended
-            );
-            if (isRecommended) {
-              selectProviderCard(savedProvider, 'settings');
-            }
-          });
-
-          // 渲染推荐厂商卡片（设置页）
-          renderProviderCards('settingsProviderCards', 'settings');
-          setupCardKeyValidation('settings');
-
-          // 如果当前 provider 是推荐厂商，自动选中对应卡片
-          const isRecommended = (modelsConfig?.providers || []).find(
-            p => p.id === savedProvider && p.recommended
-          );
-          if (isRecommended) {
-            selectProviderCard(savedProvider, 'settings');
-            // 填入已保存的 Key
-            if (localData.apiKey && apiKeyInput) {
-              apiKeyInput.value = localData.apiKey;
-            }
-          }
+        // 加载 models-config.json（onboarding 仍需使用），异步拉取远程推荐配置
+        const onboardingSelect = document.getElementById('onboardingProviderSelect');
+        loadApiProviders(onboardingSelect).then(() => {
+          fetchRemoteProviderConfig();
         });
+
+        // 填充自定义模型表单（URL / Key / 模型名 —— 用户直接配置）
+        const apiUrlInputField = document.getElementById('apiUrlInput');
+        const modelNameInputField = document.getElementById('modelNameInput');
+        if (apiUrlInputField) apiUrlInputField.value = localData.apiUrl || '';
+        if (modelNameInputField) modelNameInputField.value = localData.modelName || '';
+        if (apiKeyInput) apiKeyInput.value = localData.apiKey || '';
 
         // Add change listeners for auto-save
         [toneSelect, replyLengthSelect, btnThemeSelect].forEach(el => {

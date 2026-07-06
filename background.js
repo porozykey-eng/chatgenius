@@ -291,10 +291,19 @@ async function resolveProviderConfig(providerId, apiKey) {
 // 从 local storage 读取 API 配置，合并到 data 对象
 async function loadApiSettings(data) {
   const localApi = await chrome.storage.local.get(['apiProvider', 'apiKey', 'apiUrl', 'modelName']);
-  data.provider = localApi.apiProvider || 'openai';
   data.apiKey = localApi.apiKey || '';
 
-  // 优先用 models-config.json 动态解析，fallback 到 local storage 缓存
+  // 优先使用用户直接配置的 apiUrl / modelName（设置页自定义模型表单）
+  // 仅当两者都存在时才视为自定义配置，避免半填状态被误用
+  if (localApi.apiUrl && localApi.modelName) {
+    data.apiUrl = localApi.apiUrl;
+    data.modelName = localApi.modelName;
+    data.provider = localApi.apiProvider || 'custom';
+    return data;
+  }
+
+  // fallback: 从 models-config.json 解析（兼容 onboarding 预设选择）
+  data.provider = localApi.apiProvider || 'openai';
   const resolved = await resolveProviderConfig(data.provider, data.apiKey);
   if (resolved) {
     data.apiUrl = resolved.apiUrl;
