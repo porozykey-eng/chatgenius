@@ -4,7 +4,7 @@
 const API_BASE_URL = 'https://chat.sopie.cc';
 
 // SYNC: Daily usage limit for free tier - must match across all files
-const DAILY_LIMIT = 20;
+const DAILY_LIMIT = 50;
 
 // Upgrade URL
 const UPGRADE_URL = 'https://chatgenius.ai/#pricing';

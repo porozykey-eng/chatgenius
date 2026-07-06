@@ -4,7 +4,7 @@ const MAX_RETRIES = 3;
 const RETRY_DELAY_BASE = 1000; // 1 second base delay
 
 // SYNC: Daily usage limit for free tier - must match across all files (background.js, popup.js, options.js)
-const DAILY_LIMIT = 20;
+const DAILY_LIMIT = 50;
 
 // SYNC: Backend API base URL - must match across all files (background.js, options.js)
 const API_BASE_URL = 'https://chat.sopie.cc';

@@ -1,7 +1,7 @@
 // popup.js - 快捷控制面板
 
 // SYNC: Daily usage limit for free tier - must match across all files (background.js, popup.js, options.js)
-const DAILY_LIMIT = 20;
+const DAILY_LIMIT = 50;
 
 document.addEventListener('DOMContentLoaded', () => {
   // Dynamically display extension version from manifest
