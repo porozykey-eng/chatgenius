@@ -2121,34 +2121,40 @@
       align-items: center;
       justify-content: space-between;
       gap: var(--spacing-3);
-      padding: var(--spacing-3) var(--spacing-4);
+      padding: 10px 14px;
       border: 1px solid var(--border-default);
+      border-left-width: 3px;
       border-radius: var(--radius-md);
-      font-size: var(--font-size-base);
+      font-size: 13px;
       margin-bottom: var(--spacing-4);
+      background: var(--bg-secondary);
       transition: background var(--duration-base) var(--ease-out),
                   border-color var(--duration-base) var(--ease-out);
     }
     .api-status-bar.unconfigured {
       background: var(--warning-bg);
-      border-color: var(--warning);
+      border-color: var(--border-default);
+      border-left-color: var(--warning);
     }
     .api-status-bar.connected {
       background: var(--success-bg);
-      border-color: var(--success);
+      border-color: var(--border-default);
+      border-left-color: var(--success);
     }
     .api-status-bar.failed {
       background: var(--error-bg);
-      border-color: var(--error);
+      border-color: var(--border-default);
+      border-left-color: var(--error);
     }
     .api-status-bar.testing {
       background: var(--accent-light);
-      border-color: var(--accent);
+      border-color: var(--border-default);
+      border-left-color: var(--accent);
     }
     .api-status-left {
       display: flex;
       align-items: center;
-      gap: var(--spacing-2);
+      gap: 10px;
       flex: 1;
       min-width: 0;
     }
@@ -2165,9 +2171,9 @@
     .api-status-bar.failed .api-status-indicator { background: var(--error); }
     .api-status-bar.testing .api-status-indicator {
       background: var(--accent);
-      animation: pulse 1s ease-in-out infinite;
+      animation: api-pulse 1s ease-in-out infinite;
     }
-    @keyframes pulse {
+    @keyframes api-pulse {
       0%, 100% { opacity: 1; transform: scale(1); }
       50% { opacity: 0.4; transform: scale(0.8); }
     }
@@ -2176,7 +2182,7 @@
       align-items: center;
       flex-shrink: 0;
     }
-    .api-status-icon svg { width: 16px; height: 16px; }
+    .api-status-icon svg { width: 15px; height: 15px; }
     .api-status-text {
       color: var(--text-primary);
       font-weight: 500;
@@ -2237,6 +2243,102 @@
       font-size: 13px;
       color: var(--text-secondary);
     }
+
+    /* 快捷键录入按钮 */
+    .shortcut-recorder {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      min-width: 92px;
+      padding: 4px 10px;
+      background: var(--bg-secondary);
+      color: var(--text-primary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      font-family: var(--font-sans);
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+      white-space: nowrap;
+      margin-left: auto;
+    }
+    .shortcut-recorder:hover {
+      border-color: var(--accent);
+      color: var(--accent);
+    }
+    .shortcut-recorder.recording {
+      background: var(--accent-light);
+      border-color: var(--accent);
+      color: var(--accent);
+      animation: api-pulse 1.2s ease-in-out infinite;
+    }
+    .shortcut-recorder.conflict {
+      border-color: var(--error);
+      color: var(--error);
+    }
+
+    /* 悬浮按钮主题预览 */
+    .theme-preview {
+      margin-top: var(--spacing-3);
+      padding: 14px;
+      border: 1px dashed var(--border-default);
+      border-radius: var(--radius-md);
+      background: var(--bg-primary);
+    }
+    .theme-preview-label {
+      font-size: 11px;
+      color: var(--text-tertiary);
+      margin-bottom: 10px;
+      letter-spacing: 0.3px;
+    }
+    .theme-preview-stage {
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      height: 64px;
+      border-radius: var(--radius-sm);
+      /* 模拟网页背景（深色 + 浅色渐变）让玻璃/极简主题可见 */
+      background:
+        linear-gradient(135deg, #2a2a3e 0%, #3d3d5c 50%, #1a1a2e 100%);
+      position: relative;
+      overflow: hidden;
+    }
+    .theme-preview-btn {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      font-family: var(--font-sans);
+      line-height: 1;
+      transition: all 0.2s var(--ease-out);
+      cursor: default;
+    }
+    /* 三种主题样式（与 content.js 保持一致） */
+    .theme-preview-btn.theme-gradient {
+      background: linear-gradient(135deg, rgba(102, 126, 234, 1), rgba(118, 75, 162, 1));
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+    }
+    .theme-preview-btn.theme-minimal {
+      background: rgba(255, 255, 255, 1);
+      color: #1d1d1f;
+      border: 1px solid rgba(0, 0, 0, 0.06);
+      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+    }
+    .theme-preview-btn.theme-glass {
+      background: rgba(255, 255, 255, 0.12);
+      color: #ffffff;
+      border: 1px solid rgba(255, 255, 255, 0.18);
+      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+      backdrop-filter: blur(20px);
+      -webkit-backdrop-filter: blur(20px);
+    }
+    .theme-preview-btn svg { width: 14px; height: 14px; }
 
     /* Responsive */
     @media (max-width: 1024px) {
@@ -2709,8 +2811,8 @@
               <div class="shortcut-cards">
                 <div class="shortcut-card">
                   <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                  <span class="shortcut-key">Alt+2</span>
                   <span class="shortcut-desc">打开/关闭悬浮按钮</span>
+                  <button type="button" class="shortcut-recorder" id="shortcutRecorder" title="点击后按下组合键">Alt + 1</button>
                 </div>
                 <div class="shortcut-card">
                   <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
@@ -2723,6 +2825,7 @@
                   <span class="shortcut-desc">重新生成回复</span>
                 </div>
               </div>
+              <div class="form-hint" id="shortcutHint" style="margin-top:6px;">点击右侧按钮后按下组合键（至少含 Ctrl/Alt/Shift/Cmd 之一）。Esc 取消。</div>
             </div>
             <div class="form-group">
               <label class="form-label" for="btnTheme" data-i18n="btnTheme">悬浮按钮主题</label>
@@ -2731,6 +2834,15 @@
                 <option value="minimal" data-i18n="themeMinimal">极简黑白</option>
                 <option value="glass" data-i18n="themeGlass">毛玻璃</option>
               </select>
+              <div class="theme-preview" id="themePreview" aria-hidden="true">
+                <div class="theme-preview-label">实时预览</div>
+                <div class="theme-preview-stage">
+                  <span class="theme-preview-btn" id="themePreviewBtn">
+                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                    <span>AI</span>
+                  </span>
+                </div>
+              </div>
             </div>
           </div>
         </div>

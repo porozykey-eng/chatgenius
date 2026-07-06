@@ -1319,6 +1319,87 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // ---- Shortcut ----
   const shortcutInput = document.getElementById('shortcut');
+  const shortcutRecorder = document.getElementById('shortcutRecorder');
+
+  // ---- 悬浮按钮主题预览 ----
+  const btnThemeSelect = document.getElementById('btnTheme');
+  const themePreviewBtn = document.getElementById('themePreviewBtn');
+  function updateThemePreview(theme) {
+    if (!themePreviewBtn) return;
+    themePreviewBtn.className = 'theme-preview-btn theme-' + (theme || 'gradient');
+  }
+  if (btnThemeSelect) {
+    btnThemeSelect.addEventListener('change', () => updateThemePreview(btnThemeSelect.value));
+  }
+
+  // 快捷键录入：点击按钮进入录制模式，按下组合键保存
+  let isRecordingShortcut = false;
+  if (shortcutRecorder) {
+    shortcutRecorder.addEventListener('click', () => {
+      if (isRecordingShortcut) return;
+      isRecordingShortcut = true;
+      shortcutRecorder.classList.add('recording');
+      shortcutRecorder.classList.remove('conflict');
+      shortcutRecorder.textContent = '按下组合键...';
+    });
+
+    document.addEventListener('keydown', (e) => {
+      if (!isRecordingShortcut) return;
+      e.preventDefault();
+      e.stopPropagation();
+
+      // Esc 取消录制
+      if (e.key === 'Escape') {
+        isRecordingShortcut = false;
+        shortcutRecorder.classList.remove('recording');
+        chrome.storage.sync.get({ shortcut: 'Alt + 1' }, (data) => {
+          shortcutRecorder.textContent = data.shortcut || '未设置';
+        });
+        return;
+      }
+
+      // 必须含修饰键（避免单字母被注册为快捷键导致输入冲突）
+      if (!e.ctrlKey && !e.altKey && !e.shiftKey && !e.metaKey) {
+        shortcutRecorder.classList.add('conflict');
+        shortcutRecorder.textContent = '需含修饰键';
+        return;
+      }
+
+      const keys = [];
+      if (e.ctrlKey) keys.push('Ctrl');
+      if (e.altKey) keys.push('Alt');
+      if (e.shiftKey) keys.push('Shift');
+      if (e.metaKey) keys.push('Cmd');
+      // 忽略修饰键本身，只记录主键
+      const mainKey = e.key.replace('Control', '').replace('Alt', '').replace('Shift', '').replace('Meta', '');
+      if (mainKey) keys.push(mainKey.length === 1 ? mainKey.toUpperCase() : mainKey);
+
+      const combo = keys.join(' + ');
+
+      // 冲突检查：与浏览器/扩展内固定快捷键冲突
+      const FIXED_SHORTCUTS = ['Ctrl + Enter', 'Ctrl + R', 'Ctrl + Shift + N', 'Ctrl + T', 'Ctrl + W'];
+      if (FIXED_SHORTCUTS.includes(combo)) {
+        isRecordingShortcut = false;
+        shortcutRecorder.classList.remove('recording');
+        shortcutRecorder.classList.add('conflict');
+        shortcutRecorder.textContent = combo + ' 冲突';
+        setTimeout(() => {
+          shortcutRecorder.classList.remove('conflict');
+          chrome.storage.sync.get({ shortcut: 'Alt + 1' }, (data) => {
+            shortcutRecorder.textContent = data.shortcut || '未设置';
+          });
+        }, 1500);
+        return;
+      }
+
+      // 保存
+      isRecordingShortcut = false;
+      shortcutRecorder.classList.remove('recording');
+      shortcutRecorder.textContent = combo;
+      chrome.storage.sync.set({ shortcut: combo });
+      if (shortcutInput) shortcutInput.value = combo;
+    });
+  }
 
   // ---- API Configuration ----
   const apiProvider = document.getElementById('apiProvider');
@@ -2513,10 +2594,15 @@ document.addEventListener('DOMContentLoaded', () => {
         // Set form values
         const toneSelect = document.getElementById('tone');
         const replyLengthSelect = document.getElementById('replyLength');
-        const btnThemeSelect = document.getElementById('btnTheme');
         if (toneSelect) toneSelect.value = data.tone || 'auto';
         if (replyLengthSelect) replyLengthSelect.value = data.replyLength || 'auto';
         if (btnThemeSelect) btnThemeSelect.value = data.btnTheme || 'gradient';
+        // 初始化主题预览
+        updateThemePreview(data.btnTheme || 'gradient');
+
+        // 回填快捷键录入按钮显示
+        if (shortcutRecorder) shortcutRecorder.textContent = data.shortcut || '未设置';
+        if (shortcutInput) shortcutInput.value = data.shortcut || 'Alt + 1';
 
         // 加载 models-config.json（保留兼容），异步拉取远程推荐配置
         loadApiProviders().then(() => {
