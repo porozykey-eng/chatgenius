@@ -82,6 +82,6 @@
     }
   ],
   "content_security_policy": {
-    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://chat.sopie.cc https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://ark.cn-beijing.volces.com https://aip.baidubce.com https://api.moonshot.cn https://dashscope.aliyuncs.com https://api.hunyuan.cloud.tencent.com https://open.bigmodel.cn https://api.deepseek.com https://spark-api-open.xf-yun.com https://api.minimax.chat https://api.stepfun.com https://api.lingyiwanwu.com https://api.baichuan-ai.com https://api.siliconflow.cn https://api.x.ai https://api.mistral.ai https://api.cohere.ai https://openrouter.ai;"
+    "extension_pages": "script-src 'self'; object-src 'self'; style-src 'self' 'unsafe-inline' https://fonts.googleapis.com; font-src 'self' https://fonts.gstatic.com; connect-src 'self' https://chat.sopie.cc https://api.openai.com https://api.anthropic.com https://generativelanguage.googleapis.com https://ark.cn-beijing.volces.com https://aip.baidubce.com https://api.moonshot.cn https://dashscope.aliyuncs.com https://api.hunyuan.cloud.tencent.com https://open.bigmodel.cn https://api.deepseek.com https://spark-api-open.xf-yun.com https://api.minimax.chat https://api.stepfun.com https://api.lingyiwanwu.com https://api.baichuan-ai.com https://api.siliconflow.cn https://api.x.ai https://api.mistral.ai https://api.cohere.ai https://openrouter.ai;"
   }
 }
