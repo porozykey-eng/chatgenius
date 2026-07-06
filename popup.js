@@ -24,6 +24,9 @@ document.addEventListener('DOMContentLoaded', () => {
   const personaChips = document.getElementById('personaChips');
   const openOptionsBtn = document.getElementById('openOptionsBtn');
   const openSettingsBtn = document.getElementById('openSettingsBtn');
+  const modelInfoBar = document.getElementById('modelInfoBar');
+  const modelInfoName = document.getElementById('modelInfoName');
+  const modelInfoEdit = document.getElementById('modelInfoEdit');
 
   // 默认角色列表
   const DEFAULT_PERSONAS = [
@@ -31,10 +34,8 @@ document.addEventListener('DOMContentLoaded', () => {
   ];
 
   // 加载设置并显示状态
+  // 注意：apiUrl/apiKey/modelName 保存在 local storage（options.js doSave）
   chrome.storage.sync.get({
-    apiUrl: '',
-    apiKey: '',
-    modelName: '',
     connectionValid: null,
     personas: DEFAULT_PERSONAS,
     activePersonaId: 'default',
@@ -43,8 +44,19 @@ document.addEventListener('DOMContentLoaded', () => {
     activatedAt: null,
     dailyReplyCount: 0,
     lastResetDate: null
-  }, (data) => {
-    chrome.storage.local.get(['aiButtonDisabled'], (localData) => {
+  }, (syncData) => {
+    chrome.storage.local.get({
+      aiButtonDisabled: false,
+      apiUrl: '',
+      apiKey: '',
+      modelName: ''
+    }, (localData) => {
+      const data = {
+        ...syncData,
+        apiUrl: localData.apiUrl,
+        apiKey: localData.apiKey,
+        modelName: localData.modelName
+      };
       updateUI(data, localData.aiButtonDisabled || false);
       updateLicenseStatus(data);
       updateUsageBar(data);
@@ -59,9 +71,16 @@ document.addEventListener('DOMContentLoaded', () => {
       statusText.textContent = '插件未配置';
       quickPanel.style.display = 'none';
       notConfigured.style.display = 'block';
+      if (modelInfoBar) modelInfoBar.style.display = 'none';
     } else {
       quickPanel.style.display = 'block';
       notConfigured.style.display = 'none';
+
+      // 显示当前模型信息条
+      if (modelInfoBar && modelInfoName) {
+        modelInfoBar.style.display = 'flex';
+        modelInfoName.textContent = settings.modelName || '—';
+      }
 
       // AI toggle state
       if (aiToggle) {
@@ -78,7 +97,7 @@ document.addEventListener('DOMContentLoaded', () => {
       // 更新状态指示
       if (settings.connectionValid === true) {
         statusDot.classList.add('active');
-        statusText.textContent = `已连接: ${settings.modelName}`;
+        statusText.textContent = '已连接';
       } else if (settings.connectionValid === false) {
         statusDot.classList.remove('active');
         statusText.textContent = 'API 连接失败';
@@ -206,6 +225,14 @@ document.addEventListener('DOMContentLoaded', () => {
   // 打开设置页面 (options.html)
   if (openSettingsBtn) {
     openSettingsBtn.addEventListener('click', () => {
+      chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
+      window.close();
+    });
+  }
+
+  // 模型信息条 - 编辑按钮打开设置页
+  if (modelInfoEdit) {
+    modelInfoEdit.addEventListener('click', () => {
       chrome.tabs.create({ url: chrome.runtime.getURL('options.html') });
       window.close();
     });

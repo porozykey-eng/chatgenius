@@ -107,6 +107,38 @@
     .status-dot.active { background: var(--success); box-shadow: 0 0 8px rgba(52, 199, 89, 0.5); }
     .status-text { font-size: 12px; font-weight: 500; color: var(--text-secondary); flex: 1; }
 
+    /* 当前模型信息条 */
+    .model-info-bar {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      padding: 10px 12px;
+      background: rgba(79, 70, 229, 0.04);
+      border: 1px solid rgba(79, 70, 229, 0.1);
+      border-radius: var(--radius-md);
+      margin-bottom: 12px;
+    }
+    .model-info-icon {
+      width: 28px; height: 28px;
+      border-radius: 8px;
+      background: var(--accent-gradient);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; flex-shrink: 0;
+    }
+    .model-info-content { flex: 1; min-width: 0; }
+    .model-info-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: 1px; }
+    .model-info-name {
+      font-size: 12px; font-weight: 600; color: var(--text-primary);
+      overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
+    }
+    .model-info-edit {
+      width: 26px; height: 26px; border-radius: 6px; border: none;
+      background: transparent; color: var(--text-tertiary); cursor: pointer;
+      display: flex; align-items: center; justify-content: center;
+      transition: all var(--transition-fast); flex-shrink: 0;
+    }
+    .model-info-edit:hover { background: var(--bg-hover); color: var(--text-primary); }
+
     /* Quick actions row */
     .quick-actions {
       display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
@@ -232,6 +264,20 @@
     <div class="status-bar">
       <div class="status-dot" id="statusDot"></div>
       <span class="status-text" id="statusText">正在加载状态...</span>
+    </div>
+
+    <!-- 当前模型信息（已配置时显示） -->
+    <div class="model-info-bar" id="modelInfoBar" style="display:none;">
+      <div class="model-info-icon">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 2L2 7l10 5 10-5-10-5z"></path><path d="M2 17l10 5 10-5"></path><path d="M2 12l10 5 10-5"></path></svg>
+      </div>
+      <div class="model-info-content">
+        <div class="model-info-label">当前模型</div>
+        <div class="model-info-name" id="modelInfoName">—</div>
+      </div>
+      <button class="model-info-edit" id="modelInfoEdit" title="编辑配置">
+        <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
+      </button>
     </div>
 
     <!-- License Status Bar -->
