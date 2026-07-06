@@ -1,10 +1,10 @@
 {
   "extName": {
-    "message": "ChatGenius AI - Auto Reply Assistant",
+    "message": "ChatGenius AI - Smart Auto Reply",
     "description": "Name of the extension"
   },
   "extDesc": {
-    "message": "AI-powered auto-reply assistant for WhatsApp, Messenger, Telegram, Slack and Discord with multi-model support.",
+    "message": "AI-powered auto-reply assistant for WhatsApp, Messenger and Facebook, with multi-model AI support, custom personas, and smart knowledge base integration.",
     "description": "Description of the extension"
   }
 }

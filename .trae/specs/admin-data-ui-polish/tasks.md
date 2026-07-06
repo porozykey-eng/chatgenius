@@ -33,8 +33,8 @@
   - [x] SubTask 5.5: `.card-title` 字号确认为 16px，字体权重 600
   - [x] SubTask 5.6: `.login-subtitle` 颜色从 `var(--gray-500)` 确认可读性
 
-- [ ] Task 6: 提交、推送并验证
-  - [ ] SubTask 6.1: git add + commit + push gitee
+- [x] Task 6: 提交、推送并验证
+  - [x] SubTask 6.1: git add + commit + push gitee
   - [ ] SubTask 6.2: 服务器 git pull + pm2 restart
   - [ ] SubTask 6.3: 访问管理后台验证所有改动
 

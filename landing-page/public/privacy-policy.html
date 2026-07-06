@@ -1,0 +1,462 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>隐私政策 — ChatGenius AI</title>
+  <meta name="description" content="ChatGenius AI 隐私政策 — 我们如何收集、使用和保护您的数据">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #7c3aed;
+      --color-primary-dark: #6d28d9;
+      --color-primary-light: #f5f3ff;
+      --color-accent: #8b5cf6;
+      --brand-gradient: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%);
+      --brand-border: #ddd6fe;
+
+      --color-bg: #ffffff;
+      --color-bg-subtle: #fafafa;
+      --color-bg-muted: #f4f4f5;
+      --color-text: #0f172a;
+      --color-text-secondary: #475569;
+      --color-text-muted: #94a3b8;
+      --color-border: #e4e4e7;
+      --color-border-strong: #cbd5e1;
+
+      --content-width: 760px;
+      --radius: 10px;
+      --radius-lg: 14px;
+
+      --shadow-sm: 0 1px 3px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.03);
+      --shadow-md: 0 4px 6px -1px rgba(15,23,42,0.07), 0 2px 4px -2px rgba(15,23,42,0.04);
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #0f172a;
+        --color-bg-subtle: #1e293b;
+        --color-bg-muted: #334155;
+        --color-text: #f1f5f9;
+        --color-text-secondary: #cbd5e1;
+        --color-text-muted: #64748b;
+        --color-border: #334155;
+        --color-border-strong: #475569;
+        --color-primary-light: #1e1b4b;
+        --brand-border: #4c1d95;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; scroll-padding-top: 80px; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--color-bg); color: var(--color-text); line-height: 1.7;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ============ Top Header (玻璃态) ============ */
+    .top-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--color-border);
+    }
+    @media (prefers-color-scheme: dark) {
+      .top-header { background: rgba(15,23,42,0.72); }
+    }
+    .top-header::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+      background: var(--brand-gradient); opacity: 0.6;
+    }
+    .top-header-inner {
+      max-width: 1200px; margin: 0 auto; padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 17px; color: var(--color-text); text-decoration: none;
+    }
+    .brand-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--brand-gradient);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 800; font-size: 14px;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.25);
+    }
+    .top-header nav a {
+      color: var(--color-text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;
+      padding: 6px 12px; border-radius: 7px; transition: color 0.2s, background 0.2s;
+    }
+    .top-header nav a:hover { color: var(--color-primary); background: var(--color-primary-light); }
+
+    /* ============ Hero ============ */
+    .hero {
+      max-width: var(--content-width); margin: 0 auto; padding: 64px 24px 32px;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 999px;
+      background: var(--color-primary-light); color: var(--color-primary);
+      border: 1px solid var(--brand-border);
+      font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 36px; font-weight: 800; letter-spacing: -0.02em;
+      line-height: 1.15; margin-bottom: 12px;
+      background: var(--brand-gradient);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero .lead {
+      font-size: 17px; color: var(--color-text-secondary); line-height: 1.6;
+    }
+    .hero .meta {
+      margin-top: 18px; font-size: 13px; color: var(--color-text-muted);
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+    .hero .meta strong { color: var(--color-text-secondary); font-weight: 600; }
+
+    /* ============ Content ============ */
+    .content {
+      max-width: var(--content-width); margin: 0 auto; padding: 24px 24px 96px;
+    }
+    .content section {
+      margin-bottom: 40px;
+      animation: fadeUp 0.5s var(--ease-out) both;
+    }
+    .content section:nth-child(1) { animation-delay: 0.05s; }
+    .content section:nth-child(2) { animation-delay: 0.1s; }
+    .content section:nth-child(3) { animation-delay: 0.15s; }
+    .content section:nth-child(4) { animation-delay: 0.2s; }
+    .content section:nth-child(5) { animation-delay: 0.25s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .content section { animation: none; }
+    }
+
+    .content h2 {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.01em;
+      margin-bottom: 14px; padding-left: 14px; position: relative;
+      color: var(--color-text);
+    }
+    .content h2::before {
+      content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+      width: 4px; border-radius: 2px;
+      background: var(--brand-gradient);
+    }
+    .content h3 {
+      font-size: 16px; font-weight: 600; margin: 18px 0 8px;
+      color: var(--color-text);
+    }
+    .content p {
+      color: var(--color-text-secondary); margin-bottom: 12px;
+    }
+    .content ul {
+      padding-left: 22px; color: var(--color-text-secondary);
+      margin-bottom: 14px;
+    }
+    .content ul li { margin-bottom: 6px; }
+    .content strong { color: var(--color-text); font-weight: 600; }
+    .content code {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 13px; padding: 2px 6px; border-radius: 4px;
+      background: var(--color-bg-muted); color: var(--color-primary);
+    }
+
+    /* ============ Callout ============ */
+    .callout {
+      background: var(--color-primary-light);
+      border: 1px solid var(--brand-border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin: 18px 0;
+      border-left: 3px solid var(--color-primary);
+    }
+    .callout-title {
+      font-weight: 600; color: var(--color-primary-dark); margin-bottom: 6px;
+      font-size: 14px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .callout-title { color: var(--color-accent); }
+    }
+    .callout p { color: var(--color-text-secondary); margin-bottom: 0; font-size: 14px; }
+
+    /* ============ Data Table ============ */
+    .data-table {
+      width: 100%; border-collapse: collapse;
+      margin: 14px 0; font-size: 14px;
+      border: 1px solid var(--color-border); border-radius: var(--radius);
+      overflow: hidden;
+    }
+    .data-table th, .data-table td {
+      padding: 12px 14px; text-align: left;
+      border-bottom: 1px solid var(--color-border);
+    }
+    .data-table th {
+      background: var(--color-bg-subtle); font-weight: 600;
+      color: var(--color-text); font-size: 13px;
+    }
+    .data-table tr:last-child td { border-bottom: none; }
+    .data-table td { color: var(--color-text-secondary); }
+    .data-table td strong { color: var(--color-text); }
+
+    /* ============ Contact Card ============ */
+    .contact-card {
+      background: var(--color-bg-subtle);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      margin-top: 14px;
+    }
+    .contact-card h3 { margin-top: 0; }
+    .contact-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+    .contact-item strong { color: var(--color-text); min-width: 90px; }
+
+    /* ============ Footer ============ */
+    .footer {
+      border-top: 1px solid var(--color-border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: 13px;
+    }
+    .footer a { color: var(--color-primary); text-decoration: none; }
+
+    /* ============ Mobile ============ */
+    @media (max-width: 640px) {
+      .hero { padding: 48px 20px 24px; }
+      .hero h1 { font-size: 28px; }
+      .hero .lead { font-size: 15px; }
+      .content { padding: 16px 20px 64px; }
+      .content h2 { font-size: 19px; }
+      .top-header-inner { padding: 12px 16px; }
+      .top-header nav a { padding: 6px 8px; font-size: 13px; }
+      .data-table { font-size: 13px; }
+      .data-table th, .data-table td { padding: 10px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-header">
+    <div class="top-header-inner">
+      <a class="brand" href="https://chat.sopie.cc/">
+        <span class="brand-icon">CG</span>
+        <span>ChatGenius AI</span>
+      </a>
+      <nav>
+        <a href="https://chat.sopie.cc/">首页</a>
+        <a href="https://chat.sopie.cc/guide/">使用教程</a>
+        <a href="https://chat.sopie.cc/privacy-policy/">隐私政策</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="eyebrow">Privacy Policy</span>
+      <h1>隐私政策</h1>
+      <p class="lead">我们高度重视您的隐私。本政策说明 ChatGenius AI 浏览器扩展（以下简称"本扩展"）及配套后端服务收集、使用、存储和保护您数据的方式。</p>
+      <div class="meta">
+        <span><strong>最后更新：</strong>2026-07-03</span>
+        <span><strong>适用版本：</strong>v3.0.0 及以上</span>
+        <span><strong>生效日期：</strong>2026-07-03</span>
+      </div>
+    </section>
+
+    <div class="content">
+
+      <section>
+        <h2>1. 我们收集的数据</h2>
+        <p>本扩展采用"最小化收集"原则，仅在必要时收集以下数据：</p>
+        <table class="data-table">
+          <thead>
+            <tr>
+              <th>数据类型</th>
+              <th>说明</th>
+              <th>存储位置</th>
+            </tr>
+          </thead>
+          <tbody>
+            <tr>
+              <td><strong>AI 服务商 API Key</strong></td>
+              <td>您主动填入的服务商密钥，用于调用 AI 接口</td>
+              <td>仅本地 <code>chrome.storage.local</code></td>
+            </tr>
+            <tr>
+              <td><strong>选定的 AI 服务商</strong></td>
+              <td>如 OpenAI、DeepSeek、智谱等标识</td>
+              <td>仅本地 <code>chrome.storage.local</code></td>
+            </tr>
+            <tr>
+              <td><strong>角色设定 / FAQ 知识库</strong></td>
+              <td>您自定义的回复风格与知识条目</td>
+              <td>仅本地 <code>chrome.storage.sync</code></td>
+            </tr>
+            <tr>
+              <td><strong>激活码</strong></td>
+              <td>升级 Pro 时输入的许可证密钥</td>
+              <td>本地 + 服务器（加密存储）</td>
+            </tr>
+            <tr>
+              <td><strong>设备指纹</strong></td>
+              <td>UA/语言/时区等组合哈希，用于绑定激活码到本设备</td>
+              <td>本地 + 服务器</td>
+            </tr>
+            <tr>
+              <td><strong>订单信息</strong></td>
+              <td>订单号、金额、支付渠道、支付时间</td>
+              <td>服务器（财务合规保留 5 年）</td>
+            </tr>
+            <tr>
+              <td><strong>心跳日志</strong></td>
+              <td>IP、指纹、时间戳，用于许可证有效性校验</td>
+              <td>服务器（保留 90 天）</td>
+            </tr>
+            <tr>
+              <td><strong>发票申请信息</strong></td>
+              <td>抬头、税号、邮箱（仅用户主动申请时）</td>
+              <td>服务器（保留 5 年）</td>
+            </tr>
+          </tbody>
+        </table>
+
+        <div class="callout">
+          <div class="callout-title">我们绝不收集的内容</div>
+          <p>我们不会收集您的聊天内容、联系人列表、消息历史、浏览器历史、网页访问记录，也不会读取 WhatsApp/Messenger/Facebook 页面上的对话文本。AI 回复请求由您的浏览器直接发往您选定的 AI 服务商，不经过我们的服务器。</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>2. 数据使用目的</h2>
+        <p>我们收集的数据严格用于以下目的：</p>
+        <ul>
+          <li><strong>提供 AI 自动回复功能</strong>：将您的 API Key 与角色设定用于调用 AI 服务商接口</li>
+          <li><strong>许可证验证</strong>：通过激活码 + 设备指纹确认您是 Pro 版本的合法用户</li>
+          <li><strong>防欺诈与防滥用</strong>：通过 IP 与指纹校验防止激活码被多人共享或盗用</li>
+          <li><strong>订单履行与售后</strong>：处理支付、开具发票、提供退款等售后服务</li>
+          <li><strong>服务改进</strong>：聚合统计数据（不识别个人身份）用于优化产品体验</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. 数据存储与传输</h2>
+
+        <h3>3.1 本地存储</h3>
+        <p>您的 API Key、AI 服务商选择、角色设定、FAQ 知识库等敏感配置仅存储在浏览器的 <code>chrome.storage.local</code> 中，不会上传到我们的服务器，也不会通过 Chrome 同步功能上传到 Google 云端。</p>
+
+        <h3>3.2 服务器存储</h3>
+        <p>以下数据存储在我们的服务器（位于中国境内的云服务商）：</p>
+        <ul>
+          <li><strong>激活码</strong>：用于许可证验证（绑定设备指纹后不可在他设备使用）</li>
+          <li><strong>订单数据</strong>：支付渠道返回的订单信息，保留 5 年（财务合规要求）</li>
+          <li><strong>心跳日志</strong>：保留 90 天后自动清理</li>
+          <li><strong>IP 封禁记录</strong>：连续 5 次激活失败将封禁 IP 24 小时</li>
+        </ul>
+
+        <h3>3.3 数据传输加密</h3>
+        <p>所有客户端与服务器之间的通信均通过 HTTPS（TLS 1.2+）加密。支付回调使用 HMAC-SHA256 签名 + AES-256-GCM 加密验证，防止数据被篡改或窃听。</p>
+      </section>
+
+      <section>
+        <h2>4. 第三方数据共享</h2>
+        <p>我们不会出售、出租或交易您的个人信息。在以下情形中，我们可能共享必要的数据：</p>
+
+        <h3>4.1 AI 服务商</h3>
+        <p>当您使用 AI 自动回复功能时，您的聊天上下文（您正在回复的消息）会直接从浏览器发送到您选定的 AI 服务商（如 OpenAI、DeepSeek、智谱等）。这一过程不经过我们的服务器。各服务商的数据处理受其自身隐私政策约束。</p>
+
+        <h3>4.2 支付服务商</h3>
+        <p>购买 Pro 版本时，订单信息会发送到支付宝或微信支付。支付服务商的处理受其隐私政策约束。</p>
+
+        <h3>4.3 法律要求</h3>
+        <p>在法律法规要求、政府主管部门依法要求或为维护合法权益时，我们可能共享必要数据。</p>
+      </section>
+
+      <section>
+        <h2>5. 您的权利</h2>
+        <p>根据相关法律法规（包括《个人信息保护法》和 GDPR），您享有以下权利：</p>
+        <ul>
+          <li><strong>访问权</strong>：您可随时通过本扩展查看本地存储的所有数据</li>
+          <li><strong>更正权</strong>：可在扩展设置中修改您的配置</li>
+          <li><strong>删除权</strong>：卸载扩展即可删除本地所有数据；服务器端数据可联系客服删除</li>
+          <li><strong>撤回授权</strong>：可在 Chrome 扩展管理页面随时禁用或卸载本扩展</li>
+          <li><strong>数据可携带权</strong>：扩展设置页支持导出配置 JSON 文件</li>
+          <li><strong>反对权</strong>：可对特定数据处理行为提出反对</li>
+        </ul>
+
+        <div class="callout">
+          <div class="callout-title">行使权利的方式</div>
+          <p>如需行使上述权利，请通过文末联系方式与我们沟通。我们将在 15 个工作日内回复您的请求。</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>6. 数据安全</h2>
+        <p>我们采取以下技术与组织措施保护您的数据：</p>
+        <ul>
+          <li><strong>传输加密</strong>：全站 HTTPS + TLS 1.2+</li>
+          <li><strong>支付安全</strong>：HMAC-SHA256 签名 + AES-256-GCM 加密</li>
+          <li><strong>防重放攻击</strong>：所有敏感接口使用 5 分钟时效时间戳校验</li>
+          <li><strong>防暴力破解</strong>：连续 5 次激活失败将封禁 IP 24 小时</li>
+          <li><strong>最小权限原则</strong>：扩展仅申请必要的浏览器权限</li>
+          <li><strong>权限最小化</strong>：AI 服务商域名采用 optional_host_permissions，仅当您选定具体服务商时才申请访问权限</li>
+          <li><strong>访问控制</strong>：服务器数据库访问受 IP 白名单与密钥认证保护</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>7. Cookie 与类似技术</h2>
+        <p>本扩展不使用 Cookie。后端服务器在管理后台登录时使用必要的会话 Cookie，仅用于身份验证，不用于跨站追踪。</p>
+      </section>
+
+      <section>
+        <h2>8. 未成年人隐私</h2>
+        <p>本扩展面向 18 岁及以上的成年用户。我们不会 knowingly 收集未成年人的个人信息。如果您是未成年人，请在监护人指导下使用本扩展。如发现我们误收集了未成年人信息，请联系我们删除。</p>
+      </section>
+
+      <section>
+        <h2>9. 国际用户</h2>
+        <p>本扩展的服务器位于中国境内。如果您从其他国家或地区访问本扩展，请注意您的数据将传输到中国并按中国法律法规处理。继续使用即表示您同意此跨境传输。</p>
+      </section>
+
+      <section>
+        <h2>10. 政策变更</h2>
+        <p>我们可能不时更新本隐私政策。变更后的政策将在本页面发布，并更新"最后更新"日期。如发生重大变更，我们会通过扩展内通知或官方网站公告的方式通知您。继续使用本扩展即视为您同意更新后的政策。</p>
+      </section>
+
+      <section>
+        <h2>11. 联系我们</h2>
+        <p>如果您对本隐私政策有任何疑问、建议或投诉，可通过以下方式联系我们：</p>
+        <div class="contact-card">
+          <h3>ChatGenius AI 团队</h3>
+          <div class="contact-item"><strong>官方网站</strong><a href="https://chat.sopie.cc/" style="color:var(--color-primary);text-decoration:none;">https://chat.sopie.cc/</a></div>
+          <div class="contact-item"><strong>售后 QQ 群</strong>请见扩展设置页底部</div>
+          <div class="contact-item"><strong>反馈邮箱</strong>请通过官方网站联系表单提交</div>
+        </div>
+        <p style="margin-top:16px;font-size:13px;color:var(--color-text-muted);">我们将在 15 个工作日内回复您的隐私相关请求。</p>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    © 2026 ChatGenius AI. All rights reserved.
+    · <a href="https://chat.sopie.cc/">官网</a>
+    · <a href="https://chat.sopie.cc/guide/">使用教程</a>
+    · <a href="https://chat.sopie.cc/privacy-policy/">隐私政策</a>
+  </footer>
+</body>
+</html>
