@@ -86,8 +86,10 @@ document.addEventListener('DOMContentLoaded', () => {
       if (aiToggle) {
         if (aiDisabled) {
           aiToggle.classList.remove('active');
+          aiToggle.setAttribute('aria-checked', 'false');
         } else {
           aiToggle.classList.add('active');
+          aiToggle.setAttribute('aria-checked', 'true');
         }
       }
 
@@ -204,11 +206,13 @@ document.addEventListener('DOMContentLoaded', () => {
     aiToggle.addEventListener('click', () => {
       const isActive = aiToggle.classList.contains('active');
       aiToggle.classList.toggle('active');
-      chrome.storage.local.set({ aiButtonDisabled: !isActive });
+      const nowActive = !isActive;
+      aiToggle.setAttribute('aria-checked', nowActive ? 'true' : 'false');
+      chrome.storage.local.set({ aiButtonDisabled: !nowActive });
       // Notify content script to show/hide button
       chrome.tabs.query({ active: true, currentWindow: true }, (tabs) => {
         if (tabs[0]) {
-          chrome.tabs.sendMessage(tabs[0].id, { action: 'toggleAIButton', disabled: !isActive });
+          chrome.tabs.sendMessage(tabs[0].id, { action: 'toggleAIButton', disabled: !nowActive });
         }
       });
     });

@@ -65,13 +65,14 @@
       --shadow-brand-lg: 0 8px 24px rgba(124, 58, 237, 0.3);
 
       /* 字号体系统一 token（替换硬编码） */
+      --font-size-2xs: 11px;    /* kbd / 极小标签 */
       --font-size-xs: 12px;     /* badge / label */
       --font-size-sm: 13px;     /* 辅助文字 */
       --font-size-base: 14px;   /* 正文 / 表单（统一）*/
-      --font-size-md: 14px;     /* 兼容旧引用 = base */
       --font-size-lg: 16px;     /* panel-title / 重要正文 */
       --font-size-xl: 20px;     /* page-title */
       --font-size-2xl: 28px;    /* 大数字展示 */
+      --font-size-3xl: 40px;    /* empty-state 插画 */
 
       /* 小圆角：工业风锐利感 */
       --radius-sm: 6px;
@@ -107,6 +108,35 @@
       --modal-width-sm: 400px;
       --modal-width-md: 480px;
       --modal-width-lg: 560px;
+
+      /* 布局 token */
+      --header-height: 64px;
+      --sidebar-width: 240px;
+      --sidebar-collapsed-width: 64px;
+
+      /* 悬浮按钮预览舞台背景（模拟网页背景，深色渐变让玻璃/极简主题可见） */
+      --bg-preview-stage: linear-gradient(135deg, #2a2a3e 0%, #3d3d5c 50%, #1a1a2e 100%);
+
+      /* z-index 层级 Token（建议 9） */
+      --z-base: 0;
+      --z-header: 100;
+      --z-sidebar-mobile: 100;
+      --z-toast: 900;
+      --z-modal: 1000;
+      --z-cmd-palette: 1100;
+
+      /* 预览舞台按钮颜色（建议 11：模拟外部网页背景，亮暗模式相同） */
+      --preview-btn-text: #1d1d1f;
+      --preview-btn-text-light: #ffffff;
+      --preview-btn-minimal-bg: rgba(255, 255, 255, 1);
+      --preview-btn-border: rgba(0, 0, 0, 0.06);
+      --preview-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --preview-btn-glass-bg: rgba(255, 255, 255, 0.12);
+      --preview-btn-glass-border: rgba(255, 255, 255, 0.18);
+      --preview-btn-glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+
+      /* 强调色背景上的白色文字（建议 12：亮暗模式均为白色） */
+      --text-on-accent: #ffffff;
     }
 
     /* Dark Theme — 深邃石墨灰 + 品牌紫强调 + 微光层次 */
@@ -163,13 +193,14 @@
       --shadow-brand-lg: 0 8px 24px rgba(139, 92, 246, 0.35);
 
       /* 字号体系统一 token */
+      --font-size-2xs: 11px;
       --font-size-xs: 12px;
       --font-size-sm: 13px;
       --font-size-base: 14px;
-      --font-size-md: 14px;
       --font-size-lg: 16px;
       --font-size-xl: 20px;
       --font-size-2xl: 28px;
+      --font-size-3xl: 40px;
 
       --radius-sm: 6px;
       --radius-md: 8px;
@@ -203,19 +234,48 @@
       --modal-width-sm: 400px;
       --modal-width-md: 480px;
       --modal-width-lg: 560px;
+
+      /* 布局 token */
+      --header-height: 64px;
+      --sidebar-width: 240px;
+      --sidebar-collapsed-width: 64px;
+
+      /* 悬浮按钮预览舞台背景 */
+      --bg-preview-stage: linear-gradient(135deg, #2a2a3e 0%, #3d3d5c 50%, #1a1a2e 100%);
+
+      /* z-index 层级 Token（建议 9） */
+      --z-base: 0;
+      --z-header: 100;
+      --z-sidebar-mobile: 100;
+      --z-toast: 900;
+      --z-modal: 1000;
+      --z-cmd-palette: 1100;
+
+      /* 预览舞台按钮颜色（建议 11：模拟外部网页背景，亮暗模式相同） */
+      --preview-btn-text: #1d1d1f;
+      --preview-btn-text-light: #ffffff;
+      --preview-btn-minimal-bg: rgba(255, 255, 255, 1);
+      --preview-btn-border: rgba(0, 0, 0, 0.06);
+      --preview-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --preview-btn-glass-bg: rgba(255, 255, 255, 0.12);
+      --preview-btn-glass-border: rgba(255, 255, 255, 0.18);
+      --preview-btn-glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+
+      /* 强调色背景上的白色文字（建议 12：亮暗模式均为白色） */
+      --text-on-accent: #ffffff;
     }
-    
+
     /* Base Styles */
     * {
       box-sizing: border-box;
       margin: 0;
       padding: 0;
     }
-    
+
     html {
       scroll-behavior: smooth;
     }
-    
+
     body {
       font-family: var(--font-sans);
       background: var(--bg-primary);
@@ -227,7 +287,7 @@
       min-height: 100vh;
       line-height: 1.5;
     }
-    
+
     /* ================================
        Skeleton Screen
        ================================ */
@@ -264,20 +324,28 @@
       height: 14px;
     }
 
-    .skeleton-tabs {
+    .skeleton-body {
       display: flex;
-      gap: var(--spacing-4);
-      margin-bottom: var(--spacing-6);
-      border-bottom: 1px solid var(--border-default);
-      padding-bottom: var(--spacing-4);
+      gap: var(--spacing-6);
+      align-items: flex-start;
     }
 
-    .skeleton-tab {
-      width: 80px;
-      height: 16px;
+    .skeleton-sidebar {
+      width: var(--sidebar-width);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-2);
+    }
+
+    .skeleton-nav-item {
+      height: 40px;
+      border-radius: var(--radius-md);
     }
 
     .skeleton-panel {
+      flex: 1;
+      min-width: 0;
       display: flex;
       flex-direction: column;
       gap: var(--spacing-3);
@@ -308,13 +376,15 @@
     }
 
     /* ================================
-       Layout
+       Layout — Sidebar + Main Content
        ================================ */
     .page-container {
       max-width: 1180px;
       margin: 0 auto;
-      padding: var(--spacing-10) var(--spacing-8);
-      padding-bottom: var(--spacing-6);
+      padding: var(--spacing-8) var(--spacing-8) var(--spacing-6);
+      display: flex;
+      gap: var(--spacing-6);
+      align-items: flex-start;
       opacity: 0;
       transition: opacity var(--duration-slow) var(--ease-out);
     }
@@ -323,13 +393,130 @@
       opacity: 1;
     }
 
+    /* Sidebar — sticky 侧边导航 */
+    .sidebar {
+      position: sticky;
+      top: calc(var(--header-height) + var(--spacing-4));
+      width: var(--sidebar-width);
+      flex-shrink: 0;
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-1);
+      align-self: flex-start;
+      max-height: calc(100vh - var(--header-height) - var(--spacing-8));
+    }
+
+    .sidebar-nav {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-1);
+    }
+
+    .sidebar-section-label {
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: 0 var(--spacing-4);
+      margin-bottom: var(--spacing-2);
+    }
+
+    /* Nav Item — 替代 tab-btn 的侧边导航项 */
+    .nav-item {
+      position: relative;
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      width: 100%;
+      padding: var(--spacing-3) var(--spacing-4);
+      border-radius: var(--radius-md);
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: var(--font-size-base);
+      font-weight: 500;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      text-align: left;
+      transition: background var(--duration-fast) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
+      white-space: nowrap;
+    }
+
+    /* active 项左侧 3px 品牌渐变竖条 */
+    .nav-item::before {
+      content: '';
+      position: absolute;
+      left: 0;
+      top: 50%;
+      transform: translateY(-50%) scaleY(0);
+      width: 3px;
+      height: 60%;
+      background: var(--gradient-brand);
+      border-radius: 0 2px 2px 0;
+      transition: transform var(--duration-base) var(--ease-spring);
+    }
+
+    .nav-item:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .nav-item.active {
+      background: var(--accent-light);
+      color: var(--accent-text);
+      font-weight: 600;
+    }
+
+    .nav-item.active::before {
+      transform: translateY(-50%) scaleY(1);
+    }
+
+    .nav-item svg {
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+      opacity: 0.8;
+      transition: opacity var(--duration-fast) var(--ease-out);
+    }
+
+    .nav-item:hover svg,
+    .nav-item.active svg {
+      opacity: 1;
+      color: var(--accent);
+    }
+
+    .nav-item-label {
+      overflow: hidden;
+      text-overflow: ellipsis;
+    }
+
+    .sidebar-divider {
+      height: 1px;
+      background: var(--border-default);
+      margin: var(--spacing-3) 0;
+    }
+
+    .sidebar-footer {
+      margin-top: auto;
+      padding-top: var(--spacing-3);
+    }
+
+    /* Main Content */
+    .main-content {
+      flex: 1;
+      min-width: 0;
+      max-width: 880px;
+    }
+
     /* ================================
-       Header — Sticky 玻璃态 + 品牌渐变 Logo
+       Header — Sticky 玻璃态 + 品牌 Logo + 搜索框
        ================================ */
     .page-header {
       position: sticky;
       top: 0;
-      z-index: 100;
+      z-index: var(--z-header);
       background: var(--bg-glass);
       backdrop-filter: saturate(180%) blur(20px);
       -webkit-backdrop-filter: saturate(180%) blur(20px);
@@ -366,7 +553,7 @@
     .header-text {
       display: flex;
       flex-direction: column;
-      gap: 2px;
+      gap: var(--spacing-1);
       min-width: 0;
     }
 
@@ -392,7 +579,7 @@
     .brand-icon svg {
       width: 20px;
       height: 20px;
-      color: #ffffff;
+      color: var(--text-on-accent);
     }
 
     .page-title {
@@ -415,36 +602,96 @@
       white-space: nowrap;
     }
 
-    /* Theme Toggle — 极简图标按钮 */
-    .theme-toggle {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-md);
-      background: transparent;
-      border: 1px solid var(--border-default);
-      color: var(--text-secondary);
-      cursor: pointer;
+    /* Header Search Trigger — 唤起命令面板 */
+    .header-search {
       display: flex;
       align-items: center;
-      justify-content: center;
-      transition: all var(--duration-base) var(--ease-out);
+      gap: var(--spacing-2);
+      height: 36px;
+      padding: 0 var(--spacing-3);
+      min-width: 220px;
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      color: var(--text-tertiary);
+      font-size: var(--font-size-sm);
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+    }
+
+    .header-search:hover {
+      border-color: var(--border-strong);
+      background: var(--bg-hover);
+    }
+
+    .header-search:focus-visible {
+      outline: 2px solid var(--accent);
+      outline-offset: 2px;
+    }
+
+    .header-search svg {
+      width: 16px;
+      height: 16px;
       flex-shrink: 0;
+    }
+
+    .header-search-text {
+      flex: 1;
+      text-align: left;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .header-search-kbd {
+      display: inline-flex;
+      align-items: center;
+      padding: 2px 6px;
+      background: var(--bg-tertiary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-2xs);
+      font-weight: 600;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    /* Theme Toggle — 侧边栏底部，图标 + 文字 */
+    .theme-toggle {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      width: 100%;
+      padding: var(--spacing-3) var(--spacing-4);
+      border-radius: var(--radius-md);
+      background: transparent;
+      border: none;
+      color: var(--text-secondary);
+      font-size: var(--font-size-base);
+      font-weight: 500;
+      font-family: var(--font-sans);
+      cursor: pointer;
+      transition: background var(--duration-fast) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
     }
 
     .theme-toggle:hover {
       background: var(--bg-hover);
       color: var(--text-primary);
-      border-color: var(--border-strong);
-      transform: translateY(-1px);
-    }
-
-    .theme-toggle:active {
-      transform: translateY(0);
     }
 
     .theme-toggle svg {
-      width: 16px;
-      height: 16px;
+      width: 18px;
+      height: 18px;
+      flex-shrink: 0;
+    }
+
+    .theme-toggle-label {
+      flex: 1;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
     }
 
     /* 亮色模式显示月亮图标（点击切换到暗色） */
@@ -453,6 +700,37 @@
     /* 暗色模式显示太阳图标（点击切换到亮色） */
     [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
     [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+
+    /* Header Theme Toggle — 仅移动端显示（桌面端用 sidebar 主题切换） */
+    .header-theme-toggle {
+      display: none;
+      align-items: center;
+      justify-content: center;
+      width: 40px;
+      height: 40px;
+      flex-shrink: 0;
+      background: transparent;
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      cursor: pointer;
+      transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+    }
+
+    .header-theme-toggle:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
+    }
+
+    .header-theme-toggle svg {
+      width: 18px;
+      height: 18px;
+    }
+
+    [data-theme="light"] .header-theme-toggle .icon-moon { display: block; }
+    [data-theme="light"] .header-theme-toggle .icon-sun { display: none; }
+    [data-theme="dark"] .header-theme-toggle .icon-moon { display: none; }
+    [data-theme="dark"] .header-theme-toggle .icon-sun { display: block; }
 
     /* ================================
        Free Tier Notification Bar — 极简边框风
@@ -467,7 +745,7 @@
       border: 1px solid var(--border-default);
       border-radius: var(--radius-sm);
       margin-bottom: var(--spacing-4);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
     }
 
     .free-tier-notification.show {
@@ -508,112 +786,39 @@
       color: var(--bg-primary);
       border: none;
       border-radius: var(--radius-sm);
-      font-size: 12px;
+      font-size: var(--font-size-xs);
       font-weight: 500;
       cursor: pointer;
-      transition: all var(--duration-fast) var(--ease-out);
+      transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
     }
 
     .free-tier-notification-btn:hover {
       background: var(--accent-hover);
     }
 
-    /* ================================
-       Tabs Navigation — Linear Underline
-       ================================ */
-    .tabs-nav {
-      display: flex;
-      gap: 0;
-      padding: 0;
-      background: transparent;
-      backdrop-filter: none;
-      -webkit-backdrop-filter: none;
-      border-radius: 0;
-      margin-bottom: var(--spacing-6);
-      border: none;
-      box-shadow: none;
-      border-bottom: 1px solid var(--border-default);
-      overflow-x: auto;
-    }
-
-    .tabs-nav::-webkit-scrollbar {
-      display: none;
-    }
-
-    .tab-btn {
-      flex: none;
-      min-width: 0;
-      height: 48px;
-      padding: 0 var(--spacing-3);
-      border: none;
-      background: transparent;
-      color: var(--text-tertiary);
-      font-size: var(--font-size-base);
-      font-weight: 500;
-      font-family: var(--font-sans);
-      border-radius: 0;
-      cursor: pointer;
-      transition: color var(--duration-base) var(--ease-out);
-      white-space: nowrap;
+    .free-tier-notification-dismiss {
+      flex-shrink: 0;
+      width: 24px;
+      height: 24px;
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: var(--spacing-2);
-      position: relative;
-    }
-
-    .tab-btn::after {
-      content: '';
-      position: absolute;
-      bottom: -1px;
-      left: 50%;
-      transform: translateX(-50%) scaleX(0);
-      width: calc(100% - 24px);
-      max-width: none;
-      height: 2px;
-      background: var(--gradient-brand);
-      border-radius: 2px 2px 0 0;
-      transition: transform var(--duration-slow) var(--ease-spring);
-    }
-
-    .tab-btn:hover {
-      color: var(--text-primary);
-      transform: none;
-    }
-
-    .tab-btn:active {
-      transform: scale(0.97);
-    }
-
-    .tab-btn.active {
-      color: var(--accent-text);
-      font-weight: 600;
       background: transparent;
-      box-shadow: none;
-      position: relative;
+      border: none;
+      border-radius: var(--radius-sm);
+      color: var(--text-tertiary);
+      cursor: pointer;
+      transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
     }
 
-    .tab-btn.active::after {
-      transform: translateX(-50%) scaleX(1);
+    .free-tier-notification-dismiss:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
     }
 
-    .tab-btn svg {
-      width: 16px;
-      height: 16px;
-      opacity: 0.7;
-      transition: opacity var(--duration-fast) var(--ease-out),
-                  color var(--duration-fast) var(--ease-out);
-    }
-
-    .tab-btn:hover svg {
-      opacity: 1;
-    }
-
-    .tab-btn.active svg {
-      opacity: 1;
-      color: var(--accent);
-    }
-
+    /* ================================
+       Tab Content Toggle (functional contract for options.js)
+       ================================ */
     .tab-content {
       display: none;
     }
@@ -629,7 +834,7 @@
     }
 
     /* ================================
-       Panels (Cards)
+       Panels / Section Cards (collapsible via <details>)
        ================================ */
     .panel-grid {
       display: flex;
@@ -644,8 +849,7 @@
       border: 1px solid var(--border-default);
       box-shadow: var(--shadow-sm);
       transition: border-color var(--duration-base) var(--ease-out),
-                  box-shadow var(--duration-base) var(--ease-out),
-                  transform var(--duration-base) var(--ease-out);
+                  box-shadow var(--duration-base) var(--ease-out);
       animation: slideUp 0.2s var(--ease-out) backwards;
     }
 
@@ -655,16 +859,29 @@
 
     .panel:hover {
       border-color: var(--border-strong);
-      box-shadow: var(--shadow-md);
     }
 
-    .panel-header {
+    /* <summary> 作为 panel-header，原生可折叠 */
+    .panel > .panel-header {
       display: flex;
       align-items: center;
       gap: var(--spacing-3);
       padding-bottom: var(--spacing-3);
       margin-bottom: var(--spacing-4);
       border-bottom: 1px solid var(--border-subtle);
+      list-style: none;
+      cursor: pointer;
+      user-select: none;
+    }
+
+    .panel > .panel-header::-webkit-details-marker {
+      display: none;
+    }
+
+    .panel:not([open]) > .panel-header {
+      border-bottom-color: transparent;
+      margin-bottom: 0;
+      padding-bottom: 0;
     }
 
     .panel-icon {
@@ -693,6 +910,23 @@
       min-width: 0;
     }
 
+    .panel-collapse-btn {
+      width: 20px;
+      height: 20px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+      transition: transform var(--duration-base) var(--ease-out),
+                  color var(--duration-fast) var(--ease-out);
+    }
+
+    .panel-header:hover .panel-collapse-btn {
+      color: var(--text-secondary);
+    }
+
+    .panel:not([open]) .panel-collapse-btn {
+      transform: rotate(-90deg);
+    }
+
     .panel-desc {
       font-size: var(--font-size-base);
       color: var(--text-tertiary);
@@ -703,11 +937,13 @@
     /* ================================
        Empty State
        ================================ */
-    .empty-state { text-align: center; padding: 40px 20px; }
-    .empty-state-icon { font-size: 40px; margin-bottom: 12px; opacity: 0.5; }
-    .empty-state-title { font-size: 15px; font-weight: 600; color: var(--text-secondary); margin-bottom: 6px; }
-    .empty-state-desc { font-size: 13px; color: var(--text-tertiary); margin-bottom: 16px; }
-    .empty-state-cta { display: flex; gap: 12px; justify-content: center; margin-top: 16px; }
+    .empty-state { text-align: center; padding: var(--spacing-10) var(--spacing-5); }
+    .empty-state-illustration { margin-bottom: var(--spacing-4); color: var(--text-tertiary); opacity: 0.5; }
+    .empty-state-illustration svg { width: 56px; height: 56px; }
+    .empty-state-icon { font-size: var(--font-size-3xl); margin-bottom: var(--spacing-3); opacity: 0.5; }
+    .empty-state-title { font-size: var(--font-size-lg); font-weight: 600; color: var(--text-secondary); margin-bottom: var(--spacing-2); }
+    .empty-state-desc { font-size: var(--font-size-sm); color: var(--text-tertiary); margin-bottom: var(--spacing-4); }
+    .empty-state-cta { display: flex; gap: var(--spacing-3); justify-content: center; margin-top: var(--spacing-4); }
 
     /* ================================
        Persona Cards
@@ -719,16 +955,14 @@
       margin-bottom: var(--spacing-4);
     }
 
-    /* ================================
-       Persona Card (重新设计)
-       ================================ */
+    /* Persona Card */
     .persona-card {
       background: var(--bg-elevated);
       border-radius: var(--radius-md);
       padding: var(--spacing-4);
       border: 1px solid var(--border-default);
       box-shadow: var(--shadow-xs);
-      transition: all var(--duration-base) var(--ease-out);
+      transition: border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out);
       position: relative;
       overflow: hidden;
     }
@@ -746,9 +980,8 @@
 
     .persona-card:hover {
       border-color: var(--accent);
-      box-shadow: var(--shadow-sm);
-      transform: translateY(-2px);
-      transition: transform var(--duration-slow) var(--ease-spring);
+      box-shadow: var(--shadow-xs);
+      transition: border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out);
     }
 
     .persona-card.active {
@@ -767,6 +1000,7 @@
       margin-bottom: var(--spacing-4);
     }
 
+    /* Persona Avatar — 渐变背景 */
     .persona-avatar {
       width: 44px;
       height: 44px;
@@ -777,14 +1011,14 @@
       justify-content: center;
       font-size: var(--font-size-lg);
       font-weight: 700;
-      color: #fff;
+      color: var(--text-on-accent);
       flex-shrink: 0;
       text-transform: uppercase;
       letter-spacing: -0.02em;
     }
 
     .persona-card:not(.active) .persona-avatar {
-      background: var(--bg-hover);
+      background: linear-gradient(135deg, var(--bg-hover), var(--bg-tertiary));
       color: var(--text-secondary);
     }
 
@@ -798,12 +1032,12 @@
       background: transparent;
       border: 1px solid transparent;
       border-radius: var(--radius-sm);
-      padding: 5px 10px;
-      font-size: 15px;
+      padding: var(--spacing-1) var(--spacing-3);
+      font-size: var(--font-size-lg);
       font-weight: 600;
       color: var(--text-primary);
-      margin-bottom: 4px;
-      transition: all var(--duration-fast) var(--ease-out);
+      margin-bottom: var(--spacing-1);
+      transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
     }
 
     .persona-name-input::placeholder {
@@ -826,10 +1060,10 @@
     .persona-badge {
       display: inline-flex;
       align-items: center;
-      gap: 5px;
+      gap: var(--spacing-1);
       font-size: var(--font-size-xs);
       font-weight: 600;
-      padding: 2px 8px;
+      padding: 2px var(--spacing-2);
       border-radius: var(--radius-full);
       letter-spacing: 0.01em;
     }
@@ -868,7 +1102,7 @@
       display: flex;
       align-items: center;
       justify-content: center;
-      transition: all var(--duration-fast) var(--ease-out);
+      transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
     }
 
     .persona-action-btn:hover {
@@ -883,12 +1117,12 @@
 
     .persona-prompt-label {
       display: block;
-      font-size: 11px;
+      font-size: var(--font-size-2xs);
       font-weight: 600;
       color: var(--text-tertiary);
       text-transform: uppercase;
       letter-spacing: 0.06em;
-      margin-bottom: 6px;
+      margin-bottom: var(--spacing-1);
     }
 
     .persona-prompt-input {
@@ -917,10 +1151,11 @@
       box-shadow: 0 0 0 3px var(--accent-glow);
     }
 
-    .persona-prompt-collapsed {
-      max-height: 54px !important;
-      min-height: 54px !important;
-      overflow-y: auto !important;
+    /* 折叠态：用更精确选择器替代 !important */
+    .persona-prompt-input.persona-prompt-collapsed {
+      max-height: 54px;
+      min-height: 54px;
+      overflow-y: auto;
       transition: max-height 0.3s ease, min-height 0.3s ease;
     }
 
@@ -932,14 +1167,14 @@
       border: 1px solid var(--border-default);
       background: transparent;
       color: var(--text-secondary);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       font-weight: 500;
       cursor: pointer;
-      transition: all var(--duration-fast) var(--ease-out);
+      transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
       display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
+      gap: var(--spacing-1);
     }
 
     .persona-toggle-btn:hover {
@@ -980,23 +1215,23 @@
       overflow-y: auto;
       border: 1px solid var(--border-default);
     }
-    
+
     .chat-bubble {
       max-width: 80%;
-      padding: 8px 12px;
+      padding: var(--spacing-2) var(--spacing-3);
       border-radius: var(--radius-md);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       line-height: 1.5;
       animation: bubbleIn 0.2s var(--ease-out);
     }
-    
+
     .chat-bubble.user {
       align-self: flex-end;
       background: var(--accent);
-      color: #ffffff;
+      color: var(--text-on-accent);
       border-radius: var(--radius-md) var(--radius-md) 4px var(--radius-md);
     }
-    
+
     .chat-bubble.ai {
       align-self: flex-start;
       background: var(--bg-secondary);
@@ -1004,18 +1239,18 @@
       border: none;
       border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 4px;
     }
-    
+
     .preview-input-row {
       display: flex;
       gap: var(--spacing-2);
       margin-top: var(--spacing-3);
     }
-    
+
     .preview-input-row .form-input {
       flex: 1;
       height: 36px;
     }
-    
+
     .preview-input-row .btn {
       flex-shrink: 0;
     }
@@ -1028,30 +1263,30 @@
       grid-template-columns: 1fr 1fr;
       gap: var(--spacing-5);
     }
-    
+
     .form-group {
       display: flex;
       flex-direction: column;
       gap: var(--spacing-2);
     }
-    
+
     .form-group.full-width {
       grid-column: 1 / -1;
     }
-    
+
     .form-label {
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       font-weight: 500;
       color: var(--text-primary);
       letter-spacing: 0;
       text-transform: none;
       transition: color var(--duration-fast) var(--ease-out);
     }
-    
+
     .form-group:focus-within .form-label {
       color: var(--accent);
     }
-    
+
     .form-input,
     .form-select,
     .form-textarea {
@@ -1059,7 +1294,7 @@
       background: var(--bg-primary);
       border: 1px solid var(--border-default);
       border-radius: var(--radius-md);
-      padding: 8px 12px;
+      padding: var(--spacing-2) var(--spacing-3);
       font-size: var(--font-size-base);
       font-family: var(--font-sans);
       color: var(--text-primary);
@@ -1085,24 +1320,18 @@
       line-height: 1.5;
     }
 
-    .form-input:hover,
-    .form-select:hover,
-    .form-textarea:hover {
+    :is(.form-input, .form-select, .form-textarea):hover {
       border-color: var(--border-strong);
     }
 
     /* Focus 状态：微弱 1px 强调色边框，无外发光 */
-    .form-input:focus,
-    .form-select:focus,
-    .form-textarea:focus {
+    :is(.form-input, .form-select, .form-textarea):focus {
       border-color: var(--border-focus);
       box-shadow: 0 0 0 3px var(--accent-glow);
       outline: none;
     }
 
-    .form-input:focus-visible,
-    .form-select:focus-visible,
-    .form-textarea:focus-visible {
+    :is(.form-input, .form-select, .form-textarea):focus-visible {
       border-color: var(--border-focus);
       box-shadow: 0 0 0 3px var(--accent-glow);
       outline: none;
@@ -1119,14 +1348,14 @@
 
     .api-key-toggle {
       position: absolute;
-      right: 8px;
+      right: var(--spacing-2);
       top: 50%;
       transform: translateY(-50%);
       background: none;
       border: none;
       color: var(--text-tertiary);
       cursor: pointer;
-      padding: 4px;
+      padding: var(--spacing-1);
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1175,7 +1404,7 @@
 
     .faq-search-icon {
       position: absolute;
-      left: 12px;
+      left: var(--spacing-3);
       top: 50%;
       transform: translateY(-50%);
       color: var(--text-tertiary);
@@ -1214,14 +1443,14 @@
     }
 
     .batch-select-label {
-      font-size: 14px;
+      font-size: var(--font-size-base);
       color: var(--text-primary);
       cursor: pointer;
       user-select: none;
     }
 
     .batch-count {
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       color: var(--text-secondary);
       font-weight: 500;
     }
@@ -1235,7 +1464,7 @@
 
     .btn-sm {
       padding: var(--spacing-1) var(--spacing-2);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       height: 32px;
       display: inline-flex;
       align-items: center;
@@ -1244,7 +1473,7 @@
 
     .form-select-sm {
       height: 32px;
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       min-width: 120px;
     }
 
@@ -1288,10 +1517,10 @@
       background: transparent;
       border: 1px solid transparent;
       border-radius: var(--radius-sm);
-      padding: 6px 8px;
-      font-size: 13px;
+      padding: var(--spacing-1) var(--spacing-2);
+      font-size: var(--font-size-sm);
       color: var(--text-primary);
-      transition: all var(--duration-fast) var(--ease-out);
+      transition: border-color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
     }
 
     .faq-item-input:hover {
@@ -1329,7 +1558,7 @@
     .import-export-btns .btn {
       padding: 0 var(--spacing-4);
       gap: var(--spacing-1);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
     }
 
     /* ================================
@@ -1351,28 +1580,28 @@
     }
 
     .api-config-title {
-      font-size: 14px;
+      font-size: var(--font-size-base);
       font-weight: 600;
       color: var(--text-primary);
     }
 
-    .api-status-indicator {
+    .api-status-pill {
       display: inline-flex;
       align-items: center;
       gap: var(--spacing-2);
       padding: var(--spacing-1) var(--spacing-3);
       border-radius: var(--radius-full);
-      font-size: 12px;
+      font-size: var(--font-size-xs);
       font-weight: 500;
       margin-left: auto;
     }
 
-    .api-status-indicator.connected {
+    .api-status-pill.connected {
       background: var(--success-bg);
       color: var(--success-text);
     }
 
-    .api-status-indicator.disconnected {
+    .api-status-pill.disconnected {
       background: var(--error-bg);
       color: var(--error);
     }
@@ -1388,127 +1617,8 @@
       margin-top: var(--spacing-3);
     }
 
-    /* ================================
-       Provider Cards — 导购式 API 选择
-       ================================ */
-    .provider-cards-grid {
-      display: grid;
-      grid-template-columns: repeat(3, 1fr);
-      gap: var(--spacing-3);
-      margin-bottom: var(--spacing-4);
-    }
-
-    .provider-card {
-      padding: var(--spacing-4);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: all var(--duration-base) var(--ease-out);
-      display: flex;
-      flex-direction: column;
-      gap: var(--spacing-2);
-    }
-
-    .provider-card:hover {
-      border-color: var(--border-strong);
-      background: var(--bg-hover);
-    }
-
-    .provider-card.selected {
-      border-color: var(--accent);
-      background: var(--accent-glow);
-    }
-
-    .provider-card-header {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-2);
-    }
-
-    .provider-card-icon {
-      width: 36px;
-      height: 36px;
-      border-radius: var(--radius-md);
-      background: var(--gradient-brand);
-      color: #fff;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: var(--font-size-lg);
-      font-weight: 700;
-      text-transform: uppercase;
-      flex-shrink: 0;
-    }
-
-    .provider-card-name {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-    }
-
-    .provider-card-tags {
-      display: flex;
-      gap: 4px;
-      flex-wrap: wrap;
-    }
-
-    .provider-tag {
-      font-size: var(--font-size-xs);
-      padding: 3px 8px;
-      background: var(--bg-tertiary);
-      border-radius: var(--radius-full);
-      color: var(--text-secondary);
-      white-space: nowrap;
-    }
-
-    .provider-card-scenario {
-      font-size: 12px;
-      color: var(--text-secondary);
-      line-height: 1.4;
-    }
-
-    .provider-card-cost {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      margin-top: auto;
-    }
-
-    .selected-provider-bar {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-3);
-      padding: var(--spacing-3) var(--spacing-4);
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-sm);
-      margin-bottom: var(--spacing-3);
-      font-size: 13px;
-    }
-
-    .selected-provider-bar .provider-card-icon {
-      width: 28px;
-      height: 28px;
-      font-size: var(--font-size-sm);
-    }
-
-    .selected-provider-bar .provider-card-name {
-      font-size: 13px;
-      font-weight: 600;
-    }
-
-    .selected-provider-bar a {
-      margin-left: auto;
-      font-size: 12px;
-      color: var(--accent-text);
-      text-decoration: none;
-    }
-
-    .selected-provider-bar a:hover {
-      text-decoration: underline;
-    }
-
     .key-validation-hint {
-      font-size: 12px;
+      font-size: var(--font-size-xs);
       margin-top: var(--spacing-1);
       min-height: 18px;
       transition: color var(--duration-fast);
@@ -1523,7 +1633,7 @@
     }
 
     .key-privacy-note {
-      font-size: 11px;
+      font-size: var(--font-size-2xs);
       color: var(--text-tertiary);
       margin-top: var(--spacing-2);
       display: flex;
@@ -1533,10 +1643,10 @@
 
     /* 自定义模型表单提示与测试行 */
     .form-hint {
-      font-size: 12px;
+      font-size: var(--font-size-xs);
       color: var(--text-tertiary);
       line-height: 1.4;
-      margin-top: 2px;
+      margin-top: var(--spacing-1);
     }
 
     .api-test-row {
@@ -1550,7 +1660,7 @@
     .api-test-row .key-validation-hint {
       flex: 1;
       min-width: 0;
-      font-size: 13px;
+      font-size: var(--font-size-sm);
     }
 
     /* 统一 details 折叠块样式（key-tutorial / advanced-config-toggle）*/
@@ -1567,8 +1677,7 @@
       margin-top: var(--spacing-4);
     }
 
-    .key-tutorial summary,
-    .advanced-config-toggle summary {
+    :is(.key-tutorial, .advanced-config-toggle) summary {
       padding: var(--spacing-3) var(--spacing-4);
       font-size: var(--font-size-sm);
       font-weight: 500;
@@ -1578,8 +1687,7 @@
       transition: color var(--duration-base) var(--ease-out);
     }
 
-    .key-tutorial summary:hover,
-    .advanced-config-toggle summary:hover {
+    :is(.key-tutorial, .advanced-config-toggle) summary:hover {
       color: var(--text-primary);
     }
 
@@ -1605,6 +1713,28 @@
       background: var(--bg-tertiary);
       border-radius: var(--radius-sm);
       font-size: var(--font-size-xs);
+    }
+
+    /* 教程重复块抽取的 class（清理 inline style） */
+    .tutorial-vendor-title {
+      margin-bottom: var(--spacing-2);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .tutorial-code-block {
+      font-family: var(--font-mono);
+      font-size: var(--font-size-xs);
+      background: var(--bg-tertiary);
+      padding: var(--spacing-2);
+      border-radius: var(--radius-sm);
+      margin-bottom: var(--spacing-3);
+      line-height: 1.6;
+      color: var(--text-secondary);
+    }
+
+    .tutorial-code-block:last-of-type {
+      margin-bottom: 0;
     }
 
     .advanced-config-toggle .advanced-config-body {
@@ -1635,7 +1765,7 @@
       gap: var(--spacing-2);
       padding: var(--spacing-2) var(--spacing-4);
       border-radius: var(--radius-full);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       font-weight: 600;
     }
 
@@ -1646,7 +1776,7 @@
 
     .license-badge.pro {
       background: var(--accent);
-      color: #fff;
+      color: var(--text-on-accent);
     }
 
     .activation-input-group {
@@ -1659,14 +1789,14 @@
     .activation-input {
       width: 100%;
       height: 36px;
-      padding: 8px 12px;
+      padding: var(--spacing-2) var(--spacing-3);
       border-radius: var(--radius-md);
       border: 1px solid var(--border-default);
       background: var(--bg-secondary);
       color: var(--text-primary);
       font-size: var(--font-size-base);
       font-family: var(--font-mono);
-      transition: all var(--duration-base) var(--ease-out);
+      transition: border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), background var(--duration-base) var(--ease-out);
     }
 
     .activation-input:focus {
@@ -1681,7 +1811,7 @@
 
     .activation-error {
       color: var(--error);
-      font-size: 12px;
+      font-size: var(--font-size-xs);
       min-height: 16px;
     }
 
@@ -1699,8 +1829,9 @@
       cursor: not-allowed;
     }
 
+    /* activation-success 默认隐藏，由 JS 通过 inline display:flex 显示 */
     .activation-success {
-      display: flex;
+      display: none;
       align-items: center;
       gap: var(--spacing-2);
       margin-top: var(--spacing-3);
@@ -1708,7 +1839,7 @@
       background: var(--success-bg);
       border-radius: var(--radius-md);
       color: var(--success-text);
-      font-size: 14px;
+      font-size: var(--font-size-base);
       font-weight: 500;
     }
 
@@ -1721,7 +1852,7 @@
     }
 
     .data-backup-title {
-      font-size: 14px;
+      font-size: var(--font-size-base);
       font-weight: 600;
       color: var(--text-primary);
       margin-bottom: var(--spacing-4);
@@ -1746,7 +1877,7 @@
       font-weight: 500;
       font-family: var(--font-sans);
       cursor: pointer;
-      transition: all var(--duration-base) var(--ease-out);
+      transition: background var(--duration-base) var(--ease-out), border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out);
       display: inline-flex;
       align-items: center;
       justify-content: center;
@@ -1764,7 +1895,7 @@
     /* 主按钮：品牌紫 + token 阴影 */
     .btn-primary {
       background: var(--accent);
-      color: #ffffff;
+      color: var(--text-on-accent);
       border-color: var(--accent);
       box-shadow: var(--shadow-brand);
     }
@@ -1806,22 +1937,24 @@
       background: var(--error-bg);
       border-color: var(--error-bg);
     }
-    
+
+    .btn-destructive:active {
+      transform: scale(0.98);
+    }
+
     .btn-add {
       width: 100%;
       margin-top: var(--spacing-2);
     }
 
     /* ================================
-       Footer Status Bar
+       Footer Status Bar + Privacy Notice
        ================================ */
-    /* Privacy Notice */
     .privacy-notice {
       display: flex;
       align-items: center;
       gap: var(--spacing-2);
-      max-width: 1180px;
-      margin: 0 auto var(--spacing-4);
+      margin: var(--spacing-6) 0 var(--spacing-4);
       padding: var(--spacing-4);
       background: var(--bg-secondary);
       border: 1px solid var(--border-default);
@@ -1850,6 +1983,7 @@
       font-size: var(--font-size-sm);
       color: var(--text-tertiary);
       padding-top: var(--spacing-4);
+      flex-wrap: wrap;
     }
 
     .footer-status-item {
@@ -1869,7 +2003,7 @@
     }
 
     /* ================================
-       Toast
+       Toast (支持 action button)
        ================================ */
     .toast {
       position: fixed;
@@ -1885,12 +2019,12 @@
       font-weight: 500;
       opacity: 0;
       transform: translateY(12px) scale(0.96);
-      transition: all var(--duration-slow) var(--ease-out);
+      transition: opacity var(--duration-slow) var(--ease-out), transform var(--duration-slow) var(--ease-out);
       box-shadow: var(--shadow-lg);
       display: flex;
       align-items: center;
       gap: var(--spacing-2);
-      z-index: 1000;
+      z-index: var(--z-toast);
       max-width: 420px;
       word-wrap: break-word;
       overflow-wrap: break-word;
@@ -1910,6 +2044,47 @@
     }
     .toast.error svg { color: var(--error); }
 
+    .toast-msg {
+      flex: 1;
+      min-width: 0;
+    }
+
+    /* Toast 关闭按钮（建议 8：从 inline style 迁移至 CSS 类，支持主题切换） */
+    .toast-close {
+      background: none;
+      border: none;
+      color: inherit;
+      cursor: pointer;
+      font-size: var(--font-size-lg);
+      line-height: 1;
+      padding: 0;
+      margin-left: var(--spacing-2);
+      opacity: 0.6;
+      flex-shrink: 0;
+      transition: opacity var(--duration-fast) var(--ease-out);
+    }
+    .toast-close:hover {
+      opacity: 1;
+    }
+
+    .toast-action {
+      flex-shrink: 0;
+      padding: var(--spacing-1) var(--spacing-3);
+      background: transparent;
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      color: var(--accent-text);
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      cursor: pointer;
+      transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
+    }
+
+    .toast-action:hover {
+      background: var(--accent-light);
+      border-color: var(--accent);
+    }
+
     /* ================================
        Modal
        ================================ */
@@ -1917,18 +2092,17 @@
       display: none;
       position: fixed;
       inset: 0;
-      background: rgba(0, 0, 0, 0.4);
-      backdrop-filter: blur(8px);
-      z-index: 1000;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: var(--z-modal);
       align-items: center;
       justify-content: center;
       padding: var(--spacing-6);
     }
-    
+
     .modal-overlay.show {
       display: flex;
     }
-    
+
     .modal-content {
       background: var(--bg-primary);
       border-radius: var(--radius-lg);
@@ -1947,19 +2121,25 @@
     .modal-content.modal-lg {
       max-width: var(--modal-width-lg);
     }
-    
+
     .modal-title {
       font-size: var(--font-size-lg);
       font-weight: 600;
       margin-bottom: var(--spacing-4);
       color: var(--text-primary);
     }
-    
+
     .modal-body {
-      font-size: 14px;
+      font-size: var(--font-size-base);
       line-height: 1.6;
       color: var(--text-secondary);
       margin-bottom: var(--spacing-6);
+    }
+
+    .modal-actions {
+      display: flex;
+      gap: var(--spacing-3);
+      justify-content: flex-end;
     }
 
     /* ================================
@@ -1969,16 +2149,16 @@
       from { transform: rotate(0deg); }
       to { transform: rotate(360deg); }
     }
-    
+
     .animate-spin {
       animation: spin 1s linear infinite;
     }
-    
+
     @keyframes fadeIn {
       from { opacity: 0; }
       to { opacity: 1; }
     }
-    
+
     @keyframes fadeInUp {
       from {
         opacity: 0;
@@ -1989,7 +2169,7 @@
         transform: translateY(0);
       }
     }
-    
+
     .animate-fadeInUp {
       animation: fadeInUp 0.3s var(--ease-out) forwards;
     }
@@ -2019,14 +2199,13 @@
 
     /* Focus visible for keyboard navigation */
     .btn:focus-visible,
-    .icon-btn:focus-visible,
-    .tab-btn:focus-visible {
+    .nav-item:focus-visible {
       outline: 2px solid var(--accent);
       outline-offset: 2px;
     }
 
     /* ================================
-       Onboarding Modal
+       Modal Components
        ================================ */
     .modal-header {
       display: flex;
@@ -2036,15 +2215,9 @@
     }
 
     .modal-header h3 {
-      font-size: 18px;
+      font-size: var(--font-size-xl);
       font-weight: 600;
       color: var(--text-primary);
-    }
-
-    #onboardingStepIndicator {
-      font-size: 13px;
-      color: var(--text-tertiary);
-      font-weight: 500;
     }
 
     .modal-footer {
@@ -2054,68 +2227,19 @@
       margin-top: var(--spacing-5);
     }
 
-    .onboarding-step {
-      animation: fadeIn 0.2s var(--ease-out);
-    }
-
-    .onboarding-desc {
-      font-size: 14px;
-      color: var(--text-secondary);
-      line-height: 1.6;
-      margin-bottom: var(--spacing-4);
-    }
-
-    .onboarding-template-grid {
-      display: grid;
-      grid-template-columns: repeat(2, 1fr);
-      gap: var(--spacing-3);
-    }
-
-    .onboarding-template-card {
-      padding: var(--spacing-3) var(--spacing-4);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      cursor: pointer;
-      transition: all var(--duration-fast) var(--ease-out);
-      background: var(--bg-secondary);
-    }
-
-    .onboarding-template-card:hover {
-      border-color: var(--accent);
-      background: var(--accent-light);
-    }
-
-    .onboarding-template-card.selected {
-      border-color: var(--accent);
-      background: var(--accent-light);
-      box-shadow: 0 0 0 1px var(--accent);
-    }
-
-    .onboarding-template-card .template-name {
-      font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary);
-      margin-bottom: 2px;
-    }
-
-    .onboarding-template-card .template-desc {
-      font-size: 12px;
-      color: var(--text-tertiary);
-    }
-
     /* ================================
-       API Status Bar (顶部 API 状态提醒)
+       API Status Bar (顶部 API 状态提醒，4 状态差异化)
        ================================ */
     .api-status-bar {
       display: flex;
       align-items: center;
       justify-content: space-between;
       gap: var(--spacing-3);
-      padding: 10px 14px;
+      padding: var(--spacing-2) var(--spacing-4);
       border: 1px solid var(--border-default);
       border-left-width: 3px;
       border-radius: var(--radius-md);
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       margin-bottom: var(--spacing-4);
       background: var(--bg-secondary);
       transition: background var(--duration-base) var(--ease-out),
@@ -2144,22 +2268,23 @@
     .api-status-left {
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: var(--spacing-2);
       flex: 1;
       min-width: 0;
     }
     /* 限定作用域：仅 .api-status-bar 内的圆点样式，避免污染 API 配置面板内的胶囊徽章 */
-    .api-status-bar .api-status-indicator {
+    .api-status-bar .api-status-dot {
+      display: inline-block;
       width: 8px;
       height: 8px;
       border-radius: 50%;
       flex-shrink: 0;
       background: var(--text-tertiary);
     }
-    .api-status-bar.unconfigured .api-status-indicator { background: var(--warning); }
-    .api-status-bar.connected .api-status-indicator { background: var(--success); }
-    .api-status-bar.failed .api-status-indicator { background: var(--error); }
-    .api-status-bar.testing .api-status-indicator {
+    .api-status-bar.unconfigured .api-status-dot { background: var(--warning); }
+    .api-status-bar.connected .api-status-dot { background: var(--success); }
+    .api-status-bar.failed .api-status-dot { background: var(--error); }
+    .api-status-bar.testing .api-status-dot {
       background: var(--accent);
       animation: api-pulse 1s ease-in-out infinite;
     }
@@ -2182,7 +2307,7 @@
     }
     .api-status-actions {
       display: flex;
-      gap: 8px;
+      gap: var(--spacing-2);
       flex-shrink: 0;
     }
 
@@ -2213,7 +2338,7 @@
     .shortcut-key {
       display: inline-flex;
       align-items: center;
-      padding: 2px 8px;
+      padding: 2px var(--spacing-2);
       background: var(--bg-secondary);
       color: var(--text-primary);
       border: 1px solid var(--border-default);
@@ -2230,7 +2355,7 @@
     }
 
     .shortcut-desc {
-      font-size: 13px;
+      font-size: var(--font-size-sm);
       color: var(--text-secondary);
     }
 
@@ -2240,7 +2365,7 @@
       align-items: center;
       justify-content: center;
       min-width: 92px;
-      padding: 4px 10px;
+      padding: var(--spacing-1) var(--spacing-3);
       background: var(--bg-secondary);
       color: var(--text-primary);
       border: 1px solid var(--border-default);
@@ -2249,7 +2374,7 @@
       font-size: var(--font-size-xs);
       font-weight: 600;
       cursor: pointer;
-      transition: all var(--duration-fast) var(--ease-out);
+      transition: background var(--duration-fast) var(--ease-out), border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
       white-space: nowrap;
       margin-left: auto;
     }
@@ -2271,15 +2396,15 @@
     /* 悬浮按钮主题预览 */
     .theme-preview {
       margin-top: var(--spacing-3);
-      padding: 14px;
+      padding: var(--spacing-4);
       border: 1px dashed var(--border-default);
       border-radius: var(--radius-md);
       background: var(--bg-primary);
     }
     .theme-preview-label {
-      font-size: 11px;
+      font-size: var(--font-size-2xs);
       color: var(--text-tertiary);
-      margin-bottom: 10px;
+      margin-bottom: var(--spacing-2);
       letter-spacing: 0.3px;
     }
     .theme-preview-stage {
@@ -2288,60 +2413,275 @@
       justify-content: center;
       height: 64px;
       border-radius: var(--radius-sm);
-      /* 模拟网页背景（深色 + 浅色渐变）让玻璃/极简主题可见 */
-      background:
-        linear-gradient(135deg, #2a2a3e 0%, #3d3d5c 50%, #1a1a2e 100%);
+      /* 模拟网页背景（token 化）让玻璃/极简主题可见 */
+      background: var(--bg-preview-stage);
       position: relative;
       overflow: hidden;
     }
     .theme-preview-btn {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      padding: 6px 12px;
-      border-radius: 999px;
-      font-size: 12px;
+      gap: var(--spacing-1);
+      padding: 6px var(--spacing-3);
+      border-radius: var(--radius-full);
+      font-size: var(--font-size-xs);
       font-weight: 600;
       font-family: var(--font-sans);
       line-height: 1;
-      transition: all 0.2s var(--ease-out);
+      transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out);
       cursor: default;
     }
-    /* 三种主题样式（与 content.js 保持一致） */
+    /* 三种主题样式（与 content.js 保持一致；颜色 token 化为 --accent） */
     .theme-preview-btn.theme-gradient {
-      background: linear-gradient(135deg, rgba(102, 126, 234, 1), rgba(118, 75, 162, 1));
-      color: #ffffff;
+      background: linear-gradient(135deg, var(--accent), var(--accent-hover));
+      color: var(--text-on-accent);
       border: none;
-      box-shadow: 0 4px 16px rgba(102, 126, 234, 0.4);
+      box-shadow: 0 4px 16px var(--accent-glow);
     }
     .theme-preview-btn.theme-minimal {
-      background: rgba(255, 255, 255, 1);
-      color: #1d1d1f;
-      border: 1px solid rgba(0, 0, 0, 0.06);
-      box-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      background: var(--preview-btn-minimal-bg);
+      color: var(--preview-btn-text);
+      border: 1px solid var(--preview-btn-border);
+      box-shadow: var(--preview-btn-shadow);
     }
     .theme-preview-btn.theme-glass {
-      background: rgba(255, 255, 255, 0.12);
-      color: #ffffff;
-      border: 1px solid rgba(255, 255, 255, 0.18);
-      box-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+      background: var(--preview-btn-glass-bg);
+      color: var(--preview-btn-text-light);
+      border: 1px solid var(--preview-btn-glass-border);
+      box-shadow: var(--preview-btn-glass-shadow);
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
     }
     .theme-preview-btn svg { width: 14px; height: 14px; }
 
-    /* Responsive */
+    /* ================================
+       Command Palette (命令面板)
+       ================================ */
+    .cmd-overlay {
+      display: none;
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.5);
+      z-index: var(--z-cmd-palette);
+      align-items: flex-start;
+      justify-content: center;
+      padding: var(--spacing-12) var(--spacing-6);
+    }
+
+    .cmd-overlay.show {
+      display: flex;
+      animation: fadeIn 0.15s var(--ease-out);
+    }
+
+    .cmd-hint {
+      padding: var(--spacing-6);
+      text-align: center;
+      color: var(--text-tertiary);
+      font-size: var(--font-size-sm);
+    }
+
+    .cmd-palette {
+      width: 100%;
+      max-width: 560px;
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-xl);
+      overflow: hidden;
+      animation: modalIn var(--duration-base) var(--ease-spring);
+    }
+
+    .cmd-input-wrap {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-4);
+      border-bottom: 1px solid var(--border-subtle);
+    }
+
+    .cmd-input-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    .cmd-input {
+      flex: 1;
+      border: none;
+      background: transparent;
+      outline: none;
+      font-size: var(--font-size-lg);
+      font-family: var(--font-sans);
+      color: var(--text-primary);
+    }
+
+    .cmd-input::placeholder {
+      color: var(--text-placeholder);
+    }
+
+    .cmd-results {
+      max-height: 360px;
+      overflow-y: auto;
+      padding: var(--spacing-2);
+    }
+
+    .cmd-section-label {
+      font-size: var(--font-size-xs);
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      padding: var(--spacing-2) var(--spacing-3);
+    }
+
+    .cmd-item {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      width: 100%;
+      padding: var(--spacing-3);
+      border-radius: var(--radius-md);
+      background: transparent;
+      border: none;
+      color: var(--text-primary);
+      font-size: var(--font-size-base);
+      font-family: var(--font-sans);
+      text-align: left;
+      cursor: pointer;
+      transition: background var(--duration-fast) var(--ease-out);
+    }
+
+    .cmd-item:hover,
+    .cmd-item.active {
+      background: var(--accent-light);
+    }
+
+    .cmd-item-icon {
+      width: 18px;
+      height: 18px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    .cmd-item-label {
+      flex: 1;
+      min-width: 0;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .cmd-item-hint {
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
+    .cmd-empty {
+      padding: var(--spacing-6);
+      text-align: center;
+      color: var(--text-tertiary);
+      font-size: var(--font-size-sm);
+    }
+
+    /* 配置指南入口（清理 inline style） */
+    .guide-entry {
+      margin-top: var(--spacing-4);
+      padding: var(--spacing-4);
+      background: var(--bg-secondary);
+      border: 1px solid var(--border-default);
+      border-radius: var(--radius-md);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: var(--spacing-3);
+    }
+    .guide-entry-inner {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      min-width: 0;
+    }
+    .guide-entry-icon {
+      color: var(--accent);
+      flex-shrink: 0;
+    }
+    .guide-entry-title {
+      font-size: var(--font-size-base);
+      font-weight: 500;
+      color: var(--text-primary);
+    }
+    .guide-entry-desc {
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+    .guide-entry-btn {
+      padding: var(--spacing-2) var(--spacing-4);
+      background: var(--accent);
+      color: var(--text-on-accent);
+      border-radius: var(--radius-sm);
+      font-size: var(--font-size-sm);
+      text-decoration: none;
+      font-weight: 500;
+      white-space: nowrap;
+      transition: background var(--duration-base) var(--ease-out);
+    }
+    .guide-entry-btn:hover {
+      background: var(--accent-hover);
+    }
+
+    /* ================================
+       Responsive — 三断点
+       ================================ */
+    /* 平板：侧边栏收缩为图标列 64px */
     @media (max-width: 1024px) {
       .page-container {
-        padding: var(--spacing-8) var(--spacing-5);
+        padding: var(--spacing-6) var(--spacing-5) var(--spacing-6);
+        gap: var(--spacing-4);
       }
 
       .page-header-inner {
         padding: 0 var(--spacing-5);
       }
+
+      .sidebar {
+        width: var(--sidebar-collapsed-width);
+        top: calc(var(--header-height) + var(--spacing-3));
+      }
+
+      .nav-item {
+        justify-content: center;
+        padding: var(--spacing-3);
+      }
+
+      .nav-item-label,
+      .theme-toggle-label,
+      .sidebar-section-label {
+        display: none;
+      }
+
+      .theme-toggle {
+        justify-content: center;
+        padding: var(--spacing-3);
+      }
+
+      .header-search {
+        min-width: 0;
+        flex: 1;
+        max-width: 320px;
+      }
     }
 
+    /* 移动：侧边栏变为底部 Tab Bar */
     @media (max-width: 768px) {
+      .page-container {
+        flex-direction: column;
+        padding: var(--spacing-5) var(--spacing-4) calc(var(--sidebar-collapsed-width) + var(--spacing-6));
+        gap: var(--spacing-4);
+      }
+
       .form-grid {
         grid-template-columns: 1fr;
       }
@@ -2350,34 +2690,12 @@
         padding: var(--spacing-5);
       }
 
-      .provider-cards-grid {
-        grid-template-columns: repeat(2, 1fr);
-      }
-
-      .onboarding-template-grid {
-        grid-template-columns: 1fr;
-      }
-
       .shortcut-cards {
         flex-direction: column;
       }
 
       .page-title {
         font-size: var(--font-size-xl);
-      }
-    }
-
-    @media (max-width: 640px) {
-      .page-container {
-        padding: var(--spacing-5) var(--spacing-4);
-      }
-
-      .page-header-inner {
-        padding: 0 var(--spacing-4);
-      }
-
-      .form-grid {
-        grid-template-columns: 1fr;
       }
 
       .page-subtitle {
@@ -2388,26 +2706,84 @@
         gap: var(--spacing-2);
       }
 
-      .tabs-nav {
+      .header-search-text {
+        display: none;
+      }
+
+      .header-search {
+        min-width: 0;
+        width: 40px;
+        padding: 0;
+        justify-content: center;
+      }
+
+      .header-search-kbd {
+        display: none;
+      }
+
+      .header-theme-toggle {
+        display: flex;
+      }
+
+      /* 侧边栏 → 底部固定 Tab Bar */
+      .sidebar {
+        position: fixed;
+        top: auto;
+        bottom: 0;
+        left: 0;
+        right: 0;
+        width: 100%;
+        max-height: none;
+        flex-direction: row;
+        justify-content: space-around;
+        align-items: center;
+        padding: var(--spacing-2) var(--spacing-2) calc(var(--spacing-2) + env(safe-area-inset-bottom));
+        background: var(--bg-glass);
+        backdrop-filter: saturate(180%) blur(20px);
+        -webkit-backdrop-filter: saturate(180%) blur(20px);
+        border-top: 1px solid var(--bg-glass-border);
+        z-index: var(--z-sidebar-mobile);
         gap: 0;
-        overflow-x: auto;
-        -webkit-overflow-scrolling: touch;
       }
 
-      .tab-btn {
-        font-size: var(--font-size-sm);
-        padding: 0 var(--spacing-3);
-        white-space: nowrap;
-        flex-shrink: 0;
+      .sidebar-nav {
+        flex-direction: row;
+        flex: 1;
+        justify-content: space-around;
+        gap: 0;
       }
 
-      .tab-btn svg {
-        width: 14px;
-        height: 14px;
+      .nav-item {
+        flex-direction: column;
+        gap: var(--spacing-1);
+        padding: var(--spacing-1);
+        justify-content: center;
+        border-radius: var(--radius-md);
       }
 
-      .provider-cards-grid {
-        grid-template-columns: 1fr;
+      .nav-item::before {
+        left: 50%;
+        top: auto;
+        bottom: 0;
+        transform: translateX(-50%) scaleX(0);
+        width: 24px;
+        height: 3px;
+        border-radius: 2px 2px 0 0;
+      }
+
+      .nav-item.active::before {
+        transform: translateX(-50%) scaleX(1);
+      }
+
+      .nav-item svg {
+        width: 20px;
+        height: 20px;
+      }
+
+      .sidebar-divider,
+      .sidebar-section-label,
+      .sidebar-footer {
+        display: none;
       }
 
       .api-status-bar {
@@ -2431,67 +2807,21 @@
         align-items: flex-start;
         gap: var(--spacing-2);
       }
-
-      .onboarding-template-grid {
-        grid-template-columns: 1fr;
-      }
     }
 
     /* ================================
-       Utility Classes (inline style 清理)
+       Utility Classes (inline style 清理；声明在末尾以保证覆盖)
        ================================ */
+    .hidden { display: none; }
     .w-full { width: 100%; }
     .mt-2 { margin-top: var(--spacing-2); }
     .mt-3 { margin-top: var(--spacing-3); }
     .mt-4 { margin-top: var(--spacing-4); }
     .mb-3 { margin-bottom: var(--spacing-3); }
     .mb-4 { margin-bottom: var(--spacing-4); }
+    .mb-6 { margin-bottom: var(--spacing-6); }
     .flex-end { display: flex; justify-content: flex-end; }
     .flex-center { display: flex; align-items: center; justify-content: center; }
-    .modal-actions {
-      display: flex;
-      gap: var(--spacing-3);
-      justify-content: flex-end;
-    }
-    .guide-entry {
-      margin-top: var(--spacing-4);
-      padding: var(--spacing-4);
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-default);
-      border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--spacing-3);
-    }
-    .guide-entry-icon {
-      color: var(--accent);
-      flex-shrink: 0;
-    }
-    .guide-entry-title {
-      font-size: var(--font-size-base);
-      font-weight: 500;
-      color: var(--text-primary);
-    }
-    .guide-entry-desc {
-      font-size: var(--font-size-xs);
-      color: var(--text-tertiary);
-      margin-top: 2px;
-    }
-    .guide-entry-btn {
-      padding: var(--spacing-2) var(--spacing-4);
-      background: var(--accent);
-      color: #fff;
-      border-radius: var(--radius-sm);
-      font-size: var(--font-size-sm);
-      text-decoration: none;
-      font-weight: 500;
-      white-space: nowrap;
-      transition: background var(--duration-base) var(--ease-out);
-    }
-    .guide-entry-btn:hover {
-      background: var(--accent-hover);
-    }
   </style>
 </head>
 <body>
@@ -2500,21 +2830,24 @@
       <div class="skeleton-block skeleton-title"></div>
       <div class="skeleton-block skeleton-subtitle"></div>
     </div>
-    <div class="skeleton-tabs">
-      <div class="skeleton-block skeleton-tab"></div>
-      <div class="skeleton-block skeleton-tab"></div>
-      <div class="skeleton-block skeleton-tab"></div>
-      <div class="skeleton-block skeleton-tab"></div>
-    </div>
-    <div class="skeleton-panel">
-      <div class="skeleton-block skeleton-panel-title"></div>
-      <div class="skeleton-block skeleton-panel-line"></div>
-      <div class="skeleton-block skeleton-panel-line short"></div>
-      <div class="skeleton-block skeleton-card"></div>
-      <div class="skeleton-block skeleton-card"></div>
+    <div class="skeleton-body">
+      <div class="skeleton-sidebar">
+        <div class="skeleton-block skeleton-nav-item"></div>
+        <div class="skeleton-block skeleton-nav-item"></div>
+        <div class="skeleton-block skeleton-nav-item"></div>
+        <div class="skeleton-block skeleton-nav-item"></div>
+      </div>
+      <div class="skeleton-panel">
+        <div class="skeleton-block skeleton-panel-title"></div>
+        <div class="skeleton-block skeleton-panel-line"></div>
+        <div class="skeleton-block skeleton-panel-line short"></div>
+        <div class="skeleton-block skeleton-card"></div>
+        <div class="skeleton-block skeleton-card"></div>
+      </div>
     </div>
   </div>
-  <!-- Header (移至 container 外，full-width sticky) -->
+
+  <!-- Header (sticky 玻璃态 + 品牌 logo + 搜索框 Cmd+K) -->
   <header class="page-header">
     <div class="page-header-inner">
       <div class="header-brand">
@@ -2528,12 +2861,18 @@
           <p class="page-subtitle" data-i18n="subtitle">让 AI 帮你回复每一条消息</p>
         </div>
       </div>
-      <button class="theme-toggle" id="themeToggle" title="切换主题" aria-label="切换主题">
-        <!-- 月亮图标（亮色模式显示） -->
+      <button class="header-search" id="cmdTrigger" type="button" aria-label="搜索设置">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <span class="header-search-text" data-i18n="searchPlaceholder">搜索设置…</span>
+        <kbd class="header-search-kbd" id="cmdKbd">⌘K</kbd>
+      </button>
+      <button class="header-theme-toggle" id="headerThemeToggle" type="button" aria-label="切换主题" title="切换主题">
         <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
         </svg>
-        <!-- 太阳图标（暗色模式显示） -->
         <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
           <circle cx="12" cy="12" r="5"></circle>
           <line x1="12" y1="1" x2="12" y2="3"></line>
@@ -2550,510 +2889,525 @@
   </header>
 
   <div class="page-container">
+    <!-- Sidebar (sticky 侧边导航 + 主题切换) -->
+    <aside class="sidebar">
+      <div class="sidebar-section-label" data-i18n="navSection">导航</div>
+      <nav class="sidebar-nav">
+        <button class="nav-item tab-btn active" id="nav-personas" type="button" data-tab="personas" aria-controls="tab-personas" aria-current="page">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+            <circle cx="12" cy="7" r="4"></circle>
+          </svg>
+          <span class="nav-item-label" data-i18n="tabPersonas">AI 角色</span>
+        </button>
+        <button class="nav-item tab-btn" type="button" id="nav-knowledge" data-tab="knowledge" aria-controls="tab-knowledge" aria-current="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
+            <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
+          </svg>
+          <span class="nav-item-label" data-i18n="tabKnowledge">知识库</span>
+        </button>
+        <button class="nav-item tab-btn" id="nav-settings" type="button" data-tab="settings" aria-controls="tab-settings" aria-current="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="4" y1="21" x2="4" y2="14"></line>
+            <line x1="4" y1="10" x2="4" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="12"></line>
+            <line x1="12" y1="8" x2="12" y2="3"></line>
+            <line x1="20" y1="21" x2="20" y2="16"></line>
+            <line x1="20" y1="12" x2="20" y2="3"></line>
+            <line x1="1" y1="14" x2="7" y2="14"></line>
+            <line x1="9" y1="8" x2="15" y2="8"></line>
+            <line x1="17" y1="16" x2="23" y2="16"></line>
+          </svg>
+          <span class="nav-item-label" data-i18n="tabSettings">设置</span>
+        </button>
+        <button class="nav-item tab-btn" id="nav-account" type="button" data-tab="account" aria-controls="tab-account" aria-current="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
+            <line x1="1" y1="10" x2="23" y2="10"></line>
+          </svg>
+          <span class="nav-item-label" data-i18n="tabAccount">账户</span>
+        </button>
+      </nav>
 
-    <!-- API Status Bar - 顶部 API 状态提醒 -->
-    <div id="apiStatusBar" class="api-status-bar" style="display:none;">
-      <div class="api-status-left">
-        <span class="api-status-indicator" id="apiStatusIndicator"></span>
-        <span class="api-status-icon" id="apiStatusIcon"></span>
-        <span class="api-status-text" id="apiStatusText"></span>
+      <div class="sidebar-divider"></div>
+
+      <div class="sidebar-footer">
+        <button class="theme-toggle" type="button" id="themeToggle" title="切换主题" aria-label="切换主题">
+          <!-- 月亮图标（亮色模式显示） -->
+          <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
+          </svg>
+          <!-- 太阳图标（暗色模式显示） -->
+          <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <circle cx="12" cy="12" r="5"></circle>
+            <line x1="12" y1="1" x2="12" y2="3"></line>
+            <line x1="12" y1="21" x2="12" y2="23"></line>
+            <line x1="4.22" y1="4.22" x2="5.64" y2="5.64"></line>
+            <line x1="18.36" y1="18.36" x2="19.78" y2="19.78"></line>
+            <line x1="1" y1="12" x2="3" y2="12"></line>
+            <line x1="21" y1="12" x2="23" y2="12"></line>
+            <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
+            <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
+          </svg>
+          <span class="theme-toggle-label" data-i18n="themeToggleLabel">切换主题</span>
+        </button>
       </div>
-      <div class="api-status-actions">
-        <button class="btn btn-sm btn-secondary" id="apiStatusTestBtn" style="display:none;">测试连接</button>
-        <button class="btn btn-sm btn-primary" id="apiStatusConfigBtn" style="display:none;">去配置</button>
-      </div>
-    </div>
+    </aside>
 
-    <!-- Free Tier Notification Bar -->
-    <div class="free-tier-notification" id="freeTierNotification">
-      <div class="free-tier-notification-left">
-        <span class="free-tier-notification-icon">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
-        </span>
-        <span class="free-tier-notification-text">
-          今日剩余 <strong id="quotaRemaining">5</strong> 次回复
-        </span>
-      </div>
-      <button class="free-tier-notification-btn" id="freeTierUpgradeBtn">升级 Pro</button>
-    </div>
-
-    <!-- Tabs Navigation -->
-    <nav class="tabs-nav">
-      <button class="tab-btn active" data-tab="personas">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-          <circle cx="12" cy="7" r="4"></circle>
-        </svg>
-        <span data-i18n="tabPersonas">AI 角色</span>
-      </button>
-      <button class="tab-btn" data-tab="knowledge">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-          <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-        </svg>
-        <span data-i18n="tabKnowledge">知识库</span>
-      </button>
-      <button class="tab-btn" data-tab="settings">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <line x1="4" y1="21" x2="4" y2="14"></line>
-          <line x1="4" y1="10" x2="4" y2="3"></line>
-          <line x1="12" y1="21" x2="12" y2="12"></line>
-          <line x1="12" y1="8" x2="12" y2="3"></line>
-          <line x1="20" y1="21" x2="20" y2="16"></line>
-          <line x1="20" y1="12" x2="20" y2="3"></line>
-          <line x1="1" y1="14" x2="7" y2="14"></line>
-          <line x1="9" y1="8" x2="15" y2="8"></line>
-          <line x1="17" y1="16" x2="23" y2="16"></line>
-        </svg>
-        <span data-i18n="tabSettings">设置</span>
-      </button>
-      <button class="tab-btn" data-tab="account">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-          <line x1="1" y1="10" x2="23" y2="10"></line>
-        </svg>
-        <span data-i18n="tabAccount">账户</span>
-      </button>
-    </nav>
-
-    <!-- Tab Content: Personas -->
-    <div class="tab-content active" id="tab-personas">
-      <div class="panel-grid">
-        <!-- Personas Panel -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                <circle cx="12" cy="7" r="4"></circle>
-              </svg>
-            </div>
-            <h2 class="panel-title" data-i18n="personaSettings">自定义角色</h2>
-          </div>
-          <p class="panel-desc" data-i18n="personaHelp">创建多个 AI 角色，选择一个作为当前激活角色。</p>
-          
-          <div class="item-list" id="personaList"></div>
-          <div class="persona-actions-row">
-            <button class="btn btn-secondary" id="addPersonaBtn" data-i18n="addPersona">+ 添加角色</button>
-            <button class="btn btn-secondary" id="templateLibraryBtn">
-              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-              <span data-i18n="templateLibrary">模板库</span>
-            </button>
-          </div>
+    <!-- Main Content -->
+    <main class="main-content">
+      <!-- API Status Bar - 顶部 API 状态提醒 -->
+      <div id="apiStatusBar" class="api-status-bar hidden">
+        <div class="api-status-left">
+          <span class="api-status-dot" id="apiStatusBarDot"></span>
+          <span class="api-status-icon" id="apiStatusIcon"></span>
+          <span class="api-status-text" id="apiStatusBarText"></span>
         </div>
-
-        <!-- Live Preview Panel -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                <line x1="9" y1="9" x2="15" y2="15"></line>
-                <line x1="15" y1="9" x2="9" y2="15"></line>
-              </svg>
-            </div>
-            <h2 class="panel-title" data-i18n="livePreview">实时人设预览</h2>
-          </div>
-          <p class="panel-desc" data-i18n="previewHelp">测试当前激活角色的回复效果。</p>
-          <div class="preview-chat" id="previewChat">
-            <div class="chat-bubble user">Hi, I'd like to ask about your product details.</div>
-            <div class="chat-bubble ai">Hello! I'd be happy to help. Which product would you like to know more about?</div>
-          </div>
-          <div class="preview-input-row">
-            <input type="text" class="form-input" id="previewInput" data-i18n="previewPlaceholder" placeholder="输入测试消息...">
-            <button class="btn btn-primary" id="previewSendBtn" data-i18n="sendBtn">发送</button>
-          </div>
+        <div class="api-status-actions">
+          <button class="btn btn-sm btn-secondary" type="button" id="apiStatusTestBtn">测试连接</button>
+          <button class="btn btn-sm btn-primary" type="button" id="apiStatusConfigBtn">去配置</button>
         </div>
       </div>
-    </div>
 
-    <!-- Tab Content: Knowledge -->
-    <div class="tab-content" id="tab-knowledge">
-      <div class="panel-grid">
-        <!-- FAQ Panel -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                <line x1="12" y1="17" x2="12.01" y2="17"></line>
-              </svg>
-            </div>
-            <h2 class="panel-title" data-i18n="faq">知识库 / FAQ</h2>
-          </div>
-          <p class="panel-desc" data-i18n="faqHelp">添加常见问答，AI 会自然融入这些信息。</p>
+      <!-- Free Tier Notification Bar -->
+      <div class="free-tier-notification" id="freeTierNotification">
+        <div class="free-tier-notification-left">
+          <span class="free-tier-notification-icon">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+          </span>
+          <span class="free-tier-notification-text">
+            今日剩余 <strong id="quotaRemaining">5</strong> 次回复
+          </span>
+        </div>
+        <button class="free-tier-notification-btn" type="button" id="freeTierUpgradeBtn">升级 Pro</button>
+        <button class="free-tier-notification-dismiss" id="freeTierDismissBtn" type="button" aria-label="关闭">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
 
-          <!-- FAQ Toolbar -->
-          <div class="faq-toolbar">
-            <div class="faq-search">
-              <svg class="faq-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="11" cy="11" r="8"></circle>
-                <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-              </svg>
-              <input type="text" class="faq-search-input" id="faqSearch" data-i18n="faqSearchPlaceholder" placeholder="搜索问答...">
-            </div>
-            <select class="form-select faq-category-select" id="faqCategoryFilter">
-              <option value="all" data-i18n="allCategories">全部分类</option>
-              <option value="product" data-i18n="catProduct">产品相关</option>
-              <option value="price" data-i18n="catPrice">价格咨询</option>
-              <option value="service" data-i18n="catService">售后服务</option>
-              <option value="other" data-i18n="catOther">其他</option>
-            </select>
-          </div>
+      <!-- Tab Content: Personas -->
+      <div class="tab-content active" id="tab-personas" role="tabpanel" aria-labelledby="nav-personas">
+        <div class="panel-grid">
+          <!-- Personas Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+                  <circle cx="12" cy="7" r="4"></circle>
+                </svg>
+              </div>
+              <h2 class="panel-title" data-i18n="personaSettings">自定义角色</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <p class="panel-desc" data-i18n="personaHelp">创建多个 AI 角色，选择一个作为当前激活角色。</p>
 
-          <!-- Batch Operations Toolbar -->
-          <div class="faq-batch-toolbar" id="faqBatchToolbar" style="display: none;">
-            <div class="batch-selection">
-              <input type="checkbox" id="faqSelectAll" class="batch-select-all">
-              <label for="faqSelectAll" class="batch-select-label" data-i18n="batchSelectAll">全选</label>
-              <span class="batch-count" id="batchCount" data-i18n="batchCountPrefix">已选 </span>
-            </div>
-            <div class="batch-actions">
-              <button class="btn btn-sm btn-secondary" id="batchDeleteBtn" data-i18n="batchDelete" title="批量删除">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                <span data-i18n="batchDelete">删除</span>
+            <div class="item-list" id="personaList"></div>
+            <div class="persona-actions-row">
+              <button class="btn btn-secondary" type="button" id="addPersonaBtn" data-i18n="addPersona">+ 添加角色</button>
+              <button class="btn btn-secondary" type="button" id="templateLibraryBtn">
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
+                <span data-i18n="templateLibrary">模板库</span>
               </button>
-              <select class="form-select form-select-sm" id="batchCategorySelect">
-                <option value="" data-i18n="batchMoveTo">移动到分类...</option>
+            </div>
+          </details>
+
+          <!-- Live Preview Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
+                  <line x1="9" y1="9" x2="15" y2="15"></line>
+                  <line x1="15" y1="9" x2="9" y2="15"></line>
+                </svg>
+              </div>
+              <h2 class="panel-title" data-i18n="livePreview">实时人设预览</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <p class="panel-desc" data-i18n="previewHelp">测试当前激活角色的回复效果。</p>
+            <div class="preview-chat" id="previewChat">
+              <div class="chat-bubble user">Hi, I'd like to ask about your product details.</div>
+              <div class="chat-bubble ai">Hello! I'd be happy to help. Which product would you like to know more about?</div>
+            </div>
+            <div class="preview-input-row">
+              <input type="text" class="form-input" id="previewInput" data-i18n="previewPlaceholder" placeholder="输入测试消息...">
+              <button class="btn btn-primary" type="button" id="previewSendBtn" data-i18n="sendBtn">发送</button>
+            </div>
+          </details>
+        </div>
+      </div>
+
+      <!-- Tab Content: Knowledge -->
+      <div class="tab-content" id="tab-knowledge" role="tabpanel" aria-labelledby="nav-knowledge">
+        <div class="panel-grid">
+          <!-- FAQ Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="10"></circle>
+                  <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
+                  <line x1="12" y1="17" x2="12.01" y2="17"></line>
+                </svg>
+              </div>
+              <h2 class="panel-title" data-i18n="faq">知识库 / FAQ</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <p class="panel-desc" data-i18n="faqHelp">添加常见问答，AI 会自然融入这些信息。</p>
+
+            <!-- FAQ Toolbar -->
+            <div class="faq-toolbar">
+              <div class="faq-search">
+                <svg class="faq-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="11" cy="11" r="8"></circle>
+                  <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+                </svg>
+                <input type="text" class="faq-search-input" id="faqSearch" data-i18n="faqSearchPlaceholder" placeholder="搜索问答...">
+              </div>
+              <select class="form-select faq-category-select" id="faqCategoryFilter">
+                <option value="all" data-i18n="allCategories">全部分类</option>
                 <option value="product" data-i18n="catProduct">产品相关</option>
                 <option value="price" data-i18n="catPrice">价格咨询</option>
                 <option value="service" data-i18n="catService">售后服务</option>
                 <option value="other" data-i18n="catOther">其他</option>
               </select>
-              <button class="btn btn-sm btn-secondary" id="smartCategorizeBtn" data-i18n="smartCategorize" title="智能分类">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 12 2.1 12.1"></path><path d="M19.5 19.5c-1.4-1.4-3.5-2.8-6-3.5"></path></svg>
-                <span data-i18n="smartCategorize">智能分类</span>
-              </button>
             </div>
-          </div>
 
-          <div class="item-list" id="faqList"></div>
-          <div class="faq-actions">
-            <button class="btn btn-secondary btn-add" id="addFaqBtn" data-i18n="addFaq">+ 添加问答</button>
-            <div class="import-export-btns">
-              <button class="btn btn-secondary" id="importFaqBtn" data-i18n="importBtn" title="导入FAQ">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                <span data-i18n="importBtn">导入</span>
-              </button>
-              <button class="btn btn-secondary" id="exportFaqBtn" data-i18n="exportBtn" title="导出FAQ">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                <span data-i18n="exportBtn">导出</span>
-              </button>
+            <!-- Batch Operations Toolbar -->
+            <div class="faq-batch-toolbar hidden" id="faqBatchToolbar">
+              <div class="batch-selection">
+                <input type="checkbox" id="faqSelectAll" class="batch-select-all">
+                <label for="faqSelectAll" class="batch-select-label" data-i18n="batchSelectAll">全选</label>
+                <span class="batch-count" id="batchCount" data-i18n="batchCountPrefix">已选 </span>
+              </div>
+              <div class="batch-actions">
+                <button class="btn btn-sm btn-secondary" type="button" id="batchDeleteBtn" data-i18n="batchDelete" title="批量删除">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
+                  <span data-i18n="batchDelete">删除</span>
+                </button>
+                <select class="form-select form-select-sm" id="batchCategorySelect">
+                  <option value="" data-i18n="batchMoveTo">移动到分类...</option>
+                  <option value="product" data-i18n="catProduct">产品相关</option>
+                  <option value="price" data-i18n="catPrice">价格咨询</option>
+                  <option value="service" data-i18n="catService">售后服务</option>
+                  <option value="other" data-i18n="catOther">其他</option>
+                </select>
+                <button class="btn btn-sm btn-secondary" type="button" id="smartCategorizeBtn" data-i18n="smartCategorize" title="智能分类">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 12 2.1 12.1"></path><path d="M19.5 19.5c-1.4-1.4-3.5-2.8-6-3.5"></path></svg>
+                  <span data-i18n="smartCategorize">智能分类</span>
+                </button>
+              </div>
             </div>
-          </div>
-          <input type="file" id="faqFileInput" accept=".json" style="display: none;">
+
+            <div class="item-list" id="faqList"></div>
+            <div class="faq-actions">
+              <button class="btn btn-secondary btn-add" type="button" id="addFaqBtn" data-i18n="addFaq">+ 添加问答</button>
+              <div class="import-export-btns">
+                <button class="btn btn-secondary" type="button" id="importFaqBtn" data-i18n="importBtn" title="导入FAQ">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
+                  <span data-i18n="importBtn">导入</span>
+                </button>
+                <button class="btn btn-secondary" type="button" id="exportFaqBtn" data-i18n="exportBtn" title="导出FAQ">
+                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
+                  <span data-i18n="exportBtn">导出</span>
+                </button>
+              </div>
+            </div>
+            <input type="file" id="faqFileInput" accept=".json" class="hidden">
+          </details>
         </div>
       </div>
-    </div>
 
-    <!-- Tab Content: Settings -->
-    <div class="tab-content" id="tab-settings">
-      <div class="panel-grid">
-        <!-- Reply Settings Panel -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 20h9"></path>
-                <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-              </svg>
-            </div>
-            <h2 class="panel-title" data-i18n="replySettings">回复偏好</h2>
-          </div>
-          <div class="form-grid" style="margin-top: var(--spacing-4);">
-            <div class="form-group">
-              <label class="form-label" for="tone" data-i18n="tone">回复语气</label>
-              <select class="form-select" id="tone">
-                <option value="auto" data-i18n="toneAuto">自动 (根据语境)</option>
-                <option value="professional" data-i18n="tonePro">专业严谨</option>
-                <option value="friendly" data-i18n="toneFriendly">热情友好</option>
-                <option value="empathetic" data-i18n="toneEmpathetic">共情理解</option>
-                <option value="direct" data-i18n="toneDirect">直接干练</option>
-              </select>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="replyLength" data-i18n="replyLength">回复长度</label>
-              <select class="form-select" id="replyLength">
-                <option value="auto" data-i18n="lenAuto">自动</option>
-                <option value="short" data-i18n="lenShort">简短 (1-2句话)</option>
-                <option value="medium" data-i18n="lenMedium">适中 (2-4句话)</option>
-                <option value="long" data-i18n="lenLong">详细</option>
-              </select>
-            </div>
-          </div>
-        </div>
-
-        <!-- UI Settings Panel -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="3"></circle>
-                <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-              </svg>
-            </div>
-            <h2 class="panel-title" data-i18n="uiSettings">界面与交互</h2>
-          </div>
-          <div class="form-grid" style="margin-top: var(--spacing-4);">
-            <div class="form-group full-width">
-              <label class="form-label" data-i18n="shortcut">快捷键</label>
-              <div class="shortcut-cards">
-                <div class="shortcut-card">
-                  <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                  <span class="shortcut-desc">打开/关闭悬浮按钮</span>
-                  <button type="button" class="shortcut-recorder" id="shortcutRecorder" title="点击后按下组合键">Alt + 1</button>
-                </div>
-                <div class="shortcut-card">
-                  <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                  <span class="shortcut-key">Ctrl+Enter</span>
-                  <span class="shortcut-desc">生成 AI 回复</span>
-                </div>
-                <div class="shortcut-card">
-                  <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                  <span class="shortcut-key">Ctrl+R</span>
-                  <span class="shortcut-desc">重新生成回复</span>
-                </div>
-              </div>
-              <div class="form-hint" id="shortcutHint" style="margin-top:6px;">点击右侧按钮后按下组合键（至少含 Ctrl/Alt/Shift/Cmd 之一）。Esc 取消。</div>
-            </div>
-            <div class="form-group">
-              <label class="form-label" for="btnTheme" data-i18n="btnTheme">悬浮按钮主题</label>
-              <select class="form-select" id="btnTheme">
-                <option value="gradient" data-i18n="themeGradient">品牌紫（默认）</option>
-                <option value="minimal" data-i18n="themeMinimal">极简黑白</option>
-                <option value="glass" data-i18n="themeGlass">毛玻璃</option>
-              </select>
-              <div class="theme-preview" id="themePreview" aria-hidden="true">
-                <div class="theme-preview-label">实时预览</div>
-                <div class="theme-preview-stage">
-                  <span class="theme-preview-btn" id="themePreviewBtn">
-                    <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                    <span>AI</span>
-                  </span>
-                </div>
-              </div>
-            </div>
-          </div>
-        </div>
-
-        <!-- API Configuration Panel -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
-                <path d="M12 12 2.1 12.1"></path>
-                <path d="M19.5 19.5c-1.4-1.4-3.5-2.8-6-3.5"></path>
-              </svg>
-            </div>
-            <h2 class="panel-title" data-i18n="apiConfig">API 配置</h2>
-          </div>
-          <p class="panel-desc" data-i18n="apiConfigDesc">配置 AI 服务提供商和 API 密钥。</p>
-          
-          <div class="api-config-section">
-            <div class="api-config-header">
-              <span class="api-config-title" data-i18n="apiProvider">AI 引擎</span>
-              <div class="api-status-indicator disconnected" id="apiStatusIndicator">
-                <span class="api-status-dot"></span>
-                <span id="apiStatusText" data-i18n="apiDisconnected">未连接</span>
-              </div>
-            </div>
-
-            <!-- 自定义大模型配置：URL + Key + 模型名称 -->
-            <div class="custom-api-form">
-              <div class="form-grid">
-                <div class="form-group full-width">
-                  <label class="form-label" for="apiUrlInput">API 地址 (URL)</label>
-                  <input type="text" class="form-input" id="apiUrlInput" placeholder="https://api.deepseek.com/v1/chat/completions" autocomplete="off" spellcheck="false" autocapitalize="off">
-                  <div class="form-hint">OpenAI 兼容格式，通常以 /chat/completions 结尾</div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="apiKey" data-i18n="apiKey">API Key</label>
-                  <div class="api-key-wrapper">
-                    <input type="password" class="form-input" id="apiKey" placeholder="粘贴您的 API Key" autocomplete="off" spellcheck="false" autocapitalize="off">
-                    <button type="button" class="api-key-toggle" id="apiKeyToggle" title="显示/隐藏">
-                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                        <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                        <circle cx="12" cy="12" r="3"></circle>
-                      </svg>
-                    </button>
-                  </div>
-                  <div class="key-privacy-note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 仅保存在浏览器本地，不会上传</div>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="modelNameInput">模型名称</label>
-                  <input type="text" class="form-input" id="modelNameInput" placeholder="deepseek-chat" autocomplete="off" spellcheck="false" autocapitalize="off">
-                  <div class="form-hint">如 gpt-4o、deepseek-chat、glm-4-flash</div>
-                </div>
-              </div>
-              <div class="api-test-row">
-                <button class="btn btn-secondary" id="testApiBtn" data-i18n="testConnection">测试连接</button>
-                <div id="settingsKeyValidation" class="key-validation-hint"></div>
-              </div>
-
-              <!-- 内嵌示例教程 -->
-              <details class="key-tutorial">
-                <summary>不知道怎么填？查看常见示例</summary>
-                <div class="tutorial-content">
-                  <p style="margin-bottom:6px;"><strong>DeepSeek（深度求索）</strong></p>
-                  <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);margin-bottom:12px;line-height:1.6;">
-                    URL: https://api.deepseek.com/v1/chat/completions<br>
-                    模型: deepseek-chat
-                  </p>
-                  <p style="margin-bottom:6px;"><strong>智谱清言 (GLM)</strong></p>
-                  <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);margin-bottom:12px;line-height:1.6;">
-                    URL: https://open.bigmodel.cn/api/paas/v4/chat/completions<br>
-                    模型: glm-4-flash
-                  </p>
-                  <p style="margin-bottom:6px;"><strong>通义千问 (Qwen)</strong></p>
-                  <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);margin-bottom:12px;line-height:1.6;">
-                    URL: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions<br>
-                    模型: qwen-plus
-                  </p>
-                  <p style="margin-bottom:6px;"><strong>OpenAI</strong></p>
-                  <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);line-height:1.6;">
-                    URL: https://api.openai.com/v1/chat/completions<br>
-                    模型: gpt-4o-mini
-                  </p>
-                  <p class="tutorial-note">模型名称会随厂商更新而变化，请以厂商控制台为准。Key 只保存在您的浏览器本地。</p>
-                </div>
-              </details>
-            </div>
-          </div>
-        </div>
-
-        <!-- 配置指南入口 -->
-        <div class="guide-entry">
-          <div style="display:flex;align-items:center;gap:var(--spacing-3);">
-            <svg class="guide-entry-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-            <div>
-              <div class="guide-entry-title">大模型配置指南</div>
-              <div class="guide-entry-desc">不知道如何获取 API Key？查看详细教程</div>
-            </div>
-          </div>
-          <a href="https://chat.sopie.cc/guide/" target="_blank" class="guide-entry-btn">查看指南 →</a>
-        </div>
-      </div>
-    </div>
-
-    <!-- Tab Content: Account -->
-    <div class="tab-content" id="tab-account">
-      <div class="panel-grid">
-        <!-- License Status Panel -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-              </svg>
-            </div>
-            <h2 class="panel-title" data-i18n="licenseStatus">许可证状态</h2>
-          </div>
-          
-          <div class="license-status-card">
-            <div class="license-status-header">
-              <div class="license-badge free" id="licenseBadge">
-                <span id="licenseType">免费版</span>
-              </div>
-            </div>
-            <p class="panel-desc" data-i18n="licenseDesc">当前使用免费版，每日限 20 次回复。升级到 Pro 版享受无限次回复和高级功能。</p>
-            <button class="btn btn-primary" id="upgradeBtn" style="width:100%;" data-i18n="upgradeBtn">升级至 Pro 版</button>
-          </div>
-
-          <div class="activation-input-group">
-            <input 
-              type="text" 
-              id="activationCodeInput" 
-              class="activation-input" 
-              data-i18n="activatePlaceholder"
-              placeholder="输入激活码（例如：PRO-XXXX-XXXX）"
-              autocomplete="off"
-              spellcheck="false"
-            />
-            <div id="activationError" class="activation-error"></div>
-            <button id="activateBtn" class="btn btn-primary activation-btn">
-              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-                <polyline points="22 4 12 14.01 9 11.01"></polyline>
-              </svg>
-              <span data-i18n="activateLabel">激活</span>
-            </button>
-          </div>
-          <div id="activationSuccess" class="activation-success" style="display: none;">
-            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#10b981" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-              <polyline points="22 4 12 14.01 9 11.01"></polyline>
-            </svg>
-            <span data-i18n="activateSuccessPrefix">激活成功！已升级到 </span>
-            <span id="licenseTypeDisplay"></span>
-          </div>
-        </div>
-
-        <!-- Data Backup Panel -->
-        <div class="panel">
-          <div class="panel-header">
-            <div class="panel-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                <polyline points="17 8 12 3 7 8"></polyline>
-                <line x1="12" y1="3" x2="12" y2="15"></line>
-              </svg>
-            </div>
-            <h2 class="panel-title" data-i18n="dataBackup">数据备份</h2>
-          </div>
-          <p class="panel-desc" data-i18n="dataBackupDesc">导出或导入全部设置（包括角色、FAQ、偏好和 API 配置）。</p>
-          
-          <div class="data-backup-section">
-            <div class="data-backup-btns">
-              <button class="btn btn-secondary" id="exportAllSettingsBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                  <polyline points="7 10 12 15 17 10"></polyline>
-                  <line x1="12" y1="15" x2="12" y2="3"></line>
+      <!-- Tab Content: Settings -->
+      <div class="tab-content" id="tab-settings" role="tabpanel" aria-labelledby="nav-settings">
+        <div class="panel-grid">
+          <!-- Reply Settings Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
                 </svg>
-                <span data-i18n="exportAllSettings">导出全部设置</span>
-              </button>
-              <button class="btn btn-secondary" id="importAllSettingsBtn">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              </div>
+              <h2 class="panel-title" data-i18n="replySettings">回复偏好</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="form-grid mt-4">
+              <div class="form-group">
+                <label class="form-label" for="tone" data-i18n="tone">回复语气</label>
+                <select class="form-select" id="tone">
+                  <option value="auto" data-i18n="toneAuto">自动 (根据语境)</option>
+                  <option value="professional" data-i18n="tonePro">专业严谨</option>
+                  <option value="friendly" data-i18n="toneFriendly">热情友好</option>
+                  <option value="empathetic" data-i18n="toneEmpathetic">共情理解</option>
+                  <option value="direct" data-i18n="toneDirect">直接干练</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="replyLength" data-i18n="replyLength">回复长度</label>
+                <select class="form-select" id="replyLength">
+                  <option value="auto" data-i18n="lenAuto">自动</option>
+                  <option value="short" data-i18n="lenShort">简短 (1-2句话)</option>
+                  <option value="medium" data-i18n="lenMedium">适中 (2-4句话)</option>
+                  <option value="long" data-i18n="lenLong">详细</option>
+                </select>
+              </div>
+            </div>
+          </details>
+
+          <!-- UI Settings Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+              </div>
+              <h2 class="panel-title" data-i18n="uiSettings">界面与交互</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="form-grid mt-4">
+              <div class="form-group full-width">
+                <div class="form-label" id="shortcutLabel" data-i18n="shortcut">快捷键</div>
+                <div class="shortcut-cards" role="group" aria-labelledby="shortcutLabel">
+                  <div class="shortcut-card">
+                    <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span class="shortcut-desc">打开/关闭悬浮按钮</span>
+                    <button type="button" class="shortcut-recorder" id="shortcutRecorder" title="点击后按下组合键">Alt + 1</button>
+                  </div>
+                  <div class="shortcut-card">
+                    <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    <span class="shortcut-key">Ctrl+Enter</span>
+                    <span class="shortcut-desc">生成 AI 回复</span>
+                  </div>
+                  <div class="shortcut-card">
+                    <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    <span class="shortcut-key">Ctrl+R</span>
+                    <span class="shortcut-desc">重新生成回复</span>
+                  </div>
+                </div>
+                <div class="form-hint mt-2" id="shortcutHint">点击右侧按钮后按下组合键（至少含 Ctrl/Alt/Shift/Cmd 之一）。Esc 取消。</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="btnTheme" data-i18n="btnTheme">悬浮按钮主题</label>
+                <select class="form-select" id="btnTheme">
+                  <option value="gradient" data-i18n="themeGradient">品牌紫（默认）</option>
+                  <option value="minimal" data-i18n="themeMinimal">极简黑白</option>
+                  <option value="glass" data-i18n="themeGlass">毛玻璃</option>
+                </select>
+                <div class="theme-preview" id="themePreview" aria-hidden="true">
+                  <div class="theme-preview-label">实时预览</div>
+                  <div class="theme-preview-stage">
+                    <span class="theme-preview-btn" id="themePreviewBtn">
+                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                      <span>AI</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- API Configuration Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
+                  <path d="M12 12 2.1 12.1"></path>
+                  <path d="M19.5 19.5c-1.4-1.4-3.5-2.8-6-3.5"></path>
+                </svg>
+              </div>
+              <h2 class="panel-title" data-i18n="apiConfig">API 配置</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <p class="panel-desc" data-i18n="apiConfigDesc">配置 AI 服务提供商和 API 密钥。</p>
+
+            <div class="api-config-section">
+              <div class="api-config-header">
+                <span class="api-config-title" data-i18n="apiProvider">AI 引擎</span>
+                <div class="api-status-pill disconnected" id="apiStatusIndicator">
+                  <span class="api-status-dot"></span>
+                  <span id="apiStatusText" data-i18n="apiDisconnected">未连接</span>
+                </div>
+              </div>
+
+              <!-- 自定义大模型配置：URL + Key + 模型名称 -->
+              <div class="custom-api-form">
+                <div class="form-grid">
+                  <div class="form-group full-width">
+                    <label class="form-label" for="apiUrlInput">API 地址 (URL)</label>
+                    <input type="text" class="form-input" id="apiUrlInput" placeholder="https://api.deepseek.com/v1/chat/completions" autocomplete="off" spellcheck="false" autocapitalize="off">
+                    <div class="form-hint">OpenAI 兼容格式，通常以 /chat/completions 结尾</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="apiKey" data-i18n="apiKey">API Key</label>
+                    <div class="api-key-wrapper">
+                      <input type="password" class="form-input" id="apiKey" placeholder="粘贴您的 API Key" autocomplete="off" spellcheck="false" autocapitalize="off">
+                      <button type="button" class="api-key-toggle" id="apiKeyToggle" title="显示/隐藏">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    </div>
+                    <div class="key-privacy-note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 仅保存在浏览器本地，不会上传</div>
+                  </div>
+                  <div class="form-group">
+                    <label class="form-label" for="modelNameInput">模型名称</label>
+                    <input type="text" class="form-input" id="modelNameInput" placeholder="deepseek-chat" autocomplete="off" spellcheck="false" autocapitalize="off">
+                    <div class="form-hint">如 gpt-4o、deepseek-chat、glm-4-flash</div>
+                  </div>
+                </div>
+                <div class="api-test-row">
+                  <button class="btn btn-secondary" type="button" id="testApiBtn" data-i18n="testConnection">测试连接</button>
+                  <div id="settingsKeyValidation" class="key-validation-hint"></div>
+                </div>
+
+                <!-- 内嵌示例教程 -->
+                <details class="key-tutorial">
+                  <summary>不知道怎么填？查看常见示例</summary>
+                  <div class="tutorial-content">
+                    <p class="tutorial-vendor-title"><strong>DeepSeek（深度求索）</strong></p>
+                    <p class="tutorial-code-block">
+                      URL: https://api.deepseek.com/v1/chat/completions<br>
+                      模型: deepseek-chat
+                    </p>
+                    <p class="tutorial-vendor-title"><strong>智谱清言 (GLM)</strong></p>
+                    <p class="tutorial-code-block">
+                      URL: https://open.bigmodel.cn/api/paas/v4/chat/completions<br>
+                      模型: glm-4-flash
+                    </p>
+                    <p class="tutorial-vendor-title"><strong>通义千问 (Qwen)</strong></p>
+                    <p class="tutorial-code-block">
+                      URL: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions<br>
+                      模型: qwen-plus
+                    </p>
+                    <p class="tutorial-vendor-title"><strong>OpenAI</strong></p>
+                    <p class="tutorial-code-block">
+                      URL: https://api.openai.com/v1/chat/completions<br>
+                      模型: gpt-4o-mini
+                    </p>
+                    <p class="tutorial-note">模型名称会随厂商更新而变化，请以厂商控制台为准。Key 只保存在您的浏览器本地。</p>
+                  </div>
+                </details>
+              </div>
+            </div>
+          </details>
+
+          <!-- 配置指南入口 -->
+          <div class="guide-entry">
+            <div class="guide-entry-inner">
+              <svg class="guide-entry-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
+                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+              </svg>
+              <div>
+                <div class="guide-entry-title" data-i18n="guideEntryTitle">大模型配置指南</div>
+                <div class="guide-entry-desc" data-i18n="guideEntryDesc">不知道如何获取 API Key？查看详细教程</div>
+              </div>
+            </div>
+            <a href="https://chat.sopie.cc/guide/" target="_blank" rel="noopener" class="guide-entry-btn" data-i18n="viewGuide">查看指南 →</a>
+          </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Account -->
+      <div class="tab-content" id="tab-account" role="tabpanel" aria-labelledby="nav-account">
+        <div class="panel-grid">
+          <!-- License Status Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
+                </svg>
+              </div>
+              <h2 class="panel-title" data-i18n="licenseStatus">许可证状态</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <p class="panel-desc" data-i18n="licenseDesc">当前为免费版，每日限制 50 次回复。升级 Pro 解锁无限回复。</p>
+            <div class="license-status-card">
+              <div class="license-status-header">
+                <span class="license-badge free" id="licenseBadge">
+                  <span id="licenseType">免费版</span>
+                </span>
+              </div>
+              <button class="btn btn-primary w-full" type="button" id="upgradeBtn" data-i18n="upgradeBtn">升级至 Pro 版</button>
+              <div class="activation-input-group">
+                <input type="text" class="activation-input" id="activationCodeInput" data-i18n="activatePlaceholder" placeholder="输入激活码（如 PRO-XXXX-XXXX）">
+                <div class="activation-error hidden" id="activationError"></div>
+                <button class="btn btn-primary activation-btn" type="button" id="activateBtn">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  <span data-i18n="activateLabel">激活</span>
+                </button>
+                <div class="activation-success" id="activationSuccess">
+                  <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
+                  <span data-i18n="activateSuccessPrefix">激活成功！已升级到 </span>
+                  <span id="licenseTypeDisplay"></span>
+                </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Data Backup Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                   <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
                   <polyline points="17 8 12 3 7 8"></polyline>
                   <line x1="12" y1="3" x2="12" y2="15"></line>
                 </svg>
-                <span data-i18n="importSettings">导入设置</span>
-              </button>
+              </div>
+              <h2 class="panel-title" data-i18n="dataBackup">数据备份</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <p class="panel-desc" data-i18n="dataBackupDesc">导出或导入全部设置（角色、FAQ、偏好、API 配置）。</p>
+            <div class="data-backup-section">
+              <div class="data-backup-btns">
+                <button class="btn btn-secondary" type="button" id="exportAllSettingsBtn" data-i18n="exportAllSettings">导出全部设置</button>
+                <button class="btn btn-secondary" type="button" id="importAllSettingsBtn" data-i18n="importSettings">导入设置</button>
+                <input type="file" id="allSettingsFileInput" class="hidden" accept=".json">
+              </div>
             </div>
-            <input type="file" id="allSettingsFileInput" accept=".json" style="display: none;">
+          </details>
+        </div>
+      </div>
+
+      <!-- Privacy Notice -->
+      <div class="privacy-notice">
+        <svg class="privacy-notice-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
+        </svg>
+        <span data-i18n="privacyNotice">您的数据仅存储在浏览器本地，不会上传到服务器。API Key 仅用于直接调用 AI 服务。</span>
+      </div>
+
+      <!-- Page Footer -->
+      <footer class="page-footer">
+        <div class="footer-status-bar">
+          <div class="footer-status-item">
+            <span class="footer-status-label" data-i18n="statReplies">累计回复:</span>
+            <span class="footer-status-value" id="statReplies">0</span>
+          </div>
+          <div class="footer-status-item">
+            <span class="footer-status-label" data-i18n="statSuccess">成功率:</span>
+            <span class="footer-status-value" id="statSuccess">0%</span>
+          </div>
+          <div class="footer-status-item">
+            <span class="footer-status-label" data-i18n="statQuota">今日配额:</span>
+            <span class="footer-status-value" id="statQuota">0/50</span>
           </div>
         </div>
-      </div>
-    </div>
-
-    <!-- Privacy Notice -->
-    <div class="privacy-notice">
-      <svg class="privacy-notice-icon" width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/>
-      </svg>
-      <span>本插件仅在本地浏览器运行，聊天数据与预设 Prompt 直接与大模型厂商加密交互，我们不存储任何您的聊天记录和商业数据</span>
-    </div>
-
-    <!-- Footer Status Bar -->
-    <footer class="page-footer">
-      <div class="footer-status-bar">
-        <div class="footer-status-item">
-          <span class="footer-status-label" data-i18n="statReplies">累计回复:</span>
-          <span class="footer-status-value" id="statReplies">0</span>
-        </div>
-        <div class="footer-status-item">
-          <span class="footer-status-label" data-i18n="statSuccess">成功率:</span>
-          <span class="footer-status-value" id="statSuccess">-</span>
-        </div>
-        <div class="footer-status-item">
-          <span class="footer-status-label" data-i18n="statQuota">今日配额:</span>
-          <span class="footer-status-value" id="statQuota">20/20</span>
-        </div>
-      </div>
-    </footer>
+      </footer>
+    </main>
   </div>
 
   <!-- Toast -->
@@ -3062,144 +3416,82 @@
       <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
       <polyline points="22 4 12 14.01 9 11.01"></polyline>
     </svg>
-    <span id="toastMsg">保存成功</span>
+    <span class="toast-msg" id="toastMsg">保存成功</span>
   </div>
 
-  <!-- Template Library Modal -->
-  <div class="modal-overlay" id="templateModal">
+  <!-- Template Modal -->
+  <div class="modal-overlay" id="templateModal" role="dialog" aria-modal="true" aria-labelledby="templateModalTitle">
     <div class="modal-content">
-      <h2 class="modal-title" data-i18n="templateLibrary">角色模板库</h2>
-      <p class="panel-desc" data-i18n="templateHelp">选择预设模板快速创建新角色。</p>
-      <div class="item-list" id="templateGrid"></div>
-      <button class="btn btn-secondary" id="closeTemplateBtn" style="width:100%;margin-top:var(--spacing-4);" data-i18n="close">关闭</button>
+      <div class="modal-header">
+        <h3 id="templateModalTitle" data-i18n="templateLibrary">角色模板库</h3>
+      </div>
+      <div class="modal-body">
+        <p class="panel-desc" data-i18n="templateHelp">选择一个预设模板快速创建新角色。</p>
+        <div class="item-list" id="templateGrid"></div>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" id="closeTemplateBtn" data-i18n="close">关闭</button>
+      </div>
     </div>
   </div>
 
   <!-- Upgrade Modal -->
-  <div class="modal-overlay" id="upgradeModal">
+  <div class="modal-overlay" id="upgradeModal" role="dialog" aria-modal="true" aria-labelledby="upgradeModalTitle">
     <div class="modal-content">
-      <h2 class="modal-title" data-i18n="upgradeModalTitle">升级 ChatGenius Pro</h2>
-      <div class="modal-body">
-        <button class="btn btn-secondary" id="upgradeOptionBuy" style="width:100%;margin-bottom:var(--spacing-3);">
-          <span data-i18n="upgradeOptBuyTitle">在线购买</span>
-        </button>
-        <button class="btn btn-secondary" id="useActivationCodeBtn" style="width:100%;">
-          <span data-i18n="upgradeOptCodeTitle">我有激活码</span>
-        </button>
+      <div class="modal-header">
+        <h3 id="upgradeModalTitle" data-i18n="upgradeModalTitle">升级 ChatGenius Pro</h3>
       </div>
-      <button class="btn btn-secondary" id="closeUpgradeModal" style="width:100%;" data-i18n="close">关闭</button>
+      <div class="modal-body">
+        <p class="panel-desc" data-i18n="upgradeModalDesc">升级到 Pro 版解锁无限回复、高级角色模板、优先支持等专属功能。</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" id="closeUpgradeModal" data-i18n="close">关闭</button>
+        <button class="btn btn-primary" type="button" id="upgradeOptionBuy" data-i18n="upgradeBtn">立即升级</button>
+        <button class="btn btn-secondary" type="button" id="useActivationCodeBtn" data-i18n="haveActivationCode">我有激活码</button>
+      </div>
     </div>
   </div>
 
   <!-- Confirm Modal -->
-  <div class="modal-overlay" id="confirmModal" style="display:none;">
+  <div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
     <div class="modal-content modal-sm">
-      <h2 class="modal-title" id="confirmTitle">确认</h2>
-      <p class="panel-desc" id="confirmMessage" style="margin-bottom:24px;">确定要执行此操作吗？</p>
-      <div style="display:flex;gap:12px;justify-content:flex-end;">
-        <button class="btn btn-secondary" id="confirmCancelBtn" data-i18n="cancel">取消</button>
-        <button class="btn btn-destructive" id="confirmOkBtn" data-i18n="confirm">确认</button>
+      <div class="modal-header">
+        <h3 id="confirmTitle">确认</h3>
+      </div>
+      <div class="modal-body">
+        <p class="panel-desc" id="confirmMessage">确定要执行此操作吗？</p>
+      </div>
+      <div class="modal-footer">
+        <button class="btn btn-secondary" type="button" id="confirmCancelBtn" data-i18n="cancel">取消</button>
+        <button class="btn btn-destructive" type="button" id="confirmOkBtn" data-i18n="confirm">确认</button>
       </div>
     </div>
   </div>
 
-  <!-- Onboarding Modal -->
-  <div class="modal-overlay" id="onboardingModal" style="display:none;">
-    <div class="modal-content modal-lg">
-      <div class="modal-header">
-        <h3 id="onboardingTitle" data-i18n="onboardingTitle">欢迎使用 ChatGenius</h3>
-        <span id="onboardingStepIndicator">步骤 1 / 3</span>
+  <!-- Empty State Template（统一空状态契约） -->
+  <template id="emptyStateTpl">
+    <div class="empty-state">
+      <div class="empty-state-icon">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
+          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+        </svg>
       </div>
-      <div class="modal-body">
-        <!-- 步骤 1: 选模板 -->
-        <div id="onboardingStep1" class="onboarding-step">
-          <p class="onboarding-desc" data-i18n="onboardingStep1Desc">选择一个角色模板，快速开始（可稍后自定义）：</p>
-          <div id="onboardingTemplateGrid" class="onboarding-template-grid"></div>
-        </div>
-        <!-- 步骤 2: 配置 API（用户自定义 URL/Key/模型名） -->
-        <div id="onboardingStep2" class="onboarding-step" style="display:none;">
-          <p class="onboarding-desc">填写你的大模型 API 信息，30 秒开始使用</p>
+      <div class="empty-state-title"></div>
+      <div class="empty-state-desc"></div>
+    </div>
+  </template>
 
-          <div class="custom-api-form">
-            <div class="form-grid">
-              <div class="form-group full-width">
-                <label class="form-label" for="onboardingApiUrlInput">API 地址 (URL)</label>
-                <input type="text" class="form-input" id="onboardingApiUrlInput" placeholder="https://api.deepseek.com/v1/chat/completions" autocomplete="off" spellcheck="false" autocapitalize="off">
-                <div class="form-hint">OpenAI 兼容格式，通常以 /chat/completions 结尾</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="onboardingApiKeyInput">API Key</label>
-                <div class="api-key-wrapper">
-                  <input type="password" class="form-input" id="onboardingApiKeyInput" placeholder="粘贴您的 API Key" autocomplete="off" spellcheck="false" autocapitalize="off">
-                  <button type="button" class="api-key-toggle" id="onboardingApiKeyToggle" title="显示/隐藏">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                      <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                      <circle cx="12" cy="12" r="3"></circle>
-                    </svg>
-                  </button>
-                </div>
-                <div class="key-privacy-note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 仅保存在浏览器本地，不会上传</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="onboardingModelNameInput">模型名称</label>
-                <input type="text" class="form-input" id="onboardingModelNameInput" placeholder="deepseek-chat" autocomplete="off" spellcheck="false" autocapitalize="off">
-                <div class="form-hint">如 gpt-4o、deepseek-chat、glm-4-flash</div>
-              </div>
-            </div>
-            <button class="btn btn-primary" id="onboardingTestBtn" type="button" style="width:100%;margin-top:12px;">测试连接</button>
-            <span id="onboardingTestResult" style="font-size:13px;display:block;margin-top:8px;"></span>
-
-            <!-- 内嵌示例教程 -->
-            <details class="key-tutorial">
-              <summary>不知道怎么填？查看常见示例</summary>
-              <div class="tutorial-content">
-                <p style="margin-bottom:6px;"><strong>DeepSeek（深度求索）</strong></p>
-                <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);margin-bottom:12px;line-height:1.6;">
-                  URL: https://api.deepseek.com/v1/chat/completions<br>
-                  模型: deepseek-chat
-                </p>
-                <p style="margin-bottom:6px;"><strong>智谱清言 (GLM)</strong></p>
-                <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);margin-bottom:12px;line-height:1.6;">
-                  URL: https://open.bigmodel.cn/api/paas/v4/chat/completions<br>
-                  模型: glm-4-flash
-                </p>
-                <p style="margin-bottom:6px;"><strong>通义千问 (Qwen)</strong></p>
-                <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);margin-bottom:12px;line-height:1.6;">
-                  URL: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions<br>
-                  模型: qwen-plus
-                </p>
-                <p style="margin-bottom:6px;"><strong>OpenAI</strong></p>
-                <p style="font-family:var(--font-mono);font-size:11px;background:var(--bg-tertiary);padding:8px;border-radius:var(--radius-sm);line-height:1.6;">
-                  URL: https://api.openai.com/v1/chat/completions<br>
-                  模型: gpt-4o-mini
-                </p>
-                <p class="tutorial-note">模型名称会随厂商更新而变化，请以厂商控制台为准。Key 只保存在您的浏览器本地。</p>
-              </div>
-            </details>
-          </div>
-
-          <!-- 配置指南入口 -->
-          <div style="margin-top:var(--spacing-4);text-align:center;">
-            <a href="https://chat.sopie.cc/guide/" target="_blank" style="font-size:12px;color:var(--text-tertiary);text-decoration:none;display:inline-flex;align-items:center;gap:4px;">
-              <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path></svg>
-              需要帮助？查看详细配置指南
-            </a>
-          </div>
-        </div>
-        <!-- 步骤 3: 完成 -->
-        <div id="onboardingStep3" class="onboarding-step" style="display:none;text-align:center;padding:20px 0;">
-          <div style="width:56px;height:56px;margin:0 auto 16px;border-radius:50%;background:var(--success-bg);display:flex;align-items:center;justify-content:center;">
-            <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round" stroke-linejoin="round" style="color:var(--success);"><polyline points="20 6 9 17 4 12"></polyline></svg>
-          </div>
-          <h3 data-i18n="onboardingDone">一切就绪！</h3>
-          <p class="onboarding-desc" data-i18n="onboardingDoneDesc">你已完成基础配置，现在可以开始使用 ChatGenius AI 了。</p>
-        </div>
+  <!-- Command Palette -->
+  <div class="cmd-overlay" id="cmdOverlay" role="dialog" aria-modal="true" aria-label="命令面板">
+    <div class="cmd-palette">
+      <div class="cmd-input-wrap">
+        <svg class="cmd-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+          <circle cx="11" cy="11" r="8"></circle>
+          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+        </svg>
+        <input class="cmd-input" id="cmdInput" placeholder="搜索设置、角色、FAQ…" autocomplete="off" spellcheck="false">
       </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" id="onboardingSkipBtn" data-i18n="onboardingSkip">跳过</button>
-        <button class="btn btn-primary" id="onboardingNextBtn" data-i18n="onboardingNext">下一步</button>
-        <button class="btn btn-primary" id="onboardingStartBtn" style="display:none;" data-i18n="onboardingStart">开始使用</button>
-      </div>
+      <div class="cmd-results" id="cmdResults"></div>
     </div>
   </div>
 

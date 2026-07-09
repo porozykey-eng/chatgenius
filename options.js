@@ -197,14 +197,6 @@ const I18N = {
     freeTierUpgrade: 'Upgrade Pro',
     importFileTooLarge: 'File too large (max 1MB)',
     importInvalidData: 'Invalid data format',
-    onboardingTitle: 'Welcome to ChatGenius',
-    onboardingStep1Desc: 'Choose a persona template to get started',
-    onboardingStep2Desc: 'Configure your AI API (can be changed later)',
-    onboardingSkip: 'Skip',
-    onboardingNext: 'Next',
-    onboardingStart: 'Get Started',
-    onboardingDone: 'All Set!',
-    onboardingDoneDesc: "You've completed the basic setup. Ready to use ChatGenius AI.",
     apiGuideText: 'Configure your API to enable AI replies',
     apiGuideBtn: 'Configure Now',
     emptyPersonas: 'No custom personas yet',
@@ -352,14 +344,6 @@ const I18N = {
     freeTierUpgrade: '升级 Pro',
     importFileTooLarge: '文件过大（最大 1MB）',
     importInvalidData: '数据格式无效',
-    onboardingTitle: '欢迎使用 ChatGenius',
-    onboardingStep1Desc: '选择一个角色模板，快速开始（可稍后自定义）',
-    onboardingStep2Desc: '配置你的 AI API（可稍后在设置中修改）',
-    onboardingSkip: '跳过',
-    onboardingNext: '下一步',
-    onboardingStart: '开始使用',
-    onboardingDone: '一切就绪！',
-    onboardingDoneDesc: '你已完成基础配置，现在可以开始使用 ChatGenius AI 了。',
     apiGuideText: '建议先配置 API 以启用 AI 回复',
     apiGuideBtn: '去配置',
     emptyPersonas: '还没有自定义角色',
@@ -393,19 +377,194 @@ const PERSONA_TEMPLATES = [
 // ================================
 document.addEventListener('DOMContentLoaded', () => {
   // ---- Theme Toggle ----
+  function toggleTheme() {
+    const currentTheme = document.documentElement.getAttribute('data-theme');
+    const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
+    document.documentElement.setAttribute('data-theme', newTheme);
+    try {
+      localStorage.setItem('chatgenius_theme', newTheme);
+    } catch (e) {
+      // localStorage 不可用时忽略
+    }
+  }
+
   const themeToggle = document.getElementById('themeToggle');
   if (themeToggle) {
-    themeToggle.addEventListener('click', () => {
-      const currentTheme = document.documentElement.getAttribute('data-theme');
-      const newTheme = currentTheme === 'dark' ? 'light' : 'dark';
-      document.documentElement.setAttribute('data-theme', newTheme);
-      try {
-        localStorage.setItem('chatgenius_theme', newTheme);
-      } catch (e) {
-        // localStorage 不可用时忽略
-      }
+    themeToggle.addEventListener('click', toggleTheme);
+  }
+
+  // 移动端 header 主题切换按钮
+  const headerThemeToggle = document.getElementById('headerThemeToggle');
+  if (headerThemeToggle) {
+    headerThemeToggle.addEventListener('click', toggleTheme);
+  }
+
+  // ---- ⌘K / Ctrl+K 平台适配 ----
+  const cmdKbd = document.getElementById('cmdKbd');
+  if (cmdKbd) {
+    const isMac = navigator.platform.includes('Mac');
+    cmdKbd.textContent = isMac ? '⌘K' : 'Ctrl K';
+  }
+
+  // ---- Modal 焦点陷阱工具（建议 1 + 建议 7：ARIA dialog 语义 + 统一 class 驱动） ----
+  let _previouslyFocused = null;
+
+  function _trapKeydown(e) {
+    if (e.key !== 'Tab') return;
+    const modal = e.currentTarget;
+    if (!modal.classList.contains('show')) return;
+    const focusable = modal.querySelectorAll('button, [href], input, select, textarea, [tabindex]:not([tabindex="-1"])');
+    if (!focusable.length) return;
+    const first = focusable[0];
+    const last = focusable[focusable.length - 1];
+    if (e.shiftKey && document.activeElement === first) {
+      e.preventDefault();
+      last.focus();
+    } else if (!e.shiftKey && document.activeElement === last) {
+      e.preventDefault();
+      first.focus();
+    }
+  }
+
+  function openModal(modal) {
+    if (!modal) return;
+    _previouslyFocused = document.activeElement;
+    modal.classList.add('show');
+    // 首次聚焦：优先聚焦交互元素
+    const focusable = modal.querySelector('button, [href], input');
+    if (focusable) setTimeout(() => focusable.focus(), 50);
+  }
+
+  function closeModal(modal) {
+    if (!modal) return;
+    modal.classList.remove('show');
+    if (_previouslyFocused && _previouslyFocused.focus) {
+      _previouslyFocused.focus();
+    }
+    _previouslyFocused = null;
+  }
+
+  // 为所有 modal 和 cmd overlay 绑定焦点陷阱（仅绑定一次）
+  document.querySelectorAll('.modal-overlay, .cmd-overlay').forEach(m => {
+    m.addEventListener('keydown', _trapKeydown);
+  });
+
+  // ---- Command Palette（建议 15：结果渲染 + 键盘导航 + 执行） ----
+  const cmdTrigger = document.getElementById('cmdTrigger');
+  const cmdOverlay = document.getElementById('cmdOverlay');
+  const cmdInput = document.getElementById('cmdInput');
+  const cmdResults = document.getElementById('cmdResults');
+  let _cmdActiveIndex = -1;
+  let _cmdFiltered = [];
+
+  function _getCmdItems() {
+    const L = I18N[currentLang] || I18N.zh;
+    return [
+      { id: 'tab-personas', label: L.tabPersonas || 'AI 角色', hint: '切换到角色面板', icon: '👤', action: () => switchTab('personas') },
+      { id: 'tab-knowledge', label: L.tabKnowledge || '知识库', hint: '切换到知识库', icon: '📚', action: () => switchTab('knowledge') },
+      { id: 'tab-settings', label: L.tabSettings || '设置', hint: '切换到设置', icon: '⚙️', action: () => switchTab('settings') },
+      { id: 'tab-account', label: L.tabAccount || '账户', hint: '切换到账户', icon: '💳', action: () => switchTab('account') },
+      { id: 'toggle-theme', label: currentLang === 'zh' ? '切换主题' : 'Toggle Theme', hint: currentLang === 'zh' ? '明暗模式切换' : 'Light/Dark', icon: '🌓', action: () => toggleTheme() },
+      { id: 'open-templates', label: L.templateLibrary || '模板库', hint: currentLang === 'zh' ? '打开角色模板' : 'Open persona templates', icon: '📋', action: () => { const m = document.getElementById('templateModal'); if (m) { if (typeof renderTemplateLibrary === 'function') renderTemplateLibrary(); openModal(m); } } },
+      { id: 'export-settings', label: L.exportAllSettings || '导出全部设置', hint: currentLang === 'zh' ? '备份到文件' : 'Backup to file', icon: '💾', action: () => { const b = document.getElementById('exportAllSettingsBtn'); if (b) b.click(); } },
+      { id: 'import-settings', label: L.importSettings || '导入设置', hint: currentLang === 'zh' ? '从文件恢复' : 'Restore from file', icon: '📥', action: () => { const b = document.getElementById('importAllSettingsBtn'); if (b) b.click(); } },
+    ];
+  }
+
+  function _renderCmdResults(query) {
+    if (!cmdResults) return;
+    const items = _getCmdItems();
+    const q = (query || '').trim().toLowerCase();
+    _cmdFiltered = q ? items.filter(it => it.label.toLowerCase().includes(q) || it.hint.toLowerCase().includes(q) || it.id.includes(q)) : items;
+
+    if (!_cmdFiltered.length) {
+      cmdResults.innerHTML = '<div class="cmd-empty">' + escapeHtml(I18N[currentLang].noMatchingFaq || 'No results') + '</div>';
+      _cmdActiveIndex = -1;
+      return;
+    }
+
+    cmdResults.innerHTML = _cmdFiltered.map((it, i) => {
+      return '<button class="cmd-item' + (i === 0 ? ' active' : '') + '" type="button" data-cmd-index="' + i + '">' +
+        '<span class="cmd-item-icon">' + it.icon + '</span>' +
+        '<span class="cmd-item-label">' + escapeHtml(it.label) + '</span>' +
+        '<span class="cmd-item-hint">' + escapeHtml(it.hint) + '</span>' +
+        '</button>';
+    }).join('');
+    _cmdActiveIndex = 0;
+
+    // 绑定点击和 hover
+    cmdResults.querySelectorAll('.cmd-item').forEach((el, i) => {
+      el.addEventListener('click', () => _executeCmdItem(i));
+      el.addEventListener('mouseenter', () => _setCmdActive(i));
     });
   }
+
+  function _setCmdActive(index) {
+    if (!cmdResults) return;
+    const items = cmdResults.querySelectorAll('.cmd-item');
+    if (!items.length) return;
+    if (index < 0) index = items.length - 1;
+    if (index >= items.length) index = 0;
+    items.forEach((el, i) => el.classList.toggle('active', i === index));
+    _cmdActiveIndex = index;
+    // 滚动可见
+    const active = items[index];
+    if (active && active.scrollIntoView) active.scrollIntoView({ block: 'nearest' });
+  }
+
+  function _executeCmdItem(index) {
+    if (!_cmdFiltered[index]) return;
+    const item = _cmdFiltered[index];
+    closeCmdPalette();
+    try { item.action(); } catch (e) { console.error('Cmd action error:', e); }
+  }
+
+  function openCmdPalette() {
+    if (!cmdOverlay) return;
+    openModal(cmdOverlay);
+    if (cmdInput) {
+      cmdInput.value = '';
+      setTimeout(() => cmdInput.focus(), 50);
+    }
+    _renderCmdResults('');
+  }
+
+  function closeCmdPalette() {
+    closeModal(cmdOverlay);
+  }
+
+  if (cmdTrigger) {
+    cmdTrigger.addEventListener('click', openCmdPalette);
+  }
+
+  if (cmdOverlay) {
+    cmdOverlay.addEventListener('click', (e) => {
+      if (e.target === cmdOverlay) closeCmdPalette();
+    });
+  }
+
+  if (cmdInput) {
+    cmdInput.addEventListener('input', () => _renderCmdResults(cmdInput.value));
+    cmdInput.addEventListener('keydown', (e) => {
+      if (e.key === 'Escape') { closeCmdPalette(); return; }
+      if (e.key === 'ArrowDown') { e.preventDefault(); _setCmdActive(_cmdActiveIndex + 1); return; }
+      if (e.key === 'ArrowUp') { e.preventDefault(); _setCmdActive(_cmdActiveIndex - 1); return; }
+      if (e.key === 'Enter') { e.preventDefault(); _executeCmdItem(_cmdActiveIndex); return; }
+    });
+  }
+
+  document.addEventListener('keydown', (e) => {
+    const isMac = navigator.platform.includes('Mac');
+    const modKey = isMac ? e.metaKey : e.ctrlKey;
+    if (modKey && e.key === 'k') {
+      e.preventDefault();
+      if (cmdOverlay && cmdOverlay.classList.contains('show')) {
+        closeCmdPalette();
+      } else {
+        openCmdPalette();
+      }
+    }
+  });
 
   // ---- State ----
   let currentLang = 'zh';
@@ -418,7 +577,6 @@ document.addEventListener('DOMContentLoaded', () => {
   let deletedFaqUndo = null; // { items: [], timer }
   let deletedPersonaUndo = null; // { item, index, wasActive, timer }
   let modelsConfig = null; // Loaded from models-config.json
-  let onboardingCurrentStep = 1;
 
   // ---- XSS Protection ----
   function escapeHtml(str) {
@@ -428,6 +586,44 @@ document.addEventListener('DOMContentLoaded', () => {
               .replace(/>/g, '&gt;')
               .replace(/"/g, '&quot;')
               .replace(/'/g, '&#39;');
+  }
+
+  // ---- Empty State Utility（统一空状态契约：克隆 template + 填充标题/描述） ----
+  function renderEmptyState(container, title, desc) {
+    const tpl = document.getElementById('emptyStateTpl');
+    if (!tpl) return null;
+    const clone = tpl.content.cloneNode(true);
+    clone.querySelector('.empty-state-title').textContent = title || '';
+    const descEl = clone.querySelector('.empty-state-desc');
+    if (desc) {
+      descEl.textContent = desc;
+    } else {
+      descEl.remove();
+    }
+    container.innerHTML = '';
+    container.appendChild(clone);
+    return container;
+  }
+
+  // 创建空状态元素（返回带 empty-state 类的 div，可直接 appendChild）
+  function createEmptyState(title, desc) {
+    const tpl = document.getElementById('emptyStateTpl');
+    if (!tpl) {
+      const fallback = document.createElement('div');
+      fallback.className = 'empty-state';
+      fallback.innerHTML = '<div class="empty-state-title">' + escapeHtml(title || '') + '</div>';
+      return fallback;
+    }
+    const clone = tpl.content.cloneNode(true);
+    const root = clone.querySelector('.empty-state');
+    root.querySelector('.empty-state-title').textContent = title || '';
+    const descEl = root.querySelector('.empty-state-desc');
+    if (desc) {
+      descEl.textContent = desc;
+    } else {
+      descEl.remove();
+    }
+    return root;
   }
 
   // ---- Auto-save ----
@@ -509,20 +705,29 @@ document.addEventListener('DOMContentLoaded', () => {
   function switchTab(targetTab) {
     if (!targetTab) return;
     tabBtns.forEach(b => {
-      b.classList.remove('active');
-      if (b.getAttribute('data-tab') === targetTab) b.classList.add('active');
+      const isActive = b.getAttribute('data-tab') === targetTab;
+      b.classList.toggle('active', isActive);
+      b.setAttribute('aria-current', isActive ? 'page' : 'false');
     });
     tabContents.forEach(content => {
-      content.classList.remove('active');
-      if (content.id === 'tab-' + targetTab) {
-        content.classList.add('active');
-      }
+      content.classList.toggle('active', content.id === 'tab-' + targetTab);
     });
   }
 
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       switchTab(btn.getAttribute('data-tab'));
+    });
+  });
+
+  // ---- details aria-expanded 同步（建议 6） ----
+  document.querySelectorAll('details.panel').forEach(d => {
+    const summary = d.querySelector('summary');
+    if (!summary) return;
+    summary.setAttribute('role', 'button');
+    summary.setAttribute('aria-expanded', d.open ? 'true' : 'false');
+    d.addEventListener('toggle', () => {
+      summary.setAttribute('aria-expanded', d.open ? 'true' : 'false');
     });
   });
 
@@ -539,21 +744,21 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   });
 
-  // ---- Toast ----
-  function showToast(msg, isError) {
+  // ---- Toast（建议 8：迁移 inline style 至 CSS 类，扩展签名支持 action 按钮） ----
+  function showToast(msg, isError, actionLabel, actionCallback) {
     const toast = document.getElementById('toast');
     const toastMsg = document.getElementById('toastMsg');
     if (!toast || !toastMsg) return;
     toastMsg.textContent = msg;
     toast.className = (isError ? 'error ' : '') + 'show';
 
-    // 添加关闭按钮（仅创建一次）
+    // 清理旧的 action 按钮和关闭按钮（每次重建，确保状态一致）
     let closeBtn = toast.querySelector('.toast-close');
     if (!closeBtn) {
       closeBtn = document.createElement('button');
       closeBtn.className = 'toast-close';
+      closeBtn.type = 'button';
       closeBtn.setAttribute('aria-label', '关闭');
-      closeBtn.style.cssText = 'background:none;border:none;color:inherit;cursor:pointer;font-size:18px;line-height:1;padding:0;margin-left:8px;opacity:0.6;flex-shrink:0;';
       closeBtn.textContent = '×';
       toast.appendChild(closeBtn);
     }
@@ -565,8 +770,31 @@ document.addEventListener('DOMContentLoaded', () => {
       toast.className = toast.className.replace('show', '').trim();
     };
 
-    // 错误类显示 5 秒，成功类显示 2.5 秒
-    const duration = isError ? 5000 : 2500;
+    // 移除旧的 action 按钮
+    const oldAction = toast.querySelector('.toast-action');
+    if (oldAction) oldAction.remove();
+
+    // 如有 action，创建 action 按钮
+    if (actionLabel && typeof actionCallback === 'function') {
+      const action = document.createElement('button');
+      action.className = 'toast-action';
+      action.type = 'button';
+      action.textContent = actionLabel;
+      action.addEventListener('click', () => {
+        try { actionCallback(); } catch (e) { console.error('Toast action error:', e); }
+        if (toast._toastTimer) {
+          clearTimeout(toast._toastTimer);
+          toast._toastTimer = null;
+        }
+        toast.className = toast.className.replace('show', '').trim();
+      });
+      // action 插入在 closeBtn 之前
+      toast.insertBefore(action, closeBtn);
+    }
+
+    // 错误类显示 5 秒，成功类显示 2.5 秒；有 action 时延长至 6 秒
+    let duration = isError ? 5000 : 2500;
+    if (actionLabel) duration = Math.max(duration, 6000);
     if (toast._toastTimer) clearTimeout(toast._toastTimer);
     toast._toastTimer = setTimeout(() => {
       toast.className = toast.className.replace('show', '').trim();
@@ -579,6 +807,14 @@ document.addEventListener('DOMContentLoaded', () => {
         clearTimeout(toast._toastTimer);
         toast._toastTimer = null;
       }
+    };
+    toast.onmouseleave = () => {
+      if (!toast.className.includes('show')) return;
+      if (toast._toastTimer) clearTimeout(toast._toastTimer);
+      toast._toastTimer = setTimeout(() => {
+        toast.className = toast.className.replace('show', '').trim();
+        toast._toastTimer = null;
+      }, duration);
     };
   }
 
@@ -598,10 +834,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       if (titleEl) titleEl.textContent = title;
       if (messageEl) messageEl.textContent = message;
-      modal.style.display = 'flex';
+      openModal(modal);
 
       const cleanup = (result) => {
-        modal.style.display = 'none';
+        closeModal(modal);
         okBtn.removeEventListener('click', okHandler);
         cancelBtn.removeEventListener('click', cancelHandler);
         resolve(result);
@@ -615,20 +851,18 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ---- Global Escape key to close modals ----
+  // ---- Global Escape key to close modals（建议 7：统一 class 驱动，简化检测） ----
   document.addEventListener('keydown', (e) => {
     if (e.key !== 'Escape') return;
-    const modals = document.querySelectorAll('.modal-overlay');
+    const modals = document.querySelectorAll('.modal-overlay, .cmd-overlay');
     modals.forEach(modal => {
-      const isVisible = modal.classList.contains('show') ||
-                        (modal.style.display && modal.style.display !== 'none');
-      if (!isVisible) return;
+      if (!modal.classList.contains('show')) return;
       if (modal.id === 'confirmModal') {
         // Trigger cancel button so showConfirm resolves(false) correctly
         const cancelBtn = modal.querySelector('#confirmCancelBtn');
         if (cancelBtn) cancelBtn.click();
       } else {
-        modal.classList.remove('show');
+        closeModal(modal);
       }
     });
   });
@@ -671,7 +905,7 @@ document.addEventListener('DOMContentLoaded', () => {
       cta1.textContent = I18N[currentLang].emptyPersonasCta1 || 'Create from Template';
       cta1.addEventListener('click', () => {
         renderTemplateLibrary();
-        if (templateModal) templateModal.classList.add('show');
+        if (templateModal) openModal(templateModal);
       });
 
       const cta2 = document.createElement('button');
@@ -758,22 +992,14 @@ document.addEventListener('DOMContentLoaded', () => {
         deletedPersonaUndo = { item: deletedPersona, index, wasActive, timer: null };
         renderPersonas();
         scheduleSave();
-        showToast((I18N[currentLang].deletedPersona || 'Deleted "{name}"').replace('{name}', deletedPersona.name || ''));
 
-        // Show undo toast
-        const toast = document.getElementById('toast');
-        const toastMsg = document.getElementById('toastMsg');
-        if (toast && toastMsg) {
-          toastMsg.textContent = (I18N[currentLang].deletedPersona || 'Deleted "{name}"').replace('{name}', deletedPersona.name || '');
-          // Remove any existing undo button
-          const existingUndo = toast.querySelector('.undo-btn');
-          if (existingUndo) existingUndo.remove();
-          // Add undo button
-          const undoBtn = document.createElement('button');
-          undoBtn.className = 'undo-btn';
-          undoBtn.textContent = I18N[currentLang].undoDelete || 'Undo';
-          undoBtn.style.cssText = 'margin-left:8px;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:600;font-size:13px;';
-          undoBtn.addEventListener('click', () => {
+        // 使用 showToast action 集成 Undo（建议 8）
+        showToast(
+          (I18N[currentLang].deletedPersona || 'Deleted "{name}"').replace('{name}', deletedPersona.name || ''),
+          false,
+          I18N[currentLang].undoDelete || 'Undo',
+          () => {
+            if (!deletedPersonaUndo) return;
             personas.splice(deletedPersonaUndo.index, 0, deletedPersonaUndo.item);
             if (deletedPersonaUndo.wasActive) {
               activePersonaId = deletedPersonaUndo.item.id;
@@ -781,16 +1007,13 @@ document.addEventListener('DOMContentLoaded', () => {
             deletedPersonaUndo = null;
             renderPersonas();
             scheduleSave();
-            toast.className = toast.className.replace('show', '').trim();
-          });
-          toast.appendChild(undoBtn);
-          toast.className = 'show';
-          if (toast._toastTimer) { clearTimeout(toast._toastTimer); toast._toastTimer = null; }
-          clearTimeout(deletedPersonaUndo.timer);
+          }
+        );
+        // 设置 undo 过期计时器（与 toast 显示时长一致）
+        if (deletedPersonaUndo) {
           deletedPersonaUndo.timer = setTimeout(() => {
-            toast.className = toast.className.replace('show', '').trim();
             deletedPersonaUndo = null;
-          }, 3000);
+          }, 6000);
         }
       });
 
@@ -914,7 +1137,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!activePersonaId) activePersonaId = newId;
         renderPersonas();
         scheduleSave();
-        if (templateModal) templateModal.classList.remove('show');
+        if (templateModal) closeModal(templateModal);
         showToast((I18N[currentLang].templateAdded || 'Template added: {name}').replace('{name}', I18N[currentLang][template.nameKey] || template.nameKey));
       });
 
@@ -925,14 +1148,14 @@ document.addEventListener('DOMContentLoaded', () => {
   if (templateLibraryBtn) {
     templateLibraryBtn.addEventListener('click', () => {
       renderTemplateLibrary();
-      if (templateModal) templateModal.classList.add('show');
+      if (templateModal) openModal(templateModal);
     });
   }
   if (closeTemplateBtn) {
-    closeTemplateBtn.addEventListener('click', () => { if (templateModal) templateModal.classList.remove('show'); });
+    closeTemplateBtn.addEventListener('click', () => { if (templateModal) closeModal(templateModal); });
   }
   if (templateModal) {
-    templateModal.addEventListener('click', (e) => { if (e.target === templateModal) templateModal.classList.remove('show'); });
+    templateModal.addEventListener('click', (e) => { if (e.target === templateModal) closeModal(templateModal); });
   }
 
   // ---- Live Preview ----
@@ -1078,8 +1301,9 @@ document.addEventListener('DOMContentLoaded', () => {
         ctaRow.appendChild(cta);
         noResults.appendChild(ctaRow);
       } else {
-        noResults.innerHTML = '<div class="empty-state-icon">🔍</div>' +
-          '<div class="empty-state-title">' + escapeHtml(I18N[currentLang].noMatchingFaq || 'No matching Q&A found') + '</div>';
+        faqList.appendChild(createEmptyState(I18N[currentLang].noMatchingFaq || 'No matching Q&A found'));
+        updateBatchToolbar();
+        return;
       }
       faqList.appendChild(noResults);
       updateBatchToolbar();
@@ -1127,31 +1351,24 @@ document.addEventListener('DOMContentLoaded', () => {
         deletedFaqUndo = { items: [{ item: deletedItem, index }], timer: null };
         renderFaq();
         scheduleSave();
-        showToast(I18N[currentLang].deletedFaq || 'Deleted 1 Q&A item');
 
-        // Show undo toast
-        const toast = document.getElementById('toast');
-        const toastMsg = document.getElementById('toastMsg');
-        if (toast && toastMsg) {
-          toastMsg.textContent = I18N[currentLang].deletedFaq || 'Deleted';
-          // Add undo button
-          const undoBtn = document.createElement('button');
-          undoBtn.textContent = I18N[currentLang].undoDelete || 'Undo';
-          undoBtn.style.cssText = 'margin-left:8px;color:var(--accent);background:none;border:none;cursor:pointer;font-weight:600;font-size:13px;';
-          undoBtn.addEventListener('click', () => {
+        // 使用 showToast action 集成 Undo（建议 8）
+        showToast(
+          I18N[currentLang].deletedFaq || 'Deleted 1 Q&A item',
+          false,
+          I18N[currentLang].undoDelete || 'Undo',
+          () => {
+            if (!deletedFaqUndo) return;
             faqData.splice(deletedFaqUndo.items[0].index, 0, deletedFaqUndo.items[0].item);
             deletedFaqUndo = null;
             renderFaq();
             scheduleSave();
-            toast.className = toast.className.replace('show', '').trim();
-          });
-          toast.appendChild(undoBtn);
-          toast.className = 'show';
-          clearTimeout(deletedFaqUndo.timer);
+          }
+        );
+        if (deletedFaqUndo) {
           deletedFaqUndo.timer = setTimeout(() => {
-            toast.className = toast.className.replace('show', '').trim();
             deletedFaqUndo = null;
-          }, 3000);
+          }, 6000);
         }
       });
 
@@ -1502,114 +1719,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ================================
-  // Provider Cards — 导购式 API 选择
-  // ================================
-
-  // 当前选中的 provider（卡片模式）
-  let selectedCardProviderId = null;
-
-  // 渲染推荐厂商卡片
-  function renderProviderCards(containerId, context) {
-    const container = document.getElementById(containerId);
-    if (!container || !modelsConfig) return;
-    container.innerHTML = '';
-
-    const providers = (modelsConfig.providers || [])
-      .filter(p => p.recommended)
-      .sort((a, b) => (a.priority || 99) - (b.priority || 99));
-
-    providers.forEach(provider => {
-      const card = document.createElement('div');
-      card.className = 'provider-card';
-      card.dataset.providerId = provider.id;
-
-      const tagsHtml = (provider.tags || [])
-        .map(t => `<span class="provider-tag">${t}</span>`).join('');
-
-      card.innerHTML = `
-        <div class="provider-card-header">
-          <span class="provider-card-icon">${provider.icon}</span>
-          <span class="provider-card-name">${provider.name}</span>
-        </div>
-        ${tagsHtml ? `<div class="provider-card-tags">${tagsHtml}</div>` : ''}
-        ${provider.scenario ? `<div class="provider-card-scenario">${provider.scenario}</div>` : ''}
-        ${provider.costEstimate ? `<div class="provider-card-cost">${provider.costEstimate}</div>` : ''}
-      `;
-
-      card.addEventListener('click', () => selectProviderCard(provider.id, context));
-      container.appendChild(card);
-    });
-  }
-
-  // 选中推荐厂商卡片
-  function selectProviderCard(providerId, context) {
-    const provider = (modelsConfig?.providers || []).find(p => p.id === providerId);
-    if (!provider) return;
-
-    selectedCardProviderId = providerId;
-
-    // 高亮选中卡片
-    const containerId = context === 'onboarding' ? 'onboardingProviderCards' : 'settingsProviderCards';
-    const container = document.getElementById(containerId);
-    if (container) {
-      container.querySelectorAll('.provider-card').forEach(card => {
-        card.classList.toggle('selected', card.dataset.providerId === providerId);
-      });
-    }
-
-    // 展开 Key 输入区
-    const keySectionId = context === 'onboarding' ? 'onboardingKeySection' : 'settingsKeySection';
-    const keySection = document.getElementById(keySectionId);
-    if (keySection) keySection.style.display = '';
-
-    // 设置选中厂商信息
-    const iconId = context === 'onboarding' ? 'onboardingSelectedIcon' : 'settingsSelectedIcon';
-    const nameId = context === 'onboarding' ? 'onboardingSelectedName' : 'settingsSelectedName';
-    const linkId = context === 'onboarding' ? 'onboardingGetKeyLink' : 'settingsGetKeyLink';
-
-    const iconEl = document.getElementById(iconId);
-    const nameEl = document.getElementById(nameId);
-    const linkEl = document.getElementById(linkId);
-
-    if (iconEl) iconEl.textContent = provider.icon;
-    if (nameEl) nameEl.textContent = provider.name;
-    if (linkEl) {
-      if (provider.getKey) {
-        linkEl.href = provider.getKey;
-        linkEl.style.display = '';
-      } else {
-        linkEl.style.display = 'none';
-      }
-    }
-
-    // 更新配置引导小字
-    const guideEl = document.getElementById(context === 'onboarding' ? 'onboardingProviderGuide' : 'settingsProviderGuide');
-    const guideLinkEl = document.getElementById(context === 'onboarding' ? 'onboardingGuideLink' : 'settingsGuideLink');
-    if (guideEl && guideLinkEl) {
-      guideEl.style.display = '';
-      guideLinkEl.textContent = provider.name + ' 官方平台';
-      if (provider.getKey) {
-        guideLinkEl.href = provider.getKey;
-        guideEl.style.display = '';
-      } else {
-        guideEl.style.display = 'none';
-      }
-    }
-
-    // 更新隐藏的 apiProvider select（用于高级模式同步）
-    const apiProviderSelect = document.getElementById('apiProvider');
-    if (apiProviderSelect) apiProviderSelect.value = providerId;
-
-    // 清除之前的校验状态
-    const validationId = context === 'onboarding' ? 'onboardingKeyValidation' : 'settingsKeyValidation';
-    const validationEl = document.getElementById(validationId);
-    if (validationEl) {
-      validationEl.textContent = '';
-      validationEl.className = 'key-validation-hint';
-    }
-  }
-
   // 智能 Key 格式校验
   function validateKeyFormat(providerId, key) {
     if (!key || key.length < 10) return null;
@@ -1693,20 +1802,20 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(testUrl, { method: 'POST', headers, body });
       if (response.ok) {
         if (resultEl) { resultEl.textContent = '✓ ' + (currentLang === 'zh' ? '连接成功！' : 'Connection successful!'); resultEl.style.color = 'var(--success)'; }
-        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator connected'; }
+        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill connected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
         chrome.storage.sync.set({ connectionValid: true });
       } else {
         const errMsg = getFriendlyError(response.status, providerConfig?.name || providerId);
         if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
-        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
+        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill disconnected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
         chrome.storage.sync.set({ connectionValid: false });
       }
     } catch (error) {
       const errMsg = currentLang === 'zh' ? '网络连接失败，请检查网络' : 'Network connection failed';
       if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
-      if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
+      if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill disconnected'; }
       if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
       chrome.storage.sync.set({ connectionValid: false });
     } finally {
@@ -1756,38 +1865,25 @@ document.addEventListener('DOMContentLoaded', () => {
       const response = await fetch(testUrl, { method: 'POST', headers, body });
       if (response.ok) {
         if (resultEl) { resultEl.textContent = '✓ ' + (currentLang === 'zh' ? '连接成功！' : 'Connection successful!'); resultEl.style.color = 'var(--success)'; }
-        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator connected'; }
+        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill connected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
         chrome.storage.sync.set({ connectionValid: true });
       } else {
         const errMsg = getFriendlyError(response.status, modelName);
         if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
-        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
+        if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill disconnected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
         chrome.storage.sync.set({ connectionValid: false });
       }
     } catch (error) {
       const errMsg = currentLang === 'zh' ? '网络连接失败，请检查网络或 API 地址' : 'Network connection failed';
       if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
-      if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-indicator disconnected'; }
+      if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill disconnected'; }
       if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
       chrome.storage.sync.set({ connectionValid: false });
     } finally {
       if (btnEl) { btnEl.disabled = false; btnEl.textContent = currentLang === 'zh' ? '测试连接' : 'Test Connection'; }
     }
-  }
-
-  // 为卡片模式的 Key 输入框绑定校验事件
-  function setupCardKeyValidation(context) {
-    const inputId = context === 'onboarding' ? 'onboardingApiKeyInput' : 'apiKey';
-    const input = document.getElementById(inputId);
-    if (!input) return;
-
-    input.addEventListener('input', () => {
-      const providerId = selectedCardProviderId || document.getElementById('apiProvider')?.value || 'openai';
-      updateKeyValidation(providerId, input.value, context);
-      scheduleSave();
-    });
   }
 
   // Update API Key placeholder and "Get Key" link based on selected provider
@@ -1879,27 +1975,6 @@ document.addEventListener('DOMContentLoaded', () => {
       const provider = document.getElementById('apiProvider')?.value || 'openai';
       const key = document.getElementById('apiKeyAdvanced')?.value.trim() || '';
       doTestConnection(provider, key, null, testApiAdvancedBtn);
-    });
-  }
-
-  // Onboarding test connection — 自定义模型表单
-  const onboardingTestBtn = document.getElementById('onboardingTestBtn');
-  if (onboardingTestBtn) {
-    onboardingTestBtn.addEventListener('click', () => {
-      const url = document.getElementById('onboardingApiUrlInput')?.value.trim() || '';
-      const key = document.getElementById('onboardingApiKeyInput')?.value.trim() || '';
-      const model = document.getElementById('onboardingModelNameInput')?.value.trim() || '';
-      const resultEl = document.getElementById('onboardingTestResult');
-      doTestConnectionCustom(url, key, model, resultEl, onboardingTestBtn);
-    });
-  }
-
-  // Onboarding Key 输入 show/hide toggle
-  const onboardingApiKeyToggle = document.getElementById('onboardingApiKeyToggle');
-  const onboardingApiKeyInput = document.getElementById('onboardingApiKeyInput');
-  if (onboardingApiKeyToggle && onboardingApiKeyInput) {
-    onboardingApiKeyToggle.addEventListener('click', () => {
-      onboardingApiKeyInput.type = onboardingApiKeyInput.type === 'password' ? 'text' : 'password';
     });
   }
 
@@ -2046,17 +2121,17 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   if (closeUpgradeModal) {
-    closeUpgradeModal.addEventListener('click', () => { if (upgradeModal) upgradeModal.classList.remove('show'); });
+    closeUpgradeModal.addEventListener('click', () => { if (upgradeModal) closeModal(upgradeModal); });
   }
   if (upgradeModal) {
-    upgradeModal.addEventListener('click', (e) => { if (e.target === upgradeModal) upgradeModal.classList.remove('show'); });
+    upgradeModal.addEventListener('click', (e) => { if (e.target === upgradeModal) closeModal(upgradeModal); });
   }
 
   // Dead button fix: "I have an activation code" button
   const useActivationCodeBtn = document.getElementById('useActivationCodeBtn') || document.getElementById('upgradeOptionCode');
   if (useActivationCodeBtn) {
     useActivationCodeBtn.addEventListener('click', () => {
-      if (upgradeModal) upgradeModal.classList.remove('show');
+      if (upgradeModal) closeModal(upgradeModal);
       switchTab('account');
       setTimeout(() => {
         if (activationCodeInput) activationCodeInput.focus();
@@ -2102,6 +2177,14 @@ document.addEventListener('DOMContentLoaded', () => {
 
   if (freeTierUpgradeBtn) {
     freeTierUpgradeBtn.addEventListener('click', () => { chrome.tabs.create({ url: UPGRADE_URL }); });
+  }
+
+  // 免费额度通知条 dismiss 按钮（当前会话隐藏，不持久化）
+  const freeTierDismissBtn = document.getElementById('freeTierDismissBtn');
+  if (freeTierDismissBtn) {
+    freeTierDismissBtn.addEventListener('click', () => {
+      if (freeTierNotification) freeTierNotification.classList.remove('show');
+    });
   }
 
   // ---- Data Backup ----
@@ -2336,7 +2419,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // ---- API Status Bar - 顶部 API 状态提醒 ----
   const apiStatusBar = document.getElementById('apiStatusBar');
   const apiStatusIconEl = document.getElementById('apiStatusIcon');
-  const apiStatusTextEl = document.getElementById('apiStatusText');
+  const apiStatusTextEl = document.getElementById('apiStatusBarText');
   const apiStatusTestBtn = document.getElementById('apiStatusTestBtn');
   const apiStatusConfigBtn = document.getElementById('apiStatusConfigBtn');
 
@@ -2433,135 +2516,6 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
-  // ---- Onboarding ----
-  function checkOnboarding() {
-    chrome.storage.local.get(['apiKey'], (localData) => {
-      if (chrome.runtime.lastError) return;
-      chrome.storage.sync.get(['onboardingCompleted'], (syncData) => {
-        if (chrome.runtime.lastError) return;
-        if (!localData.apiKey && syncData.onboardingCompleted !== true) {
-          showOnboarding();
-        } else if (!localData.apiKey && syncData.onboardingCompleted === true) {
-          // 用户已跳过 onboarding 但未配置 API，自动切换到设置 tab 引导配置
-          switchTab('settings');
-        }
-      });
-    });
-  }
-
-  function showOnboarding() {
-    const modal = document.getElementById('onboardingModal');
-    if (!modal) return;
-    modal.style.display = 'flex';
-    onboardingCurrentStep = 1;
-    showOnboardingStep(1);
-    renderOnboardingTemplates();
-  }
-
-  function showOnboardingStep(step) {
-    onboardingCurrentStep = step;
-    const step1 = document.getElementById('onboardingStep1');
-    const step2 = document.getElementById('onboardingStep2');
-    const step3 = document.getElementById('onboardingStep3');
-    const indicator = document.getElementById('onboardingStepIndicator');
-    const nextBtn = document.getElementById('onboardingNextBtn');
-    const startBtn = document.getElementById('onboardingStartBtn');
-    if (step1) step1.style.display = step === 1 ? 'block' : 'none';
-    if (step2) step2.style.display = step === 2 ? 'block' : 'none';
-    if (step3) step3.style.display = step === 3 ? 'block' : 'none';
-    if (indicator) indicator.textContent = (currentLang === 'zh' ? '步骤 ' : 'Step ') + step + ' / 3';
-    if (nextBtn) {
-      nextBtn.style.display = step === 2 ? '' : 'none';
-      nextBtn.textContent = I18N[currentLang].onboardingNext || 'Next';
-    }
-    if (startBtn) startBtn.style.display = step === 3 ? '' : 'none';
-  }
-
-  function renderOnboardingTemplates() {
-    const grid = document.getElementById('onboardingTemplateGrid');
-    if (!grid) return;
-    grid.innerHTML = '';
-    PERSONA_TEMPLATES.forEach(template => {
-      const card = document.createElement('div');
-      card.className = 'onboarding-template-card';
-      card.style.cssText = 'cursor:pointer;padding:16px;border:1px solid var(--border-default);border-radius:var(--radius-md);transition:border-color 0.2s;';
-      const header = document.createElement('div');
-      header.style.cssText = 'display:flex;align-items:center;gap:12px;margin-bottom:8px;';
-      const avatar = document.createElement('div');
-      avatar.style.cssText = 'font-size:24px;';
-      avatar.textContent = template.icon;
-      const name = document.createElement('div');
-      name.style.cssText = 'font-size:14px;font-weight:600;color:var(--text-primary);';
-      name.textContent = I18N[currentLang][template.nameKey] || template.nameKey;
-      header.appendChild(avatar);
-      header.appendChild(name);
-      const desc = document.createElement('div');
-      desc.style.cssText = 'font-size:12px;color:var(--text-secondary);';
-      desc.textContent = I18N[currentLang][template.descKey] || template.descKey;
-      card.appendChild(header);
-      card.appendChild(desc);
-      card.addEventListener('click', () => {
-        const newId = Math.random().toString(36).substr(2, 9);
-        personas.push({
-          id: newId,
-          name: I18N[currentLang][template.nameKey] || template.nameKey,
-          prompt: template.prompt
-        });
-        if (!activePersonaId) activePersonaId = newId;
-        renderPersonas();
-        scheduleSave();
-        showOnboardingStep(2);
-      });
-      grid.appendChild(card);
-    });
-  }
-
-  // Onboarding Skip
-  const onboardingSkipBtn = document.getElementById('onboardingSkipBtn');
-  if (onboardingSkipBtn) {
-    onboardingSkipBtn.addEventListener('click', () => {
-      const modal = document.getElementById('onboardingModal');
-      if (modal) modal.style.display = 'none';
-      chrome.storage.sync.set({ onboardingCompleted: true }, () => {});
-    });
-  }
-
-  // Onboarding Next (step 2 → 3)
-  const onboardingNextBtn = document.getElementById('onboardingNextBtn');
-  if (onboardingNextBtn) {
-    onboardingNextBtn.addEventListener('click', () => {
-      if (onboardingCurrentStep === 2) {
-        // 用户自定义：直接读取 URL / Key / 模型名
-        const apiUrl = document.getElementById('onboardingApiUrlInput')?.value.trim() || '';
-        const key = document.getElementById('onboardingApiKeyInput')?.value || '';
-        const modelName = document.getElementById('onboardingModelNameInput')?.value.trim() || '';
-        chrome.storage.local.set({ apiProvider: 'custom', apiKey: key, apiUrl, modelName }, () => {
-          // 同步设置页表单
-          const settingsUrl = document.getElementById('apiUrlInput');
-          const settingsKey = document.getElementById('apiKey');
-          const settingsModel = document.getElementById('modelNameInput');
-          if (settingsUrl) settingsUrl.value = apiUrl;
-          if (settingsKey) settingsKey.value = key;
-          if (settingsModel) settingsModel.value = modelName;
-          updateApiStatusBar();
-          showOnboardingStep(3);
-        });
-      }
-    });
-  }
-
-  // Onboarding Start (step 3 complete)
-  const onboardingStartBtn = document.getElementById('onboardingStartBtn');
-  if (onboardingStartBtn) {
-    onboardingStartBtn.addEventListener('click', () => {
-      const modal = document.getElementById('onboardingModal');
-      if (modal) modal.style.display = 'none';
-      chrome.storage.sync.set({ onboardingCompleted: true }, () => {
-        loadSettings();
-      });
-    });
-  }
-
   // ---- Load Settings ----
   function loadSettings() {
     migrateApiKeyToLocal();
@@ -2577,8 +2531,7 @@ document.addEventListener('DOMContentLoaded', () => {
         btnTheme: 'gradient',
         lang: 'zh',
         licenseType: 'free',
-        activatedAt: null,
-        onboardingCompleted: false
+        activatedAt: null
       }, (data) => {
         if (chrome.runtime.lastError) {
           console.error('Load settings error:', chrome.runtime.lastError);
@@ -2643,8 +2596,6 @@ document.addEventListener('DOMContentLoaded', () => {
         if (skeleton) skeleton.classList.add('hidden');
         if (container) container.classList.add('loaded');
 
-        // Check onboarding and API guide bar
-        checkOnboarding();
         updateApiStatusBar();
       });
     });

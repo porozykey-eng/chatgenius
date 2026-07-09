@@ -3,43 +3,66 @@
 <head>
   <meta charset="UTF-8">
   <title>ChatGenius AI</title>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
     :root[data-theme="light"] {
       --bg-primary: #ffffff;
-      --bg-secondary: #f4f4f5;
-      --bg-hover: #e4e4e7;
-      --text-primary: #09090b;
-      --text-secondary: #71717a;
-      --text-tertiary: #a1a1aa;
-      --border-subtle: rgba(0, 0, 0, 0.04);
-      --border-default: rgba(0, 0, 0, 0.05);
-      --accent-gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-      --success: #10b981;
+      --bg-secondary: #fafafa;
+      --bg-hover: #f4f4f5;
+      --text-primary: #0f172a;
+      --text-secondary: #475569;
+      --text-tertiary: #94a3b8;
+      --border-subtle: #f4f4f5;
+      --border-default: #e4e4e7;
+      --gradient-brand: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
+      --accent: #7c3aed;
+      --success: #16a34a;
       --error: #ef4444;
       --warning: #f59e0b;
-      --shadow-glow: 0 4px 20px rgba(79, 70, 229, 0.25);
+      --shadow-brand: 0 4px 20px rgba(124, 58, 237, 0.25);
       --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 8px rgba(0, 0, 0, 0.04);
-      --radius-md: 12px;
-      --radius-sm: 8px;
-      --transition-fast: 0.2s cubic-bezier(0.16, 1, 0.3, 1);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-full: 9999px;
+      --duration-fast: 150ms;
+      --duration-base: 200ms;
+      --duration-slow: 300ms;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --text-on-accent: #ffffff;
       --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     :root[data-theme="dark"] {
-      --bg-primary: #09090b;
+      --bg-primary: #0f0f11;
       --bg-secondary: #18181b;
       --bg-hover: #27272a;
-      --text-primary: #fafafa;
+      --text-primary: #f4f4f5;
       --text-secondary: #a1a1aa;
       --text-tertiary: #71717a;
-      --border-subtle: rgba(255, 255, 255, 0.04);
-      --border-default: rgba(255, 255, 255, 0.08);
-      --accent-gradient: linear-gradient(135deg, #4F46E5 0%, #7C3AED 100%);
-      --success: #10b981;
+      --border-subtle: #27272a;
+      --border-default: #3f3f46;
+      --gradient-brand: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
+      --accent: #8b5cf6;
+      --success: #22c55e;
       --error: #ef4444;
       --warning: #f59e0b;
-      --shadow-glow: 0 4px 24px rgba(79, 70, 229, 0.3);
+      --shadow-brand: 0 4px 24px rgba(139, 92, 246, 0.3);
       --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+      --radius-sm: 6px;
+      --radius-md: 8px;
+      --radius-lg: 12px;
+      --radius-xl: 16px;
+      --radius-full: 9999px;
+      --duration-fast: 150ms;
+      --duration-base: 200ms;
+      --duration-slow: 300ms;
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --text-on-accent: #ffffff;
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -64,16 +87,16 @@
     .brand-icon {
       width: 32px;
       height: 32px;
-      background: var(--accent-gradient);
-      border-radius: 10px;
+      background: var(--gradient-brand);
+      border-radius: var(--radius-md);
       display: flex;
       align-items: center;
       justify-content: center;
-      box-shadow: var(--shadow-glow);
+      box-shadow: var(--shadow-brand);
       flex-shrink: 0;
     }
 
-    .brand-icon svg { width: 18px; height: 18px; color: #ffffff; }
+    .brand-icon svg { width: 18px; height: 18px; color: var(--text-on-accent); }
 
     .brand-name { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; flex: 1; }
 
@@ -83,9 +106,10 @@
       width: 32px; height: 32px; border-radius: 8px; border: none;
       background: transparent; color: var(--text-tertiary); cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: all var(--transition-fast);
+      transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
     }
     .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .content { padding: 12px 16px 16px; }
 
@@ -104,7 +128,7 @@
       width: 7px; height: 7px; border-radius: 50%;
       background: var(--error); flex-shrink: 0;
     }
-    .status-dot.active { background: var(--success); box-shadow: 0 0 8px rgba(52, 199, 89, 0.5); }
+    .status-dot.active { background: var(--success); box-shadow: 0 0 8px rgba(22, 163, 74, 0.5); }
     .status-text { font-size: 12px; font-weight: 500; color: var(--text-secondary); flex: 1; }
 
     /* 当前模型信息条 */
@@ -113,17 +137,17 @@
       align-items: center;
       gap: 10px;
       padding: 10px 12px;
-      background: rgba(79, 70, 229, 0.04);
-      border: 1px solid rgba(79, 70, 229, 0.1);
+      background: rgba(124, 58, 237, 0.04);
+      border: 1px solid rgba(124, 58, 237, 0.1);
       border-radius: var(--radius-md);
       margin-bottom: 12px;
     }
     .model-info-icon {
       width: 28px; height: 28px;
       border-radius: 8px;
-      background: var(--accent-gradient);
+      background: var(--gradient-brand);
       display: flex; align-items: center; justify-content: center;
-      color: #fff; flex-shrink: 0;
+      color: var(--text-on-accent); flex-shrink: 0;
     }
     .model-info-content { flex: 1; min-width: 0; }
     .model-info-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: 1px; }
@@ -135,9 +159,10 @@
       width: 26px; height: 26px; border-radius: 6px; border: none;
       background: transparent; color: var(--text-tertiary); cursor: pointer;
       display: flex; align-items: center; justify-content: center;
-      transition: all var(--transition-fast); flex-shrink: 0;
+      transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); flex-shrink: 0;
     }
     .model-info-edit:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .model-info-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     /* Quick actions row */
     .quick-actions {
@@ -151,16 +176,17 @@
     .toggle-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
     .toggle-switch {
       position: relative; width: 36px; height: 20px; background: var(--bg-hover);
-      border-radius: 10px; cursor: pointer; transition: background 0.2s;
+      border-radius: 10px; cursor: pointer; transition: background var(--duration-fast) var(--ease-out);
       border: none; padding: 0;
     }
     .toggle-switch.active { background: var(--success); }
     .toggle-switch::after {
       content: ''; position: absolute; top: 2px; left: 2px;
-      width: 16px; height: 16px; background: #fff; border-radius: 50%;
-      transition: transform 0.2s;
+      width: 16px; height: 16px; background: var(--text-on-accent); border-radius: 50%;
+      transition: transform var(--duration-fast) var(--ease-out);
     }
     .toggle-switch.active::after { transform: translateX(16px); }
+    .toggle-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     /* Usage progress bar */
     .usage-bar-wrap { flex: 1; }
@@ -171,24 +197,26 @@
       width: 100%; height: 5px; background: var(--bg-hover); border-radius: 3px; overflow: hidden;
     }
     .usage-bar-fill {
-      height: 100%; border-radius: 3px; transition: width 0.4s ease, background 0.4s;
+      height: 100%; border-radius: 3px; transition: width var(--duration-slow) var(--ease-out), background var(--duration-slow) var(--ease-out);
     }
 
     /* License bar */
     .license-bar {
       padding: 10px 14px;
-      background: rgba(79, 70, 229, 0.04);
+      background: rgba(124, 58, 237, 0.04);
       border-radius: var(--radius-md);
-      border: 1px solid rgba(79, 70, 229, 0.1);
+      border: 1px solid rgba(124, 58, 237, 0.1);
       display: flex; align-items: center; gap: 8px;
       margin-bottom: 12px;
     }
     .license-bar .license-text { flex: 1; font-size: 12px; font-weight: 500; }
     .license-bar .upgrade-btn {
-      background: var(--accent-gradient); color: white; border: none;
+      background: var(--gradient-brand); color: var(--text-on-accent); border: none;
       padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: 600;
-      cursor: pointer; white-space: nowrap; transition: all var(--transition-fast);
+      cursor: pointer; white-space: nowrap;
+      transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
     }
+    .license-bar .upgrade-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .license-bar .upgrade-btn-warning {
       background: linear-gradient(135deg, #f59e0b, #ef4444);
     }
@@ -214,7 +242,9 @@
       flex-shrink: 0; padding: 6px 12px; border-radius: 20px;
       border: 1px solid var(--border-default); background: transparent;
       font-size: 12px; font-weight: 500; color: var(--text-secondary);
-      cursor: pointer; transition: all 0.15s; white-space: nowrap;
+      cursor: pointer;
+      transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+      white-space: nowrap;
       font-family: var(--font-sans);
     }
     .persona-chip:hover { border-color: var(--text-tertiary); color: var(--text-primary); }
@@ -222,17 +252,20 @@
       background: var(--text-primary); color: var(--bg-primary);
       border-color: var(--text-primary);
     }
+    .persona-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
 
     .btn {
       width: 100%; height: 40px; border-radius: var(--radius-md);
       font-size: 13px; font-weight: 600; font-family: var(--font-sans);
-      cursor: pointer; transition: all var(--transition-fast);
+      cursor: pointer;
+      transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
       display: flex; align-items: center; justify-content: center;
-      gap: 6px; outline: none; border: none; margin-bottom: 8px;
+      gap: 6px; border: none; margin-bottom: 8px;
     }
     .btn:active { transform: scale(0.97); }
+    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
     .btn-primary { background: var(--text-primary); color: var(--bg-primary); box-shadow: var(--shadow-sm); }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-glow); }
+    .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-brand); }
     .btn-secondary { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-default); }
     .btn-secondary:hover { background: var(--bg-hover); color: var(--text-primary); }
 
@@ -254,14 +287,14 @@
     </div>
     <span class="brand-name">ChatGenius AI</span>
     <div class="header-actions">
-      <button class="icon-btn" id="openOptionsBtn" title="设置">
+      <button class="icon-btn" id="openOptionsBtn" type="button" aria-label="打开设置页" title="设置">
         <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
       </button>
     </div>
   </header>
 
   <div class="content">
-    <div class="status-bar">
+    <div class="status-bar" role="status" aria-live="polite">
       <div class="status-dot" id="statusDot"></div>
       <span class="status-text" id="statusText">正在加载状态...</span>
     </div>
@@ -275,7 +308,7 @@
         <div class="model-info-label">当前模型</div>
         <div class="model-info-name" id="modelInfoName">—</div>
       </div>
-      <button class="model-info-edit" id="modelInfoEdit" title="编辑配置">
+      <button class="model-info-edit" id="modelInfoEdit" type="button" aria-label="编辑 API 配置" title="编辑配置">
         <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M11 4H4a2 2 0 0 0-2 2v14a2 2 0 0 0 2 2h14a2 2 0 0 0 2-2v-7"></path><path d="M18.5 2.5a2.121 2.121 0 0 1 3 3L12 15l-4 1 1-4 9.5-9.5z"></path></svg>
       </button>
     </div>
@@ -283,7 +316,7 @@
     <!-- License Status Bar -->
     <div class="license-bar" id="licenseBar" style="display:none;">
       <span class="license-text" id="licenseStatus">加载中...</span>
-      <button class="upgrade-btn" id="upgradeBtn">升级 Pro</button>
+      <button class="upgrade-btn" id="upgradeBtn" type="button">升级 Pro</button>
     </div>
 
     <div id="quickPanel" style="display:none;">
@@ -291,7 +324,7 @@
       <div class="quick-actions">
         <div class="toggle-wrap">
           <span class="toggle-label">AI</span>
-          <button class="toggle-switch active" id="aiToggle"></button>
+          <button class="toggle-switch active" id="aiToggle" type="button" role="switch" aria-checked="true" aria-label="AI 回复开关"></button>
         </div>
         <div class="usage-bar-wrap">
           <div class="usage-bar-header">
@@ -308,18 +341,18 @@
       <div class="persona-section">
         <div class="persona-section-label">AI 角色</div>
         <div class="persona-chips" id="personaChips">
-          <button class="persona-chip active">加载中...</button>
+          <button class="persona-chip active" type="button">加载中...</button>
         </div>
       </div>
     </div>
 
     <div class="not-configured" id="notConfigured" style="display:none;">
       <p>初次使用？请先配置 AI 服务商</p>
-      <button class="btn btn-primary" id="openSettingsBtn">⚙️ 去配置 API</button>
+      <button class="btn btn-primary" id="openSettingsBtn" type="button">⚙️ 去配置 API</button>
     </div>
   </div>
 
-  <footer class="footer"><span id="versionText"></span></footer>
+  <footer class="footer"><span id="versionText">v3.0.0</span></footer>
 
   <script src="popup.js"></script>
 </body>
