@@ -5,64 +5,339 @@
   <title>ChatGenius AI</title>
   <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700&display=swap" rel="stylesheet">
   <style>
+    /* ================================
+       Design System — Apple/Linear Minimal Industrial
+       极简工业风：克制、专业、高效（与 options.html 3.0 对齐）
+       ================================ */
+
+    /* Light Theme (默认) — 纯净暖白 + Indigo 品牌强调 + 精致阴影层次 */
     :root[data-theme="light"] {
+      color-scheme: light;
+
+      /* 中性色：统一 zinc 全系（消除色温混用） */
       --bg-primary: #ffffff;
       --bg-secondary: #fafafa;
+      --bg-elevated: #ffffff;
       --bg-hover: #f4f4f5;
-      --text-primary: #0f172a;
-      --text-secondary: #475569;
-      --text-tertiary: #94a3b8;
-      --border-subtle: #f4f4f5;
-      --border-default: #e4e4e7;
-      --gradient-brand: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 100%);
-      --accent: #7c3aed;
+      --bg-active: #e4e4e7;
+      --bg-tertiary: #f4f4f5;
+
+      /* 文字色：统一 zinc 系（原 slate 改为 zinc，色温一致） */
+      --text-primary: #18181b;
+      --text-secondary: #52525b;
+      --text-tertiary: #a1a1aa;
+      --text-placeholder: #d4d4d8;
+
+      /* 品牌色：Indigo 靛蓝（有记忆点的科技感，避开 violet 滥用） */
+      --accent: #6366f1;           /* indigo-500 */
+      --accent-hover: #4f46e5;     /* indigo-600 */
+      --accent-active: #4338ca;    /* indigo-700 */
+      --accent-light: #eef2ff;     /* indigo-50，active 态背景 */
+      --accent-glow: rgba(99, 102, 241, 0.16);  /* focus ring，提升至 16% */
+      --accent-text: #4f46e5;      /* indigo-600，文字用略深保证对比度 */
+
+      /* Indigo 完整色阶 50-900（支持系统派生所有状态） */
+      --accent-50: #eef2ff;
+      --accent-100: #e0e7ff;
+      --accent-200: #c7d2fe;
+      --accent-300: #a5b4fc;
+      --accent-400: #818cf8;
+      --accent-500: #6366f1;
+      --accent-600: #4f46e5;
+      --accent-700: #4338ca;
+      --accent-800: #3730a3;
+      --accent-900: #312e81;
+
+      /* 语义色：提升背景透明度至 12%（原 8% 几乎不可见） */
       --success: #16a34a;
-      --error: #ef4444;
-      --warning: #f59e0b;
-      --shadow-brand: 0 4px 20px rgba(124, 58, 237, 0.25);
-      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.02), 0 4px 8px rgba(0, 0, 0, 0.04);
+      --success-bg: rgba(22, 163, 74, 0.12);
+      --success-text: #15803d;
+      --warning: #d97706;
+      --warning-bg: rgba(217, 119, 6, 0.12);
+      --error: #dc2626;
+      --error-bg: rgba(220, 38, 38, 0.12);
+
+      /* 精致阴影：混入品牌色调，消除生硬感 */
+      --shadow-xs: 0 1px 2px rgba(24, 24, 27, 0.05);
+      --shadow-sm: 0 1px 3px rgba(24, 24, 27, 0.07), 0 1px 2px rgba(24, 24, 27, 0.04);
+      --shadow-md: 0 4px 6px -1px rgba(24, 24, 27, 0.08), 0 2px 4px -2px rgba(24, 24, 27, 0.05);
+      --shadow-lg: 0 10px 15px -3px rgba(24, 24, 27, 0.09), 0 4px 6px -4px rgba(24, 24, 27, 0.04);
+      --shadow-xl: 0 20px 25px -5px rgba(24, 24, 27, 0.1), 0 8px 10px -6px rgba(24, 24, 27, 0.04);
+
+      /* Elevation token（卡片层次体系，替代 shadow-xs/sm 混淆） */
+      --elevation-0: none;
+      --elevation-1: var(--shadow-xs);
+      --elevation-2: var(--shadow-sm);
+      --elevation-3: var(--shadow-md);
+
+      /* 边框：subtle 比 hover 深一档，恢复边界可见性 */
+      --border-subtle: #e4e4e7;   /* zinc-200，原 f4f4f5 与 bg-hover 相同 */
+      --border-default: #d4d4d8;  /* zinc-300，原 e4e4e7 */
+      --border-strong: #a1a1aa;   /* zinc-400，原 cbd5e1 slate */
+      --border-focus: #6366f1;    /* indigo-500 */
+      --border-accent-width: 3px; /* 统一左边框强调宽度 token */
+
+      /* Sticky header 玻璃态 */
+      --bg-glass: rgba(255, 255, 255, 0.8);
+      --bg-glass-border: rgba(212, 212, 216, 0.6);
+
+      /* 品牌渐变：Indigo 渐变（冷峻科技感） */
+      --gradient-brand: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+      --gradient-brand-hover: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
+      --gradient-subtle: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
+      --shadow-brand: 0 4px 14px rgba(99, 102, 241, 0.28);
+      --shadow-brand-lg: 0 8px 24px rgba(99, 102, 241, 0.32);
+
+      /* 字号体系：合并 2xs/xs 为单一 12px（原 11/12 差距过小） */
+      --font-size-xs: 12px;     /* kbd / badge / 极小标签 */
+      --font-size-sm: 13px;     /* 辅助文字 */
+      --font-size-base: 14px;   /* 正文 / 表单（统一）*/
+      --font-size-lg: 16px;     /* panel-title / 重要正文 */
+      --font-size-xl: 20px;     /* page-title */
+      --font-size-2xl: 28px;    /* 大数字展示 */
+      --font-size-3xl: 40px;    /* empty-state 插画 */
+
+      /* 行高 token（统一 6 种硬编码） */
+      --leading-tight: 1.25;    /* 标题 / 紧凑 */
+      --leading-normal: 1.5;    /* 正文（默认） */
+      --leading-relaxed: 1.7;   /* textarea / 长文本 */
+
+      /* 字重 token（统一硬编码） */
+      --font-weight-regular: 400;
+      --font-weight-medium: 500;
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+
+      /* 圆角：新增 2xl 档（大容器用） */
       --radius-sm: 6px;
       --radius-md: 8px;
       --radius-lg: 12px;
       --radius-xl: 16px;
+      --radius-2xl: 20px;
       --radius-full: 9999px;
+
+      /* 极速克制动效 */
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);     /* 默认：入场/持续 */
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1); /* 回弹：nav 竖条/modal */
+      --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);    /* 退出/收起 */
       --duration-fast: 150ms;
       --duration-base: 200ms;
       --duration-slow: 300ms;
-      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      /* 字体：加入中文 fallback（消除中英混排跳跃） */
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Code", monospace;
+
+      /* 卡片 padding 分级 token */
+      --card-pad-lg: 24px;   /* panel 主卡片 */
+      --card-pad-md: 16px;   /* persona-card / guide-entry */
+      --card-pad-sm: 12px;   /* shortcut-card / faq-item */
+
+      /* 图标按钮尺寸 token */
+      --icon-btn-sm: 28px;
+      --icon-btn-md: 32px;
+      --icon-btn-lg: 40px;
+
+      /* 输入框复合 token */
+      --input-bg: var(--bg-primary);
+      --input-border: var(--border-default);
+      --input-focus-shadow: 0 0 0 3px var(--accent-glow);
+      --input-height: 40px;
+
+      --spacing-1: 4px;
+      --spacing-2: 8px;
+      --spacing-3: 12px;
+      --spacing-4: 16px;
+      --spacing-5: 20px;
+      --spacing-6: 24px;
+      --spacing-7: 28px;
+      --spacing-8: 32px;
+      --spacing-10: 40px;
+      --spacing-12: 48px;
+      --spacing-16: 64px;
+
+      /* 悬浮按钮预览舞台背景（模拟网页背景，深色渐变让玻璃/极简主题可见） */
+      --bg-preview-stage: linear-gradient(135deg, #2a2a3e 0%, #3d3d5c 50%, #1a1a2e 100%);
+
+      /* z-index 层级 Token */
+      --z-base: 0;
+      --z-header: 100;
+      --z-toast: 900;
+      --z-modal: 1000;
+      --z-cmd-palette: 1100;
+
+      /* 预览舞台按钮颜色（模拟外部网页背景，亮暗模式相同） */
+      --preview-btn-text: #1d1d1f;
+      --preview-btn-text-light: #ffffff;
+      --preview-btn-minimal-bg: rgba(255, 255, 255, 1);
+      --preview-btn-border: rgba(0, 0, 0, 0.06);
+      --preview-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --preview-btn-glass-bg: rgba(255, 255, 255, 0.12);
+      --preview-btn-glass-border: rgba(255, 255, 255, 0.18);
+      --preview-btn-glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+
+      /* 强调色背景上的白色文字（亮暗模式均为白色） */
       --text-on-accent: #ffffff;
-      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
+    /* Dark Theme — 深邃石墨 + Indigo 品牌强调 + 高光层次 */
     :root[data-theme="dark"] {
-      --bg-primary: #0f0f11;
-      --bg-secondary: #18181b;
+      color-scheme: dark;
+
+      /* 背景色：统一带微蓝调（消除色温跳跃） */
+      --bg-primary: #0a0a0c;      /* 偏蓝黑，原 0f0f11 */
+      --bg-secondary: #141417;    /* 偏蓝灰，原 18181b */
+      --bg-elevated: #1c1c20;     /* 偏蓝灰，原 1c1c1f */
       --bg-hover: #27272a;
+      --bg-active: #3f3f46;
+      --bg-tertiary: #27272a;
+
       --text-primary: #f4f4f5;
       --text-secondary: #a1a1aa;
       --text-tertiary: #71717a;
-      --border-subtle: #27272a;
-      --border-default: #3f3f46;
-      --gradient-brand: linear-gradient(135deg, #8b5cf6 0%, #a78bfa 100%);
-      --accent: #8b5cf6;
+      --text-placeholder: #71717a;  /* 提亮，原 52525b 低于 WCAG AA */
+
+      /* 品牌色：Indigo（暗色用 indigo-400 保证对比度） */
+      --accent: #818cf8;           /* indigo-400 */
+      --accent-hover: #a5b4fc;     /* indigo-300 */
+      --accent-active: #c7d2fe;    /* indigo-200 */
+      --accent-light: #1e1b4b;     /* indigo-950，原脏紫 1e1530 */
+      --accent-glow: rgba(129, 140, 248, 0.24);  /* 24% 保证可见 */
+      --accent-text: #a5b4fc;      /* indigo-300 */
+
+      /* Indigo 完整色阶 */
+      --accent-50: #eef2ff;
+      --accent-100: #e0e7ff;
+      --accent-200: #c7d2fe;
+      --accent-300: #a5b4fc;
+      --accent-400: #818cf8;
+      --accent-500: #6366f1;
+      --accent-600: #4f46e5;
+      --accent-700: #4338ca;
+      --accent-800: #3730a3;
+      --accent-900: #312e81;
+
+      /* 语义色：暗色透明度 14% */
       --success: #22c55e;
-      --error: #ef4444;
+      --success-bg: rgba(34, 197, 94, 0.14);
+      --success-text: #4ade80;
       --warning: #f59e0b;
-      --shadow-brand: 0 4px 24px rgba(139, 92, 246, 0.3);
-      --shadow-sm: 0 2px 8px rgba(0, 0, 0, 0.3);
+      --warning-bg: rgba(245, 158, 11, 0.14);
+      --error: #ef4444;
+      --error-bg: rgba(239, 68, 68, 0.14);
+
+      /* 暗色阴影：混入品牌色调，消除纯黑污渍感 */
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(99, 102, 241, 0.04);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(99, 102, 241, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -2px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(99, 102, 241, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(99, 102, 241, 0.08);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.5), 0 8px 10px rgba(99, 102, 241, 0.1);
+
+      /* Elevation token */
+      --elevation-0: none;
+      --elevation-1: var(--shadow-xs);
+      --elevation-2: var(--shadow-sm);
+      --elevation-3: var(--shadow-md);
+
+      /* 边框：subtle 比 hover 深一档（原与 bg-hover 相同导致边界消失） */
+      --border-subtle: #3f3f46;   /* zinc-700，原 27272a 与 bg-hover 相同 */
+      --border-default: #52525b;  /* zinc-600，原 3f3f46 */
+      --border-strong: #71717a;   /* zinc-500，原 52525b */
+      --border-focus: #818cf8;    /* indigo-400 */
+      --border-accent-width: 3px;
+
+      /* Sticky header 玻璃态（暗色） */
+      --bg-glass: rgba(10, 10, 12, 0.8);
+      --bg-glass-border: rgba(63, 63, 70, 0.6);
+
+      /* 品牌渐变：Indigo */
+      --gradient-brand: linear-gradient(135deg, #818cf8 0%, #a5b4fc 100%);
+      --gradient-brand-hover: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
+      --gradient-subtle: linear-gradient(135deg, #1e1b4b 0%, #1c1c20 100%);
+      --shadow-brand: 0 4px 14px rgba(129, 140, 248, 0.32);
+      --shadow-brand-lg: 0 8px 24px rgba(129, 140, 248, 0.38);
+
+      /* 字号体系（与 light 一致） */
+      --font-size-xs: 12px;
+      --font-size-sm: 13px;
+      --font-size-base: 14px;
+      --font-size-lg: 16px;
+      --font-size-xl: 20px;
+      --font-size-2xl: 28px;
+      --font-size-3xl: 40px;
+
+      /* 行高 / 字重 token */
+      --leading-tight: 1.25;
+      --leading-normal: 1.5;
+      --leading-relaxed: 1.7;
+      --font-weight-regular: 400;
+      --font-weight-medium: 500;
+      --font-weight-semibold: 600;
+      --font-weight-bold: 700;
+
       --radius-sm: 6px;
       --radius-md: 8px;
       --radius-lg: 12px;
       --radius-xl: 16px;
+      --radius-2xl: 20px;
       --radius-full: 9999px;
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+      --ease-smooth: cubic-bezier(0.4, 0, 0.2, 1);
       --duration-fast: 150ms;
       --duration-base: 200ms;
       --duration-slow: 300ms;
-      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
-      --ease-spring: cubic-bezier(0.34, 1.56, 0.64, 1);
+
+      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "SF Pro Text", "PingFang SC", "Microsoft YaHei", "Noto Sans SC", "Segoe UI", sans-serif;
+      --font-mono: "SF Mono", "JetBrains Mono", "Cascadia Code", monospace;
+
+      /* 卡片 padding / 图标按钮 / 输入框 token */
+      --card-pad-lg: 24px;
+      --card-pad-md: 16px;
+      --card-pad-sm: 12px;
+      --icon-btn-sm: 28px;
+      --icon-btn-md: 32px;
+      --icon-btn-lg: 40px;
+      --input-bg: var(--bg-elevated);
+      --input-border: var(--border-default);
+      --input-focus-shadow: 0 0 0 3px var(--accent-glow);
+      --input-height: 40px;
+
+      --spacing-1: 4px;
+      --spacing-2: 8px;
+      --spacing-3: 12px;
+      --spacing-4: 16px;
+      --spacing-5: 20px;
+      --spacing-6: 24px;
+      --spacing-7: 28px;
+      --spacing-8: 32px;
+      --spacing-10: 40px;
+      --spacing-12: 48px;
+      --spacing-16: 64px;
+
+      /* 悬浮按钮预览舞台背景 */
+      --bg-preview-stage: linear-gradient(135deg, #2a2a3e 0%, #3d3d5c 50%, #1a1a2e 100%);
+
+      /* z-index 层级 Token */
+      --z-base: 0;
+      --z-header: 100;
+      --z-toast: 900;
+      --z-modal: 1000;
+      --z-cmd-palette: 1100;
+
+      /* 预览舞台按钮颜色（模拟外部网页背景，亮暗模式相同） */
+      --preview-btn-text: #1d1d1f;
+      --preview-btn-text-light: #ffffff;
+      --preview-btn-minimal-bg: rgba(255, 255, 255, 1);
+      --preview-btn-border: rgba(0, 0, 0, 0.06);
+      --preview-btn-shadow: 0 2px 8px rgba(0, 0, 0, 0.04);
+      --preview-btn-glass-bg: rgba(255, 255, 255, 0.12);
+      --preview-btn-glass-border: rgba(255, 255, 255, 0.18);
+      --preview-btn-glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
+
+      /* 强调色背景上的白色文字（亮暗模式均为白色） */
       --text-on-accent: #ffffff;
-      --font-sans: "Inter", -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
     }
 
     * { box-sizing: border-box; margin: 0; padding: 0; }
@@ -77,10 +352,10 @@
     }
 
     .app-header {
-      padding: 16px 16px 12px;
+      padding: var(--spacing-4) var(--spacing-4) var(--spacing-3);
       display: flex;
       align-items: center;
-      gap: 10px;
+      gap: var(--spacing-2);
       border-bottom: 1px solid var(--border-subtle);
     }
 
@@ -98,30 +373,30 @@
 
     .brand-icon svg { width: 18px; height: 18px; color: var(--text-on-accent); }
 
-    .brand-name { font-size: 16px; font-weight: 600; letter-spacing: -0.02em; flex: 1; }
+    .brand-name { font-size: var(--font-size-lg); font-weight: 600; letter-spacing: -0.02em; flex: 1; }
 
-    .header-actions { display: flex; gap: 4px; }
+    .header-actions { display: flex; gap: var(--spacing-1); }
 
     .icon-btn {
-      width: 32px; height: 32px; border-radius: 8px; border: none;
+      width: var(--icon-btn-md); height: var(--icon-btn-md); border-radius: var(--radius-md); border: none;
       background: transparent; color: var(--text-tertiary); cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
     }
     .icon-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .icon-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .icon-btn:focus-visible { box-shadow: 0 0 0 3px var(--accent-glow); outline: none; }
 
-    .content { padding: 12px 16px 16px; }
+    .content { padding: var(--spacing-3) var(--spacing-4) var(--spacing-4); }
 
     .status-bar {
-      padding: 10px 14px;
+      padding: var(--spacing-3) var(--spacing-4);
       background: rgba(0, 0, 0, 0.02);
       border-radius: var(--radius-md);
       border: 1px solid var(--border-default);
       display: flex;
       align-items: center;
-      gap: 8px;
-      margin-bottom: 12px;
+      gap: var(--spacing-2);
+      margin-bottom: var(--spacing-3);
     }
 
     .status-dot {
@@ -129,22 +404,22 @@
       background: var(--error); flex-shrink: 0;
     }
     .status-dot.active { background: var(--success); box-shadow: 0 0 8px rgba(22, 163, 74, 0.5); }
-    .status-text { font-size: 12px; font-weight: 500; color: var(--text-secondary); flex: 1; }
+    .status-text { font-size: var(--font-size-xs); font-weight: 500; color: var(--text-secondary); flex: 1; }
 
     /* 当前模型信息条 */
     .model-info-bar {
       display: flex;
       align-items: center;
-      gap: 10px;
-      padding: 10px 12px;
-      background: rgba(124, 58, 237, 0.04);
-      border: 1px solid rgba(124, 58, 237, 0.1);
+      gap: var(--spacing-2);
+      padding: var(--spacing-2) var(--spacing-3);
+      background: rgba(99, 102, 241, 0.04);
+      border: 1px solid rgba(99, 102, 241, 0.1);
       border-radius: var(--radius-md);
-      margin-bottom: 12px;
+      margin-bottom: var(--spacing-3);
     }
     .model-info-icon {
       width: 28px; height: 28px;
-      border-radius: 8px;
+      border-radius: var(--radius-md);
       background: var(--gradient-brand);
       display: flex; align-items: center; justify-content: center;
       color: var(--text-on-accent); flex-shrink: 0;
@@ -152,31 +427,31 @@
     .model-info-content { flex: 1; min-width: 0; }
     .model-info-label { font-size: 10px; color: var(--text-tertiary); margin-bottom: 1px; }
     .model-info-name {
-      font-size: 12px; font-weight: 600; color: var(--text-primary);
+      font-size: var(--font-size-xs); font-weight: 600; color: var(--text-primary);
       overflow: hidden; text-overflow: ellipsis; white-space: nowrap;
     }
     .model-info-edit {
-      width: 26px; height: 26px; border-radius: 6px; border: none;
+      width: var(--icon-btn-sm); height: var(--icon-btn-sm); border-radius: var(--radius-sm); border: none;
       background: transparent; color: var(--text-tertiary); cursor: pointer;
       display: flex; align-items: center; justify-content: center;
       transition: background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out); flex-shrink: 0;
     }
     .model-info-edit:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .model-info-edit:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .model-info-edit:focus-visible { box-shadow: 0 0 0 3px var(--accent-glow); outline: none; }
 
     /* Quick actions row */
     .quick-actions {
-      display: flex; align-items: center; gap: 8px; margin-bottom: 12px;
+      display: flex; align-items: center; gap: var(--spacing-2); margin-bottom: var(--spacing-3);
     }
 
     /* AI toggle switch */
     .toggle-wrap {
       display: flex; align-items: center; gap: 6px; flex-shrink: 0;
     }
-    .toggle-label { font-size: 12px; color: var(--text-secondary); font-weight: 500; }
+    .toggle-label { font-size: var(--font-size-xs); color: var(--text-secondary); font-weight: 500; }
     .toggle-switch {
       position: relative; width: 36px; height: 20px; background: var(--bg-hover);
-      border-radius: 10px; cursor: pointer; transition: background var(--duration-fast) var(--ease-out);
+      border-radius: var(--radius-full); cursor: pointer; transition: background var(--duration-fast) var(--ease-out);
       border: none; padding: 0;
     }
     .toggle-switch.active { background: var(--success); }
@@ -186,13 +461,13 @@
       transition: transform var(--duration-fast) var(--ease-out);
     }
     .toggle-switch.active::after { transform: translateX(16px); }
-    .toggle-switch:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .toggle-switch:focus-visible { box-shadow: 0 0 0 3px var(--accent-glow); outline: none; }
 
     /* Usage progress bar */
     .usage-bar-wrap { flex: 1; }
-    .usage-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 4px; }
-    .usage-bar-label { font-size: 11px; color: var(--text-tertiary); }
-    .usage-bar-count { font-size: 11px; font-weight: 600; color: var(--text-secondary); }
+    .usage-bar-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: var(--spacing-1); }
+    .usage-bar-label { font-size: var(--font-size-xs); color: var(--text-tertiary); }
+    .usage-bar-count { font-size: var(--font-size-xs); font-weight: 600; color: var(--text-secondary); }
     .usage-bar-track {
       width: 100%; height: 5px; background: var(--bg-hover); border-radius: 3px; overflow: hidden;
     }
@@ -202,21 +477,22 @@
 
     /* License bar */
     .license-bar {
-      padding: 10px 14px;
-      background: rgba(124, 58, 237, 0.04);
+      padding: var(--spacing-3) var(--spacing-4);
+      background: rgba(99, 102, 241, 0.04);
       border-radius: var(--radius-md);
-      border: 1px solid rgba(124, 58, 237, 0.1);
-      display: flex; align-items: center; gap: 8px;
-      margin-bottom: 12px;
+      border: 1px solid rgba(99, 102, 241, 0.1);
+      display: flex; align-items: center; gap: var(--spacing-2);
+      margin-bottom: var(--spacing-3);
     }
-    .license-bar .license-text { flex: 1; font-size: 12px; font-weight: 500; }
+    .license-bar .license-text { flex: 1; font-size: var(--font-size-xs); font-weight: 500; }
     .license-bar .upgrade-btn {
       background: var(--gradient-brand); color: var(--text-on-accent); border: none;
-      padding: 5px 10px; border-radius: 7px; font-size: 11px; font-weight: 600;
+      padding: var(--spacing-1) var(--spacing-2); border-radius: var(--radius-md); font-size: var(--font-size-xs); font-weight: 600;
       cursor: pointer; white-space: nowrap;
       transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out);
     }
-    .license-bar .upgrade-btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .license-bar .upgrade-btn:hover { transform: translateY(-1px); box-shadow: var(--shadow-brand); }
+    .license-bar .upgrade-btn:focus-visible { box-shadow: 0 0 0 3px var(--accent-glow); outline: none; }
     .license-bar .upgrade-btn-warning {
       background: linear-gradient(135deg, #f59e0b, #ef4444);
     }
@@ -230,50 +506,52 @@
     }
 
     /* Persona chips */
-    .persona-section { margin-bottom: 12px; }
-    .persona-section-label { font-size: 12px; color: var(--text-tertiary); margin-bottom: 6px; }
+    .persona-section { margin-bottom: var(--spacing-3); }
+    .persona-section-label { font-size: var(--font-size-xs); color: var(--text-tertiary); margin-bottom: 6px; }
     .persona-chips {
-      display: flex; gap: 6px; overflow-x: auto; padding-bottom: 4px;
+      display: flex; gap: 6px; overflow-x: auto; padding-bottom: var(--spacing-1);
       scrollbar-width: thin;
     }
     .persona-chips::-webkit-scrollbar { height: 3px; }
     .persona-chips::-webkit-scrollbar-thumb { background: var(--border-default); border-radius: 2px; }
     .persona-chip {
-      flex-shrink: 0; padding: 6px 12px; border-radius: 20px;
+      flex-shrink: 0; padding: 6px var(--spacing-3); border-radius: var(--radius-full);
       border: 1px solid var(--border-default); background: transparent;
-      font-size: 12px; font-weight: 500; color: var(--text-secondary);
+      font-size: var(--font-size-xs); font-weight: 500; color: var(--text-secondary);
       cursor: pointer;
-      transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+      transition: border-color var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out), transform var(--duration-fast) var(--ease-out);
       white-space: nowrap;
       font-family: var(--font-sans);
     }
     .persona-chip:hover { border-color: var(--text-tertiary); color: var(--text-primary); }
+    .persona-chip:active { transform: scale(0.97); }
     .persona-chip.active {
-      background: var(--text-primary); color: var(--bg-primary);
-      border-color: var(--text-primary);
+      background: var(--accent-light);
+      color: var(--accent-text);
+      border-color: var(--accent);
     }
-    .persona-chip:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
+    .persona-chip:focus-visible { box-shadow: 0 0 0 3px var(--accent-glow); outline: none; }
 
     .btn {
       width: 100%; height: 40px; border-radius: var(--radius-md);
-      font-size: 13px; font-weight: 600; font-family: var(--font-sans);
+      font-size: var(--font-size-sm); font-weight: 600; font-family: var(--font-sans);
       cursor: pointer;
       transition: transform var(--duration-fast) var(--ease-out), box-shadow var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out), color var(--duration-fast) var(--ease-out);
       display: flex; align-items: center; justify-content: center;
-      gap: 6px; border: none; margin-bottom: 8px;
+      gap: 6px; border: none; margin-bottom: var(--spacing-2);
     }
     .btn:active { transform: scale(0.97); }
-    .btn:focus-visible { outline: 2px solid var(--accent); outline-offset: 2px; }
-    .btn-primary { background: var(--text-primary); color: var(--bg-primary); box-shadow: var(--shadow-sm); }
-    .btn-primary:hover { transform: translateY(-1px); box-shadow: var(--shadow-brand); }
+    .btn:focus-visible { box-shadow: var(--shadow-brand), 0 0 0 3px var(--accent-glow); outline: none; }
+    .btn-primary { background: var(--gradient-brand); color: var(--text-on-accent); box-shadow: var(--shadow-brand); }
+    .btn-primary:hover { background: var(--gradient-brand-hover); transform: translateY(-1px); box-shadow: var(--shadow-brand); }
     .btn-secondary { background: transparent; color: var(--text-secondary); border: 1px solid var(--border-default); }
     .btn-secondary:hover { background: var(--bg-hover); color: var(--text-primary); }
 
-    .not-configured { text-align: center; padding: 20px 0; }
-    .not-configured p { font-size: 13px; color: var(--text-secondary); margin-bottom: 14px; }
+    .not-configured { text-align: center; padding: var(--spacing-5) 0; }
+    .not-configured p { font-size: var(--font-size-sm); color: var(--text-secondary); margin-bottom: var(--spacing-4); }
 
     .footer {
-      padding: 12px 16px; text-align: center; font-size: 11px;
+      padding: var(--spacing-3) var(--spacing-4); text-align: center; font-size: var(--font-size-xs);
       color: var(--text-tertiary); border-top: 1px solid var(--border-subtle);
     }
   </style>
@@ -281,8 +559,10 @@
 <body>
   <header class="app-header">
     <div class="brand-icon">
-      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-        <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" width="100%" height="100%">
+        <circle cx="12" cy="12" r="2" fill="currentColor" stroke="none"/>
+        <path d="M7 12a5 5 0 0 1 10 0"/>
+        <path d="M4 12a8 8 0 0 1 16 0"/>
       </svg>
     </div>
     <span class="brand-name">ChatGenius AI</span>
