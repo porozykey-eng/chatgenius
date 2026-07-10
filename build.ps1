@@ -17,6 +17,7 @@ $Files = @(
     "background.js",
     "content.js",
     "fingerprint.js",
+    "theme-init.js",
     "options.html",
     "options.js",
     "popup.html",

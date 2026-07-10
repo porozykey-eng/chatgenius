@@ -71,7 +71,7 @@ const I18N = {
     templateHelp: 'Select a preset template to quickly create a new persona.',
     livePreview: 'Live Preview',
     previewHelp: 'Test your active persona in real-time.',
-    previewPlaceholder: 'Type a test message...',
+    previewPlaceholder: 'Type a test message (Markdown supported)...',
     sendBtn: 'Send',
     previewThinking: 'AI thinking...',
     previewError: 'Error: ',
@@ -162,6 +162,7 @@ const I18N = {
     personaNamePlaceholder: 'Persona Name',
     statusActive: 'Active',
     statusInactive: 'Inactive',
+    statusDefault: 'Default',
     toggleActive: 'Active',
     toggleSetAsActive: 'Set as Active',
     questionLabel: 'Question',
@@ -220,7 +221,7 @@ const I18N = {
     templateHelp: '选择预设模板快速创建新角色。',
     livePreview: '实时预览',
     previewHelp: '测试当前激活角色的回复效果。',
-    previewPlaceholder: '输入测试消息...',
+    previewPlaceholder: '输入测试消息（支持 Markdown）...',
     sendBtn: '发送',
     previewThinking: 'AI 思考中...',
     previewError: '错误: ',
@@ -311,6 +312,7 @@ const I18N = {
     personaNamePlaceholder: '角色名称',
     statusActive: '当前使用',
     statusInactive: '未激活',
+    statusDefault: '默认',
     toggleActive: '当前激活',
     toggleSetAsActive: '切换为当前角色',
     questionLabel: '问题',
@@ -964,9 +966,9 @@ document.addEventListener('DOMContentLoaded', () => {
       nameInput.addEventListener('mousedown', (e) => e.stopPropagation());
 
       const badge = document.createElement('div');
-      badge.className = 'persona-badge ' + (isActive ? 'active' : 'inactive');
+      badge.className = 'persona-badge ' + (isActive ? 'default' : 'inactive');
       badge.innerHTML = '<span class="persona-badge-dot"></span>' +
-        escapeHtml(isActive ? (I18N[currentLang].statusActive || 'Active') : (I18N[currentLang].statusInactive || 'Inactive'));
+        escapeHtml(isActive ? (I18N[currentLang].statusDefault || 'Default') : (I18N[currentLang].statusInactive || 'Inactive'));
 
       info.appendChild(nameInput);
       info.appendChild(badge);
@@ -975,8 +977,8 @@ document.addEventListener('DOMContentLoaded', () => {
       actions.className = 'persona-actions';
 
       const delBtn = document.createElement('button');
-      delBtn.className = 'persona-action-btn delete';
-      delBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>';
+      delBtn.className = 'persona-action-btn danger';
+      delBtn.innerHTML = '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="1"></circle><circle cx="19" cy="12" r="1"></circle><circle cx="5" cy="12" r="1"></circle></svg>';
       delBtn.title = 'Delete';
       delBtn.addEventListener('click', async (e) => {
         e.stopPropagation();
@@ -1957,6 +1959,15 @@ document.addEventListener('DOMContentLoaded', () => {
     });
   }
 
+  // API 指南 banner 关闭
+  const apiGuideBannerClose = document.getElementById('apiGuideBannerClose');
+  if (apiGuideBannerClose) {
+    apiGuideBannerClose.addEventListener('click', () => {
+      const banner = document.getElementById('apiGuideBanner');
+      if (banner) banner.classList.add('hidden');
+    });
+  }
+
   // Settings page test connection — 卡片模式
   if (testApiBtn) {
     testApiBtn.addEventListener('click', () => {
@@ -2351,7 +2362,16 @@ document.addEventListener('DOMContentLoaded', () => {
       if (statRepliesEl) statRepliesEl.textContent = replies.toLocaleString();
       if (statSuccessEl) {
         const total = successCount + failedCount;
-        statSuccessEl.textContent = total > 0 ? Math.round((successCount / total) * 100) + '%' : '-';
+        if (total > 0) {
+          const rate = Math.round((successCount / total) * 100);
+          statSuccessEl.textContent = rate + '%';
+          statSuccessEl.setAttribute('data-tooltip', successCount + '/' + total + ' 次成功');
+          statSuccessEl.style.color = rate >= 90 ? 'var(--success)' : rate >= 70 ? 'var(--warning)' : 'var(--error)';
+        } else {
+          statSuccessEl.textContent = '-';
+          statSuccessEl.setAttribute('data-tooltip', '暂无数据');
+          statSuccessEl.style.color = '';
+        }
       }
     });
 

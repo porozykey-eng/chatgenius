@@ -9,9 +9,9 @@ function injectFonts() {
     
     const style = document.createElement('style');
     style.textContent = '@keyframes wa-ai-pulse {' +
-                      '  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0.4); }' +
-                      '  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(99, 102, 241, 0); }' +
-                      '  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(99, 102, 241, 0); }' +
+                      '  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }' +
+                      '  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); }' +
+                      '  100% { transform: scale(1); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0); }' +
                       '}' +
                       '.wa-ai-pulse {' +
                       '  animation: wa-ai-pulse 2s infinite;' +
@@ -72,9 +72,9 @@ function getInjectUIColors() {
       inputBg: 'rgba(0,0,0,0.03)',
       inputBorder: 'rgba(0,0,0,0.1)',
       inputText: '#09090b',
-      hoverBg: 'rgba(79,70,229,0.08)',
+      hoverBg: 'rgba(124,58,237,0.08)',
       shadow: '0 20px 60px rgba(0,0,0,0.15),0 0 0 1px rgba(0,0,0,0.06)',
-      accent: '#4F46E5'
+      accent: '#7c3aed'
     };
   }
   return {
@@ -86,9 +86,9 @@ function getInjectUIColors() {
     inputBg: 'rgba(0,0,0,0.3)',
     inputBorder: 'rgba(255,255,255,0.1)',
     inputText: '#e2e8f0',
-    hoverBg: 'rgba(102,126,234,0.2)',
+    hoverBg: 'rgba(124,58,237,0.2)',
     shadow: '0 20px 60px rgba(0,0,0,0.4),0 0 0 1px rgba(255,255,255,0.1)',
-    accent: '#667eea'
+    accent: '#7c3aed'
   };
 }
 
@@ -246,7 +246,7 @@ function makeDraggable(el) {
       el.style.transform = 'scale(1.08)';
       el.style.outline = '2px dashed rgba(255,255,255,0.7)';
       el.style.outlineOffset = '4px';
-      el.style.transition = 'transform 0.2s ease, outline 0.2s ease';
+      el.style.transition = 'transform 0.2s cubic-bezier(0.16, 1, 0.3, 1), outline 0.2s ease';
 
       // Show draggable hint label
       let hint = document.getElementById('wa-ai-drag-hint');
@@ -336,7 +336,7 @@ function makeDraggable(el) {
       el.style.top = newTop + 'px';
       
       // Visual feedback for snap
-      el.style.boxShadow = '0 0 20px rgba(102, 126, 234, 0.6)';
+      el.style.boxShadow = '0 0 20px rgba(124, 58, 237, 0.6)';
       setTimeout(() => {
         el.style.boxShadow = '';
         // Restore normal transition after snap animation
@@ -488,12 +488,12 @@ function createAIButton() {
       case 'gradient':
       default:
         themeStyles = `
-          background: linear-gradient(135deg, rgba(102, 126, 234, ${opacity}), rgba(118, 75, 162, ${opacity}));
+          background: linear-gradient(135deg, rgba(124, 58, 237, ${opacity}), rgba(118, 75, 162, ${opacity}));
           color: #ffffff;
           border: none;
-          box-shadow: 0 4px 16px rgba(102, 126, 234, ${opacity * 0.4});
+          box-shadow: 0 4px 16px rgba(124, 58, 237, ${opacity * 0.4});
         `;
-        hoverStyles = `box-shadow: 0 6px 24px rgba(102, 126, 234, ${opacity * 0.5}); transform: translateY(-1px);`;
+        hoverStyles = `box-shadow: 0 6px 24px rgba(124, 58, 237, ${opacity * 0.5}); transform: translateY(-1px);`;
         break;
     }
 
@@ -580,7 +580,7 @@ function showFirstUseBubble(btn) {
           color:${c.text};font-family:'Inter',-apple-system,sans-serif;
           font-size:13px;line-height:1.7;
           max-width:240px;
-          animation:wa-ai-menu-in 0.3s cubic-bezier(0.16,1,0.3,1);
+          animation:wa-ai-menu-in 0.2s cubic-bezier(0.16,1,0.3,1);
         `;
         bubble.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
@@ -601,7 +601,7 @@ function showFirstUseBubble(btn) {
         }
         const dismiss = () => {
           bubble.style.opacity = '0';
-          bubble.style.transition = 'opacity 0.3s';
+          bubble.style.transition = 'opacity 0.2s';
           setTimeout(() => bubble.remove(), 300);
           chrome.storage.local.set({ guideBubbleShown: true });
         };
@@ -771,7 +771,7 @@ function handleGenerateReply(e) {
   
   btn.disabled = true;
   btn.style.cursor = 'wait';
-  btn.style.boxShadow = '0 0 25px #6366f1, 0 0 50px rgba(99, 102, 241, 0.5)';
+  btn.style.boxShadow = '0 0 25px #7c3aed, 0 0 50px rgba(124, 58, 237, 0.5)';
   btn.style.transform = 'scale(0.98)';
 
   // Check remaining daily quota before generating
@@ -873,14 +873,14 @@ function showQuotaExhaustedPanel() {
     background:${c.bg};border-radius:16px;padding:24px;
     box-shadow:${c.shadow};
     font-family:'Inter',-apple-system,sans-serif;opacity:0;
-    transition:opacity 0.25s ease,transform 0.25s cubic-bezier(0.16,1,0.3,1);
+    transition:opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1),transform 0.25s cubic-bezier(0.16,1,0.3,1);
   `;
   panel.innerHTML = `
     <div style="text-align:center;">
       <div style="font-size:36px;margin-bottom:12px;">⏳</div>
       <h3 style="color:${c.text};font-size:16px;font-weight:600;margin:0 0 6px 0;">今日免费额度已用完</h3>
       <p style="color:${c.textSecondary};font-size:13px;margin:0 0 18px 0;">每天 20 次免费额度已耗尽，明天自动重置</p>
-      <button id="wa-ai-quota-upgrade" style="width:100%;padding:12px;border-radius:10px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 16px rgba(102,126,234,0.35);">
+      <button id="wa-ai-quota-upgrade" style="width:100%;padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#7c3aed,#764ba2);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 16px rgba(124,58,237,0.35);">
         ✨ 升级 Pro 无限次使用
       </button>
       <button id="wa-ai-quota-close" style="background:none;border:none;color:${c.textSecondary};font-size:13px;cursor:pointer;">
@@ -980,7 +980,7 @@ function createQuickMenu() {
     const item = document.createElement('button');
     item.className = 'wa-ai-quick-item';
     item.dataset.templateId = template.id;
-    item.style.cssText = `display:flex;align-items:center;gap:10px;padding:10px 12px;border:none;background:transparent;color:${c.text};font-size:14px;cursor:pointer;border-radius:10px;transition:all 0.15s ease;text-align:left;width:100%;`;
+    item.style.cssText = `display:flex;align-items:center;gap:10px;padding:10px 12px;border:none;background:transparent;color:${c.text};font-size:14px;cursor:pointer;border-radius:10px;transition:all 0.15s cubic-bezier(0.16, 1, 0.3, 1);text-align:left;width:100%;`;
     item.innerHTML = `<span style="font-size:16px;">${template.label.split(' ')[0]}</span><span style="flex:1;">${template.label.split(' ').slice(1).join(' ')}</span>`;
     item.onmouseover = () => { item.style.background = c.hoverBg; item.style.color = c.text; };
     item.onmouseout = () => { item.style.background = 'transparent'; item.style.color = c.text; };
@@ -1053,7 +1053,7 @@ function createQuickMenu() {
     font-size: 14px;
     cursor: pointer;
     border-radius: 10px;
-    transition: all 0.15s ease;
+    transition: all 0.15s cubic-bezier(0.16, 1, 0.3, 1);
     text-align: left;
     width: 100%;
     font-weight: 500;
@@ -1206,7 +1206,7 @@ function showCustomPromptDialog() {
       width: 90%;
       max-width: 480px;
       box-shadow: ${c.shadow};
-      animation: wa-ai-modal-in 0.3s cubic-bezier(0.16, 1, 0.3, 1);
+      animation: wa-ai-modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     ">
       <h3 style="margin: 0 0 8px 0; color: ${c.text}; font-size: 18px; font-weight: 600;">自定义提示</h3>
       <p style="margin: 0 0 16px 0; color: ${c.textSecondary}; font-size: 14px;">描述你想要的回复风格或内容</p>
@@ -1234,24 +1234,24 @@ function showCustomPromptDialog() {
         <span style="color:${c.textSecondary};font-size:12px;">Ctrl+Enter 提交</span>
         <button id="wa-ai-custom-cancel" style="
           padding: 10px 20px;
-          border-radius: 10px;
+          border-radius: 8px;
           border: 1px solid ${c.border};
           background: transparent;
           color: ${c.textSecondary};
           font-size: 14px;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         ">取消</button>
         <button id="wa-ai-custom-submit" style="
           padding: 10px 24px;
-          border-radius: 10px;
+          border-radius: 8px;
           border: none;
-          background: linear-gradient(135deg, #667eea, #764ba2);
+          background: linear-gradient(135deg, #7c3aed, #764ba2);
           color: #ffffff;
           font-size: 14px;
           font-weight: 600;
           cursor: pointer;
-          transition: all 0.2s ease;
+          transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
         ">生成回复</button>
       </div>
     </div>
@@ -1326,7 +1326,7 @@ function createPreviewModal() {
     box-shadow: ${c.shadow};
     font-family: 'Inter', -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
     opacity: 0;
-    transition: opacity 0.25s ease, transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
+    transition: opacity 0.25s cubic-bezier(0.16, 1, 0.3, 1), transform 0.25s cubic-bezier(0.16, 1, 0.3, 1);
   `;
 
   // Header
@@ -1334,7 +1334,7 @@ function createPreviewModal() {
   header.style.cssText = 'display:flex;align-items:center;justify-content:space-between;margin-bottom:14px;';
   header.innerHTML = `
     <div style="display:flex;align-items:center;gap:10px;">
-      <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#667eea,#764ba2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
+      <div style="width:32px;height:32px;border-radius:10px;background:linear-gradient(135deg,#7c3aed,#764ba2);display:flex;align-items:center;justify-content:center;flex-shrink:0;">
         <svg viewBox="0 0 24 24" width="16" height="16" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
       </div>
       <div>
@@ -1373,7 +1373,7 @@ function createPreviewModal() {
     const b = document.createElement('button');
     b.id = id;
     b.style.cssText = isPrimary
-      ? 'flex:2;padding:10px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;box-shadow:0 4px 14px rgba(102,126,234,0.35);'
+      ? 'flex:2;padding:10px 16px;border-radius:9px;border:none;background:linear-gradient(135deg,#7c3aed,#764ba2);color:#fff;font-size:13px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;box-shadow:0 4px 14px rgba(124,58,237,0.35);'
       : `flex:1;padding:10px 12px;border-radius:9px;border:1px solid ${c.border};background:transparent;color:${c.textSecondary};font-size:13px;font-weight:500;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:6px;transition:all 0.2s;`;
     b.innerHTML = svg + '<span>' + label + '</span>';
     return b;
@@ -1391,12 +1391,12 @@ function createPreviewModal() {
   // Hover styles
   const style = document.createElement('style');
   style.textContent = `
-    #wa-ai-preview-textarea:focus{border-color:${c.accent};box-shadow:0 0 0 3px rgba(102,126,234,0.2);}
+    #wa-ai-preview-textarea:focus{border-color:${c.accent};box-shadow:0 0 0 3px rgba(124,58,237,0.2);}
     #wa-ai-preview-close:hover{background:${c.hoverBg};color:${c.text};}
     #wa-ai-preview-expand:hover{background:${c.hoverBg};color:${c.text};}
     #wa-ai-preview-regenerate:hover{border-color:${c.accent};color:${c.text};background:${c.hoverBg};}
     #wa-ai-preview-copy:hover{border-color:${c.accent};color:${c.text};background:${c.hoverBg};}
-    #wa-ai-preview-insert:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(102,126,234,0.45);}
+    #wa-ai-preview-insert:hover{transform:translateY(-1px);box-shadow:0 6px 20px rgba(124,58,237,0.45);}
   `;
   panel.appendChild(style);
 
@@ -1497,7 +1497,7 @@ function showExpandedEditor(text) {
     font-family:'Inter',-apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
   `;
   overlay.innerHTML = `
-    <div style="background:${c.bg};border-radius:20px;padding:28px;width:90%;max-width:520px;max-height:80vh;display:flex;flex-direction:column;box-shadow:${c.shadow};animation:wa-ai-modal-in 0.3s cubic-bezier(0.16,1,0.3,1);">
+    <div style="background:${c.bg};border-radius:20px;padding:28px;width:90%;max-width:520px;max-height:80vh;display:flex;flex-direction:column;box-shadow:${c.shadow};animation:wa-ai-modal-in 0.2s cubic-bezier(0.16,1,0.3,1);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
         <div style="color:${c.text};font-size:16px;font-weight:600;">全屏编辑</div>
         <button id="wa-ai-exp-close" style="background:${c.inputBg};border:none;color:${c.textSecondary};width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
@@ -1506,7 +1506,7 @@ function showExpandedEditor(text) {
       </div>
       <textarea id="wa-ai-exp-textarea" style="flex:1;min-height:160px;background:${c.inputBg};border:1px solid ${c.inputBorder};border-radius:12px;padding:16px;color:${c.inputText};font-size:15px;line-height:1.6;resize:vertical;outline:none;font-family:inherit;"></textarea>
       <div style="display:flex;gap:10px;margin-top:16px;">
-        <button id="wa-ai-exp-insert" style="flex:1;padding:12px 20px;border-radius:10px;border:none;background:linear-gradient(135deg,#667eea,#764ba2);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(102,126,234,0.4);">插入回复</button>
+        <button id="wa-ai-exp-insert" style="flex:1;padding:12px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#7c3aed,#764ba2);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(124,58,237,0.4);">插入回复</button>
       </div>
     </div>
   `;
@@ -1579,26 +1579,26 @@ function createRegenerateButton() {
     height: 36px;
     border-radius: 50%;
     background: rgba(255, 255, 255, 0.95);
-    color: #667eea;
-    border: 1px solid rgba(102, 126, 234, 0.3);
+    color: #7c3aed;
+    border: 1px solid rgba(124, 58, 237, 0.3);
     box-shadow: 0 2px 12px rgba(0, 0, 0, 0.15);
     cursor: pointer;
     display: none;
     align-items: center;
     justify-content: center;
-    transition: all 0.2s ease;
+    transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     font-family: 'Inter', -apple-system, sans-serif;
   `;
   
   regenBtn.onmouseover = () => {
-    regenBtn.style.background = '#667eea';
+    regenBtn.style.background = '#7c3aed';
     regenBtn.style.color = '#ffffff';
     regenBtn.style.transform = 'scale(1.1)';
   };
   
   regenBtn.onmouseout = () => {
     regenBtn.style.background = 'rgba(255, 255, 255, 0.95)';
-    regenBtn.style.color = '#667eea';
+    regenBtn.style.color = '#7c3aed';
     regenBtn.style.transform = 'scale(1)';
   };
   

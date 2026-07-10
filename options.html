@@ -29,15 +29,15 @@
       --text-tertiary: #a1a1aa;
       --text-placeholder: #d4d4d8;
 
-      /* 品牌色：Indigo 靛蓝（有记忆点的科技感，避开 violet 滥用） */
-      --accent: #6366f1;           /* indigo-500 */
-      --accent-hover: #4f46e5;     /* indigo-600 */
-      --accent-active: #4338ca;    /* indigo-700 */
-      --accent-light: #eef2ff;     /* indigo-50，active 态背景 */
-      --accent-glow: rgba(99, 102, 241, 0.16);  /* focus ring，提升至 16% */
-      --accent-text: #4f46e5;      /* indigo-600，文字用略深保证对比度 */
+      /* 品牌色：深靛蓝（自定义色号，比 indigo-500 更深更饱和） */
+      --accent: #4361ee;           /* 深靛蓝（原 #6366f1） */
+      --accent-hover: #3a56d4;     /* 深一档（原 #4f46e5） */
+      --accent-active: #2e4ab8;    /* 更深（原 #4338ca） */
+      --accent-light: #eef2ff;     /* 保持 indigo-50 */
+      --accent-glow: rgba(67, 97, 238, 0.16);  /* 原 rgba(99,102,241,0.16) */
+      --accent-text: #3a56d4;      /* 文字用深色（原 #4f46e5） */
 
-      /* Indigo 完整色阶 50-900（支持系统派生所有状态） */
+      /* Indigo 完整色阶 50-900（参考色阶，保留不动） */
       --accent-50: #eef2ff;
       --accent-100: #e0e7ff;
       --accent-200: #c7d2fe;
@@ -48,6 +48,10 @@
       --accent-700: #4338ca;
       --accent-800: #3730a3;
       --accent-900: #312e81;
+
+      /* 辅助紫（用于渐变第二色、次要强调） */
+      --accent-secondary: #725ac1;          /* 辅助紫 */
+      --accent-secondary-hover: #5f48a8;    /* 深一档 */
 
       /* 语义色：提升背景透明度至 12%（原 8% 几乎不可见） */
       --success: #16a34a;
@@ -75,19 +79,19 @@
       --border-subtle: #e4e4e7;   /* zinc-200，原 f4f4f5 与 bg-hover 相同 */
       --border-default: #d4d4d8;  /* zinc-300，原 e4e4e7 */
       --border-strong: #a1a1aa;   /* zinc-400，原 cbd5e1 slate */
-      --border-focus: #6366f1;    /* indigo-500 */
+      --border-focus: #4361ee;    /* 深靛蓝 */
       --border-accent-width: 3px; /* 统一左边框强调宽度 token */
 
       /* Sticky header 玻璃态 */
       --bg-glass: rgba(255, 255, 255, 0.8);
       --bg-glass-border: rgba(212, 212, 216, 0.6);
 
-      /* 品牌渐变：Indigo 渐变（冷峻科技感） */
-      --gradient-brand: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
-      --gradient-brand-hover: linear-gradient(135deg, #4f46e5 0%, #6366f1 100%);
-      --gradient-subtle: linear-gradient(135deg, #eef2ff 0%, #e0e7ff 100%);
-      --shadow-brand: 0 4px 14px rgba(99, 102, 241, 0.28);
-      --shadow-brand-lg: 0 8px 24px rgba(99, 102, 241, 0.32);
+      /* 品牌渐变：深靛蓝 + 辅助紫（主色+辅助紫） */
+      --gradient-brand: linear-gradient(135deg, #4361ee 0%, #725ac1 100%);
+      --gradient-brand-hover: linear-gradient(135deg, #3a56d4 0%, #5f48a8 100%);
+      --gradient-subtle: linear-gradient(135deg, #eef2ff 0%, #f3f0ff 100%);
+      --shadow-brand: 0 4px 14px rgba(67, 97, 238, 0.28);
+      --shadow-brand-lg: 0 8px 24px rgba(67, 97, 238, 0.32);
 
       /* 字号体系：合并 2xs/xs 为单一 12px（原 11/12 差距过小） */
       --font-size-xs: 12px;     /* kbd / badge / 极小标签 */
@@ -209,15 +213,15 @@
       --text-tertiary: #71717a;
       --text-placeholder: #71717a;  /* 提亮，原 52525b 低于 WCAG AA */
 
-      /* 品牌色：Indigo（暗色用 indigo-400 保证对比度） */
-      --accent: #818cf8;           /* indigo-400 */
-      --accent-hover: #a5b4fc;     /* indigo-300 */
-      --accent-active: #c7d2fe;    /* indigo-200 */
-      --accent-light: #1e1b4b;     /* indigo-950，原脏紫 1e1530 */
-      --accent-glow: rgba(129, 140, 248, 0.24);  /* 24% 保证可见 */
-      --accent-text: #a5b4fc;      /* indigo-300 */
+      /* 品牌色：深靛蓝（暗色用亮一档保证对比度） */
+      --accent: #5a7fff;           /* 暗色用亮一档（原 #818cf8） */
+      --accent-hover: #7a96ff;     /* 原 indigo-300 */
+      --accent-active: #9ab0ff;    /* 原 indigo-200 */
+      --accent-light: #1a1f4b;     /* 深靛蓝暗色底（原 #1e1b4b） */
+      --accent-glow: rgba(90, 127, 255, 0.24);
+      --accent-text: #7a96ff;
 
-      /* Indigo 完整色阶 */
+      /* Indigo 完整色阶（参考色阶，保留不动） */
       --accent-50: #eef2ff;
       --accent-100: #e0e7ff;
       --accent-200: #c7d2fe;
@@ -229,6 +233,10 @@
       --accent-800: #3730a3;
       --accent-900: #312e81;
 
+      /* 辅助紫（暗色亮一档） */
+      --accent-secondary: #9a85d4;   /* 暗色亮一档 */
+      --accent-secondary-hover: #8270bd;
+
       /* 语义色：暗色透明度 14% */
       --success: #22c55e;
       --success-bg: rgba(34, 197, 94, 0.14);
@@ -238,12 +246,12 @@
       --error: #ef4444;
       --error-bg: rgba(239, 68, 68, 0.14);
 
-      /* 暗色阴影：混入品牌色调，消除纯黑污渍感 */
-      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(99, 102, 241, 0.04);
-      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(99, 102, 241, 0.05);
-      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -2px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(99, 102, 241, 0.06);
-      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(99, 102, 241, 0.08);
-      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.5), 0 8px 10px rgba(99, 102, 241, 0.1);
+      /* 暗色阴影：混入品牌色调（深靛蓝 RGB 67,97,238），消除纯黑污渍感 */
+      --shadow-xs: 0 1px 2px rgba(0, 0, 0, 0.4), 0 1px 2px rgba(67, 97, 238, 0.04);
+      --shadow-sm: 0 1px 3px rgba(0, 0, 0, 0.5), 0 1px 2px rgba(0, 0, 0, 0.3), 0 1px 2px rgba(67, 97, 238, 0.05);
+      --shadow-md: 0 4px 6px -1px rgba(0, 0, 0, 0.6), 0 2px 4px -2px rgba(0, 0, 0, 0.4), 0 2px 4px rgba(67, 97, 238, 0.06);
+      --shadow-lg: 0 10px 15px -3px rgba(0, 0, 0, 0.7), 0 4px 6px -4px rgba(0, 0, 0, 0.4), 0 4px 6px rgba(67, 97, 238, 0.08);
+      --shadow-xl: 0 20px 25px -5px rgba(0, 0, 0, 0.8), 0 8px 10px -6px rgba(0, 0, 0, 0.5), 0 8px 10px rgba(67, 97, 238, 0.1);
 
       /* Elevation token */
       --elevation-0: none;
@@ -255,19 +263,19 @@
       --border-subtle: #3f3f46;   /* zinc-700，原 27272a 与 bg-hover 相同 */
       --border-default: #52525b;  /* zinc-600，原 3f3f46 */
       --border-strong: #71717a;   /* zinc-500，原 52525b */
-      --border-focus: #818cf8;    /* indigo-400 */
+      --border-focus: #5a7fff;    /* 深靛蓝暗色 */
       --border-accent-width: 3px;
 
       /* Sticky header 玻璃态（暗色） */
       --bg-glass: rgba(10, 10, 12, 0.8);
       --bg-glass-border: rgba(63, 63, 70, 0.6);
 
-      /* 品牌渐变：Indigo */
-      --gradient-brand: linear-gradient(135deg, #818cf8 0%, #a5b4fc 100%);
-      --gradient-brand-hover: linear-gradient(135deg, #6366f1 0%, #818cf8 100%);
-      --gradient-subtle: linear-gradient(135deg, #1e1b4b 0%, #1c1c20 100%);
-      --shadow-brand: 0 4px 14px rgba(129, 140, 248, 0.32);
-      --shadow-brand-lg: 0 8px 24px rgba(129, 140, 248, 0.38);
+      /* 品牌渐变：深靛蓝 + 辅助紫（暗色） */
+      --gradient-brand: linear-gradient(135deg, #5a7fff 0%, #9a85d4 100%);
+      --gradient-brand-hover: linear-gradient(135deg, #4361ee 0%, #725ac1 100%);
+      --gradient-subtle: linear-gradient(135deg, #1a1f4b 0%, #1c1c20 100%);
+      --shadow-brand: 0 4px 14px rgba(90, 127, 255, 0.32);
+      --shadow-brand-lg: 0 8px 24px rgba(90, 127, 255, 0.38);
 
       /* 字号体系（与 light 一致） */
       --font-size-xs: 12px;
@@ -1062,7 +1070,7 @@
     .persona-card {
       background: var(--bg-elevated);
       border-radius: var(--radius-md);
-      padding: var(--spacing-4);
+      padding: var(--card-pad-md);
       border: 1px solid var(--border-default);
       box-shadow: var(--elevation-2);
       transition: border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
@@ -1103,7 +1111,7 @@
       display: flex;
       align-items: center;
       gap: var(--spacing-3);
-      margin-bottom: var(--spacing-4);
+      margin-bottom: var(--spacing-3);
     }
 
     /* Persona Avatar — 渐变背景 */
@@ -1184,6 +1192,12 @@
       color: var(--text-tertiary);
     }
 
+    .persona-badge.default {
+      background: var(--success-bg);
+      color: var(--success-text);
+      border: 1px solid var(--success);
+    }
+
     .persona-badge-dot {
       width: 6px;
       height: 6px;
@@ -1193,16 +1207,21 @@
 
     .persona-actions {
       display: flex;
-      gap: var(--spacing-2);
-      flex-shrink: 0;
+      gap: var(--spacing-1);
+      opacity: 0;
+      transition: opacity var(--duration-fast) var(--ease-out);
+    }
+
+    .persona-card:hover .persona-actions {
+      opacity: 1;
     }
 
     .persona-action-btn {
-      width: var(--icon-btn-md);
-      height: var(--icon-btn-md);
+      width: var(--icon-btn-sm);
+      height: var(--icon-btn-sm);
       border-radius: var(--radius-sm);
-      border: none;
       background: transparent;
+      border: none;
       color: var(--text-tertiary);
       cursor: pointer;
       display: flex;
@@ -1216,7 +1235,7 @@
       color: var(--text-primary);
     }
 
-    .persona-action-btn.delete:hover {
+    .persona-action-btn.danger:hover {
       background: var(--error-bg);
       color: var(--error);
     }
@@ -1228,6 +1247,7 @@
       color: var(--text-tertiary);
       text-transform: uppercase;
       letter-spacing: 0.06em;
+      margin-top: var(--spacing-3);
       margin-bottom: var(--spacing-1);
     }
 
@@ -1340,9 +1360,9 @@
 
     .chat-bubble.ai {
       align-self: flex-start;
-      background: var(--bg-secondary);
+      background: var(--bg-hover);
       color: var(--text-primary);
-      border: none;
+      border: 1px solid var(--border-subtle);
       border-radius: var(--radius-md) var(--radius-md) var(--radius-md) 4px;
     }
 
@@ -2104,14 +2124,45 @@
       gap: var(--spacing-2);
     }
 
+    .footer-status-icon {
+      width: 16px;
+      height: 16px;
+      color: var(--text-tertiary);
+      flex-shrink: 0;
+    }
+
     .footer-status-label {
       font-weight: 500;
     }
 
     .footer-status-value {
-      color: var(--text-tertiary);
-      font-weight: 500;
+      color: var(--text-secondary);
+      font-weight: 600;
       font-variant-numeric: tabular-nums;
+      transition: color var(--duration-fast) var(--ease-out);
+    }
+
+    .footer-status-value[data-tooltip] {
+      position: relative;
+      cursor: help;
+    }
+
+    .footer-status-value[data-tooltip]:hover::after {
+      content: attr(data-tooltip);
+      position: absolute;
+      bottom: 100%;
+      left: 50%;
+      transform: translateX(-50%);
+      margin-bottom: var(--spacing-1);
+      padding: var(--spacing-1) var(--spacing-2);
+      background: var(--text-primary);
+      color: var(--bg-primary);
+      font-size: var(--font-size-xs);
+      font-weight: 400;
+      white-space: nowrap;
+      border-radius: var(--radius-sm);
+      pointer-events: none;
+      z-index: var(--z-toast);
     }
 
     /* ================================
@@ -2709,56 +2760,77 @@
       font-size: var(--font-size-sm);
     }
 
-    /* 配置指南入口（清理 inline style） */
-    .guide-entry {
-      margin-top: var(--spacing-4);
-      padding: var(--spacing-4);
-      background: var(--bg-secondary);
-      border: 1px solid var(--border-default);
+    /* API 配置指南 banner */
+    .api-guide-banner {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-3) var(--spacing-4);
+      background: #fef9c3;
+      border: 1px solid #fde68a;
       border-radius: var(--radius-md);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: var(--spacing-3);
-      transition: transform var(--duration-fast) var(--ease-out);
+      margin-bottom: var(--spacing-4);
+      transition: opacity var(--duration-base) var(--ease-out);
     }
-    .guide-entry:active {
-      transform: scale(0.97);
+    .api-guide-banner.hidden {
+      display: none;
     }
-    .guide-entry-inner {
-      display: flex;
-      align-items: center;
-      gap: var(--spacing-3);
-      min-width: 0;
-    }
-    .guide-entry-icon {
-      color: var(--accent);
+    .api-guide-banner-icon {
+      width: 32px; height: 32px;
+      border-radius: var(--radius-full);
+      background: #fed7aa;
+      display: flex; align-items: center; justify-content: center;
+      color: #9a3412;
       flex-shrink: 0;
     }
-    .guide-entry-title {
-      font-size: var(--font-size-base);
-      font-weight: 500;
-      color: var(--text-primary);
+    .api-guide-banner-text {
+      flex: 1;
+      color: #7c2d12;
+      font-size: var(--font-size-sm);
     }
-    .guide-entry-desc {
-      font-size: var(--font-size-xs);
-      color: var(--text-tertiary);
-      margin-top: 2px;
+    .api-guide-banner-text strong {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 2px;
     }
-    .guide-entry-btn {
-      padding: var(--spacing-2) var(--spacing-4);
+    .api-guide-banner-btn {
+      padding: var(--spacing-1) var(--spacing-3);
       background: var(--accent);
       color: var(--text-on-accent);
+      border: none;
       border-radius: var(--radius-sm);
-      font-size: var(--font-size-sm);
-      text-decoration: none;
+      font-size: var(--font-size-xs);
       font-weight: 500;
+      cursor: pointer;
       white-space: nowrap;
-      transition: background var(--duration-base) var(--ease-out);
+      text-decoration: none;
+      transition: background var(--duration-fast) var(--ease-out);
     }
-    .guide-entry-btn:hover {
+    .api-guide-banner-btn:hover {
       background: var(--accent-hover);
     }
+    .api-guide-banner-close {
+      width: 24px; height: 24px;
+      background: transparent;
+      border: none;
+      color: #9a3412;
+      cursor: pointer;
+      border-radius: var(--radius-sm);
+      display: flex; align-items: center; justify-content: center;
+      opacity: 0.6;
+      transition: opacity var(--duration-fast) var(--ease-out), background var(--duration-fast) var(--ease-out);
+    }
+    .api-guide-banner-close:hover {
+      opacity: 1;
+      background: rgba(154, 52, 18, 0.1);
+    }
+    :root[data-theme="dark"] .api-guide-banner {
+      background: rgba(254, 249, 195, 0.1);
+      border-color: rgba(253, 230, 138, 0.2);
+    }
+    :root[data-theme="dark"] .api-guide-banner-text { color: #fde68a; }
+    :root[data-theme="dark"] .api-guide-banner-icon { background: rgba(254, 215, 170, 0.2); color: #fdba74; }
+    :root[data-theme="dark"] .api-guide-banner-close { color: #fdba74; }
 
     /* ================================
        Responsive — 三断点
@@ -3176,7 +3248,7 @@
               <div class="chat-bubble ai">Hello! I'd be happy to help. Which product would you like to know more about?</div>
             </div>
             <div class="preview-input-row">
-              <input type="text" class="form-input" id="previewInput" data-i18n="previewPlaceholder" placeholder="输入测试消息...">
+              <input type="text" class="form-input" id="previewInput" data-i18n="previewPlaceholder" placeholder="输入测试消息（支持 Markdown）...">
               <button class="btn btn-primary" type="button" id="previewSendBtn" data-i18n="sendBtn">发送</button>
             </div>
           </details>
@@ -3443,19 +3515,21 @@
             </div>
           </details>
 
-          <!-- 配置指南入口 -->
-          <div class="guide-entry">
-            <div class="guide-entry-inner">
-              <svg class="guide-entry-icon" width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"></path>
-                <path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"></path>
+          <!-- API 配置指南 banner -->
+          <div class="api-guide-banner" id="apiGuideBanner">
+            <div class="api-guide-banner-icon">
+              <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
               </svg>
-              <div>
-                <div class="guide-entry-title" data-i18n="guideEntryTitle">大模型配置指南</div>
-                <div class="guide-entry-desc" data-i18n="guideEntryDesc">不知道如何获取 API Key？查看详细教程</div>
-              </div>
             </div>
-            <a href="https://chat.sopie.cc/guide/" target="_blank" rel="noopener" class="guide-entry-btn" data-i18n="viewGuide">查看指南 →</a>
+            <div class="api-guide-banner-text">
+              <strong data-i18n="guideEntryTitle">大模型配置指南</strong>
+              <span data-i18n="guideEntryDesc">不知道如何获取 API Key？查看详细教程</span>
+            </div>
+            <a href="https://chat.sopie.cc/guide/" target="_blank" rel="noopener" class="api-guide-banner-btn" data-i18n="viewGuide">去配置</a>
+            <button type="button" class="api-guide-banner-close" id="apiGuideBannerClose" aria-label="关闭">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
+            </button>
           </div>
         </div>
       </div>
@@ -3535,14 +3609,24 @@
       <footer class="page-footer">
         <div class="footer-status-bar">
           <div class="footer-status-item">
+            <svg class="footer-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+            </svg>
             <span class="footer-status-label" data-i18n="statReplies">累计回复:</span>
             <span class="footer-status-value" id="statReplies">0</span>
           </div>
           <div class="footer-status-item">
+            <svg class="footer-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
+            </svg>
             <span class="footer-status-label" data-i18n="statSuccess">成功率:</span>
-            <span class="footer-status-value" id="statSuccess">0%</span>
+            <span class="footer-status-value" id="statSuccess" data-tooltip="暂无数据">-</span>
           </div>
           <div class="footer-status-item">
+            <svg class="footer-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="12" cy="12" r="10"></circle>
+              <polyline points="12 6 12 12 16 14"></polyline>
+            </svg>
             <span class="footer-status-label" data-i18n="statQuota">今日配额:</span>
             <span class="footer-status-value" id="statQuota">0/50</span>
           </div>
