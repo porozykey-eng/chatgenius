@@ -1961,6 +1961,168 @@
       cursor: not-allowed;
     }
 
+    /* === 设备管理 === */
+    .device-mgmt-section {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-4);
+      margin-top: var(--spacing-4);
+    }
+
+    .device-mgmt-summary {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-5);
+      flex-wrap: wrap;
+      padding: var(--spacing-3) var(--spacing-4);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-default);
+    }
+
+    .device-mgmt-stat {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+    }
+
+    .device-mgmt-stat-label {
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+    }
+
+    .device-mgmt-stat-value {
+      font-size: var(--font-size-base);
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+
+    .device-mgmt-refresh {
+      margin-left: auto;
+      padding: var(--spacing-1) var(--spacing-3);
+      font-size: var(--font-size-xs);
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    .device-mgmt-warn {
+      padding: var(--spacing-2) var(--spacing-3);
+      background: #fef9c3;
+      color: #7c2d12;
+      border-radius: var(--radius-md);
+      font-size: var(--font-size-xs);
+      border: 1px solid #fde68a;
+    }
+
+    .device-mgmt-warn.hidden {
+      display: none;
+    }
+
+    .device-list {
+      display: flex;
+      flex-direction: column;
+      gap: var(--spacing-3);
+    }
+
+    .device-list-empty {
+      padding: var(--spacing-5);
+      text-align: center;
+      color: var(--text-tertiary);
+      font-size: var(--font-size-xs);
+      background: var(--bg-secondary);
+      border-radius: var(--radius-md);
+      border: 1px dashed var(--border-default);
+    }
+
+    .device-card {
+      display: flex;
+      align-items: center;
+      gap: var(--spacing-3);
+      padding: var(--spacing-3) var(--spacing-4);
+      background: var(--bg-primary);
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-default);
+      transition: border-color var(--duration-base) var(--ease-out);
+    }
+
+    .device-card.current {
+      border-color: #10b981;
+      background: #ecfdf5;
+    }
+
+    [data-theme="dark"] .device-card.current {
+      background: rgba(16, 185, 129, 0.12);
+    }
+
+    .device-card.inactive {
+      opacity: 0.55;
+    }
+
+    .device-card-info {
+      flex: 1;
+      min-width: 0;
+    }
+
+    .device-card-name {
+      font-size: var(--font-size-sm);
+      font-weight: 600;
+      color: var(--text-primary);
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+
+    .device-card-meta {
+      margin-top: 2px;
+      font-size: var(--font-size-xs);
+      color: var(--text-tertiary);
+      display: flex;
+      gap: var(--spacing-3);
+      flex-wrap: wrap;
+    }
+
+    .device-card-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      padding: 2px 8px;
+      font-size: var(--font-size-xs);
+      border-radius: 999px;
+      font-weight: 500;
+    }
+
+    .device-card-badge.current {
+      background: #10b981;
+      color: #fff;
+    }
+
+    .device-card-badge.inactive {
+      background: var(--bg-tertiary);
+      color: var(--text-tertiary);
+    }
+
+    .device-card-unbind {
+      padding: var(--spacing-1) var(--spacing-3);
+      font-size: var(--font-size-xs);
+      background: transparent;
+      border: 1px solid var(--error);
+      color: var(--error);
+      border-radius: var(--radius-md);
+      cursor: pointer;
+      transition: background var(--duration-base) var(--ease-out), color var(--duration-base) var(--ease-out);
+    }
+
+    .device-card-unbind:hover:not(:disabled) {
+      background: var(--error);
+      color: #fff;
+    }
+
+    .device-card-unbind:disabled {
+      opacity: 0.4;
+      cursor: not-allowed;
+    }
+
     /* activation-success 默认隐藏，由 JS 通过 inline display:flex 显示 */
     .activation-success {
       display: none;
@@ -3639,6 +3801,42 @@
                   <span data-i18n="activateSuccessPrefix">激活成功！已升级到 </span>
                   <span id="licenseTypeDisplay"></span>
                 </div>
+              </div>
+            </div>
+          </details>
+
+          <!-- Device Management Panel -->
+          <details class="panel" id="devicePanel">
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                  <line x1="8" y1="21" x2="16" y2="21"></line>
+                  <line x1="12" y1="17" x2="12" y2="21"></line>
+                </svg>
+              </div>
+              <h2 class="panel-title" data-i18n="deviceManagement">设备管理</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <p class="panel-desc" data-i18n="deviceMgmtDesc">查看当前激活码绑定的设备，可主动解绑旧设备以腾出名额。最多绑定 2 台设备，每月可换绑 1 次。</p>
+            <div class="device-mgmt-section">
+              <div class="device-mgmt-summary">
+                <div class="device-mgmt-stat">
+                  <span class="device-mgmt-stat-label" data-i18n="deviceSlots">已用名额</span>
+                  <span class="device-mgmt-stat-value" id="deviceSlotsValue">-</span>
+                </div>
+                <div class="device-mgmt-stat">
+                  <span class="device-mgmt-stat-label" data-i18n="deviceRebindRemaining">本月剩余换绑</span>
+                  <span class="device-mgmt-stat-value" id="deviceRebindValue">-</span>
+                </div>
+                <button class="btn btn-secondary device-mgmt-refresh" type="button" id="refreshDevicesBtn">
+                  <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                  <span data-i18n="refresh">刷新</span>
+                </button>
+              </div>
+              <div class="device-mgmt-warn hidden" id="deviceRebindPausedWarn"></div>
+              <div class="device-list" id="deviceList">
+                <div class="device-list-empty" data-i18n="deviceListEmpty">激活后可查看设备列表</div>
               </div>
             </div>
           </details>

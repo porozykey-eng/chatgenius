@@ -13,8 +13,9 @@ const API_BASE_URL = 'https://chat.sopie.cc';
 // 防重放改由服务端 timestamp 校验（5分钟窗口）保障
 
 // Heartbeat detection constants
-const HEARTBEAT_INTERVAL_HOURS = 6;
-const HEARTBEAT_CACHE_MINUTES = 30;
+// 方案 D 收紧：6h → 1h，缓存 30min → 15min
+const HEARTBEAT_INTERVAL_HOURS = 1;
+const HEARTBEAT_CACHE_MINUTES = 15;
 
 // License verification on extension startup
 chrome.runtime.onInstalled.addListener(async (details) => {
@@ -760,6 +761,86 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         await chrome.storage.local.set({ pendingOptionsTab: request.tab });
       }
       sendResponse({ success: true });
+    } else if (request.action === 'getDevices') {
+      // 设备池：查询当前激活码绑定的设备列表
+      try {
+        const { licenseCode } = await chrome.storage.local.get(['licenseCode']);
+        if (!licenseCode) {
+          sendResponse({ success: false, error: '未激活' });
+          return;
+        }
+        let fingerprint = (await chrome.storage.local.get(['deviceFingerprint'])).deviceFingerprint;
+        if (!fingerprint) {
+          fingerprint = await generateFingerprintInBackground();
+          if (fingerprint) await chrome.storage.local.set({ deviceFingerprint: fingerprint });
+        }
+        const timestamp = Date.now().toString();
+        const response = await fetch(`${API_BASE_URL}/api/license/devices`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: licenseCode.toUpperCase(),
+            fingerprint,
+            timestamp,
+          })
+        });
+        if (!response.ok) {
+          sendResponse({ success: false, error: `HTTP ${response.status}` });
+          return;
+        }
+        const result = await response.json();
+        if (!result.valid) {
+          sendResponse({ success: false, error: result.error || '查询失败' });
+          return;
+        }
+        sendResponse({
+          success: true,
+          devices: result.devices || [],
+          maxDevices: result.maxDevices,
+          remainingRebind: result.remainingRebind,
+          rebindPaused: !!result.rebindPaused,
+        });
+      } catch (err) {
+        console.warn('getDevices error:', err.message);
+        sendResponse({ success: false, error: err.message });
+      }
+    } else if (request.action === 'unbindDevice') {
+      // 设备池：用户主动踢设备（不消耗换绑次数）
+      try {
+        const { licenseCode } = await chrome.storage.local.get(['licenseCode']);
+        if (!licenseCode) {
+          sendResponse({ success: false, error: '未激活' });
+          return;
+        }
+        let fingerprint = (await chrome.storage.local.get(['deviceFingerprint'])).deviceFingerprint;
+        if (!fingerprint) {
+          fingerprint = await generateFingerprintInBackground();
+        }
+        const timestamp = Date.now().toString();
+        const response = await fetch(`${API_BASE_URL}/api/license/devices/unbind`, {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({
+            code: licenseCode.toUpperCase(),
+            fingerprint,
+            timestamp,
+            deviceId: request.deviceId,
+          })
+        });
+        if (!response.ok) {
+          sendResponse({ success: false, error: `HTTP ${response.status}` });
+          return;
+        }
+        const result = await response.json();
+        if (!result.valid) {
+          sendResponse({ success: false, error: result.error || '解绑失败' });
+          return;
+        }
+        sendResponse({ success: true, message: result.message });
+      } catch (err) {
+        console.warn('unbindDevice error:', err.message);
+        sendResponse({ success: false, error: err.message });
+      }
     } else {
       // Unknown action - always respond to prevent sender from hanging
       sendResponse({ success: false, error: `Unknown action: ${request.action}` });

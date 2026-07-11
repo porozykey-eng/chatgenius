@@ -144,6 +144,12 @@ const I18N = {
     activateErrorEmpty: 'Please enter activation code',
     activateErrorInvalid: 'Invalid code. Please check and try again',
     activateFail: 'Activation failed. Please check your network',
+    deviceManagement: 'Device Management',
+    deviceMgmtDesc: 'View devices bound to your activation code. You can unbind old devices to free up slots. Max 2 devices, 1 rebind per month.',
+    deviceSlots: 'Slots Used',
+    deviceRebindRemaining: 'Rebinds Left',
+    refresh: 'Refresh',
+    deviceListEmpty: 'Activate to view device list',
     dataBackup: 'Data Backup',
     dataBackupDesc: 'Export or import all settings (personas, FAQ, preferences, API config).',
     exportAllSettings: 'Export All Settings',
@@ -305,6 +311,12 @@ const I18N = {
     activateErrorEmpty: '请输入激活码',
     activateErrorInvalid: '激活码无效，请检查后重试',
     activateFail: '激活失败，请检查网络连接',
+    deviceManagement: '设备管理',
+    deviceMgmtDesc: '查看当前激活码绑定的设备，可主动解绑旧设备以腾出名额。最多绑定 2 台设备，每月可换绑 1 次。',
+    deviceSlots: '已用名额',
+    deviceRebindRemaining: '本月剩余换绑',
+    refresh: '刷新',
+    deviceListEmpty: '激活后可查看设备列表',
     dataBackup: '数据备份',
     dataBackupDesc: '导出或导入全部设置（包括角色、FAQ、偏好和 API 配置）。',
     exportAllSettings: '导出全部设置',
@@ -739,6 +751,10 @@ document.addEventListener('DOMContentLoaded', () => {
     tabContents.forEach(content => {
       content.classList.toggle('active', content.id === 'tab-' + targetTab);
     });
+    // 切换到账户 tab 时刷新设备列表
+    if (targetTab === 'account' && typeof window.__refreshDevices === 'function') {
+      setTimeout(() => { try { window.__refreshDevices(); } catch (e) {} }, 50);
+    }
   }
 
   tabBtns.forEach(btn => {
@@ -2129,13 +2145,35 @@ document.addEventListener('DOMContentLoaded', () => {
           updateStats();
           updateFreeTierNotification();
           showToast((I18N[currentLang].activateSuccessPrefix || '激活成功！') + result.type);
+          if (typeof window.__refreshDevices === 'function') window.__refreshDevices();
         } else if (result.needRebind) {
-          // 需要换绑确认
-          const confirmed = confirm(
-            `该激活码已在其他设备使用，是否强制在此设备登录？\n本月剩余换绑次数：${result.remainingCount}`
-          );
-          if (confirmed) {
-            await doRebind(code.toUpperCase(), fingerprint, timestamp);
+          // 设备池已满：弹窗选择要踢掉的旧设备
+          const devices = Array.isArray(result.currentDevices) ? result.currentDevices : [];
+          const deviceLines = devices.map((d, i) => {
+            const name = d.name ? String(d.name).substring(0, 60) : '未知设备';
+            const fp = d.fingerprint || '--------';
+            const last = d.lastSeen ? new Date(d.lastSeen).toLocaleString() : '无记录';
+            return `[${i + 1}] ${name}\n    指纹：${fp}\n    最后活跃：${last}`;
+          }).join('\n\n');
+          const msg =
+            `已绑定 ${result.maxDevices} 台设备，需要先解绑一台旧设备才能激活。\n` +
+            `本月剩余换绑次数：${result.remainingCount}\n\n` +
+            `${deviceLines}\n\n请输入要解绑的设备序号（1-${devices.length}），取消则不激活：`;
+          const input = prompt(msg);
+          if (input === null) return;
+          const idx = parseInt(input, 10) - 1;
+          if (isNaN(idx) || idx < 0 || idx >= devices.length) {
+            if (activationError) {
+              activationError.textContent = '设备序号无效，已取消激活';
+              activationError.style.display = 'block';
+            }
+            return;
+          }
+          await doRebind(code.toUpperCase(), fingerprint, timestamp, devices[idx].id);
+        } else if (result.rebindPaused) {
+          if (activationError) {
+            activationError.textContent = result.error || '换绑功能已暂停';
+            activationError.style.display = 'block';
           }
         } else {
           if (activationError) {
@@ -2154,8 +2192,8 @@ document.addEventListener('DOMContentLoaded', () => {
       }
     });
 
-    // 换绑函数
-    async function doRebind(code, fingerprint, timestamp) {
+    // 换绑函数（设备池模式：需指定 unbindDeviceId）
+    async function doRebind(code, fingerprint, timestamp, unbindDeviceId) {
       activateBtn.disabled = true;
       activateBtn.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="40"></circle></svg><span>换绑中...</span>';
       if (activationError) activationError.style.display = 'none';
@@ -2163,7 +2201,7 @@ document.addEventListener('DOMContentLoaded', () => {
         const response = await fetch(API_BASE_URL + '/api/license/rebind', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
-          body: JSON.stringify({ code, fingerprint, timestamp })
+          body: JSON.stringify({ code, fingerprint, timestamp, unbindDeviceId })
         });
         const result = await response.json();
         if (result.valid && result.type) {
@@ -2179,6 +2217,7 @@ document.addEventListener('DOMContentLoaded', () => {
           updateStats();
           updateFreeTierNotification();
           showToast('换绑成功！');
+          if (typeof window.__refreshDevices === 'function') window.__refreshDevices();
         } else {
           if (activationError) {
             activationError.textContent = result.error || '换绑失败';
@@ -2198,6 +2237,153 @@ document.addEventListener('DOMContentLoaded', () => {
 
     activationCodeInput.addEventListener('keypress', (e) => { if (e.key === 'Enter') activateBtn.click(); });
   }
+
+  // === 设备管理 ===
+  const deviceListEl = document.getElementById('deviceList');
+  const deviceSlotsValueEl = document.getElementById('deviceSlotsValue');
+  const deviceRebindValueEl = document.getElementById('deviceRebindValue');
+  const refreshDevicesBtn = document.getElementById('refreshDevicesBtn');
+  const deviceRebindPausedWarnEl = document.getElementById('deviceRebindPausedWarn');
+
+  function formatDeviceTime(t) {
+    if (!t) return '无记录';
+    try {
+      const d = new Date(t);
+      if (isNaN(d.getTime())) return '无记录';
+      return d.toLocaleString();
+    } catch (e) {
+      return '无记录';
+    }
+  }
+
+  function renderDeviceList(payload) {
+    if (!deviceListEl) return;
+    const devices = Array.isArray(payload.devices) ? payload.devices : [];
+    if (devices.length === 0) {
+      deviceListEl.innerHTML = '<div class="device-list-empty">' + escapeHtml(I18N[currentLang].deviceListEmpty || '激活后可查看设备列表') + '</div>';
+    } else {
+      deviceListEl.innerHTML = devices.map(d => {
+        const isCurrent = !!d.isCurrent;
+        const isActive = !!d.isActive;
+        const stateClass = isCurrent ? 'current' : (isActive ? '' : 'inactive');
+        const badge = isCurrent
+          ? '<span class="device-card-badge current">当前使用</span>'
+          : (isActive ? '' : '<span class="device-card-badge inactive">已解绑</span>');
+        const name = d.name ? escapeHtml(String(d.name).substring(0, 80)) : '未命名设备';
+        const fp = escapeHtml(d.fingerprint || '--------');
+        const lastIp = d.lastIp ? escapeHtml(d.lastIp) : '-';
+        const lastSeen = escapeHtml(formatDeviceTime(d.lastSeen));
+        const firstSeen = escapeHtml(formatDeviceTime(d.firstSeen));
+        const unbindDisabled = isCurrent || !isActive ? 'disabled' : '';
+        const unbindBtn = isActive
+          ? `<button class="device-card-unbind" ${unbindDisabled} data-device-id="${escapeHtml(d.id)}" data-device-name="${escapeHtml(name)}">${isCurrent ? '当前设备' : '解绑'}</button>`
+          : '';
+        return `
+          <div class="device-card ${stateClass}">
+            <div class="device-card-info">
+              <div class="device-card-name">${name} ${badge}</div>
+              <div class="device-card-meta">
+                <span>指纹：${fp}</span>
+                <span>首次激活：${firstSeen}</span>
+                <span>最后活跃：${lastSeen}</span>
+                <span>IP：${lastIp}</span>
+              </div>
+            </div>
+            ${unbindBtn}
+          </div>
+        `;
+      }).join('');
+      // 绑定解绑按钮
+      deviceListEl.querySelectorAll('.device-card-unbind:not(:disabled)').forEach(btn => {
+        btn.addEventListener('click', async () => {
+          const deviceId = parseInt(btn.getAttribute('data-device-id'), 10);
+          const deviceName = btn.getAttribute('data-device-name') || '该设备';
+          if (!confirm(`确定要解绑「${deviceName}」吗？\n解绑后该设备将无法继续使用本激活码。\n此操作不会消耗换绑次数。`)) return;
+          btn.disabled = true;
+          const originalText = btn.textContent;
+          btn.textContent = '解绑中...';
+          try {
+            const resp = await chrome.runtime.sendMessage({ action: 'unbindDevice', deviceId });
+            if (resp && resp.success) {
+              showToast(resp.message || '设备已解绑');
+              await loadDevices();
+            } else {
+              showToast((resp && resp.error) || '解绑失败');
+              btn.disabled = false;
+              btn.textContent = originalText;
+            }
+          } catch (e) {
+            showToast(e.message || '解绑失败');
+            btn.disabled = false;
+            btn.textContent = originalText;
+          }
+        });
+      });
+    }
+    if (deviceSlotsValueEl) {
+      const activeCount = devices.filter(d => d.isActive).length;
+      deviceSlotsValueEl.textContent = `${activeCount} / ${payload.maxDevices || 2}`;
+    }
+    if (deviceRebindValueEl) {
+      deviceRebindValueEl.textContent = String(payload.remainingRebind !== undefined ? payload.remainingRebind : '-');
+    }
+    if (deviceRebindPausedWarnEl) {
+      if (payload.rebindPaused) {
+        deviceRebindPausedWarnEl.textContent = '换绑功能已被风控暂停（异常换绑行为触发），暂停期间无法在新设备激活。';
+        deviceRebindPausedWarnEl.classList.remove('hidden');
+      } else {
+        deviceRebindPausedWarnEl.classList.add('hidden');
+      }
+    }
+  }
+
+  async function loadDevices() {
+    if (!deviceListEl) return;
+    const { licenseType } = await chrome.storage.sync.get(['licenseType']);
+    const { licenseCode } = await chrome.storage.local.get(['licenseCode']);
+    if (!licenseCode || licenseType === 'free') {
+      deviceListEl.innerHTML = '<div class="device-list-empty">' + escapeHtml(I18N[currentLang].deviceListEmpty || '激活后可查看设备列表') + '</div>';
+      if (deviceSlotsValueEl) deviceSlotsValueEl.textContent = '-';
+      if (deviceRebindValueEl) deviceRebindValueEl.textContent = '-';
+      if (deviceRebindPausedWarnEl) deviceRebindPausedWarnEl.classList.add('hidden');
+      return;
+    }
+    deviceListEl.innerHTML = '<div class="device-list-empty">加载中...</div>';
+    try {
+      const resp = await chrome.runtime.sendMessage({ action: 'getDevices' });
+      if (resp && resp.success) {
+        renderDeviceList(resp);
+      } else {
+        deviceListEl.innerHTML = '<div class="device-list-empty">' + escapeHtml((resp && resp.error) || '查询失败') + '</div>';
+      }
+    } catch (e) {
+      deviceListEl.innerHTML = '<div class="device-list-empty">' + escapeHtml(e.message || '查询失败') + '</div>';
+    }
+  }
+
+  if (refreshDevicesBtn) {
+    refreshDevicesBtn.addEventListener('click', () => {
+      loadDevices();
+    });
+  }
+
+  // 当切换到账户 tab 或激活成功后刷新设备列表
+  async function refreshDevicesIfActive() {
+    const accountTab = document.getElementById('tab-account');
+    if (accountTab && accountTab.classList.contains('active')) {
+      await loadDevices();
+    }
+  }
+
+  // 初次加载：若已在账户 tab，自动拉取
+  (async () => {
+    try {
+      await loadDevices();
+    } catch (e) { /* ignore */ }
+  })();
+
+  // 暴露给激活成功后调用
+  window.__refreshDevices = loadDevices;
 
   // Upgrade button
   const upgradeModal = document.getElementById('upgradeModal');

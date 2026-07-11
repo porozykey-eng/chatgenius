@@ -11,9 +11,17 @@ const LICENSE_HMAC_SECRET = process.env.LICENSE_HMAC_SECRET;
 if (!LICENSE_HMAC_SECRET) {
   console.warn('⚠️ LICENSE_HMAC_SECRET 未配置，HMAC 签名校验将被跳过（仅依赖 timestamp 防重放）');
 }
-const MAX_UNBIND_PER_MONTH = 2;
+
+// === 设备池配置 ===
+const MAX_DEVICES = 2;                  // 一个激活码最多绑定 2 台设备
+const MAX_UNBIND_PER_MONTH = 1;         // 每月可踢设备 1 次（收紧，原为 2）
 const MAX_ACTIVATION_ERRORS = 5;
 const IP_BAN_HOURS = 24;
+
+// === 风控规则配置 ===
+const REBIND_SUSPECT_THRESHOLD = 2;     // 24小时内换绑 ≥2 次视为异常
+const REBIND_PAUSE_HOURS = 48;          // 异常换绑后暂停换绑 48 小时
+const REBIND_REACTIVATE_WARN_MINUTES = 60; // 换绑后 1 小时内原设备再激活 → 告警
 
 // 签名验证：timestamp 5 分钟内有效（防重放）；HMAC 签名校验
 function verifySignature(code, timestamp, signature) {
@@ -94,6 +102,101 @@ async function checkAndResetUnbindCount(conn, licenseId, resetAt) {
   return rows[0] ? rows[0].unbind_count : 0;
 }
 
+// === 风控：检查换绑是否被暂停 ===
+async function checkRebindPaused(conn, licenseId) {
+  const [rows] = await conn.query(
+    'SELECT rebind_paused_until FROM licenses WHERE id = ?', [licenseId]
+  );
+  if (rows.length > 0 && rows[0].rebind_paused_until) {
+    const until = new Date(rows[0].rebind_paused_until);
+    if (until > new Date()) {
+      return { paused: true, until };
+    }
+  }
+  return { paused: false };
+}
+
+// === 风控：记录换绑时间，检测异常频率 ===
+// 24 小时内换绑 ≥ REBIND_SUSPECT_THRESHOLD → 暂停换绑 REBIND_PAUSE_HOURS 小时
+async function recordRebindAndCheckRisk(conn, licenseId) {
+  const now = new Date();
+  await conn.query(
+    'UPDATE licenses SET last_rebind_at = ? WHERE id = ?', [now, licenseId]
+  );
+  // 查询 24 小时内的换绑次数（通过 last_rebind_at 时间间隔判断）
+  const [rows] = await conn.query(
+    `SELECT unbind_count, unbind_count_reset_at, last_rebind_at, rebind_paused_until
+     FROM licenses WHERE id = ?`, [licenseId]
+  );
+  if (rows.length === 0) return { suspect: false };
+  const lic = rows[0];
+  // 如果本月换绑次数达到阈值，触发暂停
+  if (lic.unbind_count >= REBIND_SUSPECT_THRESHOLD) {
+    const pauseUntil = new Date(now.getTime() + REBIND_PAUSE_HOURS * 3600 * 1000);
+    await conn.query(
+      'UPDATE licenses SET rebind_paused_until = ? WHERE id = ?', [pauseUntil, licenseId]
+    );
+    console.warn(`⚠️ 风控告警：license_id=${licenseId} 换绑次数=${lic.unbind_count}，暂停至 ${pauseUntil.toISOString()}`);
+    return { suspect: true, pauseUntil };
+  }
+  return { suspect: false };
+}
+
+// === 风控：换绑后短时间内原设备再激活告警 ===
+async function checkRebindReactivateWarn(conn, licenseId, oldFingerprint) {
+  const [rows] = await conn.query(
+    'SELECT last_rebind_at FROM licenses WHERE id = ?', [licenseId]
+  );
+  if (rows.length === 0 || !rows[0].last_rebind_at) return;
+  const lastRebind = new Date(rows[0].last_rebind_at);
+  const elapsedMin = (Date.now() - lastRebind.getTime()) / 60000;
+  if (elapsedMin < REBIND_REACTIVATE_WARN_MINUTES) {
+    console.warn(`⚠️ 风控告警：license_id=${licenseId} 换绑后 ${Math.round(elapsedMin)} 分钟，原设备 ${oldFingerprint.substring(0, 8)}... 再次激活，疑似共享`);
+  }
+}
+
+// === 设备池：获取活跃设备列表 ===
+async function getActiveDevices(conn, licenseId) {
+  const [rows] = await conn.query(
+    'SELECT id, device_fingerprint, device_name, first_seen_at, last_heartbeat_at, last_ip, is_active FROM license_devices WHERE license_id = ? AND is_active = 1 ORDER BY first_seen_at ASC',
+    [licenseId]
+  );
+  return rows;
+}
+
+// === 设备池：添加设备（返回是否成功）===
+async function addDevice(conn, licenseId, activationCode, fingerprint, ip, deviceName) {
+  // 检查是否已存在（含已踢的）
+  const [existing] = await conn.query(
+    'SELECT id, is_active FROM license_devices WHERE license_id = ? AND device_fingerprint = ?',
+    [licenseId, fingerprint]
+  );
+  if (existing.length > 0) {
+    if (!existing[0].is_active) {
+      // 之前被踢过，重新激活
+      await conn.query(
+        'UPDATE license_devices SET is_active = 1, first_seen_at = ?, last_heartbeat_at = ?, last_ip = ? WHERE id = ?',
+        [new Date(), new Date(), ip, existing[0].id]
+      );
+    }
+    return { added: false, reactivated: true };
+  }
+  await conn.query(
+    'INSERT INTO license_devices (license_id, activation_code, device_fingerprint, device_name, first_seen_at, last_heartbeat_at, last_ip, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)',
+    [licenseId, activationCode, fingerprint, deviceName || null, new Date(), new Date(), ip]
+  );
+  return { added: true };
+}
+
+// === 设备池：踢设备 ===
+async function deactivateDevice(conn, deviceId, licenseId) {
+  const [result] = await conn.query(
+    'UPDATE license_devices SET is_active = 0 WHERE id = ? AND license_id = ?',
+    [deviceId, licenseId]
+  );
+  return result.affectedRows > 0;
+}
+
 // 获取客户端 IP
 function getClientIp(req) {
   return req.ip || (req.connection && req.connection.remoteAddress) || null;
@@ -148,48 +251,91 @@ router.post('/activate', async (req, res) => {
     const activationCode = rows[0];
 
     if (activationCode.status === 'used') {
-      // 已使用：根据指纹判断是同设备重复激活还是需要换绑
-      if (!activationCode.bound_fingerprint) {
-        // 老数据没有指纹，直接补绑
+      // 已使用：进入设备池模式
+      const [licenseRows] = await conn.query(
+        'SELECT id, type, is_active, expires_at, device_fingerprint, unbind_count, unbind_count_reset_at FROM licenses WHERE activation_code = ? FOR UPDATE',
+        [normalizedCode]
+      );
+
+      if (licenseRows.length === 0) {
+        // 激活码已 used 但无 license 记录（异常数据），回退到直接绑定
         await conn.query(
           'UPDATE activation_codes SET bound_fingerprint = ? WHERE id = ?',
           [fingerprint, activationCode.id]
         );
-        // 同步到 license
-        await conn.query(
-          'UPDATE licenses SET device_fingerprint = ?, unbind_count_reset_at = ? WHERE activation_code = ?',
-          [fingerprint, new Date(), normalizedCode]
-        );
         await conn.commit();
-        return res.json({
-          valid: true,
-          type: activationCode.type,
-          activatedAt: new Date().toISOString(),
-        });
+        return res.json({ valid: true, type: activationCode.type, activatedAt: new Date().toISOString() });
       }
 
-      if (activationCode.bound_fingerprint === fingerprint) {
+      const license = licenseRows[0];
+
+      // 检查设备池中是否已有此设备
+      const [deviceRows] = await conn.query(
+        'SELECT id, is_active FROM license_devices WHERE license_id = ? AND device_fingerprint = ?',
+        [license.id, fingerprint]
+      );
+
+      if (deviceRows.length > 0 && deviceRows[0].is_active) {
+        // 同设备重复激活
         await conn.rollback();
         return res.json({ valid: false, error: '激活码已使用', alreadyActivated: true });
       }
 
-      // 不同设备：返回需要换绑
-      const [licenseRows] = await conn.query(
-        'SELECT id, unbind_count, unbind_count_reset_at FROM licenses WHERE activation_code = ?',
-        [normalizedCode]
-      );
-      let remainingCount = MAX_UNBIND_PER_MONTH;
-      if (licenseRows.length > 0) {
-        const lic = licenseRows[0];
-        const currentCount = await checkAndResetUnbindCount(conn, lic.id, lic.unbind_count_reset_at);
-        remainingCount = Math.max(0, MAX_UNBIND_PER_MONTH - currentCount);
+      // 查询当前活跃设备数
+      const devices = await getActiveDevices(conn, license.id);
+
+      if (devices.length < MAX_DEVICES) {
+        // 设备池未满，直接添加新设备（不消耗换绑次数）
+        const deviceName = req.body.deviceName || req.headers['user-agent']?.substring(0, 200) || null;
+        await addDevice(conn, license.id, normalizedCode, fingerprint, ip, deviceName);
+
+        // 更新 bound_fingerprint 为最新设备
+        await conn.query(
+          'UPDATE activation_codes SET bound_fingerprint = ? WHERE id = ?',
+          [fingerprint, activationCode.id]
+        );
+        await conn.query(
+          'UPDATE licenses SET device_fingerprint = ?, last_heartbeat = ? WHERE id = ?',
+          [fingerprint, new Date(), license.id]
+        );
+
+        await conn.commit();
+        return res.json({
+          valid: true,
+          type: license.type,
+          activatedAt: new Date().toISOString(),
+          deviceCount: devices.length + 1,
+          maxDevices: MAX_DEVICES,
+        });
       }
+
+      // 设备池已满：检查风控 → 返回需要换绑
+      const pauseCheck = await checkRebindPaused(conn, license.id);
+      if (pauseCheck.paused) {
+        await conn.rollback();
+        return res.json({
+          valid: false,
+          error: `换绑功能已暂停，请于 ${pauseCheck.until.toISOString().slice(0, 16).replace('T', ' ')} 后再试`,
+          rebindPaused: true,
+        });
+      }
+
+      const currentCount = await checkAndResetUnbindCount(conn, license.id, license.unbind_count_reset_at);
+      const remainingCount = Math.max(0, MAX_UNBIND_PER_MONTH - currentCount);
+
       await conn.rollback();
       return res.json({
         valid: false,
-        error: '激活码已绑定其他设备，请确认换绑',
+        error: `已绑定 ${MAX_DEVICES} 台设备，请先解绑一台旧设备`,
         needRebind: true,
         remainingCount,
+        maxDevices: MAX_DEVICES,
+        currentDevices: devices.map(d => ({
+          id: d.id,
+          fingerprint: d.device_fingerprint.substring(0, 8) + '...',
+          name: d.device_name,
+          lastSeen: d.last_heartbeat_at,
+        })),
       });
     }
 
@@ -207,9 +353,16 @@ router.post('/activate', async (req, res) => {
       ? new Date(new Date().setFullYear(new Date().getFullYear() + 1))
       : null;
 
-    await conn.query(
+    const [licenseResult] = await conn.query(
       'INSERT INTO licenses (activation_code, type, activated_at, expires_at, is_active, device_fingerprint, unbind_count, unbind_count_reset_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
       [normalizedCode, licenseType, new Date(), expiresAt, true, fingerprint, 0, now]
+    );
+
+    // Step 6: 同步插入 license_devices 设备池
+    const deviceName = req.body.deviceName || req.headers['user-agent']?.substring(0, 200) || null;
+    await conn.query(
+      'INSERT INTO license_devices (license_id, activation_code, device_fingerprint, device_name, first_seen_at, last_heartbeat_at, last_ip, is_active) VALUES (?, ?, ?, ?, ?, ?, ?, 1)',
+      [licenseResult.insertId, normalizedCode, fingerprint, deviceName, now, now, ip]
     );
 
     await conn.commit();
@@ -228,9 +381,10 @@ router.post('/activate', async (req, res) => {
   }
 });
 
-// 换绑确认：消耗每月换绑次数，更新绑定指纹
+// 换绑确认：踢掉一台旧设备 + 添加新设备（消耗每月换绑次数）
+// 请求体需指定 unbindDeviceId（要踢的旧设备 ID）
 router.post('/rebind', async (req, res) => {
-  const { code, fingerprint, timestamp, signature } = req.body;
+  const { code, fingerprint, timestamp, signature, unbindDeviceId } = req.body;
 
   if (!code) {
     return res.status(400).json({ valid: false, error: '激活码不能为空' });
@@ -240,6 +394,9 @@ router.post('/rebind', async (req, res) => {
   }
   if (!fingerprint) {
     return res.status(400).json({ valid: false, error: '设备指纹不能为空' });
+  }
+  if (!unbindDeviceId) {
+    return res.status(400).json({ valid: false, error: '请指定要解绑的设备' });
   }
 
   const normalizedCode = code.toUpperCase();
@@ -294,10 +451,21 @@ router.post('/rebind', async (req, res) => {
 
     const license = licenseRows[0];
 
-    // Step 4: 跨月清零
+    // Step 4: 风控检查 — 换绑是否被暂停
+    const pauseCheck = await checkRebindPaused(conn, license.id);
+    if (pauseCheck.paused) {
+      await conn.rollback();
+      return res.json({
+        valid: false,
+        error: `换绑功能已暂停，请于 ${pauseCheck.until.toISOString().slice(0, 16).replace('T', ' ')} 后再试`,
+        rebindPaused: true,
+      });
+    }
+
+    // Step 5: 跨月清零
     const currentCount = await checkAndResetUnbindCount(conn, license.id, license.unbind_count_reset_at);
 
-    // Step 5: 检查本月换绑次数
+    // Step 6: 检查本月换绑次数
     if (currentCount >= MAX_UNBIND_PER_MONTH) {
       await conn.rollback();
       return res.json({
@@ -307,25 +475,37 @@ router.post('/rebind', async (req, res) => {
       });
     }
 
-    // 同设备无需换绑
-    if (license.device_fingerprint === fingerprint) {
+    // Step 7: 踢掉旧设备
+    const oldFingerprint = license.device_fingerprint;
+    const kicked = await deactivateDevice(conn, parseInt(unbindDeviceId), license.id);
+    if (!kicked) {
       await conn.rollback();
-      return res.json({ valid: false, error: '设备未变化，无需换绑' });
+      return res.json({ valid: false, error: '未找到要解绑的设备' });
     }
 
-    const now = new Date();
+    // Step 8: 风控 — 记录换绑时间 + 检测异常频率
+    await recordRebindAndCheckRisk(conn, license.id);
 
-    // Step 6: 更新激活码和 license 的指纹
+    const now = new Date();
+    const deviceName = req.body.deviceName || req.headers['user-agent']?.substring(0, 200) || null;
+
+    // Step 9: 添加新设备
+    await addDevice(conn, license.id, normalizedCode, fingerprint, ip, deviceName);
+
+    // Step 10: 更新 bound_fingerprint + unbind_count
     await conn.query(
       'UPDATE activation_codes SET bound_fingerprint = ? WHERE id = ?',
       [fingerprint, activationCode.id]
     );
-
-    // Step 7: license.unbind_count +1，更新 reset_at
     await conn.query(
       'UPDATE licenses SET device_fingerprint = ?, unbind_count = ?, unbind_count_reset_at = ?, last_heartbeat = ? WHERE id = ?',
       [fingerprint, currentCount + 1, now, now, license.id]
     );
+
+    // 风控 — 检查原设备是否短时间内再激活（仅告警，在 commit 前执行）
+    if (oldFingerprint) {
+      await checkRebindReactivateWarn(conn, license.id, oldFingerprint).catch(() => {});
+    }
 
     await conn.commit();
 
@@ -398,34 +578,46 @@ router.post('/heartbeat', async (req, res) => {
       return res.json({ valid: false, reason: 'banned' });
     }
 
-    // Step 4: 老用户无指纹，自动绑定
+    // Step 4: 老用户无指纹，自动绑定到设备池
     if (!license.device_fingerprint) {
       const now = new Date();
       await conn.query(
         'UPDATE licenses SET device_fingerprint = ?, last_heartbeat = ?, unbind_count_reset_at = ? WHERE id = ?',
         [fingerprint, now, now, license.id]
       );
-      // 同步到 activation_codes
       await conn.query(
         'UPDATE activation_codes SET bound_fingerprint = ? WHERE code = ?',
         [fingerprint, normalizedCode]
       );
+      // 同步到设备池
+      await addDevice(conn, license.id, normalizedCode, fingerprint, clientIp, null);
       await conn.commit();
       return res.json({ valid: true });
     }
 
-    // Step 5: 设备不一致
-    if (license.device_fingerprint !== fingerprint) {
+    // Step 5: 检查设备是否在活跃设备池中
+    const [deviceRows] = await conn.query(
+      'SELECT id, is_active FROM license_devices WHERE license_id = ? AND device_fingerprint = ?',
+      [license.id, fingerprint]
+    );
+
+    if (deviceRows.length === 0 || !deviceRows[0].is_active) {
+      // 设备不在池中或已被踢
       await conn.rollback();
       return res.json({ valid: false, reason: 'device_mismatch' });
     }
 
-    // Step 6: 一致 → 更新心跳，跨月清零
+    // Step 6: 设备在池中 → 更新心跳 + 跨月清零
     const now = new Date();
     await checkAndResetUnbindCount(conn, license.id, license.unbind_count_reset_at);
     await conn.query(
       'UPDATE licenses SET last_heartbeat = ? WHERE id = ?',
       [now, license.id]
+    );
+    // 更新设备池中的心跳时间和 IP
+    await conn.query(
+      'UPDATE license_devices SET last_heartbeat_at = ?, last_ip = ? WHERE id = ?',
+      [now, clientIp, deviceRows[0].id]
     );
 
     await conn.commit();
@@ -502,6 +694,137 @@ router.post('/validate', async (req, res) => {
   }
 });
 
+// 查询当前激活码绑定的设备列表
+router.post('/devices', async (req, res) => {
+  const { code, fingerprint, timestamp, signature } = req.body;
+
+  if (!code || typeof code !== 'string' || code.length > 64 || !/^[A-Za-z0-9\-]+$/.test(code)) {
+    return res.status(400).json({ valid: false, error: '激活码格式无效' });
+  }
+
+  const normalizedCode = code.toUpperCase();
+
+  // 签名校验
+  const sigResult = verifySignature(normalizedCode, timestamp, signature);
+  if (!sigResult.valid) {
+    return res.status(401).json({ valid: false, error: '签名校验失败' });
+  }
+
+  try {
+    const [licenseRows] = await pool.query(
+      'SELECT id, type, unbind_count, unbind_count_reset_at, rebind_paused_until FROM licenses WHERE activation_code = ? AND is_active = TRUE',
+      [normalizedCode]
+    );
+
+    if (licenseRows.length === 0) {
+      return res.json({ valid: false, error: '许可证不存在或已失效' });
+    }
+
+    const license = licenseRows[0];
+    const currentCount = await checkAndResetUnbindCount(pool, license.id, license.unbind_count_reset_at);
+
+    const [devices] = await pool.query(
+      'SELECT id, device_fingerprint, device_name, first_seen_at, last_heartbeat_at, last_ip, is_active FROM license_devices WHERE license_id = ? ORDER BY is_active DESC, first_seen_at ASC',
+      [license.id]
+    );
+
+    // 判断换绑是否暂停
+    let rebindPaused = false;
+    if (license.rebind_paused_until && new Date(license.rebind_paused_until) > new Date()) {
+      rebindPaused = true;
+    }
+
+    res.json({
+      valid: true,
+      maxDevices: MAX_DEVICES,
+      remainingRebind: Math.max(0, MAX_UNBIND_PER_MONTH - currentCount),
+      rebindPaused,
+      devices: devices.map(d => ({
+        id: d.id,
+        fingerprint: d.device_fingerprint.substring(0, 8) + '...',
+        name: d.device_name,
+        firstSeen: d.first_seen_at,
+        lastSeen: d.last_heartbeat_at,
+        lastIp: d.last_ip,
+        isActive: !!d.is_active,
+        isCurrent: d.device_fingerprint === fingerprint,
+      })),
+    });
+  } catch (error) {
+    console.error('Devices list error:', error);
+    res.status(500).json({ valid: false, error: '查询失败' });
+  }
+});
+
+// 踢设备（用户主动解绑某台设备，不消耗换绑次数，仅腾出设备池名额）
+router.post('/devices/unbind', async (req, res) => {
+  const { code, fingerprint, timestamp, signature, deviceId } = req.body;
+
+  if (!code || typeof code !== 'string' || code.length > 64 || !/^[A-Za-z0-9\-]+$/.test(code)) {
+    return res.status(400).json({ valid: false, error: '激活码格式无效' });
+  }
+  if (!deviceId) {
+    return res.status(400).json({ valid: false, error: '缺少设备 ID' });
+  }
+
+  const normalizedCode = code.toUpperCase();
+
+  const sigResult = verifySignature(normalizedCode, timestamp, signature);
+  if (!sigResult.valid) {
+    return res.status(401).json({ valid: false, error: '签名校验失败' });
+  }
+
+  let conn;
+  try {
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    const [licenseRows] = await conn.query(
+      'SELECT id, device_fingerprint FROM licenses WHERE activation_code = ? AND is_active = TRUE FOR UPDATE',
+      [normalizedCode]
+    );
+
+    if (licenseRows.length === 0) {
+      await conn.rollback();
+      return res.json({ valid: false, error: '许可证不存在' });
+    }
+
+    const license = licenseRows[0];
+
+    // 不能踢当前设备
+    const [targetDevice] = await conn.query(
+      'SELECT id, device_fingerprint, is_active FROM license_devices WHERE id = ? AND license_id = ?',
+      [parseInt(deviceId), license.id]
+    );
+
+    if (targetDevice.length === 0) {
+      await conn.rollback();
+      return res.json({ valid: false, error: '设备不存在' });
+    }
+
+    if (targetDevice[0].device_fingerprint === fingerprint) {
+      await conn.rollback();
+      return res.json({ valid: false, error: '不能解绑当前正在使用的设备' });
+    }
+
+    if (!targetDevice[0].is_active) {
+      await conn.rollback();
+      return res.json({ valid: false, error: '该设备已解绑' });
+    }
+
+    await deactivateDevice(conn, parseInt(deviceId), license.id);
+
+    await conn.commit();
+    res.json({ valid: true, message: '设备已解绑' });
+  } catch (error) {
+    if (conn) await conn.rollback();
+    console.error('Device unbind error:', error);
+    res.status(500).json({ valid: false, error: '解绑失败' });
+  } finally {
+    if (conn) conn.release();
+  }
+});
+
 // 查询许可证状态
 // P1-4 修复：信息最小化，不返回 type/expiresAt 等细节，只返回 valid 布尔值
 router.get('/status/:code', async (req, res) => {
@@ -537,6 +860,7 @@ router.get('/status/:code', async (req, res) => {
 });
 
 // Server-side license verification for Pro feature gating
+// 设备池模式：校验设备是否在 license_devices 活跃列表中
 router.post('/verify-token', async (req, res) => {
   const { licenseCode, fingerprint } = req.body;
 
@@ -548,31 +872,66 @@ router.post('/verify-token', async (req, res) => {
     return res.json({ allowed: true, type: 'free', remaining: 20 });
   }
 
+  let conn;
   try {
-    const [rows] = await pool.query(
-      'SELECT type, expires_at, device_fingerprint FROM licenses WHERE activation_code = ? AND is_active = TRUE',
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    const [rows] = await conn.query(
+      'SELECT id, type, expires_at, is_active, device_fingerprint FROM licenses WHERE activation_code = ? FOR UPDATE',
       [licenseCode.toUpperCase()]
     );
 
     if (rows.length === 0) {
+      await conn.rollback();
       return res.json({ allowed: false, type: 'free', error: '许可证无效' });
     }
 
     const license = rows[0];
+
+    if (!license.is_active) {
+      await conn.rollback();
+      return res.json({ allowed: false, type: 'free', error: '许可证已被禁用' });
+    }
+
     if (license.expires_at && new Date(license.expires_at) < new Date()) {
+      await conn.rollback();
       return res.json({ allowed: false, type: 'free', error: '许可证已过期' });
     }
 
-    // 可选指纹校验：若提供 fingerprint 且 license 已绑定设备，校验一致性
-    if (fingerprint && license.device_fingerprint && license.device_fingerprint !== fingerprint) {
-      return res.json({ allowed: false, type: 'free', error: '设备不一致' });
+    // 设备池校验：若提供 fingerprint，必须命中活跃设备列表
+    if (fingerprint) {
+      // 老用户尚未迁移到设备池：自动补录到设备池（宽松策略，避免误伤已激活用户）
+      if (!license.device_fingerprint) {
+        await conn.query(
+          'UPDATE licenses SET device_fingerprint = ? WHERE id = ?',
+          [fingerprint, license.id]
+        );
+        await addDevice(conn, license.id, licenseCode.toUpperCase(), fingerprint, getClientIp(req), null);
+        await conn.commit();
+        return res.json({ allowed: true, type: license.type, remaining: -1 });
+      }
+
+      const [deviceRows] = await conn.query(
+        'SELECT id, is_active FROM license_devices WHERE license_id = ? AND device_fingerprint = ?',
+        [license.id, fingerprint]
+      );
+
+      if (deviceRows.length === 0 || !deviceRows[0].is_active) {
+        await conn.rollback();
+        return res.json({ allowed: false, type: 'free', error: '设备不在授权列表' });
+      }
     }
 
+    await conn.commit();
     res.json({ allowed: true, type: license.type, remaining: -1 });
   } catch (error) {
+    if (conn) await conn.rollback();
     console.error('Verify token error:', error);
     // P1-6 修复：fail-closed，服务器异常时不放行付费功能
     return res.json({ allowed: false, type: 'free', remaining: 0, error: 'server_error' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
