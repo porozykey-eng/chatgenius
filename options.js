@@ -1810,6 +1810,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill connected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
         chrome.storage.sync.set({ connectionValid: true });
+        // 测试通过后隐藏 API 指南 banner
+        const banner = document.getElementById('apiGuideBanner');
+        if (banner) banner.classList.add('hidden');
       } else {
         const errMsg = getFriendlyError(response.status, providerConfig?.name || providerId);
         if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
@@ -1873,6 +1876,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill connected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
         chrome.storage.sync.set({ connectionValid: true });
+        // 测试通过后隐藏 API 指南 banner
+        const banner = document.getElementById('apiGuideBanner');
+        if (banner) banner.classList.add('hidden');
       } else {
         const errMsg = getFriendlyError(response.status, modelName);
         if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
@@ -2495,15 +2501,18 @@ document.addEventListener('DOMContentLoaded', () => {
               (zh ? '已连接 · ' : 'Connected · ') + label,
               'success');
             if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--success)';
+            // 已测试通过：隐藏 API 指南 banner
+            const banner = document.getElementById('apiGuideBanner');
+            if (banner) banner.classList.add('hidden');
           } else if (syncData.connectionValid === false) {
             setApiStatusBarState('failed',
               (zh ? '连接失败 · ' : 'Connection failed · ') + label,
               'error');
             if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--error)';
           } else {
-            // 已配置但未测试过，显示"已配置"待测试状态
+            // 已配置但未测试过，仅显示"已配置"
             setApiStatusBarState('testing',
-              (zh ? '已配置 · ' : 'Configured · ') + label + (zh ? ' · 点击测试' : ' · Click to test'),
+              zh ? '已配置' : 'Configured',
               'testing');
             if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--accent)';
           }
