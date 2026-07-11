@@ -759,61 +759,28 @@ function insertTextIntoInput(text, platform) {
   return true;
 }
 
-// ---- 打字机效果：逐字插入 + 思考动画 ----
-let _thinkingIndicatorEl = null;
+// ---- 打字机效果：逐字插入，思考/输入状态显示在悬浮按钮上 ----
 
-function _showThinkingIndicator(inputEl) {
-  _hideThinkingIndicator();
-  if (!inputEl) return;
-  const rect = inputEl.getBoundingClientRect();
-  const el = document.createElement('div');
-  el.id = 'wa-ai-thinking-indicator';
-  // 定位在输入框上方
-  const bottom = window.innerHeight - rect.top + 10;
-  el.style.cssText = [
-    'position:fixed',
-    'bottom:' + bottom + 'px',
-    'right:24px',
-    'z-index:99999',
-    'display:flex',
-    'align-items:center',
-    'gap:8px',
-    'padding:8px 14px',
-    'background:rgba(67,97,238,0.1)',
-    'border:1px solid rgba(67,97,238,0.3)',
-    'border-radius:20px',
-    'font-size:13px',
-    'font-weight:500',
-    'color:#4361ee',
-    'backdrop-filter:blur(8px)',
-    '-webkit-backdrop-filter:blur(8px)',
-    'box-shadow:0 4px 12px rgba(67,97,238,0.15)',
-    'transition:opacity 0.3s, transform 0.3s',
-    'opacity:0',
-    'transform:translateY(8px)'
-  ].join(';');
-  // spinner + 文字（用 textContent 防 XSS）
-  const spinnerSvg = '<svg class="wa-ai-spin" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>';
-  const label = document.createElement('span');
-  label.textContent = detectPlatform() === PLATFORMS.WHATSAPP ? 'AI 思考中' : 'AI thinking';
-  el.innerHTML = spinnerSvg;
-  el.appendChild(label);
-  document.body.appendChild(el);
-  _thinkingIndicatorEl = el;
-  // 触发进场动画
-  void el.offsetWidth;
-  el.style.opacity = '1';
-  el.style.transform = 'translateY(0)';
+// 在悬浮按钮上显示状态（替换按钮内容，保存原内容以便恢复）
+function _setButtonStatus(btn, status, label) {
+  if (!btn) return;
+  if (status === 'thinking') {
+    btn.innerHTML = '<svg class="wa-ai-spin" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg><span>' + label + '</span>';
+  } else if (status === 'typing') {
+    btn.innerHTML = '<svg class="wa-ai-spin" viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg><span>' + label + '</span>';
+  }
+  btn.disabled = true;
+  btn.style.cursor = 'wait';
 }
 
-function _hideThinkingIndicator() {
-  if (_thinkingIndicatorEl) {
-    const el = _thinkingIndicatorEl;
-    el.style.opacity = '0';
-    el.style.transform = 'translateY(8px)';
-    setTimeout(() => { el.remove(); }, 300);
-    _thinkingIndicatorEl = null;
-  }
+// 恢复按钮原始状态
+function _resetButtonStatus(btn) {
+  if (!btn) return;
+  btn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg><span>AI</span>';
+  btn.disabled = false;
+  btn.style.cursor = 'grab';
+  btn.style.boxShadow = '';
+  btn.style.transform = '';
 }
 
 // 打字机逐字插入（返回 Promise<boolean>）
@@ -830,7 +797,6 @@ async function typewriterInsert(text, platform) {
   if (!inputEl) return false;
 
   inputEl.focus();
-  _showThinkingIndicator(inputEl);
 
   // 等待 focus 生效
   await new Promise(r => setTimeout(r, 120));
@@ -877,7 +843,6 @@ async function typewriterInsert(text, platform) {
     await new Promise(r => setTimeout(r, charDelay));
   }
 
-  _hideThinkingIndicator();
   return true;
 }
 
@@ -2001,19 +1966,25 @@ async function _autoGenerateAndInsert() {
 
   showToast('检测到新消息，自动生成回复中...', 'loading', 0);
 
+  // 在悬浮按钮上显示"思考中"状态
+  const btn = document.getElementById('wa-ai-reply-btn');
+  if (btn) _setButtonStatus(btn, 'thinking', '思考中');
+
   chrome.runtime.sendMessage({ action: 'generateReply', context: context }, async (response) => {
     _autoReplyInProgress = false;
 
     if (chrome.runtime.lastError) {
       showToast('自动回复失败: ' + chrome.runtime.lastError.message, 'error', 4000);
+      if (btn) _resetButtonStatus(btn);
       return;
     }
 
     if (response && response.success) {
-      // 打字机效果逐字插入 + 思考动画
-      showToast('AI 正在输入...', 'loading', 0);
+      // 在悬浮按钮上显示"输入中..."状态
+      if (btn) _setButtonStatus(btn, 'typing', '输入中');
       try {
         const success = await typewriterInsert(response.reply, platform);
+        if (btn) _resetButtonStatus(btn);
         if (success) {
           showToast('回复已生成，请检查后发送', 'success', 4000);
         } else {
@@ -2022,11 +1993,12 @@ async function _autoGenerateAndInsert() {
           showToast('自动插入失败，已打开预览编辑', 'info', 4000);
         }
       } catch (err) {
-        _hideThinkingIndicator();
+        if (btn) _resetButtonStatus(btn);
         showPreviewModal(response.reply);
         showToast('输入异常，已打开预览编辑', 'info', 4000);
       }
     } else {
+      if (btn) _resetButtonStatus(btn);
       const errMsg = response?.error || '未知错误';
       showToast('自动生成失败: ' + errMsg, 'error', 5000);
     }
