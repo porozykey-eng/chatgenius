@@ -3489,6 +3489,29 @@
             </div>
           </details>
 
+          <!-- Generation Mode Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path>
+                </svg>
+              </div>
+              <h2 class="panel-title" data-i18n="genMode">生成模式</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="form-grid mt-4">
+              <div class="form-group full-width">
+                <label class="form-label" for="generationMode" data-i18n="genModeLabel">回复生成方式</label>
+                <select class="form-select" id="generationMode">
+                  <option value="manual" data-i18n="genModeManual">手动生成（点击悬浮图标）</option>
+                  <option value="auto" data-i18n="genModeAuto">自动检索（光标聚焦会话时自动生成）</option>
+                </select>
+                <div class="form-hint mt-2" data-i18n="genModeHint">手动模式：点击悬浮图标生成回复；自动模式：光标进入会话输入框时自动检索并生成。</div>
+              </div>
+            </div>
+          </details>
+
           <!-- UI Settings Panel -->
           <details class="panel" open>
             <summary class="panel-header">

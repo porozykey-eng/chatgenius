@@ -106,6 +106,11 @@ const I18N = {
     lenMedium: 'Medium (2-4 sentences)',
     lenLong: 'Detailed',
     uiSettings: 'UI & Interaction',
+    genMode: 'Generation Mode',
+    genModeLabel: 'Reply Generation Method',
+    genModeManual: 'Manual (click floating icon)',
+    genModeAuto: 'Auto (generate when input focused)',
+    genModeHint: 'Manual: click floating icon to generate; Auto: auto-generate when cursor enters chat input.',
     shortcut: 'Shortcut Key',
     shortcutHint: 'Alt+2 opens quick menu · Ctrl+Enter inserts reply · Ctrl+R regenerates',
     btnTheme: 'Floating Button Theme',
@@ -257,6 +262,11 @@ const I18N = {
     lenMedium: '适中 (2-4句话)',
     lenLong: '详细',
     uiSettings: '界面与交互',
+    genMode: '生成模式',
+    genModeLabel: '回复生成方式',
+    genModeManual: '手动生成（点击悬浮图标）',
+    genModeAuto: '自动检索（光标聚焦会话时自动生成）',
+    genModeHint: '手动模式：点击悬浮图标生成回复；自动模式：光标进入会话输入框时自动检索并生成。',
     shortcut: '快捷键',
     shortcutHint: 'Alt+2 打开快捷菜单 · Ctrl+Enter 插入回复 · Ctrl+R 重新生成',
     btnTheme: '悬浮按钮主题',
@@ -648,6 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tone = document.getElementById('tone')?.value || 'auto';
     const replyLength = document.getElementById('replyLength')?.value || 'auto';
     const btnTheme = document.getElementById('btnTheme')?.value || 'gradient';
+    const generationMode = document.getElementById('generationMode')?.value || 'manual';
     // 用户直接配置：URL + Key + 模型名（不再依赖预设服务商）
     const apiUrl = document.getElementById('apiUrlInput')?.value.trim() || '';
     const apiKey = document.getElementById('apiKey')?.value || '';
@@ -669,6 +680,7 @@ document.addEventListener('DOMContentLoaded', () => {
       replyLength,
       faqData: faqData,
       btnTheme,
+      generationMode,
       lang: currentLang
     }, () => {
       if (chrome.runtime.lastError) {
@@ -2229,6 +2241,7 @@ document.addEventListener('DOMContentLoaded', () => {
           replyLength: data.replyLength,
           faqData: data.faqData || [],
           btnTheme: data.btnTheme,
+          generationMode: data.generationMode,
           shortcut: data.shortcut,
           apiUrl: localData.apiUrl || '',
           apiKey: localData.apiKey || '',
@@ -2275,7 +2288,7 @@ document.addEventListener('DOMContentLoaded', () => {
         }
       }
 
-      const stringFields = ['tone', 'replyLength', 'btnTheme', 'shortcut', 'apiProvider', 'apiKey', 'apiUrl', 'modelName', 'licenseType', 'licenseCode'];
+      const stringFields = ['tone', 'replyLength', 'btnTheme', 'generationMode', 'shortcut', 'apiProvider', 'apiKey', 'apiUrl', 'modelName', 'licenseType', 'licenseCode'];
       for (const field of stringFields) {
         if (field in data && typeof data[field] !== 'string') return false;
       }
@@ -2304,7 +2317,7 @@ document.addEventListener('DOMContentLoaded', () => {
             return;
           }
           const settingsToSave = {};
-          const keys = ['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'btnTheme', 'shortcut', 'licenseType', 'activatedAt'];
+          const keys = ['personas', 'activePersonaId', 'tone', 'replyLength', 'faqData', 'btnTheme', 'generationMode', 'shortcut', 'licenseType', 'activatedAt'];
           keys.forEach(key => { if (imported[key] !== undefined) settingsToSave[key] = imported[key]; });
 
           chrome.storage.sync.set(settingsToSave, () => {
@@ -2561,6 +2574,7 @@ document.addEventListener('DOMContentLoaded', () => {
         replyLength: 'auto',
         faqData: [],
         btnTheme: 'gradient',
+        generationMode: 'manual',
         lang: 'zh',
         licenseType: 'free',
         activatedAt: null
@@ -2584,6 +2598,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (btnThemeSelect) btnThemeSelect.value = data.btnTheme || 'gradient';
         // 初始化主题预览
         updateThemePreview(data.btnTheme || 'gradient');
+        // 回填生成模式
+        const genModeSelect = document.getElementById('generationMode');
+        if (genModeSelect) genModeSelect.value = data.generationMode || 'manual';
 
         // 回填快捷键录入按钮显示
         if (shortcutRecorder) shortcutRecorder.textContent = data.shortcut || '未设置';

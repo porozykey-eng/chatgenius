@@ -709,23 +709,43 @@ function insertTextIntoInput(text, platform) {
       inputEl.dispatchEvent(new Event('input', { bubbles: true }));
       inputEl.dispatchEvent(new Event('change', { bubbles: true }));
     } else if (inputEl.isContentEditable) {
-      // For contenteditable elements (like div[role="textbox"])
-      // Use Selection API to clear and insert, which better triggers framework change detection
+      // For contenteditable elements (WhatsApp/Messenger)
+      // WhatsApp React 状态依赖 beforeinput/input 事件的 inputType 字段更新
+      // 旧的 Selection API + appendChild 不触发这些事件，导致插入内容无法被 WhatsApp 识别
+      inputEl.focus();
       const selection = window.getSelection();
       const range = document.createRange();
       range.selectNodeContents(inputEl);
       selection.removeAllRanges();
       selection.addRange(range);
-      selection.deleteFromDocument();
-      const textNode = document.createTextNode(text);
-      inputEl.appendChild(textNode);
-      // Move cursor to end
-      range.setStartAfter(textNode);
-      range.collapse(true);
-      selection.removeAllRanges();
-      selection.addRange(range);
-      inputEl.dispatchEvent(new Event('input', { bubbles: true }));
-      inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+
+      // 优先用 execCommand('insertText')：会触发正确的 beforeinput/input 事件链
+      // WhatsApp 的 React handler 依赖此事件流更新内部状态
+      let inserted = false;
+      try {
+        inserted = document.execCommand('insertText', false, text);
+      } catch (err) {
+        inserted = false;
+      }
+
+      if (!inserted) {
+        // Fallback：Selection API + InputEvent（带 inputType）手动派发
+        selection.deleteFromDocument();
+        const textNode = document.createTextNode(text);
+        range.insertNode(textNode);
+        range.setStartAfter(textNode);
+        range.collapse(true);
+        selection.removeAllRanges();
+        selection.addRange(range);
+        // 用 InputEvent 替代普通 Event，携带 inputType 字段
+        inputEl.dispatchEvent(new InputEvent('beforeinput', {
+          bubbles: true, cancelable: true, inputType: 'insertText', data: text
+        }));
+        inputEl.dispatchEvent(new InputEvent('input', {
+          bubbles: true, cancelable: true, inputType: 'insertText', data: text
+        }));
+        inputEl.dispatchEvent(new Event('change', { bubbles: true }));
+      }
     } else {
       // Fallback to execCommand only if necessary
       document.execCommand('insertText', false, text);
@@ -1758,12 +1778,17 @@ setTimeout(() => {
 
 // Shortcut listener
 let currentShortcut = '';
-chrome.storage.sync.get({ shortcut: 'Alt + 1' }, (data) => {
+let currentGenerationMode = 'manual';
+chrome.storage.sync.get({ shortcut: 'Alt + 1', generationMode: 'manual' }, (data) => {
   currentShortcut = data.shortcut;
+  currentGenerationMode = data.generationMode || 'manual';
 });
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'sync' && changes.shortcut) {
     currentShortcut = changes.shortcut.newValue;
+  }
+  if (namespace === 'sync' && changes.generationMode) {
+    currentGenerationMode = changes.generationMode.newValue || 'manual';
   }
   if (namespace === 'sync' && (changes.btnTheme || changes.btnOpacity)) {
     // Recreate button if theme or opacity changes (pause observer to prevent self-trigger)
@@ -1774,6 +1799,56 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
     });
   }
 });
+
+// ---- 自动模式：光标聚焦会话输入框时自动生成回复 ----
+let _autoModeLastTrigger = 0;
+const _AUTO_MODE_COOLDOWN = 5000; // 冷却 5 秒，防止频繁触发
+
+function _isChatInputFocused(target) {
+  if (!target || target.nodeType !== Node.ELEMENT_NODE) return false;
+  const platform = detectPlatform();
+  if (!platform) return false;
+  if (platform === PLATFORMS.WHATSAPP) {
+    // WhatsApp 输入框：#main footer 下的 contenteditable
+    const footer = document.querySelector('#main footer');
+    if (!footer) return false;
+    return footer.contains(target) && target.isContentEditable;
+  }
+  if (platform === PLATFORMS.MESSENGER) {
+    return target.isContentEditable && target.getAttribute('role') === 'textbox';
+  }
+  return false;
+}
+
+function _tryAutoGenerate() {
+  // 仅在自动模式触发
+  if (currentGenerationMode !== 'auto') return;
+  // 预览弹窗打开时不触发
+  const modal = document.getElementById('wa-ai-preview-modal');
+  if (modal && modal.style.display !== 'none') return;
+  // 按钮禁用/隐藏时不触发
+  const btn = document.getElementById('wa-ai-reply-btn');
+  if (!btn || btn.disabled || btn.style.display === 'none') return;
+  // 冷却期内不触发
+  const now = Date.now();
+  if (now - _autoModeLastTrigger < _AUTO_MODE_COOLDOWN) return;
+  _autoModeLastTrigger = now;
+  // 合成事件触发 handleGenerateReply
+  const fakeEvent = {
+    preventDefault: () => {},
+    stopPropagation: () => {},
+    currentTarget: btn
+  };
+  handleGenerateReply(fakeEvent);
+}
+
+// focus 事件用 capture 阶段监听，确保在框架处理前捕获
+document.addEventListener('focus', (e) => {
+  if (_isChatInputFocused(e.target)) {
+    // 延迟 300ms 避免切聊天瞬间触发，等 DOM 稳定
+    setTimeout(_tryAutoGenerate, 300);
+  }
+}, true);
 
 document.addEventListener('keydown', (e) => {
   if (!currentShortcut) return;
