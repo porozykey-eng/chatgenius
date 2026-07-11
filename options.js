@@ -2053,10 +2053,8 @@ document.addEventListener('DOMContentLoaded', () => {
           chrome.storage.sync.set({ connectionValid: null }, resolve);
         });
         showToast(zh ? '配置已保存，请点击「测试连接」验证' : 'Config saved. Click "Test Connection" to verify.');
-      } else {
-        // API 未变：保留原状态（已连接则保持已连接）
-        showToast(zh ? '配置已保存（未变化）' : 'Config saved (unchanged)');
       }
+      // API 未变：静默保存，保留原连接状态，不弹 toast
 
       // 刷新状态栏
       updateApiStatusBar();
