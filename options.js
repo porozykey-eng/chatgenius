@@ -1009,10 +1009,12 @@ document.addEventListener('DOMContentLoaded', () => {
       const badge = document.createElement('div');
       badge.className = 'persona-badge ' + (isActive ? 'default' : 'inactive');
       badge.innerHTML = '<span class="persona-badge-dot"></span>' +
-        escapeHtml(isActive ? (I18N[currentLang].statusDefault || 'Default') : (I18N[currentLang].statusInactive || 'Inactive'));
+        escapeHtml(isActive ? (I18N[currentLang].statusDefault || 'Default') : '');
 
       info.appendChild(nameInput);
-      info.appendChild(badge);
+      if (isActive) {
+        info.appendChild(badge);
+      }
 
       const actions = document.createElement('div');
       actions.className = 'persona-actions';
