@@ -3113,6 +3113,12 @@
           </svg>
           <span class="nav-item-label" data-i18n="tabPersonas">AI 角色</span>
         </button>
+        <button class="nav-item tab-btn" type="button" id="nav-api" data-tab="api" aria-controls="tab-api" aria-current="false">
+          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <polygon points="13 2 3 14 12 14 11 22 21 10 12 10 13 2"></polygon>
+          </svg>
+          <span class="nav-item-label" data-i18n="tabApi">大模型 API</span>
+        </button>
         <button class="nav-item tab-btn" type="button" id="nav-knowledge" data-tab="knowledge" aria-controls="tab-knowledge" aria-current="false">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
@@ -3336,98 +3342,9 @@
         </div>
       </div>
 
-      <!-- Tab Content: Settings -->
-      <div class="tab-content" id="tab-settings" role="tabpanel" aria-labelledby="nav-settings">
+      <!-- Tab Content: API -->
+      <div class="tab-content" id="tab-api" role="tabpanel" aria-labelledby="nav-api">
         <div class="panel-grid">
-          <!-- Reply Settings Panel -->
-          <details class="panel" open>
-            <summary class="panel-header">
-              <div class="panel-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 20h9"></path>
-                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                </svg>
-              </div>
-              <h2 class="panel-title" data-i18n="replySettings">回复偏好</h2>
-              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </summary>
-            <div class="form-grid mt-4">
-              <div class="form-group">
-                <label class="form-label" for="tone" data-i18n="tone">回复语气</label>
-                <select class="form-select" id="tone">
-                  <option value="auto" data-i18n="toneAuto">自动 (根据语境)</option>
-                  <option value="professional" data-i18n="tonePro">专业严谨</option>
-                  <option value="friendly" data-i18n="toneFriendly">热情友好</option>
-                  <option value="empathetic" data-i18n="toneEmpathetic">共情理解</option>
-                  <option value="direct" data-i18n="toneDirect">直接干练</option>
-                </select>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="replyLength" data-i18n="replyLength">回复长度</label>
-                <select class="form-select" id="replyLength">
-                  <option value="auto" data-i18n="lenAuto">自动</option>
-                  <option value="short" data-i18n="lenShort">简短 (1-2句话)</option>
-                  <option value="medium" data-i18n="lenMedium">适中 (2-4句话)</option>
-                  <option value="long" data-i18n="lenLong">详细</option>
-                </select>
-              </div>
-            </div>
-          </details>
-
-          <!-- UI Settings Panel -->
-          <details class="panel" open>
-            <summary class="panel-header">
-              <div class="panel-icon">
-                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <circle cx="12" cy="12" r="3"></circle>
-                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                </svg>
-              </div>
-              <h2 class="panel-title" data-i18n="uiSettings">界面与交互</h2>
-              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-            </summary>
-            <div class="form-grid mt-4">
-              <div class="form-group full-width">
-                <div class="form-label" id="shortcutLabel" data-i18n="shortcut">快捷键</div>
-                <div class="shortcut-cards" role="group" aria-labelledby="shortcutLabel">
-                  <div class="shortcut-card">
-                    <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                    <span class="shortcut-desc">打开/关闭悬浮按钮</span>
-                    <button type="button" class="shortcut-recorder" id="shortcutRecorder" title="点击后按下组合键">Alt + 1</button>
-                  </div>
-                  <div class="shortcut-card">
-                    <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                    <span class="shortcut-key">Ctrl+Enter</span>
-                    <span class="shortcut-desc">生成 AI 回复</span>
-                  </div>
-                  <div class="shortcut-card">
-                    <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                    <span class="shortcut-key">Ctrl+R</span>
-                    <span class="shortcut-desc">重新生成回复</span>
-                  </div>
-                </div>
-                <div class="form-hint mt-2" id="shortcutHint">点击右侧按钮后按下组合键（至少含 Ctrl/Alt/Shift/Cmd 之一）。Esc 取消。</div>
-              </div>
-              <div class="form-group">
-                <label class="form-label" for="btnTheme" data-i18n="btnTheme">悬浮按钮主题</label>
-                <select class="form-select" id="btnTheme">
-                  <option value="gradient" data-i18n="themeGradient">品牌紫（默认）</option>
-                  <option value="minimal" data-i18n="themeMinimal">极简黑白</option>
-                  <option value="glass" data-i18n="themeGlass">毛玻璃</option>
-                </select>
-                <div class="theme-preview" id="themePreview" aria-hidden="true">
-                  <div class="theme-preview-label">实时预览</div>
-                  <div class="theme-preview-stage">
-                    <span class="theme-preview-btn" id="themePreviewBtn">
-                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                      <span>AI</span>
-                    </span>
-                  </div>
-                </div>
-              </div>
-            </div>
-          </details>
-
           <!-- API Configuration Panel -->
           <details class="panel" open>
             <summary class="panel-header">
@@ -3531,6 +3448,101 @@
               <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
             </button>
           </div>
+        </div>
+      </div>
+
+      <!-- Tab Content: Settings -->
+      <div class="tab-content" id="tab-settings" role="tabpanel" aria-labelledby="nav-settings">
+        <div class="panel-grid">
+          <!-- Reply Settings Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <path d="M12 20h9"></path>
+                  <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
+                </svg>
+              </div>
+              <h2 class="panel-title" data-i18n="replySettings">回复偏好</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="form-grid mt-4">
+              <div class="form-group">
+                <label class="form-label" for="tone" data-i18n="tone">回复语气</label>
+                <select class="form-select" id="tone">
+                  <option value="auto" data-i18n="toneAuto">自动 (根据语境)</option>
+                  <option value="professional" data-i18n="tonePro">专业严谨</option>
+                  <option value="friendly" data-i18n="toneFriendly">热情友好</option>
+                  <option value="empathetic" data-i18n="toneEmpathetic">共情理解</option>
+                  <option value="direct" data-i18n="toneDirect">直接干练</option>
+                </select>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="replyLength" data-i18n="replyLength">回复长度</label>
+                <select class="form-select" id="replyLength">
+                  <option value="auto" data-i18n="lenAuto">自动</option>
+                  <option value="short" data-i18n="lenShort">简短 (1-2句话)</option>
+                  <option value="medium" data-i18n="lenMedium">适中 (2-4句话)</option>
+                  <option value="long" data-i18n="lenLong">详细</option>
+                </select>
+              </div>
+            </div>
+          </details>
+
+          <!-- UI Settings Panel -->
+          <details class="panel" open>
+            <summary class="panel-header">
+              <div class="panel-icon">
+                <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <circle cx="12" cy="12" r="3"></circle>
+                  <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
+                </svg>
+              </div>
+              <h2 class="panel-title" data-i18n="uiSettings">界面与交互</h2>
+              <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
+            </summary>
+            <div class="form-grid mt-4">
+              <div class="form-group full-width">
+                <div class="form-label" id="shortcutLabel" data-i18n="shortcut">快捷键</div>
+                <div class="shortcut-cards" role="group" aria-labelledby="shortcutLabel">
+                  <div class="shortcut-card">
+                    <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
+                    <span class="shortcut-desc">打开/关闭悬浮按钮</span>
+                    <button type="button" class="shortcut-recorder" id="shortcutRecorder" title="点击后按下组合键">Alt + 1</button>
+                  </div>
+                  <div class="shortcut-card">
+                    <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
+                    <span class="shortcut-key">Ctrl+Enter</span>
+                    <span class="shortcut-desc">生成 AI 回复</span>
+                  </div>
+                  <div class="shortcut-card">
+                    <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
+                    <span class="shortcut-key">Ctrl+R</span>
+                    <span class="shortcut-desc">重新生成回复</span>
+                  </div>
+                </div>
+                <div class="form-hint mt-2" id="shortcutHint">点击右侧按钮后按下组合键（至少含 Ctrl/Alt/Shift/Cmd 之一）。Esc 取消。</div>
+              </div>
+              <div class="form-group">
+                <label class="form-label" for="btnTheme" data-i18n="btnTheme">悬浮按钮主题</label>
+                <select class="form-select" id="btnTheme">
+                  <option value="gradient" data-i18n="themeGradient">品牌紫（默认）</option>
+                  <option value="minimal" data-i18n="themeMinimal">极简黑白</option>
+                  <option value="glass" data-i18n="themeGlass">毛玻璃</option>
+                </select>
+                <div class="theme-preview" id="themePreview" aria-hidden="true">
+                  <div class="theme-preview-label">实时预览</div>
+                  <div class="theme-preview-stage">
+                    <span class="theme-preview-btn" id="themePreviewBtn">
+                      <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
+                      <span>AI</span>
+                    </span>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </details>
+
         </div>
       </div>
 

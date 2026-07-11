@@ -61,6 +61,7 @@ const I18N = {
     pageTitle: 'ChatGenius AI - Settings',
     subtitle: 'Manage your AI personas, knowledge base and preferences',
     tabPersonas: 'AI Personas',
+    tabApi: 'LLM API',
     tabKnowledge: 'Knowledge Base',
     tabSettings: 'Settings',
     tabAccount: 'Account',
@@ -211,6 +212,7 @@ const I18N = {
     pageTitle: 'ChatGenius AI - 设置',
     subtitle: '管理你的 AI 角色、知识库和偏好',
     tabPersonas: 'AI 角色',
+    tabApi: '大模型 API',
     tabKnowledge: '知识库',
     tabSettings: '设置',
     tabAccount: '账户',
@@ -463,6 +465,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const L = I18N[currentLang] || I18N.zh;
     return [
       { id: 'tab-personas', label: L.tabPersonas || 'AI 角色', hint: '切换到角色面板', icon: '👤', action: () => switchTab('personas') },
+      { id: 'tab-api', label: L.tabApi || '大模型 API', hint: '切换到大模型 API 配置', icon: '⚡', action: () => switchTab('api') },
       { id: 'tab-knowledge', label: L.tabKnowledge || '知识库', hint: '切换到知识库', icon: '📚', action: () => switchTab('knowledge') },
       { id: 'tab-settings', label: L.tabSettings || '设置', hint: '切换到设置', icon: '⚙️', action: () => switchTab('settings') },
       { id: 'tab-account', label: L.tabAccount || '账户', hint: '切换到账户', icon: '💳', action: () => switchTab('account') },
@@ -2527,7 +2530,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 去配置按钮（状态栏）
   if (apiStatusConfigBtn) {
     apiStatusConfigBtn.addEventListener('click', () => {
-      switchTab('settings');
+      switchTab('api');
       // 滚动到自定义模型表单
       const apiForm = document.querySelector('.custom-api-form');
       if (apiForm) {
