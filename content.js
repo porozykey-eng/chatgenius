@@ -457,7 +457,7 @@ function createAIButton() {
 
     let themeStyles = '';
     let hoverStyles = '';
-    
+
     switch(theme) {
       case 'glass':
         themeStyles = `
@@ -488,15 +488,56 @@ function createAIButton() {
         `;
         hoverStyles = `box-shadow: 0 4px 16px rgba(0, 0, 0, 0.08); transform: translateY(-1px);`;
         break;
-      case 'gradient':
-      default:
+      case 'aurora':
+        // 极光：深靛蓝 → 青绿渐变 + 微光晕
         themeStyles = `
-          background: linear-gradient(135deg, rgba(124, 58, 237, ${opacity}), rgba(118, 75, 162, ${opacity}));
+          background: linear-gradient(135deg, rgba(67, 97, 238, ${opacity}), rgba(114, 90, 193, ${opacity}) 50%, rgba(32, 182, 170, ${opacity}));
           color: #ffffff;
           border: none;
-          box-shadow: 0 4px 16px rgba(124, 58, 237, ${opacity * 0.4});
+          box-shadow: 0 4px 16px rgba(67, 97, 238, ${opacity * 0.4}), 0 0 24px rgba(32, 182, 170, ${opacity * 0.2});
         `;
-        hoverStyles = `box-shadow: 0 6px 24px rgba(124, 58, 237, ${opacity * 0.5}); transform: translateY(-1px);`;
+        hoverStyles = `box-shadow: 0 6px 24px rgba(67, 97, 238, ${opacity * 0.5}), 0 0 32px rgba(32, 182, 170, ${opacity * 0.3}); transform: translateY(-1px);`;
+        break;
+      case 'sunset':
+        // 日落：橙 → 粉渐变，温暖活力
+        themeStyles = `
+          background: linear-gradient(135deg, rgba(251, 146, 60, ${opacity}), rgba(236, 72, 153, ${opacity}));
+          color: #ffffff;
+          border: none;
+          box-shadow: 0 4px 16px rgba(236, 72, 153, ${opacity * 0.4});
+        `;
+        hoverStyles = `box-shadow: 0 6px 24px rgba(236, 72, 153, ${opacity * 0.5}); transform: translateY(-1px);`;
+        break;
+      case 'ocean':
+        // 海洋：蓝 → 青渐变 + 深度阴影
+        themeStyles = `
+          background: linear-gradient(135deg, rgba(14, 116, 165, ${opacity}), rgba(6, 182, 212, ${opacity}));
+          color: #ffffff;
+          border: none;
+          box-shadow: 0 4px 16px rgba(14, 116, 165, ${opacity * 0.4}), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+        `;
+        hoverStyles = `box-shadow: 0 6px 24px rgba(14, 116, 165, ${opacity * 0.5}), inset 0 1px 0 rgba(255, 255, 255, 0.2); transform: translateY(-1px);`;
+        break;
+      case 'carbon':
+        // 碳纤维：深黑灰 + 金属边框 + 内阴影
+        themeStyles = `
+          background: linear-gradient(145deg, rgba(38, 38, 42, ${opacity}), rgba(22, 22, 26, ${opacity}));
+          color: #e4e4e7;
+          border: 1px solid rgba(82, 82, 91, ${opacity * 0.6});
+          box-shadow: 0 4px 16px rgba(0, 0, 0, ${opacity * 0.4}), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+        `;
+        hoverStyles = `box-shadow: 0 6px 24px rgba(0, 0, 0, ${opacity * 0.5}), inset 0 1px 0 rgba(255, 255, 255, 0.12); transform: translateY(-1px); border-color: rgba(120, 120, 130, ${opacity * 0.8});`;
+        break;
+      case 'gradient':
+      default:
+        // 品牌渐变：深靛蓝 → 辅助紫（与 UI 3.0 品牌色一致）
+        themeStyles = `
+          background: linear-gradient(135deg, rgba(67, 97, 238, ${opacity}), rgba(114, 90, 193, ${opacity}));
+          color: #ffffff;
+          border: none;
+          box-shadow: 0 4px 16px rgba(67, 97, 238, ${opacity * 0.4});
+        `;
+        hoverStyles = `box-shadow: 0 6px 24px rgba(67, 97, 238, ${opacity * 0.5}); transform: translateY(-1px);`;
         break;
     }
 

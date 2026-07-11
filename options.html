@@ -2623,6 +2623,36 @@
       backdrop-filter: blur(20px);
       -webkit-backdrop-filter: blur(20px);
     }
+    .theme-preview-btn.theme-neon {
+      background: rgba(0, 0, 0, 0.9);
+      color: #00ffcc;
+      border: 1px solid rgba(0, 255, 204, 0.5);
+      box-shadow: 0 0 12px rgba(0, 255, 204, 0.3), inset 0 0 12px rgba(0, 255, 204, 0.1);
+    }
+    .theme-preview-btn.theme-aurora {
+      background: linear-gradient(135deg, #4361ee, #725ac1 50%, #20b6aa);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 16px rgba(67, 97, 238, 0.4), 0 0 24px rgba(32, 182, 170, 0.2);
+    }
+    .theme-preview-btn.theme-sunset {
+      background: linear-gradient(135deg, #fb923c, #ec4899);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 16px rgba(236, 72, 153, 0.4);
+    }
+    .theme-preview-btn.theme-ocean {
+      background: linear-gradient(135deg, #0e74a5, #06b6d4);
+      color: #ffffff;
+      border: none;
+      box-shadow: 0 4px 16px rgba(14, 116, 165, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.15);
+    }
+    .theme-preview-btn.theme-carbon {
+      background: linear-gradient(145deg, #26262a, #16161a);
+      color: #e4e4e7;
+      border: 1px solid rgba(82, 82, 91, 0.6);
+      box-shadow: 0 4px 16px rgba(0, 0, 0, 0.4), inset 0 1px 0 rgba(255, 255, 255, 0.08), inset 0 -1px 0 rgba(0, 0, 0, 0.3);
+    }
     .theme-preview-btn svg { width: 14px; height: 14px; }
 
     /* ================================
@@ -3550,7 +3580,12 @@
               <div class="form-group">
                 <label class="form-label" for="btnTheme" data-i18n="btnTheme">悬浮按钮主题</label>
                 <select class="form-select" id="btnTheme">
-                  <option value="gradient" data-i18n="themeGradient">品牌紫（默认）</option>
+                  <option value="gradient" data-i18n="themeGradient">品牌靛蓝（默认）</option>
+                  <option value="aurora" data-i18n="themeAurora">极光渐变</option>
+                  <option value="sunset" data-i18n="themeSunset">日落暖橙</option>
+                  <option value="ocean" data-i18n="themeOcean">海洋深蓝</option>
+                  <option value="carbon" data-i18n="themeCarbon">碳纤维黑</option>
+                  <option value="neon" data-i18n="themeNeon">赛博霓虹</option>
                   <option value="minimal" data-i18n="themeMinimal">极简黑白</option>
                   <option value="glass" data-i18n="themeGlass">毛玻璃</option>
                 </select>
