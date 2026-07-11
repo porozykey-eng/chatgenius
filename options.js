@@ -6,8 +6,8 @@ const API_BASE_URL = 'https://chat.sopie.cc';
 // SYNC: Daily usage limit for free tier - must match across all files
 const DAILY_LIMIT = 50;
 
-// Upgrade URL
-const UPGRADE_URL = 'https://chatgenius.ai/#pricing';
+// Upgrade URL — 指向落地页定价区域
+const UPGRADE_URL = 'https://chat.sopie.cc/#pricing';
 
 // 注意：LICENSE_HMAC_SECRET 已移除 — 客户端密钥本就公开，HMAC 签名无安全价值
 // 防重放改由服务端 timestamp 校验（5分钟窗口）保障

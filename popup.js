@@ -245,7 +245,7 @@ document.addEventListener('DOMContentLoaded', () => {
   // 升级按钮 - 打开官网购买页面
   if (upgradeBtn) {
     upgradeBtn.addEventListener('click', () => {
-      chrome.tabs.create({ url: 'https://chatgenius.ai/#pricing' });
+      chrome.tabs.create({ url: 'https://chat.sopie.cc/#pricing' });
       window.close();
     });
   }
