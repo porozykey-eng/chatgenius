@@ -756,6 +756,128 @@ function insertTextIntoInput(text, platform) {
   return true;
 }
 
+// ---- 打字机效果：逐字插入 + 思考动画 ----
+let _thinkingIndicatorEl = null;
+
+function _showThinkingIndicator(inputEl) {
+  _hideThinkingIndicator();
+  if (!inputEl) return;
+  const rect = inputEl.getBoundingClientRect();
+  const el = document.createElement('div');
+  el.id = 'wa-ai-thinking-indicator';
+  // 定位在输入框上方
+  const bottom = window.innerHeight - rect.top + 10;
+  el.style.cssText = [
+    'position:fixed',
+    'bottom:' + bottom + 'px',
+    'right:24px',
+    'z-index:99999',
+    'display:flex',
+    'align-items:center',
+    'gap:8px',
+    'padding:8px 14px',
+    'background:rgba(67,97,238,0.1)',
+    'border:1px solid rgba(67,97,238,0.3)',
+    'border-radius:20px',
+    'font-size:13px',
+    'font-weight:500',
+    'color:#4361ee',
+    'backdrop-filter:blur(8px)',
+    '-webkit-backdrop-filter:blur(8px)',
+    'box-shadow:0 4px 12px rgba(67,97,238,0.15)',
+    'transition:opacity 0.3s, transform 0.3s',
+    'opacity:0',
+    'transform:translateY(8px)'
+  ].join(';');
+  // spinner + 文字（用 textContent 防 XSS）
+  const spinnerSvg = '<svg class="wa-ai-spin" viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2.5" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 12a9 9 0 1 1-6.219-8.56"></path></svg>';
+  const label = document.createElement('span');
+  label.textContent = detectPlatform() === PLATFORMS.WHATSAPP ? 'AI 思考中' : 'AI thinking';
+  el.innerHTML = spinnerSvg;
+  el.appendChild(label);
+  document.body.appendChild(el);
+  _thinkingIndicatorEl = el;
+  // 触发进场动画
+  void el.offsetWidth;
+  el.style.opacity = '1';
+  el.style.transform = 'translateY(0)';
+}
+
+function _hideThinkingIndicator() {
+  if (_thinkingIndicatorEl) {
+    const el = _thinkingIndicatorEl;
+    el.style.opacity = '0';
+    el.style.transform = 'translateY(8px)';
+    setTimeout(() => { el.remove(); }, 300);
+    _thinkingIndicatorEl = null;
+  }
+}
+
+// 打字机逐字插入（返回 Promise<boolean>）
+async function typewriterInsert(text, platform) {
+  let inputEl = null;
+  if (platform === PLATFORMS.WHATSAPP) {
+    inputEl = document.querySelector('#main footer div[contenteditable="true"][data-tab="10"]') ||
+              document.querySelector('#main footer div[contenteditable="true"]');
+  } else if (platform === PLATFORMS.MESSENGER) {
+    inputEl = document.querySelector('div[contenteditable="true"][role="textbox"]') ||
+              document.querySelector('div[aria-label="Message"][contenteditable="true"]') ||
+              document.querySelector('div[aria-label="Message"]');
+  }
+  if (!inputEl) return false;
+
+  inputEl.focus();
+  _showThinkingIndicator(inputEl);
+
+  // 等待 focus 生效
+  await new Promise(r => setTimeout(r, 120));
+
+  // 清空输入框
+  const selection = window.getSelection();
+  const range = document.createRange();
+  range.selectNodeContents(inputEl);
+  selection.removeAllRanges();
+  selection.addRange(range);
+  selection.deleteFromDocument();
+
+  // 逐字插入（Array.from 支持 emoji 等多字节字符）
+  const chars = Array.from(text);
+  const charDelay = 20; // 每字 20ms（快速但可见）
+
+  for (let i = 0; i < chars.length; i++) {
+    const char = chars[i];
+
+    // 优先 execCommand（触发 WhatsApp React 正确事件链）
+    let inserted = false;
+    try {
+      inserted = document.execCommand('insertText', false, char);
+    } catch (err) {
+      inserted = false;
+    }
+
+    if (!inserted) {
+      // Fallback：Selection API + InputEvent
+      const textNode = document.createTextNode(char);
+      const r = document.createRange();
+      r.selectNodeContents(inputEl);
+      r.collapse(false);
+      r.insertNode(textNode);
+      r.setStartAfter(textNode);
+      r.collapse(true);
+      selection.removeAllRanges();
+      selection.addRange(r);
+      inputEl.dispatchEvent(new InputEvent('input', {
+        bubbles: true, cancelable: true, inputType: 'insertText', data: char
+      }));
+    }
+
+    await new Promise(r => setTimeout(r, charDelay));
+  }
+
+  _hideThinkingIndicator();
+  return true;
+}
+
 // Check if chat is active
 function isChatActive(platform) {
   if (platform === PLATFORMS.WHATSAPP) {
@@ -1862,7 +1984,7 @@ async function _autoGenerateAndInsert() {
 
   showToast('检测到新消息，自动生成回复中...', 'loading', 0);
 
-  chrome.runtime.sendMessage({ action: 'generateReply', context: context }, (response) => {
+  chrome.runtime.sendMessage({ action: 'generateReply', context: context }, async (response) => {
     _autoReplyInProgress = false;
 
     if (chrome.runtime.lastError) {
@@ -1871,14 +1993,21 @@ async function _autoGenerateAndInsert() {
     }
 
     if (response && response.success) {
-      // 直接插入输入框，不弹预览弹窗
-      const success = insertTextIntoInput(response.reply, platform);
-      if (success) {
-        showToast('已自动生成回复，请检查后发送', 'success', 4000);
-      } else {
-        // 插入失败则回退到预览弹窗
+      // 打字机效果逐字插入 + 思考动画
+      showToast('AI 正在输入...', 'loading', 0);
+      try {
+        const success = await typewriterInsert(response.reply, platform);
+        if (success) {
+          showToast('回复已生成，请检查后发送', 'success', 4000);
+        } else {
+          // 插入失败则回退到预览弹窗
+          showPreviewModal(response.reply);
+          showToast('自动插入失败，已打开预览编辑', 'info', 4000);
+        }
+      } catch (err) {
+        _hideThinkingIndicator();
         showPreviewModal(response.reply);
-        showToast('自动插入失败，已打开预览编辑', 'info', 4000);
+        showToast('输入异常，已打开预览编辑', 'info', 4000);
       }
     } else {
       const errMsg = response?.error || '未知错误';
