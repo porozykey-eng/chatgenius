@@ -124,6 +124,7 @@ const I18N = {
     provider: 'Provider',
     apiKey: 'API Key',
     testConnection: 'Test Connection',
+    saveConfig: 'Save Config',
     apiConnected: 'Connected',
     apiDisconnected: 'Not connected',
     apiTesting: 'Testing...',
@@ -280,6 +281,7 @@ const I18N = {
     provider: '提供商',
     apiKey: 'API Key',
     testConnection: '测试连接',
+    saveConfig: '保存配置',
     apiConnected: '已连接',
     apiDisconnected: '未连接',
     apiTesting: '测试中...',
@@ -664,9 +666,9 @@ document.addEventListener('DOMContentLoaded', () => {
     const apiKey = document.getElementById('apiKey')?.value || '';
     const modelName = document.getElementById('modelNameInput')?.value.trim() || '';
 
-    // API 配置保存到 local storage：用户直接填写的 URL / Key / 模型名
-    // apiProvider 保留为 'custom' 作为"已配置"信号，兼容状态栏与 background.js
-    chrome.storage.local.set({ apiProvider: 'custom', apiKey, apiUrl, modelName }, () => {
+    // API 配置已改为通过「保存配置」按钮独立保存，避免自动保存污染 connectionValid 状态
+    // 此处仅做 local.set 以保持兼容（不修改 savedApiFingerprint，不触碰 connectionValid）
+    chrome.storage.local.set({ apiProvider: 'custom' }, () => {
       if (chrome.runtime.lastError) {
         console.error('Local save failed:', chrome.runtime.lastError);
       }
@@ -1990,6 +1992,53 @@ document.addEventListener('DOMContentLoaded', () => {
   }
 
   // Settings page test connection — 卡片模式
+  // 保存 API 配置按钮：独立保存 + 智能状态保持
+  const saveApiBtn = document.getElementById('saveApiBtn');
+  if (saveApiBtn) {
+    saveApiBtn.addEventListener('click', async () => {
+      const zh = currentLang === 'zh';
+      const apiUrl = document.getElementById('apiUrlInput')?.value.trim() || '';
+      const apiKey = document.getElementById('apiKey')?.value.trim() || '';
+      const modelName = document.getElementById('modelNameInput')?.value.trim() || '';
+
+      if (!apiUrl || !apiKey || !modelName) {
+        showToast(zh ? '请完整填写 API 地址、Key 和模型名' : 'Please fill URL, Key and model name', true);
+        return;
+      }
+
+      // 读取已保存的旧配置，判断是否变化
+      const oldConfig = await new Promise(resolve => {
+        chrome.storage.local.get(['apiUrl', 'apiKey', 'modelName', 'savedApiFingerprint'], resolve);
+      });
+      const newFingerprint = apiUrl + '|' + apiKey + '|' + modelName;
+      const oldFingerprint = oldConfig.savedApiFingerprint || '';
+
+      // 保存新配置
+      await new Promise(resolve => {
+        chrome.storage.local.set({
+          apiProvider: 'custom',
+          apiUrl, apiKey, modelName,
+          savedApiFingerprint: newFingerprint
+        }, resolve);
+      });
+
+      // 状态保持逻辑：API 未变 → 保留原 connectionValid；变化 → 清空需重测
+      if (newFingerprint !== oldFingerprint) {
+        // API 变化：清空旧连接状态，避免显示错误的"已连接"
+        await new Promise(resolve => {
+          chrome.storage.sync.set({ connectionValid: null }, resolve);
+        });
+        showToast(zh ? '配置已保存，请点击「测试连接」验证' : 'Config saved. Click "Test Connection" to verify.');
+      } else {
+        // API 未变：保留原状态（已连接则保持已连接）
+        showToast(zh ? '配置已保存（未变化）' : 'Config saved (unchanged)');
+      }
+
+      // 刷新状态栏
+      updateApiStatusBar();
+    });
+  }
+
   if (testApiBtn) {
     testApiBtn.addEventListener('click', () => {
       const url = document.getElementById('apiUrlInput')?.value.trim() || '';
@@ -2334,6 +2383,11 @@ document.addEventListener('DOMContentLoaded', () => {
             if (imported.modelName !== undefined) localFields.modelName = imported.modelName;
             if (imported.apiUrl !== undefined || imported.apiKey !== undefined) {
               localFields.apiProvider = 'custom';
+              // 导入 API 配置后：更新指纹 + 清空旧连接状态（需重新测试）
+              const importedFingerprint = (imported.apiUrl || '') + '|' + (imported.apiKey || '') + '|' + (imported.modelName || '');
+              localFields.savedApiFingerprint = importedFingerprint;
+              // 清空旧 connectionValid（导入的配置需重新测试连接）
+              chrome.storage.sync.set({ connectionValid: null });
             }
 
             const finishImport = () => {
