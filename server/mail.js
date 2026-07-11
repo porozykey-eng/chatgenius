@@ -1,5 +1,7 @@
 // 邮件服务模块 - 用于发票通知等
 // 依赖 nodemailer，需先 npm install nodemailer
+const crypto = require('crypto');
+
 let nodemailer;
 try {
   nodemailer = require('nodemailer');
@@ -124,4 +126,55 @@ async function sendInvoiceIssuedEmail(to, invoice) {
   return sendMail(to, '【ChatGenius】您的电子发票已开具', html, attachments);
 }
 
-module.exports = { sendMail, sendInvoiceIssuedEmail, initTransporter };
+/**
+ * 发送激活码邮件
+ * @param {string} to - 收件人邮箱
+ * @param {object} info - 激活码信息 { activationCode, plan, orderNo, expiresAt }
+ */
+async function sendActivationCodeEmail(to, info) {
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #4361ee; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+        <h2 style="margin: 0;">ChatGenius 激活码</h2>
+      </div>
+      <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+        <p style="color: #374151; font-size: 15px;">您好，感谢您购买 ChatGenius！以下是您的激活码：</p>
+
+        <div style="text-align: center; background: #ffffff; border: 2px dashed #4361ee; border-radius: 8px; padding: 20px; margin: 20px 0;">
+          <div style="font-family: 'Courier New', Courier, monospace; font-size: 28px; font-weight: 700; color: #4361ee; letter-spacing: 2px; word-break: break-all;">${escapeHtml(info.activationCode)}</div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr>
+            <td style="padding: 8px 0; color: #6b7280; width: 100px;">套餐类型</td>
+            <td style="padding: 8px 0; color: #111827; font-weight: 500;">${escapeHtml(info.plan)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #6b7280;">订单号</td>
+            <td style="padding: 8px 0; color: #111827;">${escapeHtml(info.orderNo)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #6b7280;">到期时间</td>
+            <td style="padding: 8px 0; color: #111827;">${escapeHtml(info.expiresAt)}</td>
+          </tr>
+        </table>
+
+        <div style="background: #eff6ff; border-radius: 6px; padding: 16px; margin: 16px 0;">
+          <p style="margin: 0 0 8px 0; color: #1e40af; font-weight: 600; font-size: 14px;">激活步骤：</p>
+          <ol style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.8;">
+            <li>点击浏览器工具栏中的 ChatGenius 扩展图标</li>
+            <li>进入扩展设置页面</li>
+            <li>找到「激活产品」选项</li>
+            <li>将上方激活码粘贴到输入框中并确认</li>
+          </ol>
+        </div>
+
+        <p style="color: #9ca3af; font-size: 13px; margin-top: 24px;">如有疑问，请回复此邮件或联系 support@chatgenius.ai</p>
+      </div>
+    </div>
+  `;
+
+  return sendMail(to, '【ChatGenius】您的激活码', html, []);
+}
+
+module.exports = { sendMail, sendInvoiceIssuedEmail, sendActivationCodeEmail, initTransporter };

@@ -416,11 +416,6 @@ function PaymentModal({
                       <li>粘贴激活码并点击"激活"</li>
                     </ol>
                   </div>
-                  <div className="bg-amber-500/10 border border-amber-500/20 rounded-lg p-3 mb-4 text-left">
-                    <p className="text-xs text-amber-200/90 leading-relaxed">
-                      <span className="font-semibold">📧 邮件提醒：</span>激活码已发送至您的邮箱，若未收到，请检查垃圾邮件夹（Spam Folder）。如有问题请联系客服。
-                    </p>
-                  </div>
                   <button
                     onClick={() => { resetModal(); onClose() }}
                     className="w-full py-3 bg-gradient-to-r from-violet-600 to-purple-600 text-white rounded-xl font-semibold hover:opacity-90 transition-opacity"
@@ -2005,6 +2000,7 @@ function App() {
   const pollTimersRef = useRef<Set<ReturnType<typeof setTimeout>>>(new Set())
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed' | null>(null)
   const [paymentOrderNo, setPaymentOrderNo] = useState('')
+  const [paidActivationCode, setPaidActivationCode] = useState('')
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [qqGroup, setQqGroup] = useState('')
   const [qqGroupLink, setQqGroupLink] = useState('')
@@ -2042,6 +2038,9 @@ function App() {
             const status = await activationService.queryPaymentStatus(pendingOrder, pendingChannel)
             if (status.paid) {
               setPaymentStatus('success')
+              if (status.activationCode) {
+                setPaidActivationCode(status.activationCode)
+              }
               return
             }
             attempts++
@@ -2147,6 +2146,29 @@ function App() {
             <div>
               <p className="font-semibold">支付成功！</p>
               <p className="text-sm text-white/60">订单号：{paymentOrderNo}</p>
+              {paidActivationCode && (
+                <div className="mt-3 p-3 bg-white/5 rounded-lg border border-green-500/20">
+                  <p className="text-xs text-white/60 mb-1">您的激活码（请复制并在扩展中输入）</p>
+                  <div className="flex items-center gap-2">
+                    <p className="text-base font-mono text-green-400 font-bold tracking-wider break-all">{paidActivationCode}</p>
+                    <button
+                      onClick={() => { if (paidActivationCode) navigator.clipboard.writeText(paidActivationCode) }}
+                      className="flex-shrink-0 px-2 py-1 bg-violet-600 hover:bg-violet-700 text-white text-xs rounded transition-colors"
+                    >
+                      复制
+                    </button>
+                  </div>
+                  <div className="mt-2 text-xs text-white/50 leading-relaxed">
+                    <p className="font-semibold text-white/70 mb-1">📌 激活步骤：</p>
+                    <ol className="list-decimal list-inside space-y-0.5">
+                      <li>点击浏览器工具栏的 ChatGenius 扩展图标</li>
+                      <li>选择"设置"或"Options"</li>
+                      <li>在页面底部找到"激活产品"区域</li>
+                      <li>粘贴激活码并点击"激活"</li>
+                    </ol>
+                  </div>
+                </div>
+              )}
               <button
                 onClick={() => setShowInvoiceModal(true)}
                 className="mt-2 text-xs text-blue-400 hover:text-blue-300 transition-colors underline"

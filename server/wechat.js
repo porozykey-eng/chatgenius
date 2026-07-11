@@ -4,6 +4,8 @@ const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
 const { pool } = require('./config');
+const { generateSecureCode, generateBatchId } = require('./admin');
+const { sendActivationCodeEmail } = require('./mail');
 
 const router = express.Router();
 
@@ -169,7 +171,7 @@ const PLAN_SUBJECTS = {
 
 // 创建 Native 支付订单（PC 端扫码支付）
 router.post('/create-order', async (req, res) => {
-  const { orderNo, type } = req.body;
+  const { orderNo, type, email } = req.body;
 
   if (!orderNo || !type) {
     return res.status(400).json({ success: false, error: '参数不完整' });
@@ -231,8 +233,8 @@ router.post('/create-order', async (req, res) => {
     if (data.code_url) {
       // 保存订单到数据库
       await pool.query(
-        'INSERT INTO orders (order_no, plan, price, type, channel, status) VALUES (?, ?, ?, ?, ?, ?)',
-        [orderNo, subject, numAmount, type, 'wechat', 'pending']
+        'INSERT INTO orders (order_no, plan, price, type, channel, status, user_email) VALUES (?, ?, ?, ?, ?, ?, ?)',
+        [orderNo, subject, numAmount, type, 'wechat', 'pending', email || null]
       );
 
       res.json({
@@ -262,7 +264,7 @@ router.get('/query-order/:orderNo', async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT status FROM orders WHERE order_no = ?',
+      'SELECT status, activation_code, type FROM orders WHERE order_no = ?',
       [orderNo]
     );
 
@@ -273,7 +275,12 @@ router.get('/query-order/:orderNo', async (req, res) => {
     const order = rows[0];
     const isPaid = order.status === 'completed';
 
-    res.json({ paid: isPaid, status: order.status });
+    res.json({
+      paid: isPaid,
+      status: order.status,
+      activationCode: isPaid && order.activation_code ? order.activation_code : undefined,
+      type: order.type,
+    });
   } catch (error) {
     console.error('WeChat query order error:', error);
     res.json({ paid: false, error: '查询订单状态失败' });
@@ -340,7 +347,7 @@ router.post('/notify', async (req, res) => {
         await conn.beginTransaction();
 
         const [rows] = await conn.query(
-          'SELECT id, status, price FROM orders WHERE order_no = ? FOR UPDATE',
+          'SELECT id, status, price, type, user_email FROM orders WHERE order_no = ? FOR UPDATE',
           [out_trade_no]
         );
 
@@ -377,8 +384,33 @@ router.post('/notify', async (req, res) => {
           ['completed', new Date(), transaction_id, order.id]
         );
 
+        // 生成激活码（与 admin.js /orders/:orderNo/complete 逻辑一致）
+        const prefixMap = { year: 'YEAR', lifetime: 'PRO' };
+        const prefix = prefixMap[order.type] || 'YEAR';
+        const code = generateSecureCode(prefix);
+        await conn.query(
+          'INSERT INTO activation_codes (code, type, status, batch_id) VALUES (?, ?, ?, ?)',
+          [code, order.type || 'year', 'unused', generateBatchId()]
+        );
+        await conn.query(
+          'UPDATE orders SET activation_code = ? WHERE id = ?',
+          [code, order.id]
+        );
+
         await conn.commit();
         console.log('WeChat order updated:', out_trade_no);
+
+        // 异步发送激活码邮件（不阻塞回调响应）
+        if (order.user_email) {
+          const planName = order.type === 'lifetime' ? '终身版' : '年付版';
+          const expiresAt = order.type === 'lifetime' ? '永久有效' : new Date(Date.now() + 365 * 86400 * 1000).toLocaleDateString('zh-CN');
+          sendActivationCodeEmail(order.user_email, {
+            activationCode: code,
+            plan: planName,
+            orderNo: out_trade_no,
+            expiresAt,
+          }).catch(err => console.error('发送激活码邮件失败:', err.message));
+        }
       } catch (error) {
         if (conn) await conn.rollback();
         console.error('Update wechat order error:', error);

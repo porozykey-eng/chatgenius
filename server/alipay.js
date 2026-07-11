@@ -5,6 +5,8 @@ const path = require('path');
 const crypto = require('crypto');
 const AlipaySDK = require('alipay-sdk').default;
 const { pool } = require('./config');
+const { generateSecureCode, generateBatchId } = require('./admin');
+const { sendActivationCodeEmail } = require('./mail');
 
 const router = express.Router();
 
@@ -207,7 +209,7 @@ const PLAN_SUBJECTS = {
 // 创建支付订单（电脑网站支付 - alipay.trade.page.pay）
 // 返回支付宝支付页面 URL，前端跳转过去完成支付
 router.post('/create-order', async (req, res) => {
-  const { orderNo, type } = req.body;
+  const { orderNo, type, email } = req.body;
 
   if (!orderNo || !type) {
     return res.status(400).json({ success: false, error: '参数不完整' });
@@ -234,8 +236,8 @@ router.post('/create-order', async (req, res) => {
 
     // 保存订单到数据库
     await pool.query(
-      'INSERT INTO orders (order_no, plan, price, type, channel, status) VALUES (?, ?, ?, ?, ?, ?)',
-      [orderNo, subject, numAmount, type, 'alipay', 'pending']
+      'INSERT INTO orders (order_no, plan, price, type, channel, status, user_email) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [orderNo, subject, numAmount, type, 'alipay', 'pending', email || null]
     );
 
     // 支付宝电脑网站支付：使用 pageExec 生成支付表单 HTML（v3 SDK）
@@ -278,22 +280,34 @@ router.get('/query-order/:orderNo', async (req, res) => {
   }
 
   try {
-    const result = await alipaySdk.exec(
-      'alipay.trade.query',
-      {
-        bizContent: {
-          out_trade_no: orderNo,
-        },
-      }
+    // 优先查数据库：已完成的订单直接返回激活码
+    const [rows] = await pool.query(
+      'SELECT status, activation_code, type FROM orders WHERE order_no = ?',
+      [orderNo]
     );
 
-    const isPaid = result.code === '10000' && result.tradeStatus === 'TRADE_SUCCESS';
-    
-    res.json({ 
-      paid: isPaid, 
-      status: result.tradeStatus,
-      code: result.code 
+    if (rows.length > 0) {
+      const order = rows[0];
+      if (order.status === 'completed' && order.activation_code) {
+        return res.json({
+          paid: true,
+          status: 'TRADE_SUCCESS',
+          activationCode: order.activation_code,
+          type: order.type,
+        });
+      }
+      if (order.status === 'completed' && !order.activation_code) {
+        // 订单已完成但无激活码（兼容老数据），尝试查支付宝 API 确认
+      }
+    }
+
+    // 查询支付宝 API
+    const result = await alipaySdk.exec('alipay.trade.query', {
+      bizContent: { out_trade_no: orderNo },
     });
+
+    const isPaid = result.code === '10000' && result.tradeStatus === 'TRADE_SUCCESS';
+    res.json({ paid: isPaid, status: result.tradeStatus, code: result.code });
   } catch (error) {
     console.error('Alipay query order error:', error);
     res.json({ paid: false, error: '查询订单状态失败' });
@@ -345,7 +359,7 @@ router.post('/notify', async (req, res) => {
 
       // 查询订单并验证金额
       const [rows] = await conn.query(
-        'SELECT id, status, price FROM orders WHERE order_no = ? FOR UPDATE',
+        'SELECT id, status, price, type, user_email FROM orders WHERE order_no = ? FOR UPDATE',
         [out_trade_no]
       );
       
@@ -382,9 +396,34 @@ router.post('/notify', async (req, res) => {
         'UPDATE orders SET status = ?, completed_at = ?, alipay_trade_no = ? WHERE id = ?',
         ['completed', new Date(), trade_no, order.id]
       );
-      
+
+      // 生成激活码（与 admin.js /orders/:orderNo/complete 逻辑一致）
+      const prefixMap = { year: 'YEAR', lifetime: 'PRO' };
+      const prefix = prefixMap[order.type] || 'YEAR';
+      const code = generateSecureCode(prefix);
+      await conn.query(
+        'INSERT INTO activation_codes (code, type, status, batch_id) VALUES (?, ?, ?, ?)',
+        [code, order.type || 'year', 'unused', generateBatchId()]
+      );
+      await conn.query(
+        'UPDATE orders SET activation_code = ? WHERE id = ?',
+        [code, order.id]
+      );
+
       await conn.commit();
       console.log('Order updated:', out_trade_no);
+
+      // 异步发送激活码邮件（不阻塞回调响应）
+      if (order.user_email) {
+        const planName = order.type === 'lifetime' ? '终身版' : '年付版';
+        const expiresAt = order.type === 'lifetime' ? '永久有效' : new Date(Date.now() + 365 * 86400 * 1000).toLocaleDateString('zh-CN');
+        sendActivationCodeEmail(order.user_email, {
+          activationCode: code,
+          plan: planName,
+          orderNo: out_trade_no,
+          expiresAt,
+        }).catch(err => console.error('发送激活码邮件失败:', err.message));
+      }
     } catch (error) {
       if (conn) await conn.rollback();
       console.error('Update order error:', error);

@@ -1658,3 +1658,5 @@ router.post('/invoices/:id/reject', requireAdmin, async (req, res) => {
 });
 
 module.exports = router;
+module.exports.generateSecureCode = generateSecureCode;
+module.exports.generateBatchId = generateBatchId;

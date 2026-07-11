@@ -72,12 +72,18 @@ export const activationService = {
 
   // 查询支付状态
   // H5 修复：根据 channel 调用对应渠道端点，避免微信订单走支付宝端点导致查询失败
-  async queryPaymentStatus(orderNo: string, channel: 'alipay' | 'wechat' = 'alipay'): Promise<{ paid: boolean; status?: string; error?: string }> {
+  async queryPaymentStatus(orderNo: string, channel: 'alipay' | 'wechat' = 'alipay'): Promise<{ paid: boolean; status?: string; activationCode?: string; type?: string; error?: string }> {
     try {
       const endpoint = channel === 'wechat' ? '/wechat/query-order/' : '/alipay/query-order/';
       const res = await fetch(`${API_BASE}${endpoint}${encodeURIComponent(orderNo)}`);
       const data = await res.json();
-      return { paid: data.paid, status: data.status, error: data.error };
+      return {
+        paid: data.paid,
+        status: data.status,
+        activationCode: data.activationCode,
+        type: data.type,
+        error: data.error,
+      };
     } catch (err) {
       console.error('Query payment status error:', err);
       return { paid: false, error: '查询失败' };
