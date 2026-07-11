@@ -109,8 +109,8 @@ const I18N = {
     genMode: 'Generation Mode',
     genModeLabel: 'Reply Generation Method',
     genModeManual: 'Manual (click floating icon)',
-    genModeAuto: 'Auto (generate when input focused)',
-    genModeHint: 'Manual: click floating icon to generate; Auto: auto-generate when cursor enters chat input.',
+    genModeAuto: 'Auto (auto-generate on unreplied messages)',
+    genModeHint: 'Auto: auto-generate reply and fill input box when unreplied message detected (will not auto-send); Manual: click floating icon to generate.',
     shortcut: 'Shortcut Key',
     shortcutHint: 'Alt+2 opens quick menu · Ctrl+Enter inserts reply · Ctrl+R regenerates',
     btnTheme: 'Floating Button Theme',
@@ -265,8 +265,8 @@ const I18N = {
     genMode: '生成模式',
     genModeLabel: '回复生成方式',
     genModeManual: '手动生成（点击悬浮图标）',
-    genModeAuto: '自动检索（光标聚焦会话时自动生成）',
-    genModeHint: '手动模式：点击悬浮图标生成回复；自动模式：光标进入会话输入框时自动检索并生成。',
+    genModeAuto: '自动检索（检测到未回复消息自动生成）',
+    genModeHint: '自动模式：检测到客户未回复消息时自动生成回复并填入输入框（不会自动发送）；手动模式：点击悬浮图标生成回复。',
     shortcut: '快捷键',
     shortcutHint: 'Alt+2 打开快捷菜单 · Ctrl+Enter 插入回复 · Ctrl+R 重新生成',
     btnTheme: '悬浮按钮主题',
@@ -658,7 +658,7 @@ document.addEventListener('DOMContentLoaded', () => {
     const tone = document.getElementById('tone')?.value || 'auto';
     const replyLength = document.getElementById('replyLength')?.value || 'auto';
     const btnTheme = document.getElementById('btnTheme')?.value || 'gradient';
-    const generationMode = document.getElementById('generationMode')?.value || 'manual';
+    const generationMode = document.getElementById('generationMode')?.value || 'auto';
     // 用户直接配置：URL + Key + 模型名（不再依赖预设服务商）
     const apiUrl = document.getElementById('apiUrlInput')?.value.trim() || '';
     const apiKey = document.getElementById('apiKey')?.value || '';
@@ -2574,7 +2574,7 @@ document.addEventListener('DOMContentLoaded', () => {
         replyLength: 'auto',
         faqData: [],
         btnTheme: 'gradient',
-        generationMode: 'manual',
+        generationMode: 'auto',
         lang: 'zh',
         licenseType: 'free',
         activatedAt: null
@@ -2600,7 +2600,7 @@ document.addEventListener('DOMContentLoaded', () => {
         updateThemePreview(data.btnTheme || 'gradient');
         // 回填生成模式
         const genModeSelect = document.getElementById('generationMode');
-        if (genModeSelect) genModeSelect.value = data.generationMode || 'manual';
+        if (genModeSelect) genModeSelect.value = data.generationMode || 'auto';
 
         // 回填快捷键录入按钮显示
         if (shortcutRecorder) shortcutRecorder.textContent = data.shortcut || '未设置';

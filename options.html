@@ -3504,10 +3504,10 @@
               <div class="form-group full-width">
                 <label class="form-label" for="generationMode" data-i18n="genModeLabel">回复生成方式</label>
                 <select class="form-select" id="generationMode">
+                  <option value="auto" data-i18n="genModeAuto">自动检索（检测到未回复消息自动生成）</option>
                   <option value="manual" data-i18n="genModeManual">手动生成（点击悬浮图标）</option>
-                  <option value="auto" data-i18n="genModeAuto">自动检索（光标聚焦会话时自动生成）</option>
                 </select>
-                <div class="form-hint mt-2" data-i18n="genModeHint">手动模式：点击悬浮图标生成回复；自动模式：光标进入会话输入框时自动检索并生成。</div>
+                <div class="form-hint mt-2" data-i18n="genModeHint">自动模式：检测到客户未回复消息时自动生成回复并填入输入框（不会自动发送）；手动模式：点击悬浮图标生成回复。</div>
               </div>
             </div>
           </details>

@@ -1778,17 +1778,17 @@ setTimeout(() => {
 
 // Shortcut listener
 let currentShortcut = '';
-let currentGenerationMode = 'manual';
-chrome.storage.sync.get({ shortcut: 'Alt + 1', generationMode: 'manual' }, (data) => {
+let currentGenerationMode = 'auto';
+chrome.storage.sync.get({ shortcut: 'Alt + 1', generationMode: 'auto' }, (data) => {
   currentShortcut = data.shortcut;
-  currentGenerationMode = data.generationMode || 'manual';
+  _applyGenerationMode(data.generationMode || 'auto');
 });
 chrome.storage.onChanged.addListener((changes, namespace) => {
   if (namespace === 'sync' && changes.shortcut) {
     currentShortcut = changes.shortcut.newValue;
   }
   if (namespace === 'sync' && changes.generationMode) {
-    currentGenerationMode = changes.generationMode.newValue || 'manual';
+    _applyGenerationMode(changes.generationMode.newValue || 'auto');
   }
   if (namespace === 'sync' && (changes.btnTheme || changes.btnOpacity)) {
     // Recreate button if theme or opacity changes (pause observer to prevent self-trigger)
@@ -1800,55 +1800,124 @@ chrome.storage.onChanged.addListener((changes, namespace) => {
   }
 });
 
-// ---- 自动模式：光标聚焦会话输入框时自动生成回复 ----
-let _autoModeLastTrigger = 0;
-const _AUTO_MODE_COOLDOWN = 5000; // 冷却 5 秒，防止频繁触发
+// ---- 自动模式：轮询监控未回复消息，自动生成并插入回复 ----
+let _autoReplyLastMsgFingerprint = ''; // 上次处理的对方消息指纹
+let _autoReplyTimer = null;
+let _autoReplyInProgress = false;
+const _AUTO_REPLY_INTERVAL = 8000;   // 轮询间隔 8 秒
+const _AUTO_REPLY_COOLDOWN = 15000;  // 单次生成后冷却 15 秒，避免频繁触发
+let _autoReplyLastTrigger = 0;
 
-function _isChatInputFocused(target) {
-  if (!target || target.nodeType !== Node.ELEMENT_NODE) return false;
-  const platform = detectPlatform();
-  if (!platform) return false;
-  if (platform === PLATFORMS.WHATSAPP) {
-    // WhatsApp 输入框：#main footer 下的 contenteditable
-    const footer = document.querySelector('#main footer');
-    if (!footer) return false;
-    return footer.contains(target) && target.isContentEditable;
+function _getLastIncomingMessage(platform) {
+  const context = getChatContext(platform);
+  if (context.length === 0) return null;
+  // 从末尾往前找最后一条对方消息
+  for (let i = context.length - 1; i >= 0; i--) {
+    if (context[i].role === 'user') {
+      return { message: context[i], index: i, isLast: i === context.length - 1 };
+    }
   }
-  if (platform === PLATFORMS.MESSENGER) {
-    return target.isContentEditable && target.getAttribute('role') === 'textbox';
-  }
-  return false;
+  return null;
 }
 
-function _tryAutoGenerate() {
-  // 仅在自动模式触发
-  if (currentGenerationMode !== 'auto') return;
-  // 预览弹窗打开时不触发
+function _hasUnrepliedMessage(platform) {
+  const last = _getLastIncomingMessage(platform);
+  if (!last) return false;
+  // 最后一条消息必须是对方发的（未回复状态）
+  if (!last.isLast) return false;
+  // 消息指纹变化才算新消息（避免同一消息重复触发）
+  const fingerprint = last.message.content;
+  if (fingerprint === _autoReplyLastMsgFingerprint) return false;
+  return true;
+}
+
+async function _autoGenerateAndInsert() {
+  if (_autoReplyInProgress) return;
+  const platform = detectPlatform();
+  if (!platform) return;
+  if (!_hasUnrepliedMessage(platform)) return;
+
+  // 预览弹窗打开时不触发（避免打断用户编辑）
   const modal = document.getElementById('wa-ai-preview-modal');
   if (modal && modal.style.display !== 'none') return;
-  // 按钮禁用/隐藏时不触发
-  const btn = document.getElementById('wa-ai-reply-btn');
-  if (!btn || btn.disabled || btn.style.display === 'none') return;
+
   // 冷却期内不触发
   const now = Date.now();
-  if (now - _autoModeLastTrigger < _AUTO_MODE_COOLDOWN) return;
-  _autoModeLastTrigger = now;
-  // 合成事件触发 handleGenerateReply
-  const fakeEvent = {
-    preventDefault: () => {},
-    stopPropagation: () => {},
-    currentTarget: btn
-  };
-  handleGenerateReply(fakeEvent);
+  if (now - _autoReplyLastTrigger < _AUTO_REPLY_COOLDOWN) return;
+
+  _autoReplyInProgress = true;
+  _autoReplyLastTrigger = now;
+
+  const context = getChatContext(platform);
+  if (context.length === 0) {
+    _autoReplyInProgress = false;
+    return;
+  }
+
+  // 记录消息指纹（无论成功失败都标记，避免重复触发）
+  const lastIncoming = _getLastIncomingMessage(platform);
+  if (lastIncoming) {
+    _autoReplyLastMsgFingerprint = lastIncoming.message.content;
+  }
+
+  showToast('检测到新消息，自动生成回复中...', 'loading', 0);
+
+  chrome.runtime.sendMessage({ action: 'generateReply', context: context }, (response) => {
+    _autoReplyInProgress = false;
+
+    if (chrome.runtime.lastError) {
+      showToast('自动回复失败: ' + chrome.runtime.lastError.message, 'error', 4000);
+      return;
+    }
+
+    if (response && response.success) {
+      // 直接插入输入框，不弹预览弹窗
+      const success = insertTextIntoInput(response.reply, platform);
+      if (success) {
+        showToast('已自动生成回复，请检查后发送', 'success', 4000);
+      } else {
+        // 插入失败则回退到预览弹窗
+        showPreviewModal(response.reply);
+        showToast('自动插入失败，已打开预览编辑', 'info', 4000);
+      }
+    } else {
+      const errMsg = response?.error || '未知错误';
+      showToast('自动生成失败: ' + errMsg, 'error', 5000);
+    }
+  });
 }
 
-// focus 事件用 capture 阶段监听，确保在框架处理前捕获
-document.addEventListener('focus', (e) => {
-  if (_isChatInputFocused(e.target)) {
-    // 延迟 300ms 避免切聊天瞬间触发，等 DOM 稳定
-    setTimeout(_tryAutoGenerate, 300);
+function _startAutoReplyPolling() {
+  if (_autoReplyTimer) return;
+  _autoReplyTimer = setInterval(() => {
+    if (currentGenerationMode !== 'auto') return;
+    const platform = detectPlatform();
+    if (!platform) return;
+    if (!isChatActive(platform)) return;
+    _autoGenerateAndInsert();
+  }, _AUTO_REPLY_INTERVAL);
+}
+
+function _stopAutoReplyPolling() {
+  if (_autoReplyTimer) {
+    clearInterval(_autoReplyTimer);
+    _autoReplyTimer = null;
   }
-}, true);
+}
+
+// 切换模式时启停轮询
+function _applyGenerationMode(mode) {
+  currentGenerationMode = mode;
+  if (mode === 'auto') {
+    _autoReplyLastMsgFingerprint = ''; // 重置指纹，切回自动模式时重新检测
+    _startAutoReplyPolling();
+  } else {
+    _stopAutoReplyPolling();
+  }
+}
+
+// storage.onChanged 中模式变更时调用
+// （在下方 storage.onChanged 监听器里调用 _applyGenerationMode）
 
 document.addEventListener('keydown', (e) => {
   if (!currentShortcut) return;
