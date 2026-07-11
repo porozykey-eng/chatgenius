@@ -1,4 +1,7 @@
 
+// SYNC: Daily usage limit for free tier - must match across all files (background.js, popup.js, options.js)
+const DAILY_LIMIT = 50;
+
 function injectFonts() {
   if (!document.getElementById('wa-ai-fonts')) {
     const link = document.createElement('link');
@@ -919,7 +922,7 @@ function handleGenerateReply(e) {
   // Check remaining daily quota before generating
   chrome.storage.sync.get(['licenseType'], (licenseResult) => {
   chrome.storage.local.get(['dailyReplyCount'], (usageData) => {
-    const dailyLimit = 20;
+    const dailyLimit = DAILY_LIMIT;
     const currentCount = usageData.dailyReplyCount || 0;
     const isPro = licenseResult && licenseResult.licenseType && licenseResult.licenseType !== 'free';
 
@@ -1966,6 +1969,20 @@ async function _autoGenerateAndInsert() {
   // 冷却期内不触发
   const now = Date.now();
   if (now - _autoReplyLastTrigger < _AUTO_REPLY_COOLDOWN) return;
+
+  // 前置配额检查：免费用户超额则不触发，避免无谓的 API 调用
+  const usageData = await new Promise(resolve => {
+    chrome.storage.sync.get(['licenseType'], (syncData) => {
+      chrome.storage.local.get(['dailyReplyCount'], (localData) => {
+        resolve({ licenseType: syncData.licenseType, dailyReplyCount: localData.dailyReplyCount || 0 });
+      });
+    });
+  });
+  const isPro = usageData.licenseType && usageData.licenseType !== 'free';
+  if (!isPro && usageData.dailyReplyCount >= DAILY_LIMIT) {
+    showToast('今日免费配额已用完（' + DAILY_LIMIT + ' 次），请升级 Pro 版', 'error', 5000);
+    return;
+  }
 
   _autoReplyInProgress = true;
   _autoReplyLastTrigger = now;
