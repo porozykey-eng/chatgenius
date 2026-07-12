@@ -2906,13 +2906,16 @@ document.addEventListener('DOMContentLoaded', () => {
         if (chrome.runtime.lastError) {
           console.error('Load settings error:', chrome.runtime.lastError);
         }
-        currentLang = data.lang || 'zh';
+        try {
+        // 语言合法性校验（防止 storage 中残留非法值导致 I18N[currentLang] 为 undefined）
+        currentLang = (data.lang === 'en' || data.lang === 'zh') ? data.lang : 'zh';
         applyI18n();
 
-        personas = data.personas || [];
+        // 数组类型校验（防止脏数据导致 forEach 抛错）
+        personas = Array.isArray(data.personas) ? data.personas : [];
         activePersonaId = data.activePersonaId;
         if (personas.length > 0 && !activePersonaId) activePersonaId = personas[0].id;
-        faqData = data.faqData || [];
+        faqData = Array.isArray(data.faqData) ? data.faqData : [];
 
         // Set form values
         const toneSelect = document.getElementById('tone');
@@ -2933,7 +2936,7 @@ document.addEventListener('DOMContentLoaded', () => {
         // 加载 models-config.json（保留兼容），异步拉取远程推荐配置
         loadApiProviders().then(() => {
           fetchRemoteProviderConfig();
-        });
+        }).catch(() => { /* 非关键路径，忽略 */ });
 
         // 填充自定义模型表单（URL / Key / 模型名 —— 用户直接配置）
         const apiUrlInputField = document.getElementById('apiUrlInput');
@@ -2958,19 +2961,24 @@ document.addEventListener('DOMContentLoaded', () => {
         if (localData.licenseCode && data.licenseType && data.licenseType !== 'free') {
           if (activationSuccess) activationSuccess.style.display = 'flex';
           if (licenseTypeDisplay) {
-            const typeNames = { 'lifetime': I18N[currentLang].statProLifetime, 'year': I18N[currentLang].statProYear };
+            const L = I18N[currentLang] || I18N['zh'];
+            const typeNames = { 'lifetime': L.statProLifetime, 'year': L.statProYear };
             licenseTypeDisplay.textContent = typeNames[data.licenseType] || data.licenseType;
           }
         }
 
         updateStats();
         updateFreeTierNotification();
-
-        // 移除骨架屏，显示真实内容
-        const skeleton = document.getElementById('skeletonScreen');
-        const container = document.querySelector('.page-container');
-        if (skeleton) skeleton.classList.add('hidden');
-        if (container) container.classList.add('loaded');
+        } catch (err) {
+          // 任何子函数抛错都不能让骨架屏卡住
+          console.error('loadSettings 内部错误:', err);
+        } finally {
+          // 无论是否出错，都移除骨架屏显示真实内容
+          const skeleton = document.getElementById('skeletonScreen');
+          const container = document.querySelector('.page-container');
+          if (skeleton) skeleton.classList.add('hidden');
+          if (container) container.classList.add('loaded');
+        }
 
         updateApiStatusBar();
         updateDashboard();
