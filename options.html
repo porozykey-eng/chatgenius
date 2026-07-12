@@ -408,9 +408,7 @@
        Skeleton Screen
        ================================ */
     .skeleton-screen {
-      max-width: 1180px;
-      margin: 0 auto;
-      padding: var(--spacing-10) var(--spacing-8);
+      display: none; /* 默认隐藏骨架屏，避免 JS 失败时卡死页面 */
     }
 
     .skeleton-block {
@@ -501,12 +499,10 @@
       display: flex;
       gap: var(--spacing-6);
       align-items: flex-start;
-      opacity: 0;
-      transition: opacity var(--duration-slow) var(--ease-out);
     }
 
     .page-container.loaded {
-      opacity: 1;
+      /* 兼容旧逻辑，已不再需要 opacity 控制 */
     }
 
     /* Sidebar — sticky 侧边导航 */
