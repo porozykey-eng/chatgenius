@@ -12,6 +12,14 @@ const UPGRADE_URL = 'https://chat.sopie.cc/#pricing';
 // 注意：LICENSE_HMAC_SECRET 已移除 — 客户端密钥本就公开，HMAC 签名无安全价值
 // 防重放改由服务端 timestamp 校验（5分钟窗口）保障
 
+// === 骨架屏兜底：3秒后强制隐藏，防止任何 JS 错误导致页面卡死 ===
+setTimeout(() => {
+  const _sk = document.getElementById('skeletonScreen');
+  const _ct = document.querySelector('.page-container');
+  if (_sk) _sk.classList.add('hidden');
+  if (_ct) _ct.classList.add('loaded');
+}, 3000);
+
 // Chrome API compatibility layer for standalone preview
 if (typeof chrome === 'undefined' || !chrome.storage) {
   const _mockStorage = {};
@@ -411,7 +419,7 @@ const PERSONA_TEMPLATES = [
 // ================================
 // Main
 // ================================
-document.addEventListener('DOMContentLoaded', () => {
+function initApp() {
   // ---- Theme Toggle ----
   function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -3011,4 +3019,11 @@ document.addEventListener('DOMContentLoaded', () => {
   });
 
   startIntervals();
-});
+}
+
+// 兼容 DOMContentLoaded 已触发的情况（script 在 body 末尾时 DOM 可能已就绪）
+if (document.readyState === 'loading') {
+  document.addEventListener('DOMContentLoaded', initApp);
+} else {
+  initApp();
+}
