@@ -614,6 +614,7 @@ document.addEventListener('DOMContentLoaded', () => {
   let deletedFaqUndo = null; // { items: [], timer }
   let deletedPersonaUndo = null; // { item, index, wasActive, timer }
   let modelsConfig = null; // Loaded from models-config.json
+  let cachedApiConfig = { apiUrl: '', modelName: '' }; // 缓存 API 配置，供同步函数使用
 
   // ---- XSS Protection ----
   function escapeHtml(str) {
@@ -1071,7 +1072,7 @@ document.addEventListener('DOMContentLoaded', () => {
       const meta = document.createElement('div');
       meta.className = 'persona-meta';
       const promptChars = (persona.prompt || '').length;
-      const modelInfo = data.apiUrl ? (data.modelName || 'Custom') : 'Default';
+      const modelInfo = cachedApiConfig.apiUrl ? (cachedApiConfig.modelName || 'Custom') : 'Default';
       meta.innerHTML =
         '<span class="persona-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Prompt ' + promptChars + ' 字</span>' +
         '<span class="persona-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> ' + escapeHtml(modelInfo) + '</span>';
@@ -2090,6 +2091,10 @@ document.addEventListener('DOMContentLoaded', () => {
 
       // 刷新状态栏
       updateApiStatusBar();
+
+      // 更新缓存，供 renderPersonas 等同步函数使用
+      cachedApiConfig = { apiUrl, modelName };
+      renderPersonas();
     });
   }
 
@@ -2936,6 +2941,9 @@ document.addEventListener('DOMContentLoaded', () => {
         if (apiUrlInputField) apiUrlInputField.value = localData.apiUrl || '';
         if (modelNameInputField) modelNameInputField.value = localData.modelName || '';
         if (apiKeyInput) apiKeyInput.value = localData.apiKey || '';
+
+        // 缓存 API 配置，供 renderPersonas 等同步函数使用
+        cachedApiConfig = { apiUrl: localData.apiUrl || '', modelName: localData.modelName || '' };
 
         // Add change listeners for auto-save
         [toneSelect, replyLengthSelect, btnThemeSelect].forEach(el => {
