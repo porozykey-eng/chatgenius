@@ -213,7 +213,7 @@ async function forceLogout(reason) {
     if (chrome.notifications) {
       chrome.notifications.create({
         type: 'basic',
-        iconUrl: 'icon128.png',
+        iconUrl: 'icons/icon128.png',
         title: '许可证已失效',
         message: reason || '您的许可证已在其他设备激活，本设备已自动退出登录。',
         priority: 2
