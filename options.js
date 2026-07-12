@@ -1067,24 +1067,34 @@ document.addEventListener('DOMContentLoaded', () => {
       header.appendChild(info);
       header.appendChild(actions);
 
-      // Click card to toggle prompt
-      card.addEventListener('click', () => {
-        const promptInput = card.querySelector('.persona-prompt-input');
-        if (promptInput) {
-          promptInput.classList.toggle('persona-prompt-collapsed');
-        }
-      });
+      // 摘要信息（折叠态可见）
+      const meta = document.createElement('div');
+      meta.className = 'persona-meta';
+      const promptChars = (persona.prompt || '').length;
+      const modelInfo = data.apiUrl ? (data.modelName || 'Custom') : 'Default';
+      meta.innerHTML =
+        '<span class="persona-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 2H6a2 2 0 0 0-2 2v16a2 2 0 0 0 2 2h12a2 2 0 0 0 2-2V8z"/><polyline points="14 2 14 8 20 8"/></svg> Prompt ' + promptChars + ' 字</span>' +
+        '<span class="persona-meta-item"><svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg> ' + escapeHtml(modelInfo) + '</span>';
 
-      // Prompt label + textarea
+      // 可折叠的 Prompt 编辑区
+      const promptSection = document.createElement('div');
+      promptSection.className = 'persona-prompt-section';
+
       const promptLabel = document.createElement('label');
       promptLabel.className = 'persona-prompt-label';
       promptLabel.textContent = currentLang === 'zh' ? '系统提示词' : 'System Prompt';
 
       const promptInput = document.createElement('textarea');
-      promptInput.className = 'persona-prompt-input' + (!isActive ? ' persona-prompt-collapsed' : '');
+      promptInput.className = 'persona-prompt-input';
       promptInput.placeholder = I18N[currentLang].personaPromptPlaceholder || 'System Prompt...';
       promptInput.value = persona.prompt;
-      promptInput.addEventListener('input', (e) => { personas[index].prompt = e.target.value; scheduleSave(); });
+      promptInput.addEventListener('input', (e) => {
+        personas[index].prompt = e.target.value;
+        // 实时更新字数
+        const metaItem = meta.querySelector('.persona-meta-item');
+        if (metaItem) metaItem.innerHTML = metaItem.innerHTML.replace(/\d+ 字/, e.target.value.length + ' 字');
+        scheduleSave();
+      });
       promptInput.addEventListener('click', (e) => e.stopPropagation());
       promptInput.addEventListener('mousedown', (e) => e.stopPropagation());
 
@@ -1104,12 +1114,32 @@ document.addEventListener('DOMContentLoaded', () => {
         });
       }
 
+      promptSection.appendChild(promptLabel);
+      promptSection.appendChild(promptInput);
+      promptSection.appendChild(toggleBtn);
+
+      // 展开/收起按钮
+      const expandBtn = document.createElement('button');
+      expandBtn.className = 'persona-expand-btn';
+      expandBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg> ' +
+        (currentLang === 'zh' ? '展开编辑' : 'Expand');
+      expandBtn.addEventListener('click', (e) => {
+        e.stopPropagation();
+        const isExpanded = promptSection.classList.toggle('expanded');
+        expandBtn.classList.toggle('expanded', isExpanded);
+        expandBtn.innerHTML = '<svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg> ' +
+          (isExpanded ? (currentLang === 'zh' ? '收起' : 'Collapse') : (currentLang === 'zh' ? '展开编辑' : 'Expand'));
+      });
+
       card.appendChild(header);
-      card.appendChild(promptLabel);
-      card.appendChild(promptInput);
-      card.appendChild(toggleBtn);
+      card.appendChild(meta);
+      card.appendChild(promptSection);
+      card.appendChild(expandBtn);
       personaList.appendChild(card);
     });
+
+    // 更新 Dashboard 信息卡
+    updateDashboard();
   }
 
   // Add persona
@@ -2738,6 +2768,47 @@ document.addEventListener('DOMContentLoaded', () => {
     }
   }
 
+  // === Dashboard 信息卡数据填充 ===
+  function updateDashboard() {
+    // 当前 AI 角色
+    const dashPersona = document.getElementById('dashCurrentPersona');
+    if (dashPersona) {
+      const active = personas.find(p => p.id === activePersonaId);
+      dashPersona.textContent = active ? (active.name || 'Unnamed') : 'None';
+    }
+
+    // 模型状态
+    const dashModel = document.getElementById('dashModelName');
+    const dashModelStatus = document.getElementById('dashModelStatus');
+    if (dashModel && dashModelStatus) {
+      chrome.storage.local.get(['apiKey', 'apiUrl', 'modelName'], (data) => {
+        if (chrome.runtime.lastError) return;
+        if (data.apiKey && data.apiUrl) {
+          dashModel.textContent = data.modelName || 'Custom';
+          chrome.storage.sync.get(['connectionValid'], (syncData) => {
+            if (syncData.connectionValid === true) {
+              dashModelStatus.innerHTML = '<span class="status-dot online"></span><span>Online</span>';
+            } else {
+              dashModelStatus.innerHTML = '<span class="status-dot idle"></span><span>未测试</span>';
+            }
+          });
+        } else {
+          dashModel.textContent = '未配置';
+          dashModelStatus.innerHTML = '<span class="status-dot offline"></span><span>未连接</span>';
+        }
+      });
+    }
+
+    // 知识库统计
+    const dashKnowledge = document.getElementById('dashKnowledgeCount');
+    const dashDocs = document.getElementById('dashKnowledgeDocs');
+    if (dashKnowledge && dashDocs) {
+      const faqCount = (faqData || []).length;
+      dashKnowledge.textContent = faqCount > 0 ? '1 个知识库' : '0 个知识库';
+      dashDocs.textContent = faqCount + ' Documents';
+    }
+  }
+
   function updateApiStatusBar() {
     if (!apiStatusBar) return;
     chrome.storage.local.get(['apiKey', 'apiUrl', 'modelName'], (data) => {
@@ -2894,6 +2965,7 @@ document.addEventListener('DOMContentLoaded', () => {
         if (container) container.classList.add('loaded');
 
         updateApiStatusBar();
+        updateDashboard();
       });
     });
   }

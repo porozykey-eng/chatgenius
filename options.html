@@ -192,6 +192,16 @@
       --preview-btn-glass-border: rgba(255, 255, 255, 0.18);
       --preview-btn-glass-shadow: 0 4px 24px rgba(0, 0, 0, 0.15);
 
+      /* === UI 3.1 升级：Hero + Dashboard + 卡片增强 === */
+      --bg-page: #F8FAFC;
+      --bg-hero-gradient: linear-gradient(180deg, #FFFFFF 0%, #F5F9FF 100%);
+      --bg-card-hover: #FAFBFF;
+      --border-card: #ECEEF4;
+      --shadow-card: 0 4px 20px rgba(0, 0, 0, 0.04);
+      --shadow-card-hover: 0 8px 30px rgba(67, 97, 238, 0.10);
+      --radius-card: 16px;
+      --hero-height: 140px;
+
       /* 强调色背景上的白色文字（建议 12：亮暗模式均为白色） */
       --text-on-accent: #ffffff;
     }
@@ -545,8 +555,8 @@
       font-family: var(--font-sans);
       cursor: pointer;
       text-align: left;
-      transition: background var(--duration-fast) var(--ease-out),
-                  color var(--duration-fast) var(--ease-out),
+      transition: background var(--duration-base) var(--ease-out),
+                  color var(--duration-base) var(--ease-out),
                   transform var(--duration-fast) var(--ease-out);
       white-space: nowrap;
     }
@@ -565,9 +575,9 @@
       transition: transform var(--duration-base) var(--ease-spring);
     }
 
-    .nav-item:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
+    .nav-item:hover:not(.active) {
+      background: var(--accent-light);
+      color: var(--accent);
     }
 
     .nav-item:active {
@@ -619,7 +629,94 @@
       flex: 1;
       min-width: 0;
       max-width: 880px;
+      background: var(--bg-page);
     }
+
+    /* === Hero Header === */
+    .hero-header {
+      background: var(--bg-hero-gradient);
+      border-radius: var(--radius-card);
+      padding: 32px 32px 28px;
+      margin-bottom: 24px;
+      border: 1px solid var(--border-card);
+      position: relative;
+      overflow: hidden;
+    }
+    .hero-header::after {
+      content: '';
+      position: absolute;
+      right: -40px;
+      top: -40px;
+      width: 200px;
+      height: 200px;
+      background: radial-gradient(circle, rgba(67, 97, 238, 0.06) 0%, transparent 70%);
+      pointer-events: none;
+    }
+    .hero-title {
+      font-size: 28px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin: 0 0 6px 0;
+      letter-spacing: -0.02em;
+    }
+    .hero-subtitle {
+      font-size: 14px;
+      color: var(--text-secondary);
+      margin: 0;
+    }
+
+    /* === Dashboard 信息卡 === */
+    .dashboard-cards {
+      display: grid;
+      grid-template-columns: repeat(3, 1fr);
+      gap: 16px;
+      margin-bottom: 24px;
+    }
+    .dashboard-card {
+      background: var(--bg-elevated);
+      border: 1px solid var(--border-card);
+      border-radius: var(--radius-card);
+      padding: 20px;
+      transition: transform var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out);
+      cursor: default;
+    }
+    .dashboard-card:hover {
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card-hover);
+    }
+    .dashboard-card-label {
+      font-size: 12px;
+      font-weight: 600;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.06em;
+      margin-bottom: 8px;
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .dashboard-card-value {
+      font-size: 18px;
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .dashboard-card-status {
+      font-size: 13px;
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      gap: 6px;
+    }
+    .status-dot {
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      flex-shrink: 0;
+    }
+    .status-dot.online { background: #22C55E; box-shadow: 0 0 0 3px rgba(34, 197, 94, 0.15); }
+    .status-dot.offline { background: #EF4444; box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.15); }
+    .status-dot.idle { background: #F59E0B; box-shadow: 0 0 0 3px rgba(245, 158, 11, 0.15); }
 
     /* ================================
        Header — Sticky 玻璃态 + 品牌 Logo + 搜索框
@@ -1012,7 +1109,7 @@
     }
 
     .panel-title {
-      font-size: var(--font-size-lg);
+      font-size: 20px;
       font-weight: 600;
       letter-spacing: -0.01em;
       color: var(--text-primary);
@@ -1068,10 +1165,10 @@
     /* Persona Card */
     .persona-card {
       background: var(--bg-elevated);
-      border-radius: var(--radius-md);
-      padding: var(--card-pad-md);
-      border: 1px solid var(--border-default);
-      box-shadow: var(--elevation-2);
+      border-radius: var(--radius-card);
+      padding: var(--card-pad-lg);
+      border: 1px solid var(--border-card);
+      box-shadow: var(--shadow-card);
       transition: border-color var(--duration-base) var(--ease-out), box-shadow var(--duration-base) var(--ease-out), transform var(--duration-base) var(--ease-out);
       position: relative;
       overflow: hidden;
@@ -1089,8 +1186,9 @@
     }
 
     .persona-card:hover {
-      border-color: var(--accent);
-      box-shadow: var(--elevation-2);
+      transform: translateY(-2px);
+      box-shadow: var(--shadow-card-hover);
+      border-color: var(--accent-200);
     }
 
     .persona-card:active {
@@ -1099,11 +1197,25 @@
 
     .persona-card.active {
       border-color: var(--accent);
-      background: var(--accent-light);
+      background: linear-gradient(135deg, var(--accent-light) 0%, var(--bg-elevated) 40%);
+      box-shadow: 0 4px 20px rgba(67, 97, 238, 0.08);
     }
 
     .persona-card.active::before {
       background: var(--gradient-brand);
+    }
+    .persona-card.active::after {
+      content: '✓ 当前使用';
+      position: absolute;
+      top: 12px;
+      right: 12px;
+      font-size: 11px;
+      font-weight: 600;
+      color: var(--accent);
+      background: var(--accent-light);
+      padding: 3px 10px;
+      border-radius: var(--radius-full);
+      border: 1px solid var(--accent-200);
     }
 
     .persona-card-header {
@@ -1313,6 +1425,67 @@
       border-color: var(--success);
       color: var(--success);
       cursor: default;
+    }
+
+    /* 角色卡片摘要信息（折叠态） */
+    .persona-meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      margin-top: 8px;
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    .persona-meta-item {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+    .persona-meta-item svg {
+      width: 12px;
+      height: 12px;
+      opacity: 0.6;
+    }
+
+    /* 角色卡片展开/折叠动画 */
+    .persona-prompt-section {
+      max-height: 0;
+      overflow: hidden;
+      transition: max-height 0.3s var(--ease-smooth), opacity 0.2s var(--ease-out);
+      opacity: 0;
+    }
+    .persona-prompt-section.expanded {
+      max-height: 600px;
+      opacity: 1;
+    }
+    
+    .persona-expand-btn {
+      width: 100%;
+      margin-top: 12px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      border: 1px solid var(--border-subtle);
+      background: transparent;
+      color: var(--text-secondary);
+      font-size: 13px;
+      font-weight: 500;
+      cursor: pointer;
+      transition: all var(--duration-fast) var(--ease-out);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      gap: 6px;
+    }
+    .persona-expand-btn:hover {
+      background: var(--bg-hover);
+      border-color: var(--accent-200);
+      color: var(--accent);
+    }
+    .persona-expand-btn svg {
+      transition: transform var(--duration-base) var(--ease-out);
+    }
+    .persona-expand-btn.expanded svg {
+      transform: rotate(180deg);
     }
 
     .persona-actions-row {
@@ -2219,6 +2392,38 @@
 
     .btn-secondary:active {
       transform: scale(0.97);
+    }
+
+    /* 按钮层级优化 */
+    .btn-primary {
+      background: var(--accent);
+      color: var(--text-on-accent);
+      border: 1px solid var(--accent);
+      box-shadow: 0 2px 8px rgba(67, 97, 238, 0.2);
+    }
+    .btn-primary:hover {
+      background: var(--accent-hover);
+      border-color: var(--accent-hover);
+      transform: translateY(-1px);
+      box-shadow: 0 4px 12px rgba(67, 97, 238, 0.3);
+    }
+    .btn-secondary {
+      background: var(--bg-elevated);
+      color: var(--text-primary);
+      border: 1px solid var(--border-default);
+    }
+    .btn-secondary:hover {
+      background: var(--bg-hover);
+      border-color: var(--border-strong);
+    }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+      border: 1px solid transparent;
+    }
+    .btn-ghost:hover {
+      background: var(--bg-hover);
+      color: var(--text-primary);
     }
 
     .btn-destructive {
@@ -3368,6 +3573,49 @@
 
     <!-- Main Content -->
     <main class="main-content">
+      <!-- Hero Header -->
+      <div class="hero-header">
+        <h1 class="hero-title">ChatGenius AI</h1>
+        <p class="hero-subtitle">管理 AI 角色、模型与知识库</p>
+      </div>
+
+      <!-- Dashboard 信息卡 -->
+      <div class="dashboard-cards">
+        <div class="dashboard-card">
+          <div class="dashboard-card-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"/></svg>
+            当前 AI
+          </div>
+          <div class="dashboard-card-value" id="dashCurrentPersona">Default</div>
+          <div class="dashboard-card-status">
+            <span class="status-dot online"></span>
+            <span>正在使用</span>
+          </div>
+        </div>
+        <div class="dashboard-card">
+          <div class="dashboard-card-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 16V8a2 2 0 0 0-1-1.73l-7-4a2 2 0 0 0-2 0l-7 4A2 2 0 0 0 3 8v8a2 2 0 0 0 1 1.73l7 4a2 2 0 0 0 2 0l7-4A2 2 0 0 0 21 16z"/></svg>
+            模型
+          </div>
+          <div class="dashboard-card-value" id="dashModelName">未配置</div>
+          <div class="dashboard-card-status" id="dashModelStatus">
+            <span class="status-dot offline"></span>
+            <span>未连接</span>
+          </div>
+        </div>
+        <div class="dashboard-card">
+          <div class="dashboard-card-label">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M4 19.5A2.5 2.5 0 0 1 6.5 17H20"/><path d="M6.5 2H20v20H6.5A2.5 2.5 0 0 1 4 19.5v-15A2.5 2.5 0 0 1 6.5 2z"/></svg>
+            知识库
+          </div>
+          <div class="dashboard-card-value" id="dashKnowledgeCount">0 个知识库</div>
+          <div class="dashboard-card-status">
+            <span class="status-dot idle"></span>
+            <span id="dashKnowledgeDocs">0 Documents</span>
+          </div>
+        </div>
+      </div>
+
       <!-- API Status Bar - 顶部 API 状态提醒 -->
       <div id="apiStatusBar" class="api-status-bar hidden">
         <div class="api-status-left">
@@ -3419,7 +3667,7 @@
 
             <div class="item-list" id="personaList"></div>
             <div class="persona-actions-row">
-              <button class="btn btn-secondary" type="button" id="addPersonaBtn" data-i18n="addPersona">+ 添加角色</button>
+              <button class="btn btn-primary" type="button" id="addPersonaBtn" data-i18n="addPersona">+ 添加角色</button>
               <button class="btn btn-secondary" type="button" id="templateLibraryBtn">
                 <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
                 <span data-i18n="templateLibrary">模板库</span>
