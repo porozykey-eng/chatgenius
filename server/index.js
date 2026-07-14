@@ -172,24 +172,23 @@ app.use(express.static(landingPath, {
 }));
 
 // extension.zip 必须实时刷新，禁止缓存（确保用户下载到最新版本插件）
-// 优先从 public 目录读取（git 跟踪，始终存在），避免依赖 dist 构建产物
-// 82KB 小文件直接读入内存缓存，避免每次请求的磁盘 I/O 和 sendFile 开销
+// 仅从 public 目录读取（git 跟踪，始终存在），不读 dist 构建产物
+// 内存缓存 + mtime 校验：文件更新后自动重新加载
 const publicZipPath = path.join(__dirname, '..', 'landing-page', 'public', 'extension.zip');
-const distZipPath = path.join(landingPath, 'extension.zip');
 
-// 内存缓存 zip 文件 Buffer，首次请求加载，文件更新后清除缓存
 function getZipBuffer() {
-  if (app.locals.zipBuffer && app.locals.zipMtime) {
-    return app.locals.zipBuffer;
-  }
-  const zipPath = fs.existsSync(publicZipPath) ? publicZipPath : (fs.existsSync(distZipPath) ? distZipPath : null);
-  if (!zipPath) {
-    console.error('[extension.zip] 文件不存在: ', publicZipPath, distZipPath);
+  if (!fs.existsSync(publicZipPath)) {
+    console.error('[extension.zip] 文件不存在:', publicZipPath);
     return null;
   }
-  app.locals.zipBuffer = fs.readFileSync(zipPath);
-  app.locals.zipMtime = fs.statSync(zipPath).mtimeMs;
-  console.log('[extension.zip] 已加载到内存:', zipPath, Math.round(app.locals.zipBuffer.length / 1024) + 'KB');
+  const mtime = fs.statSync(publicZipPath).mtimeMs;
+  // mtime 变化时重新加载，确保用户下载到最新版本
+  if (app.locals.zipBuffer && app.locals.zipMtime === mtime) {
+    return app.locals.zipBuffer;
+  }
+  app.locals.zipBuffer = fs.readFileSync(publicZipPath);
+  app.locals.zipMtime = mtime;
+  console.log('[extension.zip] 已加载:', publicZipPath, Math.round(app.locals.zipBuffer.length / 1024) + 'KB', 'mtime:', new Date(mtime).toISOString());
   return app.locals.zipBuffer;
 }
 
