@@ -33,6 +33,11 @@ router.post('/submit', invoiceLimiter, async (req, res) => {
     return res.status(400).json({ success: false, error: '请填写完整信息' });
   }
 
+  // P1 修复：orderNo 格式白名单校验，防止注入和无效查询
+  if (!/^[A-Za-z0-9\-]{1,64}$/.test(orderNo)) {
+    return res.status(400).json({ success: false, error: '订单号格式无效' });
+  }
+
   if (!['personal', 'company'].includes(invoiceType)) {
     return res.status(400).json({ success: false, error: '发票类型无效' });
   }
@@ -127,6 +132,11 @@ router.post('/submit', invoiceLimiter, async (req, res) => {
 // GET /api/invoice/status/:orderNo - 查询订单的发票状态
 router.get('/status/:orderNo', async (req, res) => {
   const { orderNo } = req.params;
+
+  // P1 修复：orderNo 格式白名单校验
+  if (!/^[A-Za-z0-9\-]{1,64}$/.test(orderNo)) {
+    return res.status(400).json({ exists: false, error: '订单号格式无效' });
+  }
 
   try {
     const [rows] = await pool.query(
