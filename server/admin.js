@@ -13,8 +13,8 @@ const router = express.Router();
 // Configuration
 let ADMIN_PASSWORD_HASH = process.env.ADMIN_PASSWORD;
 const JWT_SECRET = process.env.JWT_SECRET;
-if (!JWT_SECRET || JWT_SECRET.length < 32) {
-  console.error('❌ JWT_SECRET 必须配置且长度 >= 32 字符！');
+if (!JWT_SECRET || JWT_SECRET.length < 96) {
+  console.error('❌ JWT_SECRET 必须配置且长度 >= 96 字符！请用 require("crypto").randomBytes(48).toString("hex") 生成');
   process.exit(1);
 }
 const ACCESS_TOKEN_EXPIRY = '15m';
@@ -268,7 +268,7 @@ router.post('/refresh-token', async (req, res) => {
 
     if (decoded.sessionId) {
       const [sessions] = await pool.query(
-        'SELECT revoked FROM admin_sessions WHERE session_id = ?',
+        'SELECT revoked FROM admin_sessions WHERE session_id = ? AND created_at > DATE_SUB(NOW(), INTERVAL 7 DAY)',
         [decoded.sessionId]
       );
       if (sessions.length === 0 || sessions[0].revoked) {
@@ -1091,41 +1091,56 @@ router.post('/orders/:orderNo/complete', requireAdmin, async (req, res) => {
 router.post('/orders/:orderNo/refund', requireAdmin, async (req, res) => {
   const { orderNo } = req.params;
   const { reason, revokeLicense = true } = req.body;
+  let conn;
 
   try {
-    const [rows] = await pool.query('SELECT id, status, activation_code FROM orders WHERE order_no = ?', [orderNo]);
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    // P2 安全修复：加事务 + FOR UPDATE 行锁，防止并发退款
+    const [rows] = await conn.query('SELECT id, status, activation_code FROM orders WHERE order_no = ? FOR UPDATE', [orderNo]);
 
     if (rows.length === 0) {
+      await conn.rollback();
       return res.status(404).json({ error: '订单不存在' });
     }
 
     const order = rows[0];
     if (order.status !== 'completed') {
+      await conn.rollback();
       return res.status(400).json({ error: '只能退款已完成的订单' });
     }
 
-    await pool.query(
+    await conn.query(
       'UPDATE orders SET status = ?, refund_reason = ?, refunded_at = ? WHERE id = ?',
       ['refunded', reason || '管理员手动退款', new Date(), order.id]
     );
 
     if (revokeLicense && order.activation_code) {
-      await pool.query(
+      await conn.query(
         'UPDATE licenses SET is_active = FALSE WHERE activation_code = ? AND is_active = TRUE',
+        [order.activation_code]
+      );
+      // P1 安全修复：同步清理设备池
+      await conn.query(
+        'UPDATE license_devices SET is_active = 0 WHERE license_id IN (SELECT id FROM licenses WHERE activation_code = ?)',
         [order.activation_code]
       );
     }
 
+    await conn.commit();
     await auditLog('order_refunded', req, `退款订单 ${orderNo}，原因: ${reason || '未提供'}`);
-    // P2-3 修复：退款逻辑提示 —— 当前仅改 DB 状态不调退款 API，需提示管理员手动发起实际退款
     res.json({
       success: true,
       message: '订单已标记为已退款，许可证已撤销。请注意：需在支付宝/微信商户后台手动发起实际退款。',
       orderNo: orderNo
     });
   } catch (err) {
+    if (conn) await conn.rollback();
     console.error('Refund order error:', err);
     res.status(500).json({ error: '退款失败' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
@@ -1203,6 +1218,8 @@ router.post('/licenses/:id/revoke', requireAdmin, async (req, res) => {
     }
 
     await pool.query('UPDATE licenses SET is_active = FALSE, device_fingerprint = NULL WHERE id = ?', [id]);
+    // P1 安全修复：同步清理设备池，防止撤销后旧设备仍可心跳
+    await pool.query('UPDATE license_devices SET is_active = 0 WHERE license_id = ?', [id]);
     await auditLog('license_revoked', req, `撤销许可证 ${rows[0].activation_code}`);
     res.json({ success: true });
   } catch (err) {
@@ -1224,6 +1241,8 @@ router.post('/licenses/:id/unbind', requireAdmin, async (req, res) => {
     if (license.activation_code) {
       await pool.query('UPDATE activation_codes SET bound_fingerprint = NULL WHERE code = ?', [license.activation_code]);
     }
+    // P1 安全修复：同步清理设备池，防止解绑后旧设备仍可心跳
+    await pool.query('UPDATE license_devices SET is_active = 0 WHERE license_id = ?', [id]);
 
     await auditLog('license_unbind', req, `手动解绑许可证 #${id}（不计入用户换绑次数）`);
     res.json({ success: true, message: '设备已解绑' });
@@ -1283,15 +1302,25 @@ router.post('/licenses/:id/extend', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: '延期天数必须大于 0' });
   }
 
+  let conn;
   try {
-    const [rows] = await pool.query('SELECT activation_code, type, is_active, expires_at FROM licenses WHERE id = ?', [id]);
-    if (rows.length === 0) return res.status(404).json({ error: '许可证不存在' });
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
+    // P2 安全修复：加事务 + FOR UPDATE 行锁，防止并发延期导致双重延期
+    const [rows] = await conn.query('SELECT activation_code, type, is_active, expires_at FROM licenses WHERE id = ? FOR UPDATE', [id]);
+    if (rows.length === 0) {
+      await conn.rollback();
+      return res.status(404).json({ error: '许可证不存在' });
+    }
 
     const license = rows[0];
     if (license.type === 'lifetime') {
+      await conn.rollback();
       return res.status(400).json({ error: '永久许可证无需延期' });
     }
     if (!license.is_active) {
+      await conn.rollback();
       return res.status(400).json({ error: '许可证已撤销' });
     }
 
@@ -1299,12 +1328,16 @@ router.post('/licenses/:id/extend', requireAdmin, async (req, res) => {
     const newExpiry = new Date(currentExpiry);
     newExpiry.setDate(newExpiry.getDate() + daysNum);
 
-    await pool.query('UPDATE licenses SET expires_at = ? WHERE id = ?', [newExpiry, id]);
+    await conn.query('UPDATE licenses SET expires_at = ? WHERE id = ?', [newExpiry, id]);
+    await conn.commit();
     await auditLog('license_extended', req, `许可证 ${license.activation_code} 延期 ${daysNum} 天`);
     res.json({ success: true, newExpiresAt: newExpiry });
   } catch (err) {
+    if (conn) await conn.rollback();
     console.error('Extend license error:', err);
     res.status(500).json({ error: '延期许可证失败' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 

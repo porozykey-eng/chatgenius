@@ -171,9 +171,9 @@ const PLAN_SUBJECTS = {
 
 // 创建 Native 支付订单（PC 端扫码支付）
 router.post('/create-order', async (req, res) => {
-  const { orderNo, type, email } = req.body;
+  const { type, email } = req.body;
 
-  if (!orderNo || !type) {
+  if (!type) {
     return res.status(400).json({ success: false, error: '参数不完整' });
   }
 
@@ -183,17 +183,10 @@ router.post('/create-order', async (req, res) => {
   const numAmount = PLAN_PRICES[type];
   const subject = PLAN_SUBJECTS[type];
 
-  if (!/^[a-zA-Z0-9\-]{1,64}$/.test(orderNo)) {
-    return res.status(400).json({ success: false, error: '订单号格式无效' });
-  }
+  // P0 安全修复：服务端生成订单号（crypto.randomBytes，CSPRNG），防止客户端可预测订单号导致激活码 IDOR
+  const orderNo = 'CG' + crypto.randomBytes(12).toString('hex').toUpperCase();
 
   try {
-    // 检查订单是否已存在
-    const [existing] = await pool.query('SELECT id FROM orders WHERE order_no = ?', [orderNo]);
-    if (existing.length > 0) {
-      return res.status(400).json({ success: false, error: '订单号已存在' });
-    }
-
     console.log('Creating WeChat Native pay order:', { orderNo, amount: numAmount, subject });
 
     // 金额转为分
@@ -244,7 +237,7 @@ router.post('/create-order', async (req, res) => {
       });
     } else {
       console.error('WeChat pay error:', data);
-      res.status(500).json({ success: false, error: data.message || '创建支付订单失败' });
+      res.status(500).json({ success: false, error: '创建支付订单失败' });
     }
   } catch (error) {
     console.error('WeChat create order error:', error.message);
@@ -306,6 +299,14 @@ router.post('/notify', async (req, res) => {
       return res.status(400).json({ code: 'FAIL', message: '缺少签名参数' });
     }
 
+    // P1 安全修复：时间戳新鲜度校验（±5 分钟窗口），防止重放攻击
+    const notifyTime = parseInt(timestamp);
+    const nowSec = Math.floor(Date.now() / 1000);
+    if (isNaN(notifyTime) || Math.abs(nowSec - notifyTime) > 300) {
+      console.warn('WeChat notify: timestamp out of window:', { notifyTime, nowSec, diff: nowSec - notifyTime });
+      return res.status(400).json({ code: 'FAIL', message: '时间戳过期' });
+    }
+
     // 根据 serial 获取对应的微信平台证书
     let platformCert;
     try {
@@ -336,7 +337,8 @@ router.post('/notify', async (req, res) => {
     const resource = body.resource;
     const decrypted = decryptGCM(resource.ciphertext, Buffer.from(resource.nonce, 'base64'), resource.associated_data);
 
-    console.log('WeChat notify decrypted:', JSON.stringify(decrypted));
+    // P2 安全修复：日志脱敏，仅记录必要字段
+    console.log('WeChat notify decrypted:', { out_trade_no: decrypted.out_trade_no, trade_state: decrypted.trade_state });
 
     const { out_trade_no, trade_state, transaction_id, amount: paidAmount, appid, mchid } = decrypted;
 

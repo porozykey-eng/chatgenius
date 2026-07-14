@@ -209,9 +209,9 @@ const PLAN_SUBJECTS = {
 // 创建支付订单（电脑网站支付 - alipay.trade.page.pay）
 // 返回支付宝支付页面 URL，前端跳转过去完成支付
 router.post('/create-order', async (req, res) => {
-  const { orderNo, type, email } = req.body;
+  const { type, email } = req.body;
 
-  if (!orderNo || !type) {
+  if (!type) {
     return res.status(400).json({ success: false, error: '参数不完整' });
   }
 
@@ -221,19 +221,10 @@ router.post('/create-order', async (req, res) => {
   const numAmount = PLAN_PRICES[type];
   const subject = PLAN_SUBJECTS[type];
 
-  if (!/^[a-zA-Z0-9\-]{1,64}$/.test(orderNo)) {
-    return res.status(400).json({ success: false, error: '订单号格式无效' });
-  }
+  // P0 安全修复：服务端生成订单号（crypto.randomBytes，CSPRNG），防止客户端可预测订单号导致激活码 IDOR
+  const orderNo = 'CG' + crypto.randomBytes(12).toString('hex').toUpperCase();
 
   try {
-    // Idempotency check
-    const [existing] = await pool.query('SELECT id FROM orders WHERE order_no = ?', [orderNo]);
-    if (existing.length > 0) {
-      return res.status(400).json({ success: false, error: '订单号已存在' });
-    }
-
-    console.log('Creating Alipay page pay order:', { orderNo, amount: numAmount, subject });
-
     // 保存订单到数据库
     await pool.query(
       'INSERT INTO orders (order_no, plan, price, type, channel, status, user_email) VALUES (?, ?, ?, ?, ?, ?, ?)',
@@ -262,6 +253,7 @@ router.post('/create-order', async (req, res) => {
     res.json({
       success: true,
       payForm: result,
+      orderNo,
     });
   } catch (error) {
     console.error('Alipay create order error:', error.message);
@@ -376,19 +368,17 @@ router.post('/notify', async (req, res) => {
         return res.send('success');
       }
       
-      // P2-9 修复：金额精确匹配（浮点数用字符串比较避免精度问题）
-      if (order.price && total_amount) {
-        const expectedStr = parseFloat(order.price).toFixed(2);
-        const receivedStr = parseFloat(total_amount).toFixed(2);
-        if (isNaN(parseFloat(expectedStr)) || isNaN(parseFloat(receivedStr)) || expectedStr !== receivedStr) {
-          console.error('Alipay notify: amount mismatch!', {
-            orderNo: out_trade_no,
-            expected: expectedStr,
-            received: receivedStr
-          });
-          await conn.rollback();
-          return res.send('success');
-        }
+      // P1 安全修复：金额强制精确匹配（移除条件分支，缺失即拒绝）
+      const expectedStr = parseFloat(order.price).toFixed(2);
+      const receivedStr = parseFloat(total_amount).toFixed(2);
+      if (isNaN(parseFloat(expectedStr)) || isNaN(parseFloat(receivedStr)) || expectedStr !== receivedStr) {
+        console.error('Alipay notify: amount mismatch!', {
+          orderNo: out_trade_no,
+          expected: expectedStr,
+          received: receivedStr
+        });
+        await conn.rollback();
+        return res.send('success');
       }
       
       // 更新订单状态

@@ -32,6 +32,7 @@ export const activationService = {
   },
 
   // 创建支付订单（调用服务器支付 API）
+  // P0 安全修复：订单号由服务端生成（crypto.randomBytes），前端不再生成
   async createOrder(
     _plan: string,
     _price: string,
@@ -40,15 +41,12 @@ export const activationService = {
     _userEmail?: string
   ): Promise<{ success: boolean; payForm?: string; codeUrl?: string; orderNo?: string; error?: string }> {
     try {
-      const orderNo = `CG${Date.now().toString(36).toUpperCase()}${Math.random().toString(36).substring(2, 6).toUpperCase()}`;
-
       // 根据渠道调用不同的 API
       const apiPath = channel === 'wechat' ? '/wechat/create-order' : '/alipay/create-order';
       const res = await fetch(`${API_BASE}${apiPath}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        // H4 修复：服务器依据 orderNo+type 从数据库读取价格与商品名，前端不再传 amount/subject（死代码）
-        body: JSON.stringify({ orderNo, type }),
+        body: JSON.stringify({ type }),
       });
 
       const data = await res.json();
@@ -56,10 +54,10 @@ export const activationService = {
       if (data.success) {
         if (data.codeUrl) {
           // 微信支付返回二维码链接
-          return { success: true, codeUrl: data.codeUrl, orderNo };
+          return { success: true, codeUrl: data.codeUrl, orderNo: data.orderNo };
         } else if (data.payForm) {
           // 支付宝返回表单 HTML
-          return { success: true, payForm: data.payForm, orderNo };
+          return { success: true, payForm: data.payForm, orderNo: data.orderNo };
         }
       }
 

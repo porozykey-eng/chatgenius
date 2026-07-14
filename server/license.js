@@ -40,14 +40,19 @@ function verifySignature(code, timestamp, signature) {
     }
     const expected = crypto.createHmac('sha256', LICENSE_HMAC_SECRET)
       .update(code + timestamp).digest('hex');
-    if (signature !== expected) {
+    // P1 安全修复：使用 timingSafeEqual 防止时序攻击
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
       return { valid: false, error: 'invalid_signature' };
     }
   } else if (signature && LICENSE_HMAC_SECRET) {
     // 非 strict 模式：传了 signature 就校验，不匹配仅告警不拒绝
     const expected = crypto.createHmac('sha256', LICENSE_HMAC_SECRET)
       .update(code + timestamp).digest('hex');
-    if (signature !== expected) {
+    const sigBuf = Buffer.from(signature);
+    const expBuf = Buffer.from(expected);
+    if (sigBuf.length !== expBuf.length || !crypto.timingSafeEqual(sigBuf, expBuf)) {
       console.warn('License signature mismatch (non-strict mode)');
       return { valid: true, warning: 'signature_mismatch' };
     }
@@ -117,28 +122,36 @@ async function checkRebindPaused(conn, licenseId) {
 }
 
 // === 风控：记录换绑时间，检测异常频率 ===
-// 24 小时内换绑 ≥ REBIND_SUSPECT_THRESHOLD → 暂停换绑 REBIND_PAUSE_HOURS 小时
+// 24 小时内换绑 ≥2 次 → 暂停换绑 REBIND_PAUSE_HOURS 小时
+// P0 修复：原逻辑用 unbind_count（月度计数）判断，但 MAX_UNBIND_PER_MONTH=1 导致永远无法达到阈值 2
+// 改为用 last_rebind_at 的时间窗口判断：如果上次换绑在 24 小时内，说明 24h 内已≥2 次换绑
 async function recordRebindAndCheckRisk(conn, licenseId) {
   const now = new Date();
-  await conn.query(
-    'UPDATE licenses SET last_rebind_at = ? WHERE id = ?', [now, licenseId]
-  );
-  // 查询 24 小时内的换绑次数（通过 last_rebind_at 时间间隔判断）
   const [rows] = await conn.query(
-    `SELECT unbind_count, unbind_count_reset_at, last_rebind_at, rebind_paused_until
-     FROM licenses WHERE id = ?`, [licenseId]
+    'SELECT last_rebind_at FROM licenses WHERE id = ?', [licenseId]
   );
   if (rows.length === 0) return { suspect: false };
   const lic = rows[0];
-  // 如果本月换绑次数达到阈值，触发暂停
-  if (lic.unbind_count >= REBIND_SUSPECT_THRESHOLD) {
-    const pauseUntil = new Date(now.getTime() + REBIND_PAUSE_HOURS * 3600 * 1000);
-    await conn.query(
-      'UPDATE licenses SET rebind_paused_until = ? WHERE id = ?', [pauseUntil, licenseId]
-    );
-    console.warn(`⚠️ 风控告警：license_id=${licenseId} 换绑次数=${lic.unbind_count}，暂停至 ${pauseUntil.toISOString()}`);
-    return { suspect: true, pauseUntil };
+
+  // 如果上次换绑在 24 小时内，触发暂停
+  if (lic.last_rebind_at) {
+    const lastRebind = new Date(lic.last_rebind_at);
+    const hoursSinceLastRebind = (now - lastRebind) / (3600 * 1000);
+    if (hoursSinceLastRebind < 24) {
+      const pauseUntil = new Date(now.getTime() + REBIND_PAUSE_HOURS * 3600 * 1000);
+      await conn.query(
+        'UPDATE licenses SET rebind_paused_until = ?, last_rebind_at = ? WHERE id = ?',
+        [pauseUntil, now, licenseId]
+      );
+      console.warn(`⚠️ 风控告警：license_id=${licenseId} 24小时内多次换绑（距上次${hoursSinceLastRebind.toFixed(1)}h），暂停至 ${pauseUntil.toISOString()}`);
+      return { suspect: true, pauseUntil };
+    }
   }
+
+  // 记录本次换绑时间
+  await conn.query(
+    'UPDATE licenses SET last_rebind_at = ? WHERE id = ?', [now, licenseId]
+  );
   return { suspect: false };
 }
 
@@ -483,16 +496,13 @@ router.post('/rebind', async (req, res) => {
       return res.json({ valid: false, error: '未找到要解绑的设备' });
     }
 
-    // Step 8: 风控 — 记录换绑时间 + 检测异常频率
-    await recordRebindAndCheckRisk(conn, license.id);
-
     const now = new Date();
     const deviceName = req.body.deviceName || req.headers['user-agent']?.substring(0, 200) || null;
 
-    // Step 9: 添加新设备
+    // Step 8: 添加新设备
     await addDevice(conn, license.id, normalizedCode, fingerprint, ip, deviceName);
 
-    // Step 10: 更新 bound_fingerprint + unbind_count
+    // Step 9: 更新 bound_fingerprint + unbind_count
     await conn.query(
       'UPDATE activation_codes SET bound_fingerprint = ? WHERE id = ?',
       [fingerprint, activationCode.id]
@@ -501,6 +511,9 @@ router.post('/rebind', async (req, res) => {
       'UPDATE licenses SET device_fingerprint = ?, unbind_count = ?, unbind_count_reset_at = ?, last_heartbeat = ? WHERE id = ?',
       [fingerprint, currentCount + 1, now, now, license.id]
     );
+
+    // Step 10: 风控 — 记录换绑时间 + 检测异常频率（必须在 unbind_count 递增之后）
+    await recordRebindAndCheckRisk(conn, license.id);
 
     // 风控 — 检查原设备是否短时间内再激活（仅告警，在 commit 前执行）
     if (oldFingerprint) {
@@ -546,7 +559,14 @@ router.post('/heartbeat', async (req, res) => {
   // P1-7 修复：记录心跳 IP，异常多 IP 告警
   const clientIp = req.ip || (req.connection && req.connection.remoteAddress);
   console.log(`License heartbeat: code=${normalizedCode}, ip=${clientIp}, fingerprint=${fingerprint}`);
-  // TODO: 可扩展为对比历史 IP，短期内多 IP 切换则告警
+
+  // P1 安全修复：心跳接口也检查 IP 封禁
+  if (clientIp) {
+    const isBanned = await checkIpBan(clientIp);
+    if (isBanned) {
+      return res.status(403).json({ valid: false, reason: 'ip_banned' });
+    }
+  }
 
   let conn;
   try {
@@ -597,7 +617,7 @@ router.post('/heartbeat', async (req, res) => {
 
     // Step 5: 检查设备是否在活跃设备池中
     const [deviceRows] = await conn.query(
-      'SELECT id, is_active FROM license_devices WHERE license_id = ? AND device_fingerprint = ?',
+      'SELECT id, is_active, last_ip FROM license_devices WHERE license_id = ? AND device_fingerprint = ?',
       [license.id, fingerprint]
     );
 
@@ -619,6 +639,31 @@ router.post('/heartbeat', async (req, res) => {
       'UPDATE license_devices SET last_heartbeat_at = ?, last_ip = ? WHERE id = ?',
       [now, clientIp, deviceRows[0].id]
     );
+
+    // Step 7: P0 风控 — IP 跨地区告警
+    // 如果当前设备上次心跳 IP 与本次不同，记录告警
+    if (deviceRows[0].last_ip && deviceRows[0].last_ip !== clientIp) {
+      console.warn(`⚠️ 风控告警：license_id=${license.id} 设备IP变更 ${deviceRows[0].last_ip} → ${clientIp}，可能存在跨地区使用`);
+    }
+
+    // Step 8: P0 风控 — 同时≥2台设备心跳时踢掉最老设备
+    // 查询所有活跃设备中近 5 分钟内心跳过的（说明同时在线）
+    const [activeDevices] = await conn.query(
+      `SELECT id, device_fingerprint, first_seen_at, last_heartbeat_at
+       FROM license_devices
+       WHERE license_id = ? AND is_active = 1 AND last_heartbeat_at > DATE_SUB(?, INTERVAL 5 MINUTE)
+       ORDER BY first_seen_at ASC`,
+      [license.id, now]
+    );
+
+    if (activeDevices.length >= 2) {
+      // 踢掉最老设备（first_seen_at 最早的），保留最新设备
+      const oldestDevice = activeDevices[0];
+      await conn.query(
+        'UPDATE license_devices SET is_active = 0 WHERE id = ?', [oldestDevice.id]
+      );
+      console.warn(`⚠️ 风控告警：license_id=${license.id} 检测到${activeDevices.length}台设备同时心跳，已踢掉最老设备 fingerprint=${oldestDevice.device_fingerprint}`);
+    }
 
     await conn.commit();
     res.json({ valid: true });
@@ -646,6 +691,15 @@ router.post('/validate', async (req, res) => {
 
   if (typeof code !== 'string' || code.length > 64 || !/^[A-Za-z0-9\-]+$/.test(code)) {
     return res.status(400).json({ valid: false, error: '激活码格式无效' });
+  }
+
+  // P1 安全修复：检查 IP 是否被封禁
+  const clientIp = req.ip || (req.connection && req.connection.remoteAddress) || 'unknown';
+  if (clientIp !== 'unknown') {
+    const isBanned = await checkIpBan(clientIp);
+    if (isBanned) {
+      return res.status(403).json({ valid: false, error: 'IP 已被封禁，请稍后再试' });
+    }
   }
 
   const normalizedCode = code.toUpperCase();
