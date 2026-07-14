@@ -162,18 +162,9 @@ app.get('/guide/', (req, res) => {
 app.get('/guide.html', (req, res) => res.redirect(301, '/guide/'));
 app.get('/guide', (req, res) => res.redirect(301, '/guide/'));
 
-// Serve landing page static files
+// extension.zip 路由必须在 express.static 之前注册！
+// 否则 express.static 会先匹配到 dist/extension.zip（可能过时），导致用户下载到旧版本
 const landingPath = __dirname + '/../landing-page/dist';
-// 静态资源默认缓存 1 小时（HTML/CSS/JS/图片等）
-app.use(express.static(landingPath, {
-  maxAge: '1h',
-  etag: true,
-  lastModified: true
-}));
-
-// extension.zip 必须实时刷新，禁止缓存（确保用户下载到最新版本插件）
-// 仅从 public 目录读取（git 跟踪，始终存在），不读 dist 构建产物
-// 内存缓存 + mtime 校验：文件更新后自动重新加载
 const publicZipPath = path.join(__dirname, '..', 'landing-page', 'public', 'extension.zip');
 
 function getZipBuffer() {
@@ -204,9 +195,16 @@ app.get('/extension.zip', (req, res) => {
   res.setHeader('Content-Disposition', 'attachment; filename="ChatGenius-AI-Extension.zip"');
   res.setHeader('Content-Type', 'application/zip');
   res.setHeader('Content-Length', buf.length);
-  // 直接发送内存中的 Buffer，无磁盘 I/O，响应头立即发送
   res.end(buf);
 });
+
+// Serve landing page static files（在 /extension.zip 路由之后注册）
+// 静态资源默认缓存 1 小时（HTML/CSS/JS/图片等）
+app.use(express.static(landingPath, {
+  maxAge: '1h',
+  etag: true,
+  lastModified: true
+}));
 
 app.get('*', (req, res) => {
   res.sendFile(landingPath + '/index.html');
