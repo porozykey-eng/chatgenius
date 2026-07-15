@@ -18,6 +18,7 @@ $Files = @(
     "content.js",
     "fingerprint.js",
     "theme-init.js",
+    "skeleton-fallback.js",
     "options.html",
     "options.js",
     "popup.html",
