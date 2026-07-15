@@ -1483,10 +1483,10 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
         'WhatsApp / Messenger',
         '1 个自定义角色',
         '5 条 FAQ 知识库',
-        '每天回复 20 次',
+        '每天回复 50 次',
         '基础统计面板'
       ],
-      limitations: ['每天回复 20 次', '仅 1 个角色'],
+      limitations: ['每天回复 50 次', '仅 1 个角色'],
       cta: '免费开始',
       popular: false,
       hot: false,
@@ -1708,7 +1708,7 @@ function FAQSection() {
       q: '免费版有什么限制？', 
       a: `免费版功能已经非常实用：
 
-✉️ 每天回复 20 次
+✉️ 每天回复 50 次
 👤 1 个自定义角色
 📚 5 条 FAQ 知识库
 🎯 支持 40+ AI 模型
@@ -1753,7 +1753,7 @@ function FAQSection() {
       q: '使用 ChatGenius 需要额外付费吗？',
       a: `产品本身免费，但使用 AI 功能需要：
 
-📦 免费版：每天 20 次免费回复
+📦 免费版：每天 50 次免费回复
 🔑 Pro 版：¥98 解锁无限回复
 💰 API 费用：由 AI 服务商收取
 

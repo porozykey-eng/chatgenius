@@ -11,6 +11,13 @@ try {
 
 let transporter = null;
 
+// P3-8 修复：邮箱脱敏
+function maskEmail(email) {
+  if (!email || typeof email !== 'string' || !email.includes('@')) return '***';
+  const [name, domain] = email.split('@');
+  return (name.length <= 2 ? name[0] + '*' : name.substring(0, 2) + '***') + '@' + domain;
+}
+
 // P1-3 修复：HTML 转义工具函数，防止邮件模板 XSS
 function escapeHtml(s) {
   return String(s || '').replace(/[&<>"']/g, c => ({
@@ -74,7 +81,7 @@ async function sendMail(to, subject, html, attachments = []) {
       html,
       attachments,
     });
-    console.log('✅ 邮件已发送:', info.messageId, '->', to);
+    console.log('✅ 邮件已发送:', info.messageId, '->', maskEmail(to));
     return { success: true };
   } catch (err) {
     console.error('❌ 邮件发送失败:', err.message);

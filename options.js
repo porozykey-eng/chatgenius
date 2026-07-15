@@ -12,14 +12,7 @@ const UPGRADE_URL = 'https://chat.sopie.cc/#pricing';
 // 注意：LICENSE_HMAC_SECRET 已移除 — 客户端密钥本就公开，HMAC 签名无安全价值
 // 防重放改由服务端 timestamp 校验（5分钟窗口）保障
 
-// === 骨架屏兜底：3秒后强制隐藏，防止任何 JS 错误导致页面卡死 ===
-setTimeout(() => {
-  const _sk = document.getElementById('skeletonScreen');
-  const _ct = document.querySelector('.page-container');
-  if (_sk) _sk.classList.add('hidden');
-  if (_ct) _ct.classList.add('loaded');
-}, 3000);
-
+// P3-1 修复：移除冗余的骨架屏 setTimeout 兜底（skeleton-fallback.js 已独立处理）
 // Chrome API compatibility layer for standalone preview
 if (typeof chrome === 'undefined' || !chrome.storage) {
   const _mockStorage = {};
@@ -143,7 +136,7 @@ const I18N = {
     apiTestSuccess: 'Connection successful!',
     apiTestFail: 'Connection failed: ',
     licenseStatus: 'License Status',
-    licenseDesc: 'Currently using free version, limited to 20 replies per day. Upgrade to Pro for unlimited replies.',
+    licenseDesc: 'Currently using free version, limited to 50 replies per day. Upgrade to Pro for unlimited replies.',
     upgradeBtn: 'Upgrade to Pro',
     activatePlaceholder: 'Enter activation code (e.g. PRO-XXXX-XXXX)',
     activateLabel: 'Activate',
@@ -310,7 +303,7 @@ const I18N = {
     apiTestSuccess: '连接成功！',
     apiTestFail: '连接失败: ',
     licenseStatus: '许可证状态',
-    licenseDesc: '当前使用免费版，每日限 20 次回复。升级到 Pro 版享受无限次回复和高级功能。',
+    licenseDesc: '当前使用免费版，每日限 50 次回复。升级到 Pro 版享受无限次回复和高级功能。',
     upgradeBtn: '升级至 Pro 版',
     activatePlaceholder: '输入激活码（例如：PRO-XXXX-XXXX）',
     activateLabel: '激活',
@@ -1710,50 +1703,10 @@ function initApp() {
   const apiStatusText = document.getElementById('apiStatusText');
 
   // Load API providers from models-config.json dynamically
+  // P1-2 清理：HTML 中已移除 apiProvider select，改为自定义 URL 输入，此函数已无实际作用。
+  // 保留函数签名以兼容 loadSettings 中的调用（返回 resolved Promise，避免 .then() 报错）。
   async function loadApiProviders(targetSelect) {
-    const select = targetSelect || apiProvider;
-    if (!select) return;
-    try {
-      let resp;
-      if (chrome.runtime && chrome.runtime.getURL) {
-        resp = await fetch(chrome.runtime.getURL('models-config.json'));
-      } else {
-        resp = await fetch('models-config.json');
-      }
-      const config = await resp.json();
-      modelsConfig = config;
-
-      const currentValue = select.value;
-      const internationalIds = ['openai', 'anthropic', 'google', 'openrouter', 'custom'];
-      select.innerHTML = '';
-
-      const intlGroup = document.createElement('optgroup');
-      intlGroup.label = currentLang === 'zh' ? '国际厂商' : 'International';
-      const domesticGroup = document.createElement('optgroup');
-      domesticGroup.label = currentLang === 'zh' ? '国内厂商' : 'Domestic';
-
-      (config.providers || []).forEach(provider => {
-        const opt = document.createElement('option');
-        opt.value = provider.id;
-        opt.textContent = provider.name;
-        if (internationalIds.includes(provider.id)) {
-          intlGroup.appendChild(opt);
-        } else {
-          domesticGroup.appendChild(opt);
-        }
-      });
-
-      // Domestic first (primary audience), then international
-      select.appendChild(domesticGroup);
-      select.appendChild(intlGroup);
-
-      if (currentValue) {
-        select.value = currentValue;
-      }
-      updateApiProviderUI(select.value);
-    } catch (err) {
-      console.error('Failed to load models config:', err);
-    }
+    return;
   }
 
   // ================================
@@ -1818,7 +1771,8 @@ function initApp() {
 
   // 更新 Key 校验 UI
   function updateKeyValidation(providerId, key, context) {
-    const validationId = context === 'onboarding' ? 'onboardingKeyValidation' : 'settingsKeyValidation';
+    // P1-2 清理：onboardingKeyValidation 元素已从 HTML 移除，统一使用 settingsKeyValidation
+    const validationId = 'settingsKeyValidation';
     const validationEl = document.getElementById(validationId);
     if (!validationEl) return;
 
@@ -1888,7 +1842,7 @@ function initApp() {
         if (resultEl) { resultEl.textContent = '✓ ' + (currentLang === 'zh' ? '连接成功！' : 'Connection successful!'); resultEl.style.color = 'var(--success)'; }
         if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill connected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
-        chrome.storage.sync.set({ connectionValid: true });
+        chrome.storage.local.set({ connectionValid: true });
         // 测试通过后隐藏 API 指南 banner
         const banner = document.getElementById('apiGuideBanner');
         if (banner) banner.classList.add('hidden');
@@ -1897,14 +1851,14 @@ function initApp() {
         if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
         if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill disconnected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
-        chrome.storage.sync.set({ connectionValid: false });
+        chrome.storage.local.set({ connectionValid: false });
       }
     } catch (error) {
       const errMsg = currentLang === 'zh' ? '网络连接失败，请检查网络' : 'Network connection failed';
       if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
       if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill disconnected'; }
       if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
-      chrome.storage.sync.set({ connectionValid: false });
+      chrome.storage.local.set({ connectionValid: false });
     } finally {
       if (btnEl) { btnEl.disabled = false; btnEl.textContent = currentLang === 'zh' ? '测试连接' : 'Test Connection'; }
     }
@@ -1954,7 +1908,7 @@ function initApp() {
         if (resultEl) { resultEl.textContent = '✓ ' + (currentLang === 'zh' ? '连接成功！' : 'Connection successful!'); resultEl.style.color = 'var(--success)'; }
         if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill connected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiConnected || 'Connected'; }
-        chrome.storage.sync.set({ connectionValid: true });
+        chrome.storage.local.set({ connectionValid: true });
         // 测试通过后隐藏 API 指南 banner
         const banner = document.getElementById('apiGuideBanner');
         if (banner) banner.classList.add('hidden');
@@ -1963,14 +1917,14 @@ function initApp() {
         if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
         if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill disconnected'; }
         if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
-        chrome.storage.sync.set({ connectionValid: false });
+        chrome.storage.local.set({ connectionValid: false });
       }
     } catch (error) {
       const errMsg = currentLang === 'zh' ? '网络连接失败，请检查网络或 API 地址' : 'Network connection failed';
       if (resultEl) { resultEl.textContent = '✗ ' + errMsg; resultEl.style.color = 'var(--error)'; }
       if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill disconnected'; }
       if (apiStatusText) { apiStatusText.textContent = I18N[currentLang].apiDisconnected || 'Not connected'; }
-      chrome.storage.sync.set({ connectionValid: false });
+      chrome.storage.local.set({ connectionValid: false });
     } finally {
       if (btnEl) { btnEl.disabled = false; btnEl.textContent = currentLang === 'zh' ? '测试连接' : 'Test Connection'; }
     }
@@ -1984,15 +1938,7 @@ function initApp() {
     if (apiKeyInput) {
       apiKeyInput.placeholder = (currentLang === 'zh' ? '请输入 ' : 'Enter ') + provider.name + ' API Key';
     }
-    const getKeyLink = document.getElementById('getKeyLink');
-    if (getKeyLink) {
-      if (provider.getKey) {
-        getKeyLink.href = provider.getKey;
-        getKeyLink.style.display = '';
-      } else {
-        getKeyLink.style.display = 'none';
-      }
-    }
+    // P1-2 清理：getKeyLink 元素已从 HTML 移除，删除相关引用
   }
 
   if (apiProvider) {
@@ -2013,25 +1959,7 @@ function initApp() {
   if (apiUrlInputEl) apiUrlInputEl.addEventListener('input', scheduleSave);
   if (modelNameInputEl) modelNameInputEl.addEventListener('input', scheduleSave);
 
-  // 高级模式 API Key 输入同步
-  const apiKeyAdvancedInput = document.getElementById('apiKeyAdvanced');
-  if (apiKeyAdvancedInput) {
-    apiKeyAdvancedInput.addEventListener('input', () => {
-      // 同步到卡片模式输入框
-      if (apiKeyInput && apiKeyInput.value !== apiKeyAdvancedInput.value) {
-        apiKeyInput.value = apiKeyAdvancedInput.value;
-      }
-      scheduleSave();
-    });
-  }
-
-  // 高级模式 API Key show/hide toggle
-  const apiKeyAdvancedToggle = document.getElementById('apiKeyAdvancedToggle');
-  if (apiKeyAdvancedToggle && apiKeyAdvancedInput) {
-    apiKeyAdvancedToggle.addEventListener('click', () => {
-      apiKeyAdvancedInput.type = apiKeyAdvancedInput.type === 'password' ? 'text' : 'password';
-    });
-  }
+  // P1-2 清理：apiKeyAdvanced / apiKeyAdvancedToggle 元素已从 HTML 移除（已简化为单一 apiKey 输入框），删除相关引用
 
   // API Key show/hide toggle
   const apiKeyToggle = document.getElementById('apiKeyToggle');
@@ -2091,7 +2019,7 @@ function initApp() {
       if (newFingerprint !== oldFingerprint) {
         // API 变化：清空旧连接状态，避免显示错误的"已连接"
         await new Promise(resolve => {
-          chrome.storage.sync.set({ connectionValid: null }, resolve);
+          chrome.storage.local.set({ connectionValid: null }, resolve);
         });
         showToast(zh ? '配置已保存，请点击「测试连接」验证' : 'Config saved. Click "Test Connection" to verify.');
       }
@@ -2116,15 +2044,7 @@ function initApp() {
     });
   }
 
-  // Settings page test connection — 高级模式
-  const testApiAdvancedBtn = document.getElementById('testApiAdvancedBtn');
-  if (testApiAdvancedBtn) {
-    testApiAdvancedBtn.addEventListener('click', () => {
-      const provider = document.getElementById('apiProvider')?.value || 'openai';
-      const key = document.getElementById('apiKeyAdvanced')?.value.trim() || '';
-      doTestConnection(provider, key, null, testApiAdvancedBtn);
-    });
-  }
+  // P1-2 清理：testApiAdvancedBtn 元素已从 HTML 移除，删除高级模式测试连接相关引用
 
   // ---- Account: License & Activation ----
   const licenseBadge = document.getElementById('licenseBadge');
@@ -2346,7 +2266,7 @@ function initApp() {
           const originalText = btn.textContent;
           btn.textContent = '解绑中...';
           try {
-            const resp = await chrome.runtime.sendMessage({ action: 'unbindDevice', deviceId });
+            const resp = await sendMessageWithTimeout({ action: 'unbindDevice', deviceId });
             if (resp && resp.success) {
               showToast(resp.message || '设备已解绑');
               await loadDevices();
@@ -2380,6 +2300,21 @@ function initApp() {
     }
   }
 
+  // P2-3 修复：封装 sendMessage 超时保护，避免 SW 异常时回调永不触发导致 UI 永久 loading
+  function sendMessageWithTimeout(message, timeoutMs = 10000) {
+    return new Promise((resolve, reject) => {
+      const timer = setTimeout(() => reject(new Error('操作超时')), timeoutMs);
+      chrome.runtime.sendMessage(message, (response) => {
+        clearTimeout(timer);
+        if (chrome.runtime.lastError) {
+          reject(new Error(chrome.runtime.lastError.message));
+        } else {
+          resolve(response);
+        }
+      });
+    });
+  }
+
   async function loadDevices() {
     if (!deviceListEl) return;
     const { licenseType } = await chrome.storage.sync.get(['licenseType']);
@@ -2393,7 +2328,7 @@ function initApp() {
     }
     deviceListEl.innerHTML = '<div class="device-list-empty">加载中...</div>';
     try {
-      const resp = await chrome.runtime.sendMessage({ action: 'getDevices' });
+      const resp = await sendMessageWithTimeout({ action: 'getDevices' });
       if (resp && resp.success) {
         renderDeviceList(resp);
       } else {
@@ -2446,7 +2381,8 @@ function initApp() {
   }
 
   // Dead button fix: "I have an activation code" button
-  const useActivationCodeBtn = document.getElementById('useActivationCodeBtn') || document.getElementById('upgradeOptionCode');
+  // P1-2 清理：upgradeOptionCode 已从 HTML 移除，仅保留 useActivationCodeBtn
+  const useActivationCodeBtn = document.getElementById('useActivationCodeBtn');
   if (useActivationCodeBtn) {
     useActivationCodeBtn.addEventListener('click', () => {
       if (upgradeModal) closeModal(upgradeModal);
@@ -2624,7 +2560,7 @@ function initApp() {
               const importedFingerprint = (imported.apiUrl || '') + '|' + (imported.apiKey || '') + '|' + (imported.modelName || '');
               localFields.savedApiFingerprint = importedFingerprint;
               // 清空旧 connectionValid（导入的配置需重新测试连接）
-              chrome.storage.sync.set({ connectionValid: null });
+              chrome.storage.local.set({ connectionValid: null });
             }
 
             const finishImport = () => {
@@ -2711,40 +2647,67 @@ function initApp() {
   }
 
   // ---- API Key Storage Migration (sync → local) ----
+  // P1-3 修复：增加幂等保护，避免每次 loadSettings 都无条件执行破坏性删除
   function migrateApiKeyToLocal() {
-    chrome.storage.sync.get(['apiKey', 'apiProvider'], (syncData) => {
+    chrome.storage.local.get(['apiKeyMigrated'], (flagData) => {
       if (chrome.runtime.lastError) { console.error(chrome.runtime.lastError); return; }
-      chrome.storage.local.get(['apiKey', 'apiProvider'], (localData) => {
+      if (flagData.apiKeyMigrated) return; // 已迁移，直接跳过
+      chrome.storage.sync.get(['apiKey', 'apiProvider'], (syncData) => {
         if (chrome.runtime.lastError) { console.error(chrome.runtime.lastError); return; }
-        if (syncData.apiKey && !localData.apiKey) {
-          const toMigrate = {};
-          if (syncData.apiKey) toMigrate.apiKey = syncData.apiKey;
-          if (syncData.apiProvider) toMigrate.apiProvider = syncData.apiProvider;
-          chrome.storage.local.set(toMigrate, () => {
-            chrome.storage.sync.remove('apiKey', () => {});
-          });
-        } else if (syncData.apiKey && localData.apiKey) {
-          // Local already has key, clean up sync
-          chrome.storage.sync.remove('apiKey', () => {});
-        }
+        chrome.storage.local.get(['apiKey', 'apiProvider'], (localData) => {
+          if (chrome.runtime.lastError) { console.error(chrome.runtime.lastError); return; }
+          if (syncData.apiKey && !localData.apiKey) {
+            const toMigrate = {};
+            if (syncData.apiKey) toMigrate.apiKey = syncData.apiKey;
+            if (syncData.apiProvider) toMigrate.apiProvider = syncData.apiProvider;
+            chrome.storage.local.set(toMigrate, () => {
+              chrome.storage.sync.remove('apiKey', () => {
+                // 迁移完成后写入标记，避免重复执行
+                chrome.storage.local.set({ apiKeyMigrated: true });
+              });
+            });
+          } else if (syncData.apiKey && localData.apiKey) {
+            // Local already has key, clean up sync
+            chrome.storage.sync.remove('apiKey', () => {
+              chrome.storage.local.set({ apiKeyMigrated: true });
+            });
+          } else {
+            // 无需迁移也写入标记，避免每次都进入迁移流程
+            chrome.storage.local.set({ apiKeyMigrated: true });
+          }
+        });
       });
     });
   }
 
   // ---- License Code Storage Migration (sync → local) ----
+  // P1-3 修复：增加幂等保护，避免每次 loadSettings 都无条件执行破坏性删除
   function migrateLicenseCodeToLocal() {
-    chrome.storage.sync.get(['licenseCode'], (syncData) => {
+    chrome.storage.local.get(['licenseCodeMigrated'], (flagData) => {
       if (chrome.runtime.lastError) { console.error(chrome.runtime.lastError); return; }
-      if (!syncData.licenseCode) return;
-      chrome.storage.local.get(['licenseCode'], (localData) => {
+      if (flagData.licenseCodeMigrated) return; // 已迁移，直接跳过
+      chrome.storage.sync.get(['licenseCode'], (syncData) => {
         if (chrome.runtime.lastError) { console.error(chrome.runtime.lastError); return; }
-        if (!localData.licenseCode) {
-          chrome.storage.local.set({ licenseCode: syncData.licenseCode }, () => {
-            chrome.storage.sync.remove('licenseCode', () => {});
-          });
-        } else {
-          chrome.storage.sync.remove('licenseCode', () => {});
+        if (!syncData.licenseCode) {
+          // 无需迁移也写入标记，避免每次都进入迁移流程
+          chrome.storage.local.set({ licenseCodeMigrated: true });
+          return;
         }
+        chrome.storage.local.get(['licenseCode'], (localData) => {
+          if (chrome.runtime.lastError) { console.error(chrome.runtime.lastError); return; }
+          if (!localData.licenseCode) {
+            chrome.storage.local.set({ licenseCode: syncData.licenseCode }, () => {
+              chrome.storage.sync.remove('licenseCode', () => {
+                // 迁移完成后写入标记，避免重复执行
+                chrome.storage.local.set({ licenseCodeMigrated: true });
+              });
+            });
+          } else {
+            chrome.storage.sync.remove('licenseCode', () => {
+              chrome.storage.local.set({ licenseCodeMigrated: true });
+            });
+          }
+        });
       });
     });
   }
@@ -2798,8 +2761,8 @@ function initApp() {
         if (chrome.runtime.lastError) return;
         if (data.apiKey && data.apiUrl) {
           dashModel.textContent = data.modelName || 'Custom';
-          chrome.storage.sync.get(['connectionValid'], (syncData) => {
-            if (syncData.connectionValid === true) {
+          chrome.storage.local.get(['connectionValid'], (localData) => {
+            if (localData.connectionValid === true) {
               dashModelStatus.innerHTML = '<span class="status-dot online"></span><span>Online</span>';
             } else {
               dashModelStatus.innerHTML = '<span class="status-dot idle"></span><span>未测试</span>';
@@ -2839,9 +2802,9 @@ function initApp() {
         if (apiStatusIconEl) apiStatusIconEl.style.color = 'var(--warning)';
       } else {
         // 已配置：读取上次连接状态
-        chrome.storage.sync.get(['connectionValid'], (syncData) => {
+        chrome.storage.local.get(['connectionValid'], (localData) => {
           const label = data.modelName || 'API';
-          if (syncData.connectionValid === true) {
+          if (localData.connectionValid === true) {
             setApiStatusBarState('connected',
               (zh ? '已连接 · ' : 'Connected · ') + label,
               'success');
@@ -2849,7 +2812,7 @@ function initApp() {
             // 已测试通过：隐藏 API 指南 banner
             const banner = document.getElementById('apiGuideBanner');
             if (banner) banner.classList.add('hidden');
-          } else if (syncData.connectionValid === false) {
+          } else if (localData.connectionValid === false) {
             setApiStatusBarState('failed',
               (zh ? '连接失败 · ' : 'Connection failed · ') + label,
               'error');

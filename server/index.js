@@ -212,7 +212,8 @@ app.get('*', (req, res) => {
 
 // Global error handler - hide internal details in production
 app.use((err, req, res, next) => {
-  console.error('Unhandled error:', err);
+  // P3-8 修复：仅打印 message 和 stack，避免完整 err 对象可能包含 req.body 敏感数据
+  console.error('Unhandled error:', err.message, err.stack);
   const statusCode = err.status || 500;
   const isProd = process.env.NODE_ENV === 'production';
   res.status(statusCode).json({ 
@@ -227,6 +228,17 @@ app.listen(PORT, () => {
   console.log(`💚 Alipay: http://localhost:${PORT}/api/alipay`);
   console.log(`🔑 License: http://localhost:${PORT}/api/license`);
   console.log(`🔧 Admin: configured (path hidden for security)`);
+});
+
+// P2-21 修复：进程级未捕获异常处理，避免进程崩溃
+process.on('unhandledRejection', (reason, promise) => {
+  // P3-8 修复：reason 可能是 Error 对象或含敏感上下文，仅打印 message
+  const reasonMsg = reason instanceof Error ? reason.message : String(reason);
+  console.error('Unhandled Rejection reason:', reasonMsg);
+});
+process.on('uncaughtException', (err) => {
+  console.error('Uncaught Exception:', err.message);
+  console.error(err.stack);
 });
 
 module.exports = app;

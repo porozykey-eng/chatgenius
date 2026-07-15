@@ -188,8 +188,8 @@ async function forceLogout(reason) {
     // P1-8 修复：licenseCode 改存 chrome.storage.local
     await chrome.storage.local.set({ licenseCode: null });
 
-    // Clear sensitive API credentials
-    await chrome.storage.sync.remove(['apiKey', 'apiProvider']);
+    // P1-4 修复：apiKey 已迁移到 local，清理 local 而非 sync
+    await chrome.storage.local.remove(['apiKey', 'apiProvider']);
 
     // Clear local heartbeat cache
     await chrome.storage.local.remove(['lastHeartbeatAt']);

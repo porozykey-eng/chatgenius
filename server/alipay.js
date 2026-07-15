@@ -148,7 +148,7 @@ const alipayPublicKey = processPublicKey(rawPublicKey);
 if (!process.env.ALIPAY_APP_ID) {
   console.error('❌ ALIPAY_APP_ID 未配置！支付功能将无法使用');
 } else {
-  console.log('✅ ALIPAY_APP_ID:', process.env.ALIPAY_APP_ID);
+  console.log('✅ ALIPAY_APP_ID configured');
 }
 if (!rawPrivateKey) {
   console.error('❌ ALIPAY_PRIVATE_KEY 未配置！');
@@ -181,8 +181,8 @@ if (process.env.ALIPAY_APP_ID && privateKey && alipayPublicKey) {
     console.log('✅ Private key signing test PASSED (RSA-SHA256)');
   } catch (e) {
     console.error('❌ Private key signing test FAILED:', e.message);
-    console.error('   Key first line:', privateKey.split('\n')[0]);
-    console.error('   Key length:', privateKey.length, 'chars');
+    // P3-8 修复：不再打印私钥首行（密钥材料泄露风险），仅打印长度和 PEM 头标识
+    console.error('   Key length:', privateKey.length, 'chars, has PEM header:', privateKey.includes('-----BEGIN'));
     // 尝试用 PKCS#1 类型解析
     try {
       const obj = crypto.createPrivateKey(privateKey);
@@ -257,7 +257,6 @@ router.post('/create-order', async (req, res) => {
     });
   } catch (error) {
     console.error('Alipay create order error:', error.message);
-    console.error('Error stack:', error.stack);
     res.status(500).json({ success: false, error: '创建支付订单失败' });
   }
 });
@@ -301,7 +300,7 @@ router.get('/query-order/:orderNo', async (req, res) => {
     const isPaid = result.code === '10000' && result.tradeStatus === 'TRADE_SUCCESS';
     res.json({ paid: isPaid, status: result.tradeStatus, code: result.code });
   } catch (error) {
-    console.error('Alipay query order error:', error);
+    console.error('Alipay query order error:', error.message);
     res.json({ paid: false, error: '查询订单状态失败' });
   }
 });
@@ -324,7 +323,7 @@ router.post('/notify', async (req, res) => {
   const { out_trade_no, trade_status, trade_no, total_amount, app_id } = params;
   
   if (app_id && app_id !== process.env.ALIPAY_APP_ID) {
-    console.warn('Alipay notify: app_id mismatch:', { received: app_id, expected: process.env.ALIPAY_APP_ID });
+    console.warn('Alipay notify: app_id mismatch (received does not match configured)');
     return res.send('fail');
   }
   
@@ -333,7 +332,7 @@ router.post('/notify', async (req, res) => {
   try {
     signValid = alipaySdk.checkNotifySign(params);
   } catch (signError) {
-    console.error('Alipay sign verification error:', signError);
+    console.error('Alipay sign verification error:', signError.message);
   }
   
   if (!signValid) {
@@ -416,7 +415,7 @@ router.post('/notify', async (req, res) => {
       }
     } catch (error) {
       if (conn) await conn.rollback();
-      console.error('Update order error:', error);
+      console.error('Update order error:', error.message);
     } finally {
       if (conn) conn.release();
     }

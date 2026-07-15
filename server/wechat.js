@@ -33,15 +33,16 @@ const merchantPrivateKey = readKeyFile('wechat_key.pem');
 const merchantCertificate = readKeyFile('wechat_cert.pem');
 
 // 验证配置
+// P3-8 修复：启动日志仅显示 configured 状态，不输出敏感标识符
 if (!WECHAT_APPID) {
   console.error('❌ WECHAT_APPID 未配置！微信支付将无法使用');
 } else {
-  console.log('✅ WECHAT_APPID:', WECHAT_APPID);
+  console.log('✅ WECHAT_APPID configured');
 }
 if (!WECHAT_MCHID) {
   console.error('❌ WECHAT_MCHID 未配置！微信支付将无法使用');
 } else {
-  console.log('✅ WECHAT_MCHID:', WECHAT_MCHID);
+  console.log('✅ WECHAT_MCHID configured');
 }
 if (!WECHAT_API_V3_KEY) {
   console.error('❌ WECHAT_API_V3_KEY 未配置！');
@@ -51,10 +52,10 @@ if (!WECHAT_API_V3_KEY) {
 if (!WECHAT_SERIAL_NO) {
   console.error('❌ WECHAT_SERIAL_NO 未配置！');
 } else {
-  console.log('✅ WECHAT_SERIAL_NO:', WECHAT_SERIAL_NO);
+  console.log('✅ WECHAT_SERIAL_NO configured');
 }
 if (!merchantPrivateKey) {
-  console.error('❌ wechat_key.pem 未找到！');
+  console.error('❌ wechat_key.pem 未找到或为空！微信支付功能将不可用');
 } else {
   console.log('✅ wechat_key.pem loaded');
 }
@@ -69,6 +70,9 @@ const WECHAT_API_BASE = 'https://api.mch.weixin.qq.com';
 
 // 生成签名（用于请求头 Authorization）
 function generateAuthorization(method, url, body) {
+  if (!merchantPrivateKey) {
+    throw new Error('微信支付私钥未配置');
+  }
   const timestamp = Math.floor(Date.now() / 1000).toString();
   const nonce = crypto.randomBytes(16).toString('hex');
   const message = `${method}\n${url}\n${timestamp}\n${nonce}\n${body || ''}\n`;
@@ -123,13 +127,22 @@ function decryptCertificate(encryptCertificate) {
 async function downloadPlatformCertificates() {
   const urlPath = '/v3/certificates';
   const authorization = generateAuthorization('GET', urlPath, '');
-  const response = await fetch(`${WECHAT_API_BASE}${urlPath}`, {
-    method: 'GET',
-    headers: {
-      'Authorization': authorization,
-      'Accept': 'application/json',
-    },
-  });
+  // P2-16 修复：添加 10 秒超时，避免 fetch 无限挂起
+  const controller = new AbortController();
+  const timeout = setTimeout(() => controller.abort(), 10000);
+  let response;
+  try {
+    response = await fetch(`${WECHAT_API_BASE}${urlPath}`, {
+      method: 'GET',
+      headers: {
+        'Authorization': authorization,
+        'Accept': 'application/json',
+      },
+      signal: controller.signal,
+    });
+  } finally {
+    clearTimeout(timeout);
+  }
 
   if (!response.ok) {
     throw new Error(`Failed to download platform certificates: ${response.status}`);
@@ -209,19 +222,28 @@ router.post('/create-order', async (req, res) => {
     const urlPath = '/v3/pay/transactions/native';
     const authorization = generateAuthorization('POST', urlPath, body);
 
-    // 调用微信支付 API
-    const response = await fetch(`${WECHAT_API_BASE}${urlPath}`, {
-      method: 'POST',
-      headers: {
-        'Content-Type': 'application/json',
-        'Authorization': authorization,
-        'Accept': 'application/json',
-      },
-      body,
-    });
+    // P2-16 修复：添加 10 秒超时，避免 fetch 无限挂起
+    const controller = new AbortController();
+    const timeout = setTimeout(() => controller.abort(), 10000);
+    let response;
+    try {
+      response = await fetch(`${WECHAT_API_BASE}${urlPath}`, {
+        method: 'POST',
+        headers: {
+          'Content-Type': 'application/json',
+          'Authorization': authorization,
+          'Accept': 'application/json',
+        },
+        body,
+        signal: controller.signal,
+      });
+    } finally {
+      clearTimeout(timeout);
+    }
 
     const data = await response.json();
-    console.log('WeChat Native pay response:', JSON.stringify(data));
+    // P3-8 修复：仅记录业务字段，不打印完整响应（可能含敏感信息）
+    console.log('WeChat Native pay response: code_url=', !!data.code_url, 'has_error=', !!data.code);
 
     if (data.code_url) {
       // 保存订单到数据库
@@ -236,13 +258,17 @@ router.post('/create-order', async (req, res) => {
         orderNo,
       });
     } else {
-      console.error('WeChat pay error:', data);
+      // P3-8 修复：仅打印错误码和消息，不打印完整 data
+      console.error('WeChat pay error: code=', data.code, 'message=', data.message);
       res.status(500).json({ success: false, error: '创建支付订单失败' });
     }
   } catch (error) {
     console.error('WeChat create order error:', error.message);
-    console.error('Error stack:', error.stack);
-    res.status(500).json({ success: false, error: '创建支付订单失败' });
+    if (error.message === '微信支付私钥未配置') {
+      res.status(503).json({ success: false, error: '微信支付尚未配置，请联系管理员' });
+    } else {
+      res.status(500).json({ success: false, error: '创建支付订单失败' });
+    }
   }
 });
 
@@ -275,7 +301,7 @@ router.get('/query-order/:orderNo', async (req, res) => {
       type: order.type,
     });
   } catch (error) {
-    console.error('WeChat query order error:', error);
+    console.error('WeChat query order error:', error.message);
     res.json({ paid: false, error: '查询订单状态失败' });
   }
 });
@@ -286,7 +312,8 @@ router.post('/notify', async (req, res) => {
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : JSON.stringify(req.body);
     const body = JSON.parse(rawBody);
 
-    console.log('WeChat notify received:', JSON.stringify(body));
+    // P3-8 修复：仅记录事件类型和 ID，不打印完整 body（含 payer openid 等敏感字段）
+    console.log('WeChat notify received: event=', body.event_type, 'id=', body.id);
 
     // 验证签名（使用微信平台证书，而非商户证书）
     const timestamp = req.headers['wechatpay-timestamp'];
@@ -368,7 +395,7 @@ router.post('/notify', async (req, res) => {
 
         // P0-2 修复：校验 appid 和 mchid
         if (appid !== WECHAT_APPID || mchid !== WECHAT_MCHID) {
-          console.warn('wechat notify: appid/mchid mismatch', { received_appid: appid, received_mchid: mchid });
+          console.warn('wechat notify: appid/mchid mismatch (received does not match configured)');
           await conn.rollback();
           return res.json({ code: 'SUCCESS', message: '成功' });
         }
@@ -423,7 +450,7 @@ router.post('/notify', async (req, res) => {
 
     res.json({ code: 'SUCCESS', message: '成功' });
   } catch (error) {
-    console.error('WeChat notify error:', error);
+    console.error('WeChat notify error:', error.message);
     res.status(500).json({ code: 'FAIL', message: '服务器内部错误' });
   }
 });

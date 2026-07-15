@@ -186,7 +186,7 @@ export const supportService = {
       },
       {
         question: '免费版有什么限制？',
-        answer: '免费版每日限制 20 次 AI 回复。升级到 Pro 版可享受无限制使用。',
+        answer: '免费版每日限制 50 次 AI 回复。升级到 Pro 版可享受无限制使用。',
       },
       {
         question: '如何升级 Pro 版？',

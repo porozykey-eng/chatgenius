@@ -3,14 +3,11 @@
 const DAILY_LIMIT = 50;
 
 function injectFonts() {
+  // P2-8 修复：移除外部 Google Fonts 注入，使用系统字体 fallback 避免宿主 CSP 限制
+  // 仅注入本地 keyframe 样式（不依赖外部资源，不受 CSP 影响）
   if (!document.getElementById('wa-ai-fonts')) {
-    const link = document.createElement('link');
-    link.id = 'wa-ai-fonts';
-    link.rel = 'stylesheet';
-    link.href = 'https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600&display=swap';
-    document.head.appendChild(link);
-    
     const style = document.createElement('style');
+    style.id = 'wa-ai-fonts';
     style.textContent = '@keyframes wa-ai-pulse {' +
                       '  0% { transform: scale(1); box-shadow: 0 0 0 0 rgba(124, 58, 237, 0.4); }' +
                       '  70% { transform: scale(1.05); box-shadow: 0 0 0 10px rgba(124, 58, 237, 0); }' +
@@ -943,6 +940,11 @@ function handleGenerateReply(e) {
   showToast('正在读取聊天记录...', 'loading', 0);
   const _toastStage1 = setTimeout(() => showToast('AI 正在思考...', 'loading', 0), 3000);
   const _toastStage2 = setTimeout(() => showToast('即将完成...', 'loading', 0), 6000);
+  // P2-5 修复：兜底超时，确保即使 SW 异常回调不触发也能清理 stage 定时器，避免泄漏
+  const _toastStageFallback = setTimeout(() => {
+    clearTimeout(_toastStage1);
+    clearTimeout(_toastStage2);
+  }, 15000);
 
   const context = getChatContext(platform);
   
@@ -959,6 +961,7 @@ function handleGenerateReply(e) {
   chrome.runtime.sendMessage({ action: 'generateReply', context: context }, (response) => {
     clearTimeout(_toastStage1);
     clearTimeout(_toastStage2);
+    clearTimeout(_toastStageFallback);
     resetButton(btn, originalHTML);
     
     if (chrome.runtime.lastError) {
@@ -1030,7 +1033,7 @@ function showQuotaExhaustedPanel() {
     <div style="text-align:center;">
       <div style="font-size:36px;margin-bottom:12px;">⏳</div>
       <h3 style="color:${c.text};font-size:16px;font-weight:600;margin:0 0 6px 0;">今日免费额度已用完</h3>
-      <p style="color:${c.textSecondary};font-size:13px;margin:0 0 18px 0;">每天 20 次免费额度已耗尽，明天自动重置</p>
+      <p style="color:${c.textSecondary};font-size:13px;margin:0 0 18px 0;">每天 ${DAILY_LIMIT} 次免费额度已耗尽，明天自动重置</p>
       <button id="wa-ai-quota-upgrade" style="width:100%;padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#7c3aed,#764ba2);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 16px rgba(124,58,237,0.35);">
         ✨ 升级 Pro 无限次使用
       </button>

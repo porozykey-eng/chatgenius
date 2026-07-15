@@ -17,8 +17,17 @@ if (!JWT_SECRET || JWT_SECRET.length < 96) {
   console.error('❌ JWT_SECRET 必须配置且长度 >= 96 字符！请用 require("crypto").randomBytes(48).toString("hex") 生成');
   process.exit(1);
 }
+if (!ADMIN_PASSWORD_HASH) {
+  console.error('❌ ADMIN_PASSWORD 必须配置！请在 .env 中设置管理员密码的 bcrypt hash');
+  process.exit(1);
+}
 const ACCESS_TOKEN_EXPIRY = '15m';
 const REFRESH_TOKEN_EXPIRY = '7d';
+
+// P3 修复：LIKE 通配符转义（防止用户搜索 % 或 _ 被当作通配符）
+function escapeLike(str) {
+  return String(str || '').replace(/[%_\\]/g, m => '\\' + m);
+}
 
 // ==================== Login Rate Limiter ====================
 const loginAttempts = new Map();
@@ -192,7 +201,7 @@ router.get('/public-settings', async (req, res) => {
     rows.forEach(s => { result[s.setting_key] = s.setting_value; });
     res.json(result);
   } catch (err) {
-    console.error('Get public settings error:', err);
+    console.error('Get public settings error:', err.message);
     res.status(500).json({ error: '获取设置失败' });
   }
 });
@@ -289,12 +298,18 @@ router.post('/refresh-token', async (req, res) => {
 });
 
 router.post('/logout', requireAdmin, async (req, res) => {
-  const sessionId = req.adminSession.sessionId;
-  if (sessionId) {
-    await revokeSession(sessionId);
-    await auditLog('logout', req, '管理员退出登录');
+  // P2-12 修复：用 try-catch 包裹，即使出错也返回成功让客户端退出
+  try {
+    const sessionId = req.adminSession.sessionId;
+    if (sessionId) {
+      await revokeSession(sessionId);
+      await auditLog('logout', req, '管理员退出登录');
+    }
+    res.json({ success: true });
+  } catch (err) {
+    console.error('Logout error:', err.message);
+    res.json({ success: true }); // 即使出错也返回成功，让客户端退出
   }
-  res.json({ success: true });
 });
 
 router.get('/me', requireAdmin, (req, res) => {
@@ -318,7 +333,7 @@ router.get('/sessions', requireAdmin, async (req, res) => {
       }))
     });
   } catch (err) {
-    console.error('List sessions error:', err);
+    console.error('List sessions error:', err.message);
     res.status(500).json({ error: '获取会话列表失败' });
   }
 });
@@ -330,7 +345,7 @@ router.delete('/sessions/:sessionId', requireAdmin, async (req, res) => {
     await auditLog('session_revoked', req, `强制下线会话 ${sessionId.substring(0, 8)}...`);
     res.json({ success: true });
   } catch (err) {
-    console.error('Revoke session error:', err);
+    console.error('Revoke session error:', err.message);
     res.status(500).json({ error: '撤销会话失败' });
   }
 });
@@ -486,7 +501,7 @@ router.get('/dashboard', requireAdmin, async (req, res) => {
       }))
     });
   } catch (err) {
-    console.error('Dashboard error:', err);
+    console.error('Dashboard error:', err.message);
     res.status(500).json({ error: '获取统计数据失败' });
   }
 });
@@ -547,7 +562,7 @@ router.get('/dashboard/trends', requireAdmin, async (req, res) => {
 
     res.json({ labels, values, total: metric === 'revenue' ? total.toFixed(2) : total });
   } catch (err) {
-    console.error('Trends error:', err);
+    console.error('Trends error:', err.message);
     res.status(500).json({ error: '获取趋势数据失败' });
   }
 });
@@ -572,7 +587,7 @@ router.get('/audit-logs', requireAdmin, async (req, res) => {
       whereClause += ' AND created_at <= ?';
       params.push(end);
     }
-    if (ip) { whereClause += ' AND admin_ip LIKE ?'; params.push(`%${ip}%`); }
+    if (ip) { whereClause += ' AND admin_ip LIKE ?'; params.push(`%${escapeLike(ip)}%`); }
 
     const [countRows] = await pool.query(`SELECT COUNT(*) as cnt FROM audit_logs WHERE ${whereClause}`, params);
     const total = countRows[0].cnt;
@@ -598,7 +613,7 @@ router.get('/audit-logs', requireAdmin, async (req, res) => {
       limit: limitNum
     });
   } catch (err) {
-    console.error('List audit logs error:', err);
+    console.error('List audit logs error:', err.message);
     res.status(500).json({ error: '获取审计日志失败' });
   }
 });
@@ -634,7 +649,7 @@ router.get('/audit-logs/export', requireAdmin, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="audit_logs_${Date.now()}.csv"`);
     res.send(BOM + header + rows);
   } catch (err) {
-    console.error('Export audit logs error:', err);
+    console.error('Export audit logs error:', err.message);
     res.status(500).json({ error: '导出失败' });
   }
 });
@@ -654,26 +669,35 @@ router.post('/codes/generate', requireAdmin, async (req, res) => {
     return res.status(400).json({ error: '生成数量必须在 1-100 之间' });
   }
 
+  // P2-9 修复：用事务包裹整个循环，避免中途失败产生孤儿数据
+  let conn;
   try {
     const codes = [];
     const prefixMap = { year: 'YEAR', lifetime: 'PRO' };
     const prefix = prefixMap[type];
     const batchId = generateBatchId();
 
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
     for (let i = 0; i < qty; i++) {
       const code = generateSecureCode(prefix);
-      await pool.query(
+      await conn.query(
         'INSERT INTO activation_codes (code, type, status, batch_id, note) VALUES (?, ?, ?, ?, ?)',
         [code, type, 'unused', batchId, note || null]
       );
       codes.push(code);
     }
 
+    await conn.commit();
     await auditLog('codes_generated', req, `生成 ${qty} 个 ${type} 类型激活码，批次 ${batchId}`);
     res.json({ success: true, count: codes.length, codes, batchId });
   } catch (err) {
-    console.error('Generate codes error:', err);
+    if (conn) await conn.rollback();
+    console.error('Generate codes error:', err.message);
     res.status(500).json({ error: '生成激活码失败' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
@@ -703,7 +727,7 @@ router.get('/codes/batches', requireAdmin, async (req, res) => {
 
     res.json({ batches: Array.from(batchMap.values()) });
   } catch (err) {
-    console.error('List batches error:', err);
+    console.error('List batches error:', err.message);
     res.status(500).json({ error: '获取批次列表失败' });
   }
 });
@@ -736,7 +760,7 @@ router.get('/codes/export', requireAdmin, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="codes_${Date.now()}.csv"`);
     res.send(BOM + header + rows);
   } catch (err) {
-    console.error('Export codes error:', err);
+    console.error('Export codes error:', err.message);
     res.status(500).json({ error: '导出失败' });
   }
 });
@@ -754,7 +778,7 @@ router.get('/codes', requireAdmin, async (req, res) => {
     if (status && status !== 'all') { whereClause += ' AND status = ?'; params.push(status); }
     if (type && type !== 'all') { whereClause += ' AND type = ?'; params.push(type); }
     if (batchId && batchId !== 'all') { whereClause += ' AND batch_id = ?'; params.push(batchId); }
-    if (search) { whereClause += ' AND code LIKE ?'; params.push(`%${search.toUpperCase()}%`); }
+    if (search) { whereClause += ' AND code LIKE ?'; params.push(`%${escapeLike(search.toUpperCase())}%`); }
     if (createdAfter) { whereClause += ' AND created_at >= ?'; params.push(new Date(createdAfter)); }
     if (createdBefore) {
       const before = new Date(createdBefore);
@@ -787,7 +811,7 @@ router.get('/codes', requireAdmin, async (req, res) => {
       limit: limitNum
     });
   } catch (err) {
-    console.error('List codes error:', err);
+    console.error('List codes error:', err.message);
     res.status(500).json({ error: '获取激活码列表失败' });
   }
 });
@@ -795,17 +819,23 @@ router.get('/codes', requireAdmin, async (req, res) => {
 router.post('/codes/batch-delete', requireAdmin, async (req, res) => {
   const { ids, filter } = req.body;
 
+  // P2-10 修复：用事务包裹循环删除，避免中途失败产生孤儿数据
+  let conn;
   try {
     let deletedCount = 0;
 
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+
     if (ids && Array.isArray(ids) && ids.length > 0) {
       if (ids.length > 500) {
+        await conn.rollback();
         return res.status(400).json({ error: '单次最多删除 500 条' });
       }
       for (const id of ids) {
-        const [rows] = await pool.query('SELECT status FROM activation_codes WHERE id = ?', [id]);
+        const [rows] = await conn.query('SELECT status FROM activation_codes WHERE id = ?', [id]);
         if (rows.length > 0 && rows[0].status === 'unused') {
-          await pool.query('DELETE FROM activation_codes WHERE id = ?', [id]);
+          await conn.query('DELETE FROM activation_codes WHERE id = ?', [id]);
           deletedCount++;
         }
       }
@@ -814,19 +844,23 @@ router.post('/codes/batch-delete', requireAdmin, async (req, res) => {
       const params = ['unused'];
       if (filter.type) { whereClause += ' AND type = ?'; params.push(filter.type); }
       if (filter.batchId) { whereClause += ' AND batch_id = ?'; params.push(filter.batchId); }
-      
-      const [rows] = await pool.query(`SELECT id FROM activation_codes WHERE ${whereClause} LIMIT 500`, params);
+
+      const [rows] = await conn.query(`SELECT id FROM activation_codes WHERE ${whereClause} LIMIT 500`, params);
       for (const row of rows) {
-        await pool.query('DELETE FROM activation_codes WHERE id = ?', [row.id]);
+        await conn.query('DELETE FROM activation_codes WHERE id = ?', [row.id]);
         deletedCount++;
       }
     }
 
+    await conn.commit();
     await auditLog('codes_batch_deleted', req, `批量删除 ${deletedCount} 个未使用激活码`);
     res.json({ success: true, deletedCount });
   } catch (err) {
-    console.error('Batch delete error:', err);
+    if (conn) await conn.rollback();
+    console.error('Batch delete error:', err.message);
     res.status(500).json({ error: '批量删除失败' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
@@ -839,7 +873,7 @@ router.post('/codes/:id/note', requireAdmin, async (req, res) => {
     await auditLog('code_note_updated', req, `更新激活码备注 ID:${id}`);
     res.json({ success: true });
   } catch (err) {
-    console.error('Update note error:', err);
+    console.error('Update note error:', err.message);
     res.status(500).json({ error: '更新备注失败' });
   }
 });
@@ -892,7 +926,7 @@ router.get('/orders/statistics', requireAdmin, async (req, res) => {
       channelBreakdown
     });
   } catch (err) {
-    console.error('Order statistics error:', err);
+    console.error('Order statistics error:', err.message);
     res.status(500).json({ error: '获取订单统计失败' });
   }
 });
@@ -917,11 +951,11 @@ router.get('/orders', requireAdmin, async (req, res) => {
     }
     if (minPrice) { whereClause += ' AND CAST(price AS DECIMAL) >= ?'; params.push(parseFloat(minPrice)); }
     if (maxPrice) { whereClause += ' AND CAST(price AS DECIMAL) <= ?'; params.push(parseFloat(maxPrice)); }
-    if (userEmail) { whereClause += ' AND user_email LIKE ?'; params.push(`%${userEmail}%`); }
-    if (orderNo) { whereClause += ' AND order_no LIKE ?'; params.push(`%${orderNo}%`); }
+    if (userEmail) { whereClause += ' AND user_email LIKE ?'; params.push(`%${escapeLike(userEmail)}%`); }
+    if (orderNo) { whereClause += ' AND order_no LIKE ?'; params.push(`%${escapeLike(orderNo)}%`); }
     if (search) {
       whereClause += ' AND (order_no LIKE ? OR user_email LIKE ?)';
-      params.push(`%${search}%`, `%${search}%`);
+      params.push(`%${escapeLike(search)}%`, `%${escapeLike(search)}%`);
     }
 
     const [countRows] = await pool.query(`SELECT COUNT(*) as cnt FROM orders WHERE ${whereClause}`, params);
@@ -966,7 +1000,7 @@ router.get('/orders', requireAdmin, async (req, res) => {
       }
     });
   } catch (err) {
-    console.error('List orders error:', err);
+    console.error('List orders error:', err.message);
     res.status(500).json({ error: '获取订单列表失败' });
   }
 });
@@ -1003,7 +1037,7 @@ router.get('/orders/:orderNo', requireAdmin, async (req, res) => {
       refundedAt: order.refunded_at
     });
   } catch (err) {
-    console.error('Get order error:', err);
+    console.error('Get order error:', err.message);
     res.status(500).json({ error: '获取订单详情失败' });
   }
 });
@@ -1043,7 +1077,7 @@ router.get('/orders/export', requireAdmin, async (req, res) => {
     res.setHeader('Content-Disposition', `attachment; filename="orders_${Date.now()}.csv"`);
     res.send(BOM + header + rows);
   } catch (err) {
-    console.error('Export orders error:', err);
+    console.error('Export orders error:', err.message);
     res.status(500).json({ error: '导出失败' });
   }
 });
@@ -1081,7 +1115,7 @@ router.post('/orders/:orderNo/complete', requireAdmin, async (req, res) => {
     res.json({ success: true, activationCode: code });
   } catch (err) {
     if (conn) await conn.rollback();
-    console.error('Complete order error:', err);
+    console.error('Complete order error:', err.message);
     res.status(500).json({ error: '完成订单失败' });
   } finally {
     if (conn) conn.release();
@@ -1137,7 +1171,7 @@ router.post('/orders/:orderNo/refund', requireAdmin, async (req, res) => {
     });
   } catch (err) {
     if (conn) await conn.rollback();
-    console.error('Refund order error:', err);
+    console.error('Refund order error:', err.message);
     res.status(500).json({ error: '退款失败' });
   } finally {
     if (conn) conn.release();
@@ -1171,7 +1205,7 @@ router.get('/licenses', requireAdmin, async (req, res) => {
     }
     if (search) {
       whereClause += ' AND (activation_code LIKE ? OR user_email LIKE ?)';
-      params.push(`%${search}%`, `%${search}%`);
+      params.push(`%${escapeLike(search)}%`, `%${escapeLike(search)}%`);
     }
 
     const [countRows] = await pool.query(`SELECT COUNT(*) as cnt FROM licenses WHERE ${whereClause}`, params);
@@ -1201,54 +1235,63 @@ router.get('/licenses', requireAdmin, async (req, res) => {
       limit: limitNum
     });
   } catch (err) {
-    console.error('List licenses error:', err);
+    console.error('List licenses error:', err.message);
     res.status(500).json({ error: '获取许可证列表失败' });
   }
 });
 
 router.post('/licenses/:id/revoke', requireAdmin, async (req, res) => {
   const { id } = req.params;
-
+  let conn;
   try {
-    const [rows] = await pool.query('SELECT activation_code, is_active FROM licenses WHERE id = ?', [id]);
-    if (rows.length === 0) return res.status(404).json({ error: '许可证不存在' });
-
-    if (!rows[0].is_active) {
-      return res.status(400).json({ error: '许可证已撤销' });
-    }
-
-    await pool.query('UPDATE licenses SET is_active = FALSE, device_fingerprint = NULL WHERE id = ?', [id]);
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    const [rows] = await conn.query('SELECT id, activation_code, is_active FROM licenses WHERE id = ? FOR UPDATE', [id]);
+    if (rows.length === 0) { await conn.rollback(); return res.status(404).json({ error: '许可证不存在' }); }
+    if (!rows[0].is_active) { await conn.rollback(); return res.json({ success: true, message: '许可证已是撤销状态' }); }
+    await conn.query('UPDATE licenses SET is_active = FALSE, device_fingerprint = NULL WHERE id = ?', [id]);
     // P1 安全修复：同步清理设备池，防止撤销后旧设备仍可心跳
-    await pool.query('UPDATE license_devices SET is_active = 0 WHERE license_id = ?', [id]);
-    await auditLog('license_revoked', req, `撤销许可证 ${rows[0].activation_code}`);
+    await conn.query('UPDATE license_devices SET is_active = 0 WHERE license_id = ?', [id]);
+    await conn.commit();
+    await auditLog('license_revoked', req, `撤销许可证 ${id}`, { targetId: id, targetType: 'license' });
     res.json({ success: true });
   } catch (err) {
-    console.error('Revoke license error:', err);
+    if (conn) await conn.rollback();
+    console.error('Revoke license error:', err.message);
     res.status(500).json({ error: '撤销许可证失败' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
 router.post('/licenses/:id/unbind', requireAdmin, async (req, res) => {
   const { id } = req.params;
+  let conn;
   try {
-    // 获取 license 和关联的 activation_code
-    const [rows] = await pool.query('SELECT id, activation_code FROM licenses WHERE id = ?', [id]);
-    if (rows.length === 0) return res.status(404).json({ error: '许可证不存在' });
+    conn = await pool.getConnection();
+    await conn.beginTransaction();
+    // 获取 license 和关联的 activation_code（行锁）
+    const [rows] = await conn.query('SELECT id, activation_code FROM licenses WHERE id = ? FOR UPDATE', [id]);
+    if (rows.length === 0) { await conn.rollback(); return res.status(404).json({ error: '许可证不存在' }); }
 
     const license = rows[0];
     // 清除设备绑定（licenses 和 activation_codes 都清除）
-    await pool.query('UPDATE licenses SET device_fingerprint = NULL WHERE id = ?', [id]);
+    await conn.query('UPDATE licenses SET device_fingerprint = NULL WHERE id = ?', [id]);
     if (license.activation_code) {
-      await pool.query('UPDATE activation_codes SET bound_fingerprint = NULL WHERE code = ?', [license.activation_code]);
+      await conn.query('UPDATE activation_codes SET bound_fingerprint = NULL WHERE code = ?', [license.activation_code]);
     }
     // P1 安全修复：同步清理设备池，防止解绑后旧设备仍可心跳
-    await pool.query('UPDATE license_devices SET is_active = 0 WHERE license_id = ?', [id]);
+    await conn.query('UPDATE license_devices SET is_active = 0 WHERE license_id = ?', [id]);
 
+    await conn.commit();
     await auditLog('license_unbind', req, `手动解绑许可证 #${id}（不计入用户换绑次数）`);
     res.json({ success: true, message: '设备已解绑' });
   } catch (err) {
-    console.error('Unbind license error:', err);
+    if (conn) await conn.rollback();
+    console.error('Unbind license error:', err.message);
     res.status(500).json({ error: '解绑失败' });
+  } finally {
+    if (conn) conn.release();
   }
 });
 
@@ -1286,7 +1329,7 @@ router.post('/licenses/:id/reactivate', requireAdmin, async (req, res) => {
     res.json({ success: true });
   } catch (err) {
     if (conn) await conn.rollback();
-    console.error('Reactivate license error:', err);
+    console.error('Reactivate license error:', err.message);
     res.status(500).json({ error: '重新激活失败' });
   } finally {
     if (conn) conn.release();
@@ -1334,7 +1377,7 @@ router.post('/licenses/:id/extend', requireAdmin, async (req, res) => {
     res.json({ success: true, newExpiresAt: newExpiry });
   } catch (err) {
     if (conn) await conn.rollback();
-    console.error('Extend license error:', err);
+    console.error('Extend license error:', err.message);
     res.status(500).json({ error: '延期许可证失败' });
   } finally {
     if (conn) conn.release();
@@ -1357,15 +1400,21 @@ router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
     let failCount = 0;
 
     for (const id of ids) {
+      // P2-11 修复：每条记录用独立事务包裹，加 FOR UPDATE 行锁，避免并发竞态
+      let conn;
       try {
-        const [rows] = await pool.query('SELECT is_active, type, expires_at FROM licenses WHERE id = ?', [id]);
-        if (rows.length === 0) { failCount++; continue; }
+        conn = await pool.getConnection();
+        await conn.beginTransaction();
+        const [rows] = await conn.query('SELECT is_active, type, expires_at FROM licenses WHERE id = ? FOR UPDATE', [id]);
+        if (rows.length === 0) { await conn.rollback(); failCount++; continue; }
 
         const license = rows[0];
 
         if (action === 'revoke') {
           if (license.is_active) {
-            await pool.query('UPDATE licenses SET is_active = FALSE WHERE id = ?', [id]);
+            // P2-11 修复：与单条 revoke 一致，同步清理 device_fingerprint 和 license_devices
+            await conn.query('UPDATE licenses SET is_active = FALSE, device_fingerprint = NULL WHERE id = ?', [id]);
+            await conn.query('UPDATE license_devices SET is_active = 0 WHERE license_id = ?', [id]);
             successCount++;
           }
         } else if (action === 'reactivate') {
@@ -1375,9 +1424,9 @@ router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
             if (license.type === 'year') {
               const expiresAt = new Date();
               expiresAt.setFullYear(expiresAt.getFullYear() + 1);
-              await pool.query('UPDATE licenses SET is_active = TRUE, expires_at = ? WHERE id = ?', [expiresAt, id]);
+              await conn.query('UPDATE licenses SET is_active = TRUE, expires_at = ? WHERE id = ?', [expiresAt, id]);
             } else {
-              await pool.query('UPDATE licenses SET is_active = TRUE WHERE id = ?', [id]);
+              await conn.query('UPDATE licenses SET is_active = TRUE WHERE id = ?', [id]);
             }
             successCount++;
           }
@@ -1390,19 +1439,23 @@ router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
             const base = currentExpiry > now ? currentExpiry : now;
             const newExpiry = new Date(base);
             newExpiry.setDate(newExpiry.getDate() + days);
-            await pool.query('UPDATE licenses SET expires_at = ? WHERE id = ?', [newExpiry, id]);
+            await conn.query('UPDATE licenses SET expires_at = ? WHERE id = ?', [newExpiry, id]);
             successCount++;
           }
         }
+        await conn.commit();
       } catch (err) {
+        if (conn) await conn.rollback();
         failCount++;
+      } finally {
+        if (conn) conn.release();
       }
     }
 
     await auditLog('license_batch_operation', req, `批量${action}操作，成功 ${successCount}，失败 ${failCount}`);
     res.json({ success: true, successCount, failCount });
   } catch (err) {
-    console.error('Batch operation error:', err);
+    console.error('Batch operation error:', err.message);
     res.status(500).json({ error: '批量操作失败' });
   }
 });
@@ -1426,7 +1479,7 @@ router.get('/ip-bans', requireAdmin, async (req, res) => {
       }))
     });
   } catch (err) {
-    console.error('List IP bans error:', err);
+    console.error('List IP bans error:', err.message);
     res.status(500).json({ error: '获取封禁列表失败' });
   }
 });
@@ -1438,7 +1491,7 @@ router.post('/ip-bans/:id/unban', requireAdmin, async (req, res) => {
     await auditLog('ip_unbanned', req, `解封 IP 封禁记录 #${id}`);
     res.json({ success: true, message: 'IP 已解封' });
   } catch (err) {
-    console.error('Unban IP error:', err);
+    console.error('Unban IP error:', err.message);
     res.status(500).json({ error: '解封失败' });
   }
 });
@@ -1452,7 +1505,7 @@ router.get('/settings', requireAdmin, async (req, res) => {
     rows.forEach(s => { result[s.setting_key] = s.setting_value; });
     res.json(result);
   } catch (err) {
-    console.error('Get settings error:', err);
+    console.error('Get settings error:', err.message);
     res.status(500).json({ error: '获取设置失败' });
   }
 });
@@ -1491,7 +1544,7 @@ router.put('/settings', requireAdmin, async (req, res) => {
     await auditLog('settings_changed', req, `更新设置 ${key}`);
     res.json({ success: true });
   } catch (err) {
-    console.error('Update setting error:', err);
+    console.error('Update setting error:', err.message);
     res.status(500).json({ error: '更新设置失败' });
   }
 });
@@ -1515,7 +1568,7 @@ router.get('/invoices', requireAdmin, async (req, res) => {
     }
     if (search) {
       whereClause += ' AND (i.order_no LIKE ? OR i.title LIKE ? OR i.email LIKE ?)';
-      params.push(`%${search}%`, `%${search}%`, `%${search}%`);
+      params.push(`%${escapeLike(search)}%`, `%${escapeLike(search)}%`, `%${escapeLike(search)}%`);
     }
 
     const [countRows] = await pool.query(
@@ -1557,7 +1610,7 @@ router.get('/invoices', requireAdmin, async (req, res) => {
       limit: limitNum,
     });
   } catch (err) {
-    console.error('List invoices error:', err);
+    console.error('List invoices error:', err.message);
     res.status(500).json({ error: '获取发票列表失败' });
   }
 });
@@ -1597,7 +1650,7 @@ router.get('/invoices/:id', requireAdmin, async (req, res) => {
       channel: inv.channel,
     });
   } catch (err) {
-    console.error('Get invoice error:', err);
+    console.error('Get invoice error:', err.message);
     res.status(500).json({ error: '获取发票详情失败' });
   }
 });
@@ -1648,7 +1701,7 @@ router.post('/invoices/:id/issue', requireAdmin, async (req, res) => {
       emailError: mailResult.success ? undefined : mailResult.error,
     });
   } catch (err) {
-    console.error('Issue invoice error:', err);
+    console.error('Issue invoice error:', err.message);
     res.status(500).json({ error: '操作失败' });
   }
 });
@@ -1685,7 +1738,7 @@ router.post('/invoices/:id/reject', requireAdmin, async (req, res) => {
 
     res.json({ success: true, message: '发票申请已拒绝' });
   } catch (err) {
-    console.error('Reject invoice error:', err);
+    console.error('Reject invoice error:', err.message);
     res.status(500).json({ error: '操作失败' });
   }
 });
