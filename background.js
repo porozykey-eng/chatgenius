@@ -466,6 +466,35 @@ async function generateWithFallback(settings, messages, fallbackModels) {
 
 // Try to generate with a specific model
 async function tryGenerate(apiUrl, apiKey, modelName, messages) {
+  // Chrome Web Store 合规：检查是否拥有该 API 域名的访问权限
+  // service worker 无法 request 权限（需用户手势），只能 contains 检查
+  try {
+    const u = new URL(apiUrl);
+    const origin = `${u.origin}/*`;
+    if (!origin.includes('chat.sopie.cc')) {
+      const hasPerm = await chrome.permissions.contains({ origins: [origin] });
+      if (!hasPerm) {
+        throw new Error(`PERMISSION_REQUIRED:${u.hostname}`);
+      }
+    }
+  } catch (permErr) {
+    if (permErr.message && permErr.message.startsWith('PERMISSION_REQUIRED:')) {
+      const hostname = permErr.message.split(':')[1];
+      // 通过通知提示用户去设置页授权
+      if (chrome.notifications) {
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: 'icons/icon128.png',
+          title: '需要授权 API 域名',
+          message: `请前往扩展设置页，点击"测试连接"授权 ${hostname} 后重试`,
+          priority: 2
+        });
+      }
+      throw new Error(`API 域名 ${hostname} 未授权，请到设置页点击"测试连接"完成授权`);
+    }
+    // URL 解析失败，继续尝试请求
+  }
+
   const bodyData = {
     model: modelName,
     messages: messages

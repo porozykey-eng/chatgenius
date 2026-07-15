@@ -1878,6 +1878,41 @@ function initApp() {
     return (url.endsWith('/chat/completions') || url.endsWith('/messages')) ? url : url + '/chat/completions';
   }
 
+  // Chrome Web Store 合规：从 API URL 提取 origin 用于动态权限请求
+  function extractApiOrigin(apiUrl) {
+    try {
+      const u = new URL(apiUrl);
+      return `${u.origin}/*`;
+    } catch (e) {
+      return null;
+    }
+  }
+
+  // 确保拥有对应 API 域名的权限（动态请求 optional_host_permissions）
+  // 必须在用户手势（click 事件）中调用，否则 chrome.permissions.request 会被拒绝
+  async function ensureApiPermission(apiUrl) {
+    const origin = extractApiOrigin(apiUrl);
+    if (!origin) return true; // 无法解析 URL，跳过权限检查
+    // chat.sopie.cc 是必需权限（host_permissions），不需要动态请求
+    if (origin.includes('chat.sopie.cc')) return true;
+    try {
+      const hasPermission = await chrome.permissions.contains({ origins: [origin] });
+      if (hasPermission) return true;
+      // 请求权限（此处处于用户点击事件链中）
+      const granted = await chrome.permissions.request({ origins: [origin] });
+      if (!granted) {
+        showToast(currentLang === 'zh'
+          ? '需要授权访问该 API 域名才能使用，请点击允许'
+          : 'Permission to access this API domain is required. Please allow.', true);
+        return false;
+      }
+      return true;
+    } catch (err) {
+      console.error('Permission request failed:', err.message);
+      return true; // 失败时继续尝试，可能已有权限或为本地 mock
+    }
+  }
+
   async function doTestConnectionCustom(apiUrl, apiKey, modelName, resultEl, btnEl) {
     if (!apiUrl || !apiKey) {
       if (resultEl) {
@@ -1887,6 +1922,16 @@ function initApp() {
       return;
     }
     if (!modelName) modelName = 'gpt-3.5-turbo';
+
+    // Chrome Web Store 合规：测试连接前确保已授权该 API 域名
+    const hasPerm = await ensureApiPermission(apiUrl);
+    if (!hasPerm) {
+      if (resultEl) {
+        resultEl.textContent = currentLang === 'zh' ? '未授权访问该 API 域名' : 'Permission to access this API domain was denied';
+        resultEl.style.color = 'var(--error)';
+      }
+      return;
+    }
 
     if (btnEl) { btnEl.disabled = true; btnEl.textContent = currentLang === 'zh' ? '测试中...' : 'Testing...'; }
     if (resultEl) { resultEl.textContent = currentLang === 'zh' ? '正在测试连接...' : 'Testing connection...'; resultEl.style.color = 'var(--text-secondary)'; }

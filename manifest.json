@@ -1,8 +1,8 @@
 {
   "manifest_version": 3,
   "name": "__MSG_extName__",
-  "version": "3.0.0",
-  "version_name": "3.0.0 - Security & UI Major Update",
+  "version": "3.1.0",
+  "version_name": "3.1.0 - Chrome Web Store Ready",
   "description": "__MSG_extDesc__",
   "default_locale": "en",
   "author": "ChatGenius AI",
@@ -17,7 +17,9 @@
     "https://web.whatsapp.com/*",
     "https://www.messenger.com/*",
     "https://www.facebook.com/*",
-    "https://chat.sopie.cc/*",
+    "https://chat.sopie.cc/*"
+  ],
+  "optional_host_permissions": [
     "https://ark.cn-beijing.volces.com/*",
     "https://aip.baidubce.com/*",
     "https://api.moonshot.cn/*",
