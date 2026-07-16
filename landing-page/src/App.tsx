@@ -14,6 +14,7 @@ import {
 } from 'lucide-react'
 import { activationService } from './services/activationService'
 import { invoiceService } from './services/invoiceService'
+import { getPricing, type Pricing } from './lib/pricingApi'
 
 // ==================== Animation Variants ====================
 const fadeInUp = {
@@ -91,48 +92,6 @@ function BackToTop() {
   )
 }
 
-// Countdown Timer - 每天重置到午夜 00:00:00
-function CountdownTimer() {
-  const [timeLeft, setTimeLeft] = useState({ hours: 0, minutes: 0, seconds: 0 })
-  
-  useEffect(() => {
-    const calculateTimeLeft = () => {
-      const now = new Date()
-      const midnight = new Date()
-      midnight.setHours(24, 0, 0, 0) // 下一个午夜
-      
-      const diff = midnight.getTime() - now.getTime()
-      const hours = Math.floor(diff / (1000 * 60 * 60))
-      const minutes = Math.floor((diff % (1000 * 60 * 60)) / (1000 * 60))
-      const seconds = Math.floor((diff % (1000 * 60)) / 1000)
-      
-      return { hours, minutes, seconds }
-    }
-    
-    // 初始化
-    setTimeLeft(calculateTimeLeft())
-    
-    const timer = setInterval(() => {
-      setTimeLeft(calculateTimeLeft())
-    }, 1000)
-    
-    return () => clearInterval(timer)
-  }, [])
-  
-  return (
-    <div className="inline-flex items-center gap-2 px-4 py-2 rounded-full bg-red-500/10 border border-red-500/20">
-      <span className="text-sm text-red-400 font-medium animate-pulse">限时优惠</span>
-      <div className="flex items-center gap-1 text-white font-mono">
-        <span className="bg-red-500/20 px-2 py-0.5 rounded text-sm">{String(timeLeft.hours).padStart(2, '0')}</span>
-        <span className="text-red-400">:</span>
-        <span className="bg-red-500/20 px-2 py-0.5 rounded text-sm">{String(timeLeft.minutes).padStart(2, '0')}</span>
-        <span className="text-red-400">:</span>
-        <span className="bg-red-500/20 px-2 py-0.5 rounded text-sm">{String(timeLeft.seconds).padStart(2, '0')}</span>
-      </div>
-    </div>
-  )
-}
-
 // ==================== Payment Modal ====================
 function PaymentModal({ 
   isOpen, 
@@ -151,6 +110,7 @@ function PaymentModal({
   const [orderNo, setOrderNo] = useState('')
   const [qrCode, setQrCode] = useState('')
   const [pollingTimer, setPollingTimer] = useState<ReturnType<typeof setInterval> | null>(null)
+  const [agreedToTerms, setAgreedToTerms] = useState(false)
 
   // Handle payment channel selection - create order via server API
   const handlePayment = async (channel: 'alipay' | 'wechat') => {
@@ -206,6 +166,7 @@ function PaymentModal({
     setPaymentChannel(null)
     setOrderNo('')
     setQrCode('')
+    setAgreedToTerms(false)
     if (pollingTimer) {
       clearInterval(pollingTimer)
       setPollingTimer(null)
@@ -264,11 +225,26 @@ function PaymentModal({
                     </div>
                   </div>
 
+                  <label className="flex items-start gap-2 cursor-pointer select-none">
+                    <input
+                      type="checkbox"
+                      checked={agreedToTerms}
+                      onChange={(e) => setAgreedToTerms(e.target.checked)}
+                      className="mt-0.5 w-4 h-4 accent-violet-500 flex-shrink-0"
+                    />
+                    <span className="text-xs text-white/70 leading-relaxed">
+                      我已阅读并同意
+                      <a href="/terms-of-service.html" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 underline">《服务条款》</a>
+                      和
+                      <a href="/refund-policy.html" target="_blank" rel="noopener noreferrer" className="text-violet-400 hover:text-violet-300 underline">《退款政策》</a>
+                    </span>
+                  </label>
+
                   <div className="space-y-3">
                     <p className="text-sm text-white/60">选择支付方式</p>
                     <button
                       onClick={() => handlePayment('alipay')}
-                      disabled={loading}
+                      disabled={loading || !agreedToTerms}
                       className="w-full p-4 bg-[#1677FF]/10 hover:bg-[#1677FF]/20 border border-[#1677FF]/30 rounded-xl text-left transition-colors flex items-center gap-4 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="w-10 h-10 bg-[#1677FF] rounded-lg flex items-center justify-center">
@@ -288,7 +264,7 @@ function PaymentModal({
                     </button>
                     <button
                       onClick={() => handlePayment('wechat')}
-                      disabled={loading}
+                      disabled={loading || !agreedToTerms}
                       className="w-full p-4 bg-[#07C160]/10 hover:bg-[#07C160]/20 border border-[#07C160]/30 rounded-xl text-left transition-colors flex items-center gap-4 disabled:opacity-50 disabled:cursor-not-allowed"
                     >
                       <div className="w-10 h-10 bg-[#07C160] rounded-lg flex items-center justify-center">
@@ -857,7 +833,7 @@ function HeroSection({ onDownload, isDownloading }: { onDownload: () => void, is
             <motion.div variants={fadeInUp} className="grid grid-cols-3 gap-4 sm:gap-6 md:gap-8">
               {[
                 { value: 40, suffix: '+', label: 'AI 模型' },
-                { value: 8000, suffix: '+', label: '活跃用户' },
+                { value: 7, suffix: ' 天', label: '无理由退款' },
                 { value: 10, suffix: 'x', label: '效率提升' },
               ].map((stat, i) => (
                 <div key={i} className="text-center lg:text-left">
@@ -1001,8 +977,8 @@ function BrowserMarquee() {
 function TrustBadgesSection() {
   const badges = [
     { icon: ShieldCheck, label: '数据安全', desc: '本地加密存储' },
-    { icon: Award, label: '4.9 评分', desc: 'Chrome 商店' },
-    { icon: Users, label: '8,000+', desc: '活跃用户' },
+    { icon: Award, label: '即将上架', desc: 'Chrome 商店' },
+    { icon: Users, label: '新发布', desc: '产品上线' },
     { icon: Zap, label: '3秒响应', desc: '极速AI生成' },
   ]
   
@@ -1409,14 +1385,14 @@ function TestimonialsSection() {
         >
           <motion.div variants={fadeInUp} className="inline-flex items-center gap-2 glass rounded-full px-4 py-1.5 mb-6 border border-white/10">
             <Star className="w-4 h-4 text-yellow-400" />
-            <span className="text-sm font-medium text-yellow-300">用户评价</span>
+            <span className="text-sm font-medium text-yellow-300">示例评价</span>
           </motion.div>
           <motion.h2 variants={fadeInUp} className="text-4xl md:text-5xl lg:text-6xl font-black mb-6">
-            <span className="text-white">深受</span>
-            <span className="text-gradient">用户信赖</span>
+            <span className="text-white">典型</span>
+            <span className="text-gradient">使用场景</span>
           </motion.h2>
           <motion.p variants={fadeInUp} className="text-white/50 text-lg max-w-2xl mx-auto">
-            8000+ 活跃用户的共同选择，看看他们怎么说
+            以下为示例场景评价，展示 ChatGenius 在不同岗位中的典型使用情况，仅供参考
           </motion.p>
         </motion.div>
         
@@ -1462,6 +1438,15 @@ function TestimonialsSection() {
 function PricingSection({ onDownload }: { onDownload: () => void }) {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<{ name: string; price: string; type: 'year' | 'lifetime' } | null>(null)
+  const [pricing, setPricing] = useState<Pricing>({ year: { price: 68 }, lifetime: { price: 98 } })
+
+  useEffect(() => {
+    let mounted = true
+    getPricing().then(p => {
+      if (mounted) setPricing(p)
+    })
+    return () => { mounted = false }
+  }, [])
 
   const handlePlanClick = (plan: { type: string, name: string, price: string }) => {
     if (plan.type === 'free') {
@@ -1494,7 +1479,7 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
     },
     {
       name: 'Pro 年付',
-      price: '¥68',
+      price: `¥${pricing.year.price}`,
       originalPrice: null,
       period: '/ 年',
       desc: '按年订阅，每年续费',
@@ -1517,10 +1502,10 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
     },
     {
       name: 'Pro 永久版',
-      price: '¥98',
-      originalPrice: '¥198',
+      price: `¥${pricing.lifetime.price}`,
+      originalPrice: null,
       period: '/ 永久',
-      desc: '一次付费，终身使用，仅比年付多 ¥30',
+      desc: '一次付费，终身使用',
       features: [
         '年付版所有功能',
         '终身免费更新',
@@ -1557,13 +1542,10 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
               <span className="text-white">选择适合您的</span>
               <span className="text-gradient">方案</span>
             </motion.h2>
-            <motion.div variants={fadeInUp} className="mb-4">
-              <CountdownTimer />
-            </motion.div>
             <motion.p variants={fadeInUp} className="text-lg">
               <span className="inline-flex items-center gap-2 px-4 py-2 rounded-xl bg-gradient-to-r from-amber-500/20 via-orange-500/20 to-red-500/20 border border-amber-500/30">
                 <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
-                <span className="font-bold text-gradient-gold animate-pulse">Pro 版限时特惠，永久版仅需 ¥98</span>
+                <span className="font-bold text-gradient-gold animate-pulse">Pro 版永久版仅需 ¥{pricing.lifetime.price}</span>
                 <Sparkles className="w-5 h-5 text-amber-400 animate-pulse" />
               </span>
             </motion.p>
@@ -1587,7 +1569,7 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
                     <div className="relative">
                       <div className="absolute inset-0 bg-red-500 blur-lg animate-pulse opacity-75 rounded-full" />
                       <div className="relative bg-gradient-to-r from-red-500 via-orange-500 to-yellow-500 text-white text-base font-black px-5 py-1.5 rounded-full shadow-xl tracking-wider animate-pulse">
-                        🔥 限时5折
+                        🔥 热门推荐
                       </div>
                     </div>
                   </div>
@@ -1918,7 +1900,7 @@ function Footer() {
   return (
     <footer className="border-t border-white/5 py-16">
       <div className="container max-w-7xl mx-auto px-6">
-        <div className="grid md:grid-cols-4 gap-12 mb-12">
+        <div className="grid md:grid-cols-5 gap-12 mb-12">
           <div className="md:col-span-2">
             <a href="#" className="flex items-center gap-3 mb-4">
               <div className="w-11 h-11 rounded-xl bg-gradient-to-br from-violet-500 to-purple-600 flex items-center justify-center shadow-glow">
@@ -1942,6 +1924,11 @@ function Footer() {
             ]},
             { title: '资源', links: [
               { name: '常见问题', href: '#faq' }
+            ]},
+            { title: '法律', links: [
+              { name: '服务条款', href: '/terms-of-service.html' },
+              { name: '退款政策', href: '/refund-policy.html' },
+              { name: '隐私政策', href: '/privacy-policy.html' }
             ]},
           ].map((col, i) => (
             <div key={i}>
@@ -1985,6 +1972,9 @@ function Footer() {
         <div className="mt-6 pt-6 border-t border-white/5">
           <p className="text-white/40 text-xs leading-relaxed text-center max-w-3xl mx-auto">
             隐私声明：本插件仅在本地浏览器运行，聊天数据与预设 Prompt 直接与大模型厂商加密交互，我们不存储任何您的聊天记录和商业数据。
+          </p>
+          <p className="text-white/40 text-xs leading-relaxed text-center mt-3">
+            <a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener noreferrer" className="hover:text-white/60 transition-colors">冀ICP备2023040521号-4</a>
           </p>
         </div>
       </div>

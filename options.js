@@ -222,7 +222,13 @@ const I18N = {
     emptyPersonasCta1: 'Create from Template',
     emptyPersonasCta2: 'Add Manually',
     emptyFaq: 'No knowledge base entries',
-    emptyFaqCta: 'Add First Entry'
+    emptyFaqCta: 'Add First Entry',
+    rebinding: 'Rebinding...',
+    rebindSuccess: 'Rebind successful!',
+    rebindFailed: 'Rebind failed',
+    rebindNetworkError: 'Network error',
+    invalidDeviceIndex: 'Invalid device number, activation cancelled',
+    rebindPaused: 'Rebind function paused'
   },
   zh: {
     title: 'ChatGenius AI 设置',
@@ -387,7 +393,13 @@ const I18N = {
     emptyPersonasCta1: '从模板创建',
     emptyPersonasCta2: '手动添加',
     emptyFaq: '还没有知识库条目',
-    emptyFaqCta: '添加第一条'
+    emptyFaqCta: '添加第一条',
+    rebinding: '换绑中...',
+    rebindSuccess: '换绑成功！',
+    rebindFailed: '换绑失败',
+    rebindNetworkError: '网络错误',
+    invalidDeviceIndex: '设备序号无效，已取消激活',
+    rebindPaused: '换绑功能已暂停'
   }
 };
 
@@ -1710,6 +1722,26 @@ function initApp() {
   }
 
   // ================================
+  // Fetch with timeout - 用于用户手势触发的网络请求，防止按钮卡死
+  // ================================
+  function fetchWithTimeout(url, options = {}, timeoutMs = 15000) {
+    const controller = new AbortController();
+    const timeoutId = setTimeout(() => controller.abort(), timeoutMs);
+    return fetch(url, { ...options, signal: controller.signal })
+      .then(response => {
+        clearTimeout(timeoutId);
+        return response;
+      })
+      .catch(err => {
+        clearTimeout(timeoutId);
+        if (err.name === 'AbortError') {
+          throw new Error(currentLang === 'zh' ? '请求超时，请检查网络后重试' : 'Request timeout, please check your network and retry');
+        }
+        throw err;
+      });
+  }
+
+  // ================================
   // 远程推荐配置热更新
   // ================================
   const REMOTE_CONFIG_TTL = 24 * 60 * 60 * 1000; // 24 小时
@@ -1724,7 +1756,7 @@ function initApp() {
         return;
       }
       // 拉取远程配置
-      const resp = await fetch(API_BASE_URL + '/api/config/providers');
+      const resp = await fetchWithTimeout(API_BASE_URL + '/api/config/providers');
       if (!resp.ok) return;
       const remoteConfig = await resp.json();
       if (!remoteConfig?.recommended) return;
@@ -1837,7 +1869,7 @@ function initApp() {
         body = JSON.stringify({ model: testModel, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 10 });
       }
 
-      const response = await fetch(testUrl, { method: 'POST', headers, body });
+      const response = await fetchWithTimeout(testUrl, { method: 'POST', headers, body });
       if (response.ok) {
         if (resultEl) { resultEl.textContent = '✓ ' + (currentLang === 'zh' ? '连接成功！' : 'Connection successful!'); resultEl.style.color = 'var(--success)'; }
         if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill connected'; }
@@ -1948,7 +1980,7 @@ function initApp() {
         body = JSON.stringify({ model: modelName, messages: [{ role: 'user', content: 'Hi' }], max_tokens: 10 });
       }
 
-      const response = await fetch(testUrl, { method: 'POST', headers, body });
+      const response = await fetchWithTimeout(testUrl, { method: 'POST', headers, body });
       if (response.ok) {
         if (resultEl) { resultEl.textContent = '✓ ' + (currentLang === 'zh' ? '连接成功！' : 'Connection successful!'); resultEl.style.color = 'var(--success)'; }
         if (apiStatusIndicator) { apiStatusIndicator.className = 'api-status-pill connected'; }
@@ -2132,7 +2164,7 @@ function initApp() {
         const fingerprint = await FingerprintUtil.getDeviceFingerprint();
         const timestamp = Date.now().toString();
 
-        const response = await fetch(API_BASE_URL + '/api/license/activate', {
+        const response = await fetchWithTimeout(API_BASE_URL + '/api/license/activate', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code: code.toUpperCase(), fingerprint, timestamp })
@@ -2172,7 +2204,7 @@ function initApp() {
           const idx = parseInt(input, 10) - 1;
           if (isNaN(idx) || idx < 0 || idx >= devices.length) {
             if (activationError) {
-              activationError.textContent = '设备序号无效，已取消激活';
+              activationError.textContent = I18N[currentLang].invalidDeviceIndex || 'Invalid device number, activation cancelled';
               activationError.style.display = 'block';
             }
             return;
@@ -2180,7 +2212,7 @@ function initApp() {
           await doRebind(code.toUpperCase(), fingerprint, timestamp, devices[idx].id);
         } else if (result.rebindPaused) {
           if (activationError) {
-            activationError.textContent = result.error || '换绑功能已暂停';
+            activationError.textContent = result.error || (I18N[currentLang].rebindPaused || 'Rebind function paused');
             activationError.style.display = 'block';
           }
         } else {
@@ -2203,10 +2235,10 @@ function initApp() {
     // 换绑函数（设备池模式：需指定 unbindDeviceId）
     async function doRebind(code, fingerprint, timestamp, unbindDeviceId) {
       activateBtn.disabled = true;
-      activateBtn.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="40"></circle></svg><span>换绑中...</span>';
+      activateBtn.innerHTML = '<svg class="animate-spin" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10" stroke-dasharray="60" stroke-dashoffset="40"></circle></svg><span>' + escapeHtml(I18N[currentLang].rebinding || 'Rebinding...') + '</span>';
       if (activationError) activationError.style.display = 'none';
       try {
-        const response = await fetch(API_BASE_URL + '/api/license/rebind', {
+        const response = await fetchWithTimeout(API_BASE_URL + '/api/license/rebind', {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({ code, fingerprint, timestamp, unbindDeviceId })
@@ -2224,17 +2256,17 @@ function initApp() {
           updateLicenseDisplay(result.type);
           updateStats();
           updateFreeTierNotification();
-          showToast('换绑成功！');
+          showToast(I18N[currentLang].rebindSuccess || 'Rebind successful!');
           if (typeof window.__refreshDevices === 'function') window.__refreshDevices();
         } else {
           if (activationError) {
-            activationError.textContent = result.error || '换绑失败';
+            activationError.textContent = result.error || (I18N[currentLang].rebindFailed || 'Rebind failed');
             activationError.style.display = 'block';
           }
         }
       } catch (err) {
         if (activationError) {
-          activationError.textContent = '网络错误';
+          activationError.textContent = I18N[currentLang].rebindNetworkError || 'Network error';
           activationError.style.display = 'block';
         }
       } finally {

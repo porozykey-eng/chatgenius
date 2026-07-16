@@ -48,13 +48,19 @@ function maskFingerprint(fp) {
 
 // 签名验证：timestamp 5 分钟内有效（防重放）；HMAC 签名校验
 function verifySignature(code, timestamp, signature) {
-  // H6 修复：客户端 background.js 不生成签名（密钥本就公开），strict 默认 false 保持向后兼容；
-  // 要启用严格模式需设 LICENSE_STRICT_SIGNATURE=true 并同步更新客户端生成签名
+  // strict 模式默认关闭：客户端密钥公开（Chrome 扩展可反编译），HMAC 签名无实际安全价值
+  // 防重放由 timestamp 5 分钟窗口保障；如需启用签名校验，设 LICENSE_STRICT_SIGNATURE=true
   const strict = process.env.LICENSE_STRICT_SIGNATURE === 'true';
   const now = Date.now();
   const ts = parseInt(timestamp);
-  if (!timestamp || Math.abs(now - ts) > 5 * 60 * 1000) {
-    return { valid: false, reason: 'timestamp_expired' };
+  // timestamp 校验：传了就校验（防重放），没传在非 strict 模式下放行（向后兼容旧客户端）
+  if (timestamp) {
+    if (isNaN(ts) || Math.abs(now - ts) > 5 * 60 * 1000) {
+      return { valid: false, reason: 'timestamp_expired' };
+    }
+  } else if (strict) {
+    // strict 模式下 timestamp 必须存在
+    return { valid: false, reason: 'missing_timestamp' };
   }
   if (strict) {
     // strict 模式：signature 必须存在且匹配，否则拒绝（防止不传 signature 绕过校验）
@@ -93,25 +99,29 @@ async function checkIpBan(ip) {
 }
 
 // 记录激活失败次数，达到阈值则封禁 IP
+// P0-3 修复：改用原子 upsert（INSERT ... ON DUPLICATE KEY UPDATE），避免先 SELECT 后 UPDATE 的并发竞态
+// 依赖迁移脚本 add-license-security-fixes.js 为 ip_bans.ip 添加的唯一索引
 async function recordActivationError(ip) {
-  const [rows] = await pool.query(
-    'SELECT id, error_count FROM ip_bans WHERE ip = ? AND DATE(created_at) = CURDATE() ORDER BY id DESC LIMIT 1',
-    [ip]
-  );
-  if (rows.length > 0) {
-    const newCount = rows[0].error_count + 1;
-    if (newCount >= MAX_ACTIVATION_ERRORS) {
+  try {
+    // 原子递增：INSERT ON DUPLICATE KEY UPDATE
+    await pool.query(
+      'INSERT INTO ip_bans (ip, error_count, last_error_at) VALUES (?, 1, NOW()) ON DUPLICATE KEY UPDATE error_count = error_count + 1, last_error_at = NOW()',
+      [ip]
+    );
+    // 检查是否达到阈值，触发封禁
+    const [rows] = await pool.query(
+      'SELECT error_count FROM ip_bans WHERE ip = ? AND DATE(created_at) = CURDATE() ORDER BY id DESC LIMIT 1',
+      [ip]
+    );
+    if (rows.length > 0 && rows[0].error_count >= MAX_ACTIVATION_ERRORS) {
       await pool.query(
-        'UPDATE ip_bans SET error_count = ?, banned_until = DATE_ADD(NOW(), INTERVAL ? HOUR) WHERE id = ?',
-        [newCount, IP_BAN_HOURS, rows[0].id]
+        'UPDATE ip_bans SET banned_until = DATE_ADD(NOW(), INTERVAL ? HOUR) WHERE ip = ? AND banned_until IS NULL',
+        [IP_BAN_HOURS, ip]
       );
-      return { banned: true };
     }
-    await pool.query('UPDATE ip_bans SET error_count = ? WHERE id = ?', [newCount, rows[0].id]);
-  } else {
-    await pool.query('INSERT INTO ip_bans (ip, error_count) VALUES (?, 1)', [ip]);
+  } catch (err) {
+    console.error('Record activation error failed:', err.message);
   }
-  return { banned: false };
 }
 
 // 跨自然月清零 unbind_count，返回当前有效计数
@@ -936,8 +946,50 @@ router.post('/devices/unbind', async (req, res) => {
   }
 });
 
-// 查询许可证状态
-// P1-4 修复：信息最小化，不返回 type/expiresAt 等细节，只返回 valid 布尔值
+// 查询许可证状态（POST：推荐方式，激活码放在 body 中，避免被 morgan 日志记录）
+// P1-3 修复：新增 POST /status，激活码不再暴露在 URL 路径；同时增加 verifySignature 校验
+router.post('/status', async (req, res) => {
+  const { code, timestamp, signature } = req.body;
+
+  if (!code || typeof code !== 'string' || code.length > 64 || !/^[A-Za-z0-9\-]+$/.test(code)) {
+    return res.status(400).json({ valid: false });
+  }
+
+  const normalizedCode = code.toUpperCase();
+
+  // 签名校验（与其他接口一致）
+  const sigResult = verifySignature(normalizedCode, timestamp, signature);
+  if (!sigResult.valid) {
+    return res.status(401).json({ valid: false, error: '签名校验失败' });
+  }
+
+  try {
+    const [rows] = await pool.query(
+      'SELECT type, expires_at, is_active FROM licenses WHERE activation_code = ? AND is_active = TRUE',
+      [normalizedCode]
+    );
+
+    if (rows.length === 0) {
+      return res.json({ valid: false, active: false });
+    }
+
+    const license = rows[0];
+    const isExpired = license.expires_at && new Date(license.expires_at) < new Date();
+
+    if (isExpired) {
+      return res.json({ valid: false, active: false });
+    }
+
+    // 返回兼容前端的字段：active/type 供 background.js 使用，不返回 expiresAt 等敏感细节
+    res.json({ valid: true, active: true, type: license.type });
+  } catch (error) {
+    console.error('License status error:', error.message);
+    res.status(500).json({ valid: false });
+  }
+});
+
+// 查询许可证状态（GET：已废弃，向后兼容保留；激活码暴露在 URL 会被 morgan 记录，后续客户端将切换为 POST）
+// P1-2 修复：注释与实现一致——本接口会返回 type 字段，供 background.js 区分 free/pro
 router.get('/status/:code', async (req, res) => {
   const { code } = req.params;
 
@@ -973,7 +1025,7 @@ router.get('/status/:code', async (req, res) => {
 // Server-side license verification for Pro feature gating
 // 设备池模式：校验设备是否在 license_devices 活跃列表中
 router.post('/verify-token', async (req, res) => {
-  const { licenseCode, fingerprint } = req.body;
+  const { licenseCode, fingerprint, timestamp, signature } = req.body;
 
   if (!licenseCode) {
     return res.json({ allowed: true, type: 'free', remaining: 20 });
@@ -983,6 +1035,19 @@ router.post('/verify-token', async (req, res) => {
     return res.json({ allowed: true, type: 'free', remaining: 20 });
   }
 
+  const normalizedCode = licenseCode.toUpperCase();
+
+  // P0-1 修复：强制要求 fingerprint，缺失直接拒绝（fail-closed），避免不传 fingerprint 绕过设备绑定校验
+  if (!fingerprint || typeof fingerprint !== 'string') {
+    return res.status(400).json({ allowed: false, type: 'free', error: 'missing_fingerprint' });
+  }
+
+  // P0-1 修复：增加 verifySignature 校验（与其他接口一致），校验 timestamp + signature
+  const sigResult = verifySignature(normalizedCode, timestamp, signature);
+  if (!sigResult.valid) {
+    return res.status(401).json({ allowed: false, type: 'free', error: '签名校验失败', reason: sigResult.reason });
+  }
+
   let conn;
   try {
     conn = await pool.getConnection();
@@ -990,7 +1055,7 @@ router.post('/verify-token', async (req, res) => {
 
     const [rows] = await conn.query(
       'SELECT id, type, expires_at, is_active, device_fingerprint FROM licenses WHERE activation_code = ? FOR UPDATE',
-      [licenseCode.toUpperCase()]
+      [normalizedCode]
     );
 
     if (rows.length === 0) {
@@ -1010,34 +1075,32 @@ router.post('/verify-token', async (req, res) => {
       return res.json({ allowed: false, type: 'free', error: '许可证已过期' });
     }
 
-    // 设备池校验：若提供 fingerprint，必须命中活跃设备列表
-    if (fingerprint) {
-      // 老用户尚未迁移到设备池：自动补录到设备池（宽松策略，避免误伤已激活用户）
-      if (!license.device_fingerprint) {
-        // P2-18 修复：自动补录前检查设备池上限，避免超过 MAX_DEVICES
-        const devices = await getActiveDevices(conn, license.id);
-        if (devices.length >= MAX_DEVICES) {
-          await conn.rollback();
-          return res.json({ allowed: false, reason: 'device_limit_exceeded' });
-        }
-        await conn.query(
-          'UPDATE licenses SET device_fingerprint = ? WHERE id = ?',
-          [fingerprint, license.id]
-        );
-        await addDevice(conn, license.id, licenseCode.toUpperCase(), fingerprint, getClientIp(req), null);
-        await conn.commit();
-        return res.json({ allowed: true, type: license.type, remaining: -1 });
-      }
-
-      const [deviceRows] = await conn.query(
-        'SELECT id, is_active FROM license_devices WHERE license_id = ? AND device_fingerprint = ?',
-        [license.id, fingerprint]
-      );
-
-      if (deviceRows.length === 0 || !deviceRows[0].is_active) {
+    // 设备池校验：fingerprint 必须命中活跃设备列表（fail-closed，不再可选）
+    // 老用户尚未迁移到设备池：自动补录到设备池（宽松策略，避免误伤已激活用户）
+    if (!license.device_fingerprint) {
+      // P2-18 修复：自动补录前检查设备池上限，避免超过 MAX_DEVICES
+      const devices = await getActiveDevices(conn, license.id);
+      if (devices.length >= MAX_DEVICES) {
         await conn.rollback();
-        return res.json({ allowed: false, type: 'free', error: '设备不在授权列表' });
+        return res.json({ allowed: false, reason: 'device_limit_exceeded' });
       }
+      await conn.query(
+        'UPDATE licenses SET device_fingerprint = ? WHERE id = ?',
+        [fingerprint, license.id]
+      );
+      await addDevice(conn, license.id, normalizedCode, fingerprint, getClientIp(req), null);
+      await conn.commit();
+      return res.json({ allowed: true, type: license.type, remaining: -1 });
+    }
+
+    const [deviceRows] = await conn.query(
+      'SELECT id, is_active FROM license_devices WHERE license_id = ? AND device_fingerprint = ?',
+      [license.id, fingerprint]
+    );
+
+    if (deviceRows.length === 0 || !deviceRows[0].is_active) {
+      await conn.rollback();
+      return res.json({ allowed: false, type: 'free', error: '设备不在授权列表' });
     }
 
     await conn.commit();

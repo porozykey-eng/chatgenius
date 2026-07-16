@@ -202,8 +202,8 @@ const PLAN_PRICES = {
   lifetime: Number(process.env.PRICE_LIFETIME || 299),
 };
 const PLAN_SUBJECTS = {
-  year: process.env.PLAN_SUBJECT_YEAR || '出海工作台效率插件-年付版',
-  lifetime: process.env.PLAN_SUBJECT_LIFETIME || '出海工作台效率插件-终身版',
+  year: process.env.PLAN_SUBJECT_YEAR || 'ChatGenius AI 浏览器扩展-年付版',
+  lifetime: process.env.PLAN_SUBJECT_LIFETIME || 'ChatGenius AI 浏览器扩展-永久版',
 };
 
 // 创建支付订单（电脑网站支付 - alipay.trade.page.pay）
@@ -306,7 +306,9 @@ router.get('/query-order/:orderNo', async (req, res) => {
 });
 
 // 支付回调（支付宝异步通知）
-router.post('/notify', async (req, res) => {
+// P1-2 修复：从 router 中提取为独立函数 handleNotify，在 index.js 中单独注册，
+// 避免被 /api/alipay 下的全局限流（10次/分钟）覆盖导致回调被拒
+const handleNotify = async (req, res) => {
   let params;
   try {
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : '';
@@ -319,14 +321,14 @@ router.post('/notify', async (req, res) => {
     console.error('Alipay notify body parse error:', parseError);
     return res.send('fail');
   }
-  
+
   const { out_trade_no, trade_status, trade_no, total_amount, app_id } = params;
-  
+
   if (app_id && app_id !== process.env.ALIPAY_APP_ID) {
     console.warn('Alipay notify: app_id mismatch (received does not match configured)');
     return res.send('fail');
   }
-  
+
   // 验证支付宝签名
   let signValid = false;
   try {
@@ -334,16 +336,17 @@ router.post('/notify', async (req, res) => {
   } catch (signError) {
     console.error('Alipay sign verification error:', signError.message);
   }
-  
+
   if (!signValid) {
     console.warn('Alipay notify signature verification FAILED:', { out_trade_no, trade_status });
     return res.send('fail');
   }
-  
+
   console.log('Alipay notify received (verified):', { out_trade_no, trade_status });
 
   if (trade_status === 'TRADE_SUCCESS') {
     let conn;
+    let dbFailed = false;
     try {
       conn = await pool.getConnection();
       await conn.beginTransaction();
@@ -353,20 +356,20 @@ router.post('/notify', async (req, res) => {
         'SELECT id, status, price, type, user_email FROM orders WHERE order_no = ? FOR UPDATE',
         [out_trade_no]
       );
-      
+
       if (rows.length === 0) {
         console.warn('Alipay notify: order not found:', out_trade_no);
         await conn.rollback();
         return res.send('success');
       }
-      
+
       const order = rows[0];
-      
+
       if (order.status === 'completed') {
         await conn.rollback();
         return res.send('success');
       }
-      
+
       // P1 安全修复：金额强制精确匹配（移除条件分支，缺失即拒绝）
       const expectedStr = parseFloat(order.price).toFixed(2);
       const receivedStr = parseFloat(total_amount).toFixed(2);
@@ -379,7 +382,7 @@ router.post('/notify', async (req, res) => {
         await conn.rollback();
         return res.send('success');
       }
-      
+
       // 更新订单状态
       await conn.query(
         'UPDATE orders SET status = ?, completed_at = ?, alipay_trade_no = ? WHERE id = ?',
@@ -416,12 +419,21 @@ router.post('/notify', async (req, res) => {
     } catch (error) {
       if (conn) await conn.rollback();
       console.error('Update order error:', error.message);
+      // P0-2 修复：DB 事务失败，标记失败，让支付宝平台重试回调（不再返回 success）
+      dbFailed = true;
     } finally {
       if (conn) conn.release();
     }
+    // P0-2 修复：事务失败时返回 500 fail，支付宝会重试；正常流程返回 success
+    if (dbFailed) {
+      return res.status(500).send('fail');
+    }
   }
-  
+
   res.send('success');
-});
+};
+
+// 导出 handleNotify 供 index.js 单独注册（绕过限流）
+router.handleNotify = handleNotify;
 
 module.exports = router;

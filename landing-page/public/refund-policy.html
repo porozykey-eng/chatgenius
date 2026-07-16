@@ -1,0 +1,377 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>退款政策 — ChatGenius AI</title>
+  <meta name="description" content="ChatGenius AI 退款政策 — Pro 版本退款条件、流程与到账时间说明">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #7c3aed;
+      --color-primary-dark: #6d28d9;
+      --color-primary-light: #f5f3ff;
+      --color-accent: #8b5cf6;
+      --brand-gradient: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%);
+      --brand-border: #ddd6fe;
+
+      --color-bg: #ffffff;
+      --color-bg-subtle: #fafafa;
+      --color-bg-muted: #f4f4f5;
+      --color-text: #0f172a;
+      --color-text-secondary: #475569;
+      --color-text-muted: #94a3b8;
+      --color-border: #e4e4e7;
+      --color-border-strong: #cbd5e1;
+
+      --content-width: 760px;
+      --radius: 10px;
+      --radius-lg: 14px;
+
+      --shadow-sm: 0 1px 3px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.03);
+      --shadow-md: 0 4px 6px -1px rgba(15,23,42,0.07), 0 2px 4px -2px rgba(15,23,42,0.04);
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #0f172a;
+        --color-bg-subtle: #1e293b;
+        --color-bg-muted: #334155;
+        --color-text: #f1f5f9;
+        --color-text-secondary: #cbd5e1;
+        --color-text-muted: #64748b;
+        --color-border: #334155;
+        --color-border-strong: #475569;
+        --color-primary-light: #1e1b4b;
+        --brand-border: #4c1d95;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; scroll-padding-top: 80px; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--color-bg); color: var(--color-text); line-height: 1.7;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ============ Top Header (玻璃态) ============ */
+    .top-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--color-border);
+    }
+    @media (prefers-color-scheme: dark) {
+      .top-header { background: rgba(15,23,42,0.72); }
+    }
+    .top-header::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+      background: var(--brand-gradient); opacity: 0.6;
+    }
+    .top-header-inner {
+      max-width: 1200px; margin: 0 auto; padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 17px; color: var(--color-text); text-decoration: none;
+    }
+    .brand-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--brand-gradient);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 800; font-size: 14px;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.25);
+    }
+    .top-header nav a {
+      color: var(--color-text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;
+      padding: 6px 12px; border-radius: 7px; transition: color 0.2s, background 0.2s;
+    }
+    .top-header nav a:hover { color: var(--color-primary); background: var(--color-primary-light); }
+
+    /* ============ Hero ============ */
+    .hero {
+      max-width: var(--content-width); margin: 0 auto; padding: 64px 24px 32px;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 999px;
+      background: var(--color-primary-light); color: var(--color-primary);
+      border: 1px solid var(--brand-border);
+      font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 36px; font-weight: 800; letter-spacing: -0.02em;
+      line-height: 1.15; margin-bottom: 12px;
+      background: var(--brand-gradient);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero .lead {
+      font-size: 17px; color: var(--color-text-secondary); line-height: 1.6;
+    }
+    .hero .meta {
+      margin-top: 18px; font-size: 13px; color: var(--color-text-muted);
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+    .hero .meta strong { color: var(--color-text-secondary); font-weight: 600; }
+
+    /* ============ Content ============ */
+    .content {
+      max-width: var(--content-width); margin: 0 auto; padding: 24px 24px 96px;
+    }
+    .content section {
+      margin-bottom: 40px;
+      animation: fadeUp 0.5s var(--ease-out) both;
+    }
+    .content section:nth-child(1) { animation-delay: 0.05s; }
+    .content section:nth-child(2) { animation-delay: 0.1s; }
+    .content section:nth-child(3) { animation-delay: 0.15s; }
+    .content section:nth-child(4) { animation-delay: 0.2s; }
+    .content section:nth-child(5) { animation-delay: 0.25s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .content section { animation: none; }
+    }
+
+    .content h2 {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.01em;
+      margin-bottom: 14px; padding-left: 14px; position: relative;
+      color: var(--color-text);
+    }
+    .content h2::before {
+      content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+      width: 4px; border-radius: 2px;
+      background: var(--brand-gradient);
+    }
+    .content h3 {
+      font-size: 16px; font-weight: 600; margin: 18px 0 8px;
+      color: var(--color-text);
+    }
+    .content p {
+      color: var(--color-text-secondary); margin-bottom: 12px;
+    }
+    .content ul {
+      padding-left: 22px; color: var(--color-text-secondary);
+      margin-bottom: 14px;
+    }
+    .content ul li { margin-bottom: 6px; }
+    .content strong { color: var(--color-text); font-weight: 600; }
+    .content code {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 13px; padding: 2px 6px; border-radius: 4px;
+      background: var(--color-bg-muted); color: var(--color-primary);
+    }
+
+    /* ============ Callout ============ */
+    .callout {
+      background: var(--color-primary-light);
+      border: 1px solid var(--brand-border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin: 18px 0;
+      border-left: 3px solid var(--color-primary);
+    }
+    .callout-title {
+      font-weight: 600; color: var(--color-primary-dark); margin-bottom: 6px;
+      font-size: 14px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .callout-title { color: var(--color-accent); }
+    }
+    .callout p { color: var(--color-text-secondary); margin-bottom: 0; font-size: 14px; }
+
+    /* ============ Steps ============ */
+    .steps {
+      counter-reset: step;
+      list-style: none;
+      padding-left: 0;
+      margin: 14px 0;
+    }
+    .steps li {
+      position: relative;
+      padding: 10px 0 10px 44px;
+      color: var(--color-text-secondary);
+      counter-increment: step;
+    }
+    .steps li::before {
+      content: counter(step);
+      position: absolute; left: 0; top: 8px;
+      width: 28px; height: 28px; border-radius: 50%;
+      background: var(--brand-gradient);
+      color: #fff; font-weight: 700; font-size: 13px;
+      display: flex; align-items: center; justify-content: center;
+    }
+
+    /* ============ Contact Card ============ */
+    .contact-card {
+      background: var(--color-bg-subtle);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      margin-top: 14px;
+    }
+    .contact-card h3 { margin-top: 0; }
+    .contact-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+    .contact-item strong { color: var(--color-text); min-width: 90px; }
+
+    /* ============ Footer ============ */
+    .footer {
+      border-top: 1px solid var(--color-border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: 13px;
+    }
+    .footer a { color: var(--color-primary); text-decoration: none; }
+    .footer .icp { display: block; margin-top: 8px; }
+    .footer .icp a { color: var(--color-text-muted); }
+    .footer .icp a:hover { color: var(--color-primary); }
+
+    /* ============ Mobile ============ */
+    @media (max-width: 640px) {
+      .hero { padding: 48px 20px 24px; }
+      .hero h1 { font-size: 28px; }
+      .hero .lead { font-size: 15px; }
+      .content { padding: 16px 20px 64px; }
+      .content h2 { font-size: 19px; }
+      .top-header-inner { padding: 12px 16px; }
+      .top-header nav a { padding: 6px 8px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-header">
+    <div class="top-header-inner">
+      <a class="brand" href="https://chat.sopie.cc/">
+        <span class="brand-icon">CG</span>
+        <span>ChatGenius AI</span>
+      </a>
+      <nav>
+        <a href="https://chat.sopie.cc/">首页</a>
+        <a href="/terms-of-service.html">服务条款</a>
+        <a href="/refund-policy.html">退款政策</a>
+        <a href="/privacy-policy.html">隐私政策</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="eyebrow">Refund Policy</span>
+      <h1>退款政策</h1>
+      <p class="lead">我们理解您在购买后可能有不同需求。本政策说明 ChatGenius AI Pro 版本的退款条件、流程与到账时间，请在购买前仔细阅读。</p>
+      <div class="meta">
+        <span><strong>最后更新：</strong>2026-07-16</span>
+        <span><strong>生效日期：</strong>2026-07-16</span>
+      </div>
+    </section>
+
+    <div class="content">
+
+      <section>
+        <h2>1. 7 天无理由退款</h2>
+        <p>为保障您的权益，ChatGenius AI Pro 版本（年付及永久版）支持 <strong>7 天无理由退款</strong>政策。自购买付款成功之日起 <strong>7 个自然日</strong>内，您均可申请退款，无需说明理由。</p>
+        <div class="callout">
+          <div class="callout-title">重要提示</div>
+          <p>退款政策适用于 Pro 版本的软件使用许可费用。<strong>AI 服务商收取的 API 调用费用不包含在内</strong>，该部分费用需您与对应服务商自行结算。</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>2. 退款条件</h2>
+        <p>为公平起见，申请退款需同时满足以下条件：</p>
+        <ul>
+          <li>自付款成功之日起未超过 7 个自然日</li>
+          <li>激活码未在多设备间共享、转售或转让</li>
+          <li>未发生违反《服务条款》的行为（如批量垃圾信息发送、破解许可证等）</li>
+          <li>未对扩展进行逆向工程或绕过激活验证</li>
+          <li>未已申请开具发票（已开发票的退款需先退回发票，详见第 5 条）</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>3. 退款流程</h2>
+        <ol class="steps">
+          <li><strong>联系客服</strong>：通过邮箱 <code>support@chatgenius.ai</code> 或售后 QQ 群联系我们，说明您的订单号与退款诉求。</li>
+          <li><strong>提供信息</strong>：提供订单号、付款渠道（支付宝/微信）、付款时间及退款原因（如不便说明可略）。</li>
+          <li><strong>审核确认</strong>：我们将在 1-2 个工作日内核对订单及使用情况，确认是否符合退款条件。</li>
+          <li><strong>原路退回</strong>：审核通过后，退款将原路退回到您的支付账户。</li>
+        </ol>
+      </section>
+
+      <section>
+        <h2>4. 退款到账时间</h2>
+        <ul>
+          <li>退款将<strong>原路退回</strong>至您付款时使用的支付账户（支付宝或微信）</li>
+          <li>支付宝退款一般 <strong>1-3 个工作日</strong>到账</li>
+          <li>微信退款一般 <strong>3-7 个工作日</strong>到账</li>
+          <li>如遇节假日或支付渠道延迟，到账时间可能顺延</li>
+        </ul>
+        <div class="callout">
+          <div class="callout-title">到账查询</div>
+          <p>若超过 7 个工作日仍未到账，请通过客服渠道联系我们，我们将协助您向支付渠道查询退款状态。</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>5. 不予退款的情形</h2>
+        <p>出现以下任一情形时，我们将不予退款：</p>
+        <ul>
+          <li>自付款成功之日起已超过 7 个自然日</li>
+          <li>已申请并开具发票，且未配合完成发票退回流程</li>
+          <li>经核查存在违反《服务条款》的行为，导致许可被终止</li>
+          <li>激活码已被用于商业转授权、共享或转让</li>
+          <li>因个人原因（如设备损坏、误购等）超出 7 天退款期</li>
+          <li>已使用本扩展从事违法或侵权活动</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>6. 其他说明</h2>
+        <ul>
+          <li>退款成功后，对应的激活码将立即失效，Pro 功能将被关闭</li>
+          <li>退款后您仍可继续使用免费版功能</li>
+          <li>本退款政策的最终解释权归 ChatGenius AI 开发者所有</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>7. 联系我们</h2>
+        <p>如需申请退款或对退款政策有任何疑问，可通过以下方式联系我们：</p>
+        <div class="contact-card">
+          <h3>ChatGenius AI 团队</h3>
+          <div class="contact-item"><strong>退款邮箱</strong>support@chatgenius.ai</div>
+          <div class="contact-item"><strong>官方网站</strong><a href="https://chat.sopie.cc/" style="color:var(--color-primary);text-decoration:none;">https://chat.sopie.cc/</a></div>
+          <div class="contact-item"><strong>售后 QQ 群</strong>请见扩展设置页底部</div>
+        </div>
+        <p style="margin-top:16px;font-size:13px;color:var(--color-text-muted);">我们将在 1-2 个工作日内回复您的退款申请。</p>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    © 2026 ChatGenius AI. All rights reserved.
+    · <a href="https://chat.sopie.cc/">返回首页</a>
+    · <a href="/terms-of-service.html">服务条款</a>
+    · <a href="/refund-policy.html">退款政策</a>
+    · <a href="/privacy-policy.html">隐私政策</a>
+    <span class="icp"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">冀ICP备2023040521号-4</a></span>
+  </footer>
+</body>
+</html>

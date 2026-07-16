@@ -1252,6 +1252,10 @@ router.post('/licenses/:id/revoke', requireAdmin, async (req, res) => {
     await conn.query('UPDATE licenses SET is_active = FALSE, device_fingerprint = NULL WHERE id = ?', [id]);
     // P1 安全修复：同步清理设备池，防止撤销后旧设备仍可心跳
     await conn.query('UPDATE license_devices SET is_active = 0 WHERE license_id = ?', [id]);
+    // P1-7 修复：同步清理 activation_codes.bound_fingerprint，防止撤销后激活码仍绑定旧设备
+    if (rows[0].activation_code) {
+      await conn.query('UPDATE activation_codes SET bound_fingerprint = NULL WHERE code = ?', [rows[0].activation_code]);
+    }
     await conn.commit();
     await auditLog('license_revoked', req, `撤销许可证 ${id}`, { targetId: id, targetType: 'license' });
     res.json({ success: true });
@@ -1405,7 +1409,7 @@ router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
       try {
         conn = await pool.getConnection();
         await conn.beginTransaction();
-        const [rows] = await conn.query('SELECT is_active, type, expires_at FROM licenses WHERE id = ? FOR UPDATE', [id]);
+        const [rows] = await conn.query('SELECT is_active, type, expires_at, activation_code FROM licenses WHERE id = ? FOR UPDATE', [id]);
         if (rows.length === 0) { await conn.rollback(); failCount++; continue; }
 
         const license = rows[0];
@@ -1415,6 +1419,10 @@ router.post('/licenses/batch-operation', requireAdmin, async (req, res) => {
             // P2-11 修复：与单条 revoke 一致，同步清理 device_fingerprint 和 license_devices
             await conn.query('UPDATE licenses SET is_active = FALSE, device_fingerprint = NULL WHERE id = ?', [id]);
             await conn.query('UPDATE license_devices SET is_active = 0 WHERE license_id = ?', [id]);
+            // P1-7 修复：同步清理 activation_codes.bound_fingerprint，与单条 revoke 行为一致
+            if (license.activation_code) {
+              await conn.query('UPDATE activation_codes SET bound_fingerprint = NULL WHERE code = ?', [license.activation_code]);
+            }
             successCount++;
           }
         } else if (action === 'reactivate') {

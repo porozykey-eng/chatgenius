@@ -1,54 +1,117 @@
 # Privacy Policy for ChatGenius AI
 
-**Last Updated:** May 17, 2026  
-**Effective Date:** May 17, 2026
+**Last Updated:** 2026-07-03  
+**Effective Date:** 2026-07-03  
+**Applicable Version:** v3.0.0 and above
 
-Welcome to ChatGenius AI (the "Extension"). We are committed to protecting your privacy and ensuring you have a secure experience. This Privacy Policy outlines our practices regarding data collection, usage, and protection.
+We take your privacy seriously. This Privacy Policy explains how the ChatGenius AI browser extension (the "Extension") and its accompanying backend services collect, use, store, and protect your data.
 
-## 1. Information Collection and Usage
-ChatGenius AI acts as an intermediary bridge between your web browser and the AI API providers you configure (such as OpenAI, Anthropic, Gemini, etc.). 
+## 1. Information We Collect
 
-- **Chat Context:** When you use the extension to generate a reply, the extension temporarily reads the most recent chat messages from the active webpage (e.g., WhatsApp Web, Messenger). 
-- **Direct Transmission:** This chat context is sent **directly** to the third-party AI provider you selected via your own API Key.
-- **No Developer Servers:** We **do not** collect, transmit, or store your chat messages, personal information, or generated replies on our own servers. The extension operates entirely within your browser.
+The Extension follows the principle of data minimization and only collects the following data when necessary:
 
-## 2. API Keys and Credentials
-- Your API Keys and custom AI model settings are securely stored locally within your browser using Chrome's secure `chrome.storage` API. 
-- We do not have access to your API Keys, and they are never transmitted to us or any third party other than the specific AI service you are requesting.
+| Data Type | Description | Storage Location |
+|---|---|---|
+| **AI Provider API Key** | The provider key you enter to call AI APIs | Local `chrome.storage.local` only |
+| **Selected AI Provider** | Identifier such as OpenAI, DeepSeek, Zhipu, etc. | Local `chrome.storage.local` only |
+| **Persona Settings / FAQ Knowledge Base** | Your custom reply styles and knowledge entries | Local `chrome.storage.sync` only |
+| **Activation Code** | License key entered when upgrading to Pro | Local + Server (encrypted) |
+| **Device Fingerprint** | Hash of UA/language/timezone, used to bind activation code to the device | Local + Server |
+| **Order Information** | Order number, amount, payment channel, payment time | Server (retained 5 years for financial compliance) |
+| **Heartbeat Logs** | IP, fingerprint, timestamp, used for license validity verification | Server (retained 90 days) |
+| **Invoice Request Information** | Title, tax ID, email (only when you actively request an invoice) | Server (retained 5 years) |
 
-## 3. Data Storage
-- **Local Storage:** The extension may store temporary data locally on your device (e.g., reply history, selected personas, templates, and basic usage statistics). This data remains on your device and is not synchronized to our servers.
-- **Sync Storage:** Non-sensitive user preferences (like UI theme, shortcut configurations) may be synced across your devices using Chrome's native synchronization feature if you are signed into your Google account.
+> **What We Never Collect:** We do not collect your chat content, contact lists, message history, browser history, or web access records, nor do we read the conversation text on WhatsApp/Messenger/Facebook pages. AI reply requests are sent directly from your browser to the AI provider you selected and do not pass through our servers.
 
-## 4. Third-Party Services
-Since the extension relies on third-party AI providers (e.g., OpenAI API) to generate responses, your interactions with the AI are subject to the privacy policies of the respective providers you use. We recommend reviewing their policies.
+## 2. Purposes of Data Use
 
-## 5. Your Rights (GDPR Compliance)
-Under the General Data Protection Regulation (GDPR) and applicable data protection laws, you have the right to:
-- **Access:** Request a copy of your personal data stored by the extension.
-- **Rectification:** Correct inaccurate or incomplete personal data.
-- **Erasure:** Request deletion of your personal data stored by the extension.
-- **Portability:** Request transfer of your personal data in a machine-readable format.
-- **Objection:** Object to the processing of your personal data.
+The data we collect is strictly used for the following purposes:
 
-To exercise any of these rights, please contact us at: **support@chatgenius.ai**
+- **Providing AI auto-reply**: Using your API Key and persona settings to call the AI provider's API
+- **License verification**: Confirming you are a legitimate Pro user via activation code + device fingerprint
+- **Anti-fraud and anti-abuse**: Preventing activation codes from being shared or stolen through IP and fingerprint verification
+- **Order fulfillment and after-sales**: Processing payments, issuing invoices, and providing refunds
+- **Service improvement**: Using aggregated statistics (non-personally identifiable) to optimize the product experience
 
-## 6. Data Retention
-- Chat context and reply history are stored locally and can be cleared at any time by the user through the extension's settings.
-- We do not retain any user data on our servers as no data is transmitted to us.
-- Usage statistics (e.g., total replies generated) are stored locally and reset when the extension is uninstalled.
+## 3. Data Storage and Transmission
 
-## 7. Children's Privacy
-Our extension is not directed to individuals under the age of 16. We do not knowingly collect personal information from children.
+### 3.1 Local Storage
+Your API Key, AI provider selection, persona settings, FAQ knowledge base, and other sensitive configurations are stored only in the browser's `chrome.storage.local`. They are never uploaded to our servers, nor are they uploaded to Google Cloud via Chrome's sync feature.
 
-## 8. Changes to This Policy
-We may update this Privacy Policy from time to time to reflect changes in our practices or for other operational, legal, or regulatory reasons. We will notify users of material changes by posting a notice in the extension or on our website.
+### 3.2 Server Storage
+The following data is stored on our servers (hosted on cloud providers within China):
 
-## 9. Contact Us
-If you have any questions or concerns regarding this Privacy Policy, please contact us:
+- **Activation codes**: Used for license verification (once bound to a device fingerprint, they cannot be used on other devices)
+- **Order data**: Order information returned by the payment channel, retained for 5 years (financial compliance requirement)
+- **Heartbeat logs**: Automatically cleaned up after 90 days
+- **IP ban records**: 5 consecutive activation failures will result in a 24-hour IP ban
 
-- **Email:** support@chatgenius.ai
-- **Chrome Web Store:** Use the "Support" link on our Chrome Web Store listing
+### 3.3 Transmission Encryption
+All communication between the client and server is encrypted via HTTPS (TLS 1.2+). Payment callbacks use HMAC-SHA256 signatures + AES-256-GCM encryption verification to prevent data tampering or eavesdropping.
+
+## 4. Third-Party Data Sharing
+
+We do not sell, rent, or trade your personal information. In the following situations, we may share necessary data:
+
+### 4.1 AI Providers
+When you use the AI auto-reply feature, your chat context (the message you are replying to) is sent directly from your browser to the AI provider you selected (e.g., OpenAI, DeepSeek, Zhipu). This process does not pass through our servers. Each provider's data processing is governed by their own privacy policy.
+
+### 4.2 Payment Providers
+When purchasing the Pro version, order information is sent to Alipay or WeChat Pay. The payment provider's processing is governed by their privacy policy.
+
+### 4.3 Legal Requirements
+When required by laws and regulations, demanded by government authorities in accordance with the law, or to protect legitimate rights and interests, we may share necessary data.
+
+## 5. Your Rights
+
+Under applicable data protection laws (including the Personal Information Protection Law of China and the GDPR), you have the following rights:
+
+- **Right of access**: You may view all data stored locally in the Extension at any time
+- **Right to rectification**: You may modify your configuration in the Extension's settings
+- **Right to erasure**: Uninstalling the Extension deletes all local data; server-side data may be deleted by contacting support
+- **Right to withdraw consent**: You may disable or uninstall the Extension at any time from the Chrome extensions management page
+- **Right to data portability**: The Extension's settings page supports exporting a configuration JSON file
+- **Right to object**: You may object to specific data processing activities
+
+> **How to exercise these rights:** To exercise the above rights, please contact us using the contact information at the end of this policy. We will respond to your request within 15 business days.
+
+## 6. Data Security
+
+We take the following technical and organizational measures to protect your data:
+
+- **Transmission encryption**: Full-site HTTPS + TLS 1.2+
+- **Payment security**: HMAC-SHA256 signatures + AES-256-GCM encryption
+- **Anti-replay attacks**: All sensitive endpoints use 5-minute timestamp verification
+- **Anti-brute-force**: 5 consecutive activation failures will result in a 24-hour IP ban
+- **Principle of least privilege**: The Extension only requests necessary browser permissions
+- **Permission minimization**: AI provider domains use `optional_host_permissions`; access is only requested when you select a specific provider
+- **Access control**: Server database access is protected by IP whitelisting and key authentication
+
+## 7. Cookies and Similar Technologies
+
+The Extension does not use cookies. The backend server uses necessary session cookies for admin login, only for authentication, not for cross-site tracking.
+
+## 8. Children's Privacy
+
+This Extension is intended for users aged 18 and above. We do not knowingly collect personal information from minors. If you are a minor, please use this Extension under the guidance of a guardian. If you discover we have inadvertently collected information from a minor, please contact us to delete it.
+
+## 9. International Users
+
+Our servers are located within China. If you access this Extension from another country or region, please be aware that your data will be transferred to China and processed in accordance with Chinese laws and regulations. Continued use constitutes your consent to this cross-border transfer.
+
+## 10. Changes to This Policy
+
+We may update this Privacy Policy from time to time. The updated policy will be published on this page with an updated "Last Updated" date. In the event of material changes, we will notify you via in-Extension notifications or an announcement on the official website. Continued use of the Extension constitutes your agreement to the updated policy.
+
+## 11. Contact Us
+
+If you have any questions, suggestions, or complaints regarding this Privacy Policy, you may contact us through the following:
+
+- **Official Website:** https://chat.sopie.cc/
+- **After-sales QQ Group:** See the bottom of the Extension's settings page
+- **Feedback Email:** Please submit via the contact form on the official website
+
+We will respond to your privacy-related requests within 15 business days.
 
 ---
 

@@ -1,0 +1,373 @@
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>服务条款 — ChatGenius AI</title>
+  <meta name="description" content="ChatGenius AI 服务条款 — 使用本扩展及配套服务的相关条款与条件">
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --color-primary: #7c3aed;
+      --color-primary-dark: #6d28d9;
+      --color-primary-light: #f5f3ff;
+      --color-accent: #8b5cf6;
+      --brand-gradient: linear-gradient(135deg, #7c3aed 0%, #8b5cf6 50%, #a78bfa 100%);
+      --brand-border: #ddd6fe;
+
+      --color-bg: #ffffff;
+      --color-bg-subtle: #fafafa;
+      --color-bg-muted: #f4f4f5;
+      --color-text: #0f172a;
+      --color-text-secondary: #475569;
+      --color-text-muted: #94a3b8;
+      --color-border: #e4e4e7;
+      --color-border-strong: #cbd5e1;
+
+      --content-width: 760px;
+      --radius: 10px;
+      --radius-lg: 14px;
+
+      --shadow-sm: 0 1px 3px rgba(15,23,42,0.05), 0 1px 2px rgba(15,23,42,0.03);
+      --shadow-md: 0 4px 6px -1px rgba(15,23,42,0.07), 0 2px 4px -2px rgba(15,23,42,0.04);
+
+      --ease-out: cubic-bezier(0.16, 1, 0.3, 1);
+    }
+
+    @media (prefers-color-scheme: dark) {
+      :root {
+        --color-bg: #0f172a;
+        --color-bg-subtle: #1e293b;
+        --color-bg-muted: #334155;
+        --color-text: #f1f5f9;
+        --color-text-secondary: #cbd5e1;
+        --color-text-muted: #64748b;
+        --color-border: #334155;
+        --color-border-strong: #475569;
+        --color-primary-light: #1e1b4b;
+        --brand-border: #4c1d95;
+      }
+    }
+
+    *, *::before, *::after { box-sizing: border-box; margin: 0; padding: 0; }
+    html { font-size: 16px; scroll-behavior: smooth; scroll-padding-top: 80px; }
+    body {
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif;
+      background: var(--color-bg); color: var(--color-text); line-height: 1.7;
+      -webkit-font-smoothing: antialiased; -moz-osx-font-smoothing: grayscale;
+    }
+
+    /* ============ Top Header (玻璃态) ============ */
+    .top-header {
+      position: sticky; top: 0; z-index: 100;
+      background: rgba(255,255,255,0.72);
+      backdrop-filter: blur(20px) saturate(180%);
+      -webkit-backdrop-filter: blur(20px) saturate(180%);
+      border-bottom: 1px solid var(--color-border);
+    }
+    @media (prefers-color-scheme: dark) {
+      .top-header { background: rgba(15,23,42,0.72); }
+    }
+    .top-header::after {
+      content: ''; position: absolute; left: 0; right: 0; bottom: -1px; height: 1px;
+      background: var(--brand-gradient); opacity: 0.6;
+    }
+    .top-header-inner {
+      max-width: 1200px; margin: 0 auto; padding: 14px 24px;
+      display: flex; align-items: center; justify-content: space-between;
+    }
+    .brand {
+      display: flex; align-items: center; gap: 10px;
+      font-weight: 700; font-size: 17px; color: var(--color-text); text-decoration: none;
+    }
+    .brand-icon {
+      width: 28px; height: 28px; border-radius: 7px;
+      background: var(--brand-gradient);
+      display: flex; align-items: center; justify-content: center;
+      color: #fff; font-weight: 800; font-size: 14px;
+      box-shadow: 0 4px 14px rgba(124,58,237,0.25);
+    }
+    .top-header nav a {
+      color: var(--color-text-secondary); text-decoration: none; font-size: 14px; font-weight: 500;
+      padding: 6px 12px; border-radius: 7px; transition: color 0.2s, background 0.2s;
+    }
+    .top-header nav a:hover { color: var(--color-primary); background: var(--color-primary-light); }
+
+    /* ============ Hero ============ */
+    .hero {
+      max-width: var(--content-width); margin: 0 auto; padding: 64px 24px 32px;
+    }
+    .eyebrow {
+      display: inline-flex; align-items: center; gap: 6px;
+      padding: 5px 12px; border-radius: 999px;
+      background: var(--color-primary-light); color: var(--color-primary);
+      border: 1px solid var(--brand-border);
+      font-size: 12px; font-weight: 600; letter-spacing: 0.02em;
+      margin-bottom: 16px;
+    }
+    .hero h1 {
+      font-size: 36px; font-weight: 800; letter-spacing: -0.02em;
+      line-height: 1.15; margin-bottom: 12px;
+      background: var(--brand-gradient);
+      -webkit-background-clip: text; background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+    .hero .lead {
+      font-size: 17px; color: var(--color-text-secondary); line-height: 1.6;
+    }
+    .hero .meta {
+      margin-top: 18px; font-size: 13px; color: var(--color-text-muted);
+      display: flex; gap: 16px; flex-wrap: wrap;
+    }
+    .hero .meta strong { color: var(--color-text-secondary); font-weight: 600; }
+
+    /* ============ Content ============ */
+    .content {
+      max-width: var(--content-width); margin: 0 auto; padding: 24px 24px 96px;
+    }
+    .content section {
+      margin-bottom: 40px;
+      animation: fadeUp 0.5s var(--ease-out) both;
+    }
+    .content section:nth-child(1) { animation-delay: 0.05s; }
+    .content section:nth-child(2) { animation-delay: 0.1s; }
+    .content section:nth-child(3) { animation-delay: 0.15s; }
+    .content section:nth-child(4) { animation-delay: 0.2s; }
+    .content section:nth-child(5) { animation-delay: 0.25s; }
+    @keyframes fadeUp {
+      from { opacity: 0; transform: translateY(20px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    @media (prefers-reduced-motion: reduce) {
+      .content section { animation: none; }
+    }
+
+    .content h2 {
+      font-size: 22px; font-weight: 700; letter-spacing: -0.01em;
+      margin-bottom: 14px; padding-left: 14px; position: relative;
+      color: var(--color-text);
+    }
+    .content h2::before {
+      content: ''; position: absolute; left: 0; top: 4px; bottom: 4px;
+      width: 4px; border-radius: 2px;
+      background: var(--brand-gradient);
+    }
+    .content h3 {
+      font-size: 16px; font-weight: 600; margin: 18px 0 8px;
+      color: var(--color-text);
+    }
+    .content p {
+      color: var(--color-text-secondary); margin-bottom: 12px;
+    }
+    .content ul {
+      padding-left: 22px; color: var(--color-text-secondary);
+      margin-bottom: 14px;
+    }
+    .content ul li { margin-bottom: 6px; }
+    .content strong { color: var(--color-text); font-weight: 600; }
+    .content code {
+      font-family: 'JetBrains Mono', ui-monospace, monospace;
+      font-size: 13px; padding: 2px 6px; border-radius: 4px;
+      background: var(--color-bg-muted); color: var(--color-primary);
+    }
+
+    /* ============ Callout ============ */
+    .callout {
+      background: var(--color-primary-light);
+      border: 1px solid var(--brand-border);
+      border-radius: var(--radius);
+      padding: 16px 18px;
+      margin: 18px 0;
+      border-left: 3px solid var(--color-primary);
+    }
+    .callout-title {
+      font-weight: 600; color: var(--color-primary-dark); margin-bottom: 6px;
+      font-size: 14px;
+    }
+    @media (prefers-color-scheme: dark) {
+      .callout-title { color: var(--color-accent); }
+    }
+    .callout p { color: var(--color-text-secondary); margin-bottom: 0; font-size: 14px; }
+
+    /* ============ Contact Card ============ */
+    .contact-card {
+      background: var(--color-bg-subtle);
+      border: 1px solid var(--color-border);
+      border-radius: var(--radius-lg);
+      padding: 20px 22px;
+      margin-top: 14px;
+    }
+    .contact-card h3 { margin-top: 0; }
+    .contact-item {
+      display: flex; align-items: center; gap: 10px;
+      padding: 8px 0; font-size: 14px;
+      color: var(--color-text-secondary);
+    }
+    .contact-item strong { color: var(--color-text); min-width: 90px; }
+
+    /* ============ Footer ============ */
+    .footer {
+      border-top: 1px solid var(--color-border);
+      padding: 32px 24px;
+      text-align: center;
+      color: var(--color-text-muted);
+      font-size: 13px;
+    }
+    .footer a { color: var(--color-primary); text-decoration: none; }
+    .footer .icp { display: block; margin-top: 8px; }
+    .footer .icp a { color: var(--color-text-muted); }
+    .footer .icp a:hover { color: var(--color-primary); }
+
+    /* ============ Mobile ============ */
+    @media (max-width: 640px) {
+      .hero { padding: 48px 20px 24px; }
+      .hero h1 { font-size: 28px; }
+      .hero .lead { font-size: 15px; }
+      .content { padding: 16px 20px 64px; }
+      .content h2 { font-size: 19px; }
+      .top-header-inner { padding: 12px 16px; }
+      .top-header nav a { padding: 6px 8px; font-size: 13px; }
+    }
+  </style>
+</head>
+<body>
+  <header class="top-header">
+    <div class="top-header-inner">
+      <a class="brand" href="https://chat.sopie.cc/">
+        <span class="brand-icon">CG</span>
+        <span>ChatGenius AI</span>
+      </a>
+      <nav>
+        <a href="https://chat.sopie.cc/">首页</a>
+        <a href="/terms-of-service.html">服务条款</a>
+        <a href="/refund-policy.html">退款政策</a>
+        <a href="/privacy-policy.html">隐私政策</a>
+      </nav>
+    </div>
+  </header>
+
+  <main>
+    <section class="hero">
+      <span class="eyebrow">Terms of Service</span>
+      <h1>服务条款</h1>
+      <p class="lead">欢迎使用 ChatGenius AI 浏览器扩展（以下简称"本扩展"）及配套后端服务。请在使用前仔细阅读以下条款。安装、使用或购买本扩展即视为您已阅读并同意本服务条款的全部内容。</p>
+      <div class="meta">
+        <span><strong>最后更新：</strong>2026-07-16</span>
+        <span><strong>生效日期：</strong>2026-07-16</span>
+      </div>
+    </section>
+
+    <div class="content">
+
+      <section>
+        <h2>1. 服务说明</h2>
+        <p>ChatGenius AI 是一款运行于 Chrome 等 Chromium 内核浏览器的扩展程序，提供基于人工智能的自动回复辅助功能。本扩展通过调用您自行配置的第三方 AI 服务商接口（如 OpenAI、DeepSeek、智谱等）生成回复内容，用于辅助您在 WhatsApp Web、Messenger 等网页端的日常沟通。</p>
+        <p>本扩展同时提供配套后端服务，包括许可证验证、订单管理、发票开具及售后支持等功能。</p>
+      </section>
+
+      <section>
+        <h2>2. 用户责任</h2>
+        <p>您在使用本扩展时，应遵守中华人民共和国相关法律法规及所在国家/地区的法律，并承诺不以本扩展从事下列行为：</p>
+        <ul>
+          <li>发送垃圾信息、批量广告或未经请求的商业消息</li>
+          <li>骚扰、威胁、诽谤或欺诈他人</li>
+          <li>传播违法、有害、暴力或歧视性内容</li>
+          <li>侵犯他人隐私、知识产权或其他合法权益</li>
+          <li>对本扩展进行逆向工程、反编译、破解或绕过许可证验证机制</li>
+          <li>将激活码在多设备间共享、转售或用于商业转授权</li>
+          <li>对本扩展后端服务进行攻击、爬取、压测或其他可能影响服务稳定的行为</li>
+        </ul>
+        <div class="callout">
+          <div class="callout-title">违规处理</div>
+          <p>如发现您违反上述任一条款，我们有权随时暂停或终止您的使用许可，且不退还已支付的费用。情节严重的，我们将配合相关部门依法处理。</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>3. 付费许可</h2>
+        <h3>3.1 许可性质</h3>
+        <p>ChatGenius AI 提供免费版与 Pro 版本。Pro 版本（年付或永久版）为<strong>软件使用许可</strong>，而非实物商品销售。购买 Pro 版本后，您获得的是在单一设备上使用本扩展 Pro 功能的非独占、不可转让的许可。</p>
+
+        <h3>3.2 许可范围</h3>
+        <ul>
+          <li>一个激活码默认绑定一台设备，绑定后不可在其他设备使用</li>
+          <li>永久版许可在软件可用期间内有效，不意味着终身享有服务承诺</li>
+          <li>年付版许可有效期为购买之日起 365 天，到期后需续费方可继续使用 Pro 功能</li>
+        </ul>
+
+        <h3>3.3 API 费用说明</h3>
+        <div class="callout">
+          <div class="callout-title">重要提示</div>
+          <p>本扩展调用 AI 服务商接口所产生的 <strong>API 费用由对应 AI 服务商另行收取</strong>，不包含在 Pro 版本价格内。Pro 版本费用仅用于解锁本扩展的 Pro 功能与配套后端服务，不包含任何 AI 调用额度。请您知悉并自行承担 API 调用产生的费用。</p>
+        </div>
+      </section>
+
+      <section>
+        <h2>4. 知识产权</h2>
+        <p>本扩展及其配套服务的全部知识产权（包括但不限于软件代码、界面设计、图标、文案、商标"ChatGenius"等）归开发者所有，受著作权法、商标法及相关法律法规保护。</p>
+        <ul>
+          <li>未经书面授权，您不得复制、修改、分发本扩展的全部或部分代码</li>
+          <li>不得去除或篡改本扩展中的版权声明、商标或标识</li>
+          <li>您自定义的角色设定、FAQ 知识库等内容，其知识产权归您所有</li>
+          <li>您使用 AI 服务商生成的回复内容，其权利归属以对应服务商条款为准</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>5. 服务变更与终止</h2>
+        <p>我们保留以下权利：</p>
+        <ul>
+          <li>根据技术发展或运营需要，更新、调整或下线本扩展的部分功能</li>
+          <li>在提前通知的情况下，调整 Pro 版本的价格与服务内容（已购买用户不受影响）</li>
+          <li>在您严重违反本条款时，终止您的使用许可</li>
+        </ul>
+        <p>如本扩展因不可抗力、政策变更或技术原因无法继续提供服务，我们将尽早在官网公告，并按《退款政策》对未到期的年付用户进行妥善处理。</p>
+      </section>
+
+      <section>
+        <h2>6. 免责声明</h2>
+        <ul>
+          <li>本扩展生成的回复内容由 AI 模型产出，仅供参考，不构成任何专业建议（法律、医疗、投资等）。您应自行判断并承担使用回复内容的全部责任</li>
+          <li>因 AI 服务商接口故障、网络中断或您的 API Key 配置错误导致无法生成回复的，我们不承担责任</li>
+          <li>因您违反本条款或第三方服务商规则导致的账号封禁、数据丢失等后果，由您自行承担</li>
+          <li>本扩展不保证所有网页平台均能完美适配，且不对任何间接、附带损失承担责任</li>
+        </ul>
+      </section>
+
+      <section>
+        <h2>7. 争议解决</h2>
+        <p>本服务条款的订立、效力、解释、履行及争议解决均适用中华人民共和国法律。</p>
+        <p>如因本扩展或本条款产生任何争议，双方应首先友好协商解决；协商不成的，任何一方均可向开发者所在地有管辖权的人民法院提起诉讼。</p>
+      </section>
+
+      <section>
+        <h2>8. 条款变更</h2>
+        <p>我们可能不时更新本服务条款。变更后的条款将在本页面发布，并更新"最后更新"日期。重大变更时我们将通过扩展内通知或官网公告的方式告知您。继续使用本扩展即视为您同意更新后的条款。</p>
+      </section>
+
+      <section>
+        <h2>9. 联系我们</h2>
+        <p>如对本服务条款有任何疑问，可通过以下方式联系我们：</p>
+        <div class="contact-card">
+          <h3>ChatGenius AI 团队</h3>
+          <div class="contact-item"><strong>官方网站</strong><a href="https://chat.sopie.cc/" style="color:var(--color-primary);text-decoration:none;">https://chat.sopie.cc/</a></div>
+          <div class="contact-item"><strong>反馈邮箱</strong>support@chatgenius.ai</div>
+          <div class="contact-item"><strong>售后 QQ 群</strong>请见扩展设置页底部</div>
+        </div>
+      </section>
+
+    </div>
+  </main>
+
+  <footer class="footer">
+    © 2026 ChatGenius AI. All rights reserved.
+    · <a href="https://chat.sopie.cc/">返回首页</a>
+    · <a href="/terms-of-service.html">服务条款</a>
+    · <a href="/refund-policy.html">退款政策</a>
+    · <a href="/privacy-policy.html">隐私政策</a>
+    <span class="icp"><a href="https://beian.miit.gov.cn/" target="_blank" rel="noopener">冀ICP备2023040521号-4</a></span>
+  </footer>
+</body>
+</html>

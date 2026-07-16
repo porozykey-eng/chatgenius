@@ -6,5 +6,332 @@
   "extDesc": {
     "message": "AI-powered auto-reply assistant for WhatsApp, Messenger and Facebook, with multi-model AI support, custom personas, and smart knowledge base integration.",
     "description": "Description of the extension"
-  }
+  },
+  "aiReply": {
+    "message": "AI Reply",
+    "description": "Floating button tooltip title"
+  },
+  "aiReplyHint": {
+    "message": "Right-click for more options · Long-press to drag",
+    "description": "Floating button tooltip hint line"
+  },
+  "draggable": {
+    "message": "Draggable",
+    "description": "Hint label shown when long-pressing the floating button"
+  },
+  "readingChat": {
+    "message": "Reading chat history...",
+    "description": "Toast shown when reading chat"
+  },
+  "aiThinking": {
+    "message": "AI is thinking...",
+    "description": "Toast shown while AI is generating"
+  },
+  "almostDone": {
+    "message": "Almost done...",
+    "description": "Toast shown when generation is nearly complete"
+  },
+  "noChatFound": {
+    "message": "No chat history found. Please open a chat window that contains messages.",
+    "description": "Toast error when no chat context found"
+  },
+  "noChatFoundShort": {
+    "message": "No chat history found",
+    "description": "Short toast error when no chat context found"
+  },
+  "pluginConnError": {
+    "message": "Extension connection error: ",
+    "description": "Toast prefix for extension connection errors"
+  },
+  "refreshRetrySuffix": {
+    "message": " (please refresh the page and retry)",
+    "description": "Suffix appended to connection error toast"
+  },
+  "replyGeneratedPreview": {
+    "message": "Reply generated! Please preview, edit, then insert.",
+    "description": "Toast on reply generated with preview"
+  },
+  "replyGenerated": {
+    "message": "Reply generated!",
+    "description": "Toast on reply generated"
+  },
+  "quotaRemainingToday": {
+    "message": "Today $1 remaining, resets tomorrow.",
+    "description": "Toast showing remaining daily quota; $1 is the number"
+  },
+  "generatingTemplate": {
+    "message": "Generating: $1...",
+    "description": "Toast when generating from a template; $1 is the template label"
+  },
+  "generateFailed": {
+    "message": "Generation failed: ",
+    "description": "Toast prefix for generation failure"
+  },
+  "unknownError": {
+    "message": "Unknown error",
+    "description": "Generic unknown error message"
+  },
+  "replyInserted": {
+    "message": "Reply inserted!",
+    "description": "Toast when reply inserted into input"
+  },
+  "autoFillFailed": {
+    "message": "Unable to auto-fill, please copy manually",
+    "description": "Toast when auto-fill into input fails"
+  },
+  "copiedToClipboard": {
+    "message": "Copied to clipboard!",
+    "description": "Toast when text copied to clipboard"
+  },
+  "replyRegenerated": {
+    "message": "Reply regenerated!",
+    "description": "Toast when reply regenerated"
+  },
+  "regenFailed": {
+    "message": "Regeneration failed",
+    "description": "Toast when regeneration fails"
+  },
+  "noContextRegen": {
+    "message": "No chat history available to regenerate",
+    "description": "Toast when no context for regeneration"
+  },
+  "regenerating": {
+    "message": "Regenerating reply...",
+    "description": "Toast while regenerating reply"
+  },
+  "replyRegeneratedPreview": {
+    "message": "Reply regenerated! Please preview, edit, then send.",
+    "description": "Toast when reply regenerated with preview"
+  },
+  "quotaExhausted": {
+    "message": "Today's free quota is exhausted ($1 replies). Please upgrade to Pro.",
+    "description": "Toast when free quota exhausted; $1 is the limit"
+  },
+  "autoGenDetected": {
+    "message": "New message detected, auto-generating reply...",
+    "description": "Toast when auto-reply triggers"
+  },
+  "autoReplyFailed": {
+    "message": "Auto reply failed: ",
+    "description": "Toast prefix for auto-reply failure"
+  },
+  "replyGeneratedCheck": {
+    "message": "Reply generated, please review before sending",
+    "description": "Toast when auto-reply generated"
+  },
+  "autoInsertFailed": {
+    "message": "Auto-insert failed, preview editor opened",
+    "description": "Toast when auto-insert fails"
+  },
+  "inputException": {
+    "message": "Input exception, preview editor opened",
+    "description": "Toast on input exception"
+  },
+  "autoGenFailed": {
+    "message": "Auto generation failed: ",
+    "description": "Toast prefix for auto generation failure"
+  },
+  "licenseRevoked": {
+    "message": "Your license has been revoked. Please reactivate to continue using.",
+    "description": "Toast when license is revoked"
+  },
+  "unknownApiError": {
+    "message": "Unknown error, please check API settings.",
+    "description": "Error message for unknown API error"
+  },
+  "networkRequestFailed": {
+    "message": "Network request failed. Please check your network connection or API URL.",
+    "description": "Error message for network failure"
+  },
+  "apiKeyInvalid": {
+    "message": "API key invalid or unauthorized (HTTP 401). Please check your API Key.",
+    "description": "Error message for 401"
+  },
+  "apiUrlNotFound": {
+    "message": "API URL not found (HTTP 404). Please check your API URL.",
+    "description": "Error message for 404"
+  },
+  "rateLimited": {
+    "message": "Too many requests or quota exhausted (HTTP 429). Please try again later or check your balance.",
+    "description": "Error message for 429"
+  },
+  "aiServerError": {
+    "message": "AI server error ($1). Please try again later.",
+    "description": "Error message for 5xx; $1 is the status code"
+  },
+  "quickCommands": {
+    "message": "Quick Commands",
+    "description": "Quick menu header title"
+  },
+  "selectReplyStyle": {
+    "message": "Select reply style",
+    "description": "Quick menu header subtitle"
+  },
+  "recent": {
+    "message": "Recent",
+    "description": "Quick menu section label for recent templates"
+  },
+  "common": {
+    "message": "Common",
+    "description": "Quick menu section label for common templates"
+  },
+  "moreStyles": {
+    "message": "More Styles",
+    "description": "Quick menu section label for more templates"
+  },
+  "customPromptTitle": {
+    "message": "Custom Prompt",
+    "description": "Custom prompt dialog title"
+  },
+  "customPromptDesc": {
+    "message": "Describe the reply style or content you want",
+    "description": "Custom prompt dialog description"
+  },
+  "customPromptPlaceholder": {
+    "message": "e.g. Reply in a formal tone, express thanks and ask for more details...",
+    "description": "Custom prompt input placeholder"
+  },
+  "ctrlEnterSubmit": {
+    "message": "Ctrl+Enter to submit",
+    "description": "Hint text in custom prompt dialog"
+  },
+  "cancel": {
+    "message": "Cancel",
+    "description": "Cancel button label"
+  },
+  "generateReply": {
+    "message": "Generate Reply",
+    "description": "Generate reply button label"
+  },
+  "customLabel": {
+    "message": "✨ Custom",
+    "description": "Custom template label"
+  },
+  "customPromptHint": {
+    "message": "Custom prompt...",
+    "description": "Custom prompt menu item label"
+  },
+  "previewReply": {
+    "message": "Preview Reply",
+    "description": "Preview modal title"
+  },
+  "editThenInsert": {
+    "message": "Edit then click insert",
+    "description": "Preview modal subtitle"
+  },
+  "fullscreenEdit": {
+    "message": "Fullscreen Edit",
+    "description": "Fullscreen editor title and button tooltip"
+  },
+  "previewPlaceholder": {
+    "message": "AI-generated reply will appear here...",
+    "description": "Preview textarea placeholder"
+  },
+  "regenerate": {
+    "message": "Regenerate",
+    "description": "Regenerate button label"
+  },
+  "copy": {
+    "message": "Copy",
+    "description": "Copy button label"
+  },
+  "insertReply": {
+    "message": "Insert Reply",
+    "description": "Insert reply button label"
+  },
+  "regenReply": {
+    "message": "Regenerate reply",
+    "description": "Regenerate button tooltip"
+  },
+  "quotaExhaustedTitle": {
+    "message": "Today's free quota is exhausted",
+    "description": "Quota panel title"
+  },
+  "quotaExhaustedDesc": {
+    "message": "Your $1 daily free replies are used up. They reset automatically tomorrow.",
+    "description": "Quota panel description; $1 is the limit"
+  },
+  "upgradeProUnlimited": {
+    "message": "✨ Upgrade to Pro for unlimited use",
+    "description": "Quota panel upgrade button"
+  },
+  "close": {
+    "message": "Close",
+    "description": "Close button label"
+  },
+  "quickStart": {
+    "message": "💡 Quick Start",
+    "description": "First-use guide bubble title"
+  },
+  "leftClickGen": {
+    "message": "🖱️ <b>Left-click</b> to generate reply",
+    "description": "First-use guide bubble hint"
+  },
+  "rightClickStyle": {
+    "message": "📋 <b>Right-click</b> to switch style",
+    "description": "First-use guide bubble hint"
+  },
+  "longPressDrag": {
+    "message": "✋ <b>Long-press</b> to drag",
+    "description": "First-use guide bubble hint"
+  },
+  "thinking": {
+    "message": "Thinking",
+    "description": "Button status label while AI is thinking"
+  },
+  "typing": {
+    "message": "Typing",
+    "description": "Button status label while inserting reply"
+  },
+  "tplFriendly": { "message": "Friendly reply", "description": "Template label" },
+  "tplFriendlyPrompt": { "message": "Generate a friendly, warm reply", "description": "Template prompt" },
+  "tplProfessional": { "message": "Professional reply", "description": "Template label" },
+  "tplProfessionalPrompt": { "message": "Generate a professional, formal reply", "description": "Template prompt" },
+  "tplConcise": { "message": "Concise reply", "description": "Template label" },
+  "tplConcisePrompt": { "message": "Generate a concise, direct reply, no more than 2 sentences", "description": "Template prompt" },
+  "tplDetailed": { "message": "Detailed reply", "description": "Template label" },
+  "tplDetailedPrompt": { "message": "Generate a detailed, comprehensive reply", "description": "Template prompt" },
+  "tplHumorous": { "message": "Humorous reply", "description": "Template label" },
+  "tplHumorousPrompt": { "message": "Generate a light, humorous reply", "description": "Template prompt" },
+  "tplQuestion": { "message": "Question reply", "description": "Template label" },
+  "tplQuestionPrompt": { "message": "Generate a reply with a relevant question to continue the conversation", "description": "Template prompt" },
+  "tplAgreement": { "message": "Agreement reply", "description": "Template label" },
+  "tplAgreementPrompt": { "message": "Generate a reply expressing agreement or support", "description": "Template prompt" },
+  "tplDisagreement": { "message": "Polite decline", "description": "Template label" },
+  "tplDisagreementPrompt": { "message": "Generate a reply politely expressing disagreement", "description": "Template prompt" },
+  "tplThanks": { "message": "Thank-you reply", "description": "Template label" },
+  "tplThanksPrompt": { "message": "Generate a reply expressing thanks", "description": "Template prompt" },
+  "tplFollowup": { "message": "Follow-up reminder", "description": "Template label" },
+  "tplFollowupPrompt": { "message": "Generate a follow-up or reminder reply", "description": "Template prompt" },
+  "exampleReplyEnglish": { "message": "Reply in English", "description": "Custom prompt example chip" },
+  "exampleToneMild": { "message": "Softer tone", "description": "Custom prompt example chip" },
+  "exampleAddEmoji": { "message": "Add emojis", "description": "Custom prompt example chip" },
+  "exampleShortConfirm": { "message": "Short confirmation only", "description": "Custom prompt example chip" },
+
+  "pluginNotConfigured": { "message": "Extension not configured", "description": "Popup status text" },
+  "connected": { "message": "Connected", "description": "Popup status text" },
+  "apiConnFailed": { "message": "API connection failed", "description": "Popup status text" },
+  "apiNotTested": { "message": "API not tested", "description": "Popup status text" },
+  "quotaExhaustedToday": { "message": "Today's quota exhausted", "description": "Popup license status" },
+  "exhaustedUpgradePro": { "message": "Exhausted - Upgrade Pro", "description": "Popup upgrade button" },
+  "freeRemaining": { "message": "Free · $1 remaining", "description": "Popup license status; $1 is the number" },
+  "almostExhaustedUpgrade": { "message": "Almost exhausted - Upgrade", "description": "Popup upgrade button" },
+  "upgradePro": { "message": "Upgrade Pro", "description": "Popup upgrade button" },
+  "proLifetime": { "message": "✨ Pro Lifetime", "description": "Popup license status" },
+  "proDaysLeft": { "message": "✨ Pro · $1 days left", "description": "Popup license status; $1 is the number" },
+  "proYear": { "message": "✨ Pro Yearly", "description": "Popup license status" },
+  "defaultPersonaName": { "message": "🧠 Professional Assistant (Default)", "description": "Default persona name" },
+
+  "licenseInvalidTitle": { "message": "License invalidated", "description": "Notification title" },
+  "licenseInvalidMsg": { "message": "Your license has been activated on another device. This device has been logged out automatically.", "description": "Notification message" },
+  "permRequiredTitle": { "message": "API domain authorization required", "description": "Notification title" },
+  "permRequiredMsg": { "message": "Please go to the extension settings page, click \"Test Connection\" to authorize $1 and retry.", "description": "Notification message; $1 is the hostname" },
+  "permRequiredError": { "message": "API domain $1 is not authorized. Please go to the settings page and click \"Test Connection\" to complete authorization.", "description": "Error message; $1 is the hostname" },
+  "fingerprintMismatch": { "message": "Device fingerprint mismatch, you have been forced offline", "description": "Force logout reason" },
+  "freeLimitExhausted": { "message": "Free tier daily limit of $1 replies is exhausted. Upgrade to Pro for unlimited replies.", "description": "Error message; $1 is the limit" },
+  "apiKeyNotConfigured": { "message": "Please configure the API Key first", "description": "Error message" },
+  "notActivated": { "message": "Not activated", "description": "Error message for device actions" },
+  "queryFailed": { "message": "Query failed", "description": "Error message for device query" },
+  "unbindFailed": { "message": "Unbind failed", "description": "Error message for device unbind" },
+  "requestTimeout": { "message": "Request timeout ($1s). Please check your network connection.", "description": "Error message; $1 is the seconds" }
 }

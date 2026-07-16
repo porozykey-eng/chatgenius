@@ -6,5 +6,332 @@
   "extDesc": {
     "message": "为 WhatsApp、Messenger 和 Facebook 提供 AI 智能自动回复，支持多种 AI 模型、自定义角色与知识库。",
     "description": "Description of the extension"
-  }
+  },
+  "aiReply": {
+    "message": "AI 回复",
+    "description": "Floating button tooltip title"
+  },
+  "aiReplyHint": {
+    "message": "右键更多选项 · 长按可拖拽",
+    "description": "Floating button tooltip hint line"
+  },
+  "draggable": {
+    "message": "可拖拽",
+    "description": "Hint label shown when long-pressing the floating button"
+  },
+  "readingChat": {
+    "message": "正在读取聊天记录...",
+    "description": "Toast shown when reading chat"
+  },
+  "aiThinking": {
+    "message": "AI 正在思考...",
+    "description": "Toast shown while AI is generating"
+  },
+  "almostDone": {
+    "message": "即将完成...",
+    "description": "Toast shown when generation is nearly complete"
+  },
+  "noChatFound": {
+    "message": "未找到聊天记录，请打开一个包含消息的聊天窗口。",
+    "description": "Toast error when no chat context found"
+  },
+  "noChatFoundShort": {
+    "message": "未找到聊天记录",
+    "description": "Short toast error when no chat context found"
+  },
+  "pluginConnError": {
+    "message": "插件连接错误: ",
+    "description": "Toast prefix for extension connection errors"
+  },
+  "refreshRetrySuffix": {
+    "message": " (请刷新页面重试)",
+    "description": "Suffix appended to connection error toast"
+  },
+  "replyGeneratedPreview": {
+    "message": "回复已生成！请预览编辑后插入。",
+    "description": "Toast on reply generated with preview"
+  },
+  "replyGenerated": {
+    "message": "回复已生成！",
+    "description": "Toast on reply generated"
+  },
+  "quotaRemainingToday": {
+    "message": "今日剩余 $1 次，明天重置。",
+    "description": "Toast showing remaining daily quota; $1 is the number"
+  },
+  "generatingTemplate": {
+    "message": "正在生成: $1...",
+    "description": "Toast when generating from a template; $1 is the template label"
+  },
+  "generateFailed": {
+    "message": "生成失败: ",
+    "description": "Toast prefix for generation failure"
+  },
+  "unknownError": {
+    "message": "未知错误",
+    "description": "Generic unknown error message"
+  },
+  "replyInserted": {
+    "message": "回复已插入！",
+    "description": "Toast when reply inserted into input"
+  },
+  "autoFillFailed": {
+    "message": "无法自动填充，请手动复制",
+    "description": "Toast when auto-fill into input fails"
+  },
+  "copiedToClipboard": {
+    "message": "已复制到剪贴板！",
+    "description": "Toast when text copied to clipboard"
+  },
+  "replyRegenerated": {
+    "message": "回复已重新生成！",
+    "description": "Toast when reply regenerated"
+  },
+  "regenFailed": {
+    "message": "重新生成失败",
+    "description": "Toast when regeneration fails"
+  },
+  "noContextRegen": {
+    "message": "没有可用的聊天记录进行重新生成",
+    "description": "Toast when no context for regeneration"
+  },
+  "regenerating": {
+    "message": "重新生成回复...",
+    "description": "Toast while regenerating reply"
+  },
+  "replyRegeneratedPreview": {
+    "message": "回复已重新生成！请预览编辑后发送。",
+    "description": "Toast when reply regenerated with preview"
+  },
+  "quotaExhausted": {
+    "message": "今日免费配额已用完（$1 次），请升级 Pro 版",
+    "description": "Toast when free quota exhausted; $1 is the limit"
+  },
+  "autoGenDetected": {
+    "message": "检测到新消息，自动生成回复中...",
+    "description": "Toast when auto-reply triggers"
+  },
+  "autoReplyFailed": {
+    "message": "自动回复失败: ",
+    "description": "Toast prefix for auto-reply failure"
+  },
+  "replyGeneratedCheck": {
+    "message": "回复已生成，请检查后发送",
+    "description": "Toast when auto-reply generated"
+  },
+  "autoInsertFailed": {
+    "message": "自动插入失败，已打开预览编辑",
+    "description": "Toast when auto-insert fails"
+  },
+  "inputException": {
+    "message": "输入异常，已打开预览编辑",
+    "description": "Toast on input exception"
+  },
+  "autoGenFailed": {
+    "message": "自动生成失败: ",
+    "description": "Toast prefix for auto generation failure"
+  },
+  "licenseRevoked": {
+    "message": "您的许可证已被撤销，如需继续使用请重新激活。",
+    "description": "Toast when license is revoked"
+  },
+  "unknownApiError": {
+    "message": "未知错误，请检查 API 设置。",
+    "description": "Error message for unknown API error"
+  },
+  "networkRequestFailed": {
+    "message": "网络请求失败，请检查您的网络连接或 API 地址是否正确。",
+    "description": "Error message for network failure"
+  },
+  "apiKeyInvalid": {
+    "message": "API 密钥无效或未授权 (HTTP 401)，请检查您的 API Key。",
+    "description": "Error message for 401"
+  },
+  "apiUrlNotFound": {
+    "message": "API 地址不存在 (HTTP 404)，请检查 API URL 是否正确。",
+    "description": "Error message for 404"
+  },
+  "rateLimited": {
+    "message": "请求过于频繁或额度耗尽 (HTTP 429)，请稍后再试或检查账户余额。",
+    "description": "Error message for 429"
+  },
+  "aiServerError": {
+    "message": "AI 服务端错误 ($1)，请稍后再试。",
+    "description": "Error message for 5xx; $1 is the status code"
+  },
+  "quickCommands": {
+    "message": "快捷指令",
+    "description": "Quick menu header title"
+  },
+  "selectReplyStyle": {
+    "message": "选择回复风格",
+    "description": "Quick menu header subtitle"
+  },
+  "recent": {
+    "message": "最近使用",
+    "description": "Quick menu section label for recent templates"
+  },
+  "common": {
+    "message": "常用",
+    "description": "Quick menu section label for common templates"
+  },
+  "moreStyles": {
+    "message": "更多风格",
+    "description": "Quick menu section label for more templates"
+  },
+  "customPromptTitle": {
+    "message": "自定义提示",
+    "description": "Custom prompt dialog title"
+  },
+  "customPromptDesc": {
+    "message": "描述你想要的回复风格或内容",
+    "description": "Custom prompt dialog description"
+  },
+  "customPromptPlaceholder": {
+    "message": "例如：用正式的语气回复，表达感谢并询问更多细节...",
+    "description": "Custom prompt input placeholder"
+  },
+  "ctrlEnterSubmit": {
+    "message": "Ctrl+Enter 提交",
+    "description": "Hint text in custom prompt dialog"
+  },
+  "cancel": {
+    "message": "取消",
+    "description": "Cancel button label"
+  },
+  "generateReply": {
+    "message": "生成回复",
+    "description": "Generate reply button label"
+  },
+  "customLabel": {
+    "message": "✨ 自定义",
+    "description": "Custom template label"
+  },
+  "customPromptHint": {
+    "message": "自定义提示...",
+    "description": "Custom prompt menu item label"
+  },
+  "previewReply": {
+    "message": "预览回复",
+    "description": "Preview modal title"
+  },
+  "editThenInsert": {
+    "message": "编辑后点击插入",
+    "description": "Preview modal subtitle"
+  },
+  "fullscreenEdit": {
+    "message": "全屏编辑",
+    "description": "Fullscreen editor title and button tooltip"
+  },
+  "previewPlaceholder": {
+    "message": "AI 生成的回复将显示在这里...",
+    "description": "Preview textarea placeholder"
+  },
+  "regenerate": {
+    "message": "重新生成",
+    "description": "Regenerate button label"
+  },
+  "copy": {
+    "message": "复制",
+    "description": "Copy button label"
+  },
+  "insertReply": {
+    "message": "插入回复",
+    "description": "Insert reply button label"
+  },
+  "regenReply": {
+    "message": "重新生成回复",
+    "description": "Regenerate button tooltip"
+  },
+  "quotaExhaustedTitle": {
+    "message": "今日免费额度已用完",
+    "description": "Quota panel title"
+  },
+  "quotaExhaustedDesc": {
+    "message": "每天 $1 次免费额度已耗尽，明天自动重置",
+    "description": "Quota panel description; $1 is the limit"
+  },
+  "upgradeProUnlimited": {
+    "message": "✨ 升级 Pro 无限次使用",
+    "description": "Quota panel upgrade button"
+  },
+  "close": {
+    "message": "关闭",
+    "description": "Close button label"
+  },
+  "quickStart": {
+    "message": "💡 快速上手",
+    "description": "First-use guide bubble title"
+  },
+  "leftClickGen": {
+    "message": "🖱️ <b>左键</b> 生成回复",
+    "description": "First-use guide bubble hint"
+  },
+  "rightClickStyle": {
+    "message": "📋 <b>右键</b> 切换风格",
+    "description": "First-use guide bubble hint"
+  },
+  "longPressDrag": {
+    "message": "✋ <b>长按</b> 拖拽移动",
+    "description": "First-use guide bubble hint"
+  },
+  "thinking": {
+    "message": "思考中",
+    "description": "Button status label while AI is thinking"
+  },
+  "typing": {
+    "message": "输入中",
+    "description": "Button status label while inserting reply"
+  },
+  "tplFriendly": { "message": "友好回复", "description": "Template label" },
+  "tplFriendlyPrompt": { "message": "生成一个友好、热情的回复", "description": "Template prompt" },
+  "tplProfessional": { "message": "专业回复", "description": "Template label" },
+  "tplProfessionalPrompt": { "message": "生成一个专业、正式的回复", "description": "Template prompt" },
+  "tplConcise": { "message": "简洁回复", "description": "Template label" },
+  "tplConcisePrompt": { "message": "生成一个简洁、直接的回复，不超过2句话", "description": "Template prompt" },
+  "tplDetailed": { "message": "详细回复", "description": "Template label" },
+  "tplDetailedPrompt": { "message": "生成一个详细、全面的回复", "description": "Template prompt" },
+  "tplHumorous": { "message": "幽默回复", "description": "Template label" },
+  "tplHumorousPrompt": { "message": "生成一个轻松幽默的回复", "description": "Template prompt" },
+  "tplQuestion": { "message": "提问回复", "description": "Template label" },
+  "tplQuestionPrompt": { "message": "生成一个带有相关问题的回复，以继续对话", "description": "Template prompt" },
+  "tplAgreement": { "message": "同意回复", "description": "Template label" },
+  "tplAgreementPrompt": { "message": "生成一个表示同意/支持的回复", "description": "Template prompt" },
+  "tplDisagreement": { "message": "委婉拒绝", "description": "Template label" },
+  "tplDisagreementPrompt": { "message": "生成一个委婉表示不同意的回复", "description": "Template prompt" },
+  "tplThanks": { "message": "感谢回复", "description": "Template label" },
+  "tplThanksPrompt": { "message": "生成一个表达感谢的回复", "description": "Template prompt" },
+  "tplFollowup": { "message": "跟进提醒", "description": "Template label" },
+  "tplFollowupPrompt": { "message": "生成一个跟进或提醒的回复", "description": "Template prompt" },
+  "exampleReplyEnglish": { "message": "用英语回复", "description": "Custom prompt example chip" },
+  "exampleToneMild": { "message": "语气更委婉", "description": "Custom prompt example chip" },
+  "exampleAddEmoji": { "message": "加上表情符号", "description": "Custom prompt example chip" },
+  "exampleShortConfirm": { "message": "简短确认即可", "description": "Custom prompt example chip" },
+
+  "pluginNotConfigured": { "message": "插件未配置", "description": "Popup status text" },
+  "connected": { "message": "已连接", "description": "Popup status text" },
+  "apiConnFailed": { "message": "API 连接失败", "description": "Popup status text" },
+  "apiNotTested": { "message": "API 未测试", "description": "Popup status text" },
+  "quotaExhaustedToday": { "message": "今日配额已用完", "description": "Popup license status" },
+  "exhaustedUpgradePro": { "message": "已用完 - 升级 Pro", "description": "Popup upgrade button" },
+  "freeRemaining": { "message": "免费版 · 剩余 $1 次", "description": "Popup license status; $1 is the number" },
+  "almostExhaustedUpgrade": { "message": "即将用完 - 升级", "description": "Popup upgrade button" },
+  "upgradePro": { "message": "升级 Pro", "description": "Popup upgrade button" },
+  "proLifetime": { "message": "✨ Pro 永久版", "description": "Popup license status" },
+  "proDaysLeft": { "message": "✨ Pro · 剩余 $1 天", "description": "Popup license status; $1 is the number" },
+  "proYear": { "message": "✨ Pro 年付版", "description": "Popup license status" },
+  "defaultPersonaName": { "message": "🧠 专业助理 (默认)", "description": "Default persona name" },
+
+  "licenseInvalidTitle": { "message": "许可证已失效", "description": "Notification title" },
+  "licenseInvalidMsg": { "message": "您的许可证已在其他设备激活，本设备已自动退出登录。", "description": "Notification message" },
+  "permRequiredTitle": { "message": "需要授权 API 域名", "description": "Notification title" },
+  "permRequiredMsg": { "message": "请前往扩展设置页，点击\"测试连接\"授权 $1 后重试", "description": "Notification message; $1 is the hostname" },
+  "permRequiredError": { "message": "API 域名 $1 未授权，请到设置页点击\"测试连接\"完成授权", "description": "Error message; $1 is the hostname" },
+  "fingerprintMismatch": { "message": "设备指纹不匹配，已被强制下线", "description": "Force logout reason" },
+  "freeLimitExhausted": { "message": "免费版每日限制 $1 次回复已用完。升级到 Pro 版无限制。", "description": "Error message; $1 is the limit" },
+  "apiKeyNotConfigured": { "message": "请先配置 API Key", "description": "Error message" },
+  "notActivated": { "message": "未激活", "description": "Error message for device actions" },
+  "queryFailed": { "message": "查询失败", "description": "Error message for device query" },
+  "unbindFailed": { "message": "解绑失败", "description": "Error message for device unbind" },
+  "requestTimeout": { "message": "请求超时 ($1秒)，请检查网络连接", "description": "Error message; $1 is the seconds" }
 }

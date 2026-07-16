@@ -178,8 +178,8 @@ const PLAN_PRICES = {
   lifetime: Number(process.env.PRICE_LIFETIME || 299),
 };
 const PLAN_SUBJECTS = {
-  year: process.env.PLAN_SUBJECT_YEAR || '出海工作台效率插件-年付版',
-  lifetime: process.env.PLAN_SUBJECT_LIFETIME || '出海工作台效率插件-终身版',
+  year: process.env.PLAN_SUBJECT_YEAR || 'ChatGenius AI 浏览器扩展-年付版',
+  lifetime: process.env.PLAN_SUBJECT_LIFETIME || 'ChatGenius AI 浏览器扩展-永久版',
 };
 
 // 创建 Native 支付订单（PC 端扫码支付）
@@ -204,6 +204,13 @@ router.post('/create-order', async (req, res) => {
 
     // 金额转为分
     const totalFee = Math.round(numAmount * 100);
+
+    // P1-5 修复：先入库创建 pending 订单，再调微信 API
+    // 避免 API 成功 DB 失败导致用户已付款但订单不存在
+    await pool.query(
+      'INSERT INTO orders (order_no, plan, price, type, channel, status, user_email) VALUES (?, ?, ?, ?, ?, ?, ?)',
+      [orderNo, subject, numAmount, type, 'wechat', 'pending', email || null]
+    );
 
     // 请求体
     const body = JSON.stringify({
@@ -246,24 +253,32 @@ router.post('/create-order', async (req, res) => {
     console.log('WeChat Native pay response: code_url=', !!data.code_url, 'has_error=', !!data.code);
 
     if (data.code_url) {
-      // 保存订单到数据库
-      await pool.query(
-        'INSERT INTO orders (order_no, plan, price, type, channel, status, user_email) VALUES (?, ?, ?, ?, ?, ?, ?)',
-        [orderNo, subject, numAmount, type, 'wechat', 'pending', email || null]
-      );
-
       res.json({
         success: true,
         codeUrl: data.code_url,  // 二维码链接
         orderNo,
       });
     } else {
+      // P1-5 修复：API 返回错误，将订单标记为 cancelled
+      await pool.query(
+        'UPDATE orders SET status = ? WHERE order_no = ?',
+        ['cancelled', orderNo]
+      );
       // P3-8 修复：仅打印错误码和消息，不打印完整 data
       console.error('WeChat pay error: code=', data.code, 'message=', data.message);
       res.status(500).json({ success: false, error: '创建支付订单失败' });
     }
   } catch (error) {
     console.error('WeChat create order error:', error.message);
+    // P1-5 修复：API 调用异常，将订单标记为 cancelled
+    try {
+      await pool.query(
+        'UPDATE orders SET status = ? WHERE order_no = ?',
+        ['cancelled', orderNo]
+      );
+    } catch (updateErr) {
+      console.error('Failed to mark order as cancelled:', updateErr.message);
+    }
     if (error.message === '微信支付私钥未配置') {
       res.status(503).json({ success: false, error: '微信支付尚未配置，请联系管理员' });
     } else {
@@ -307,7 +322,9 @@ router.get('/query-order/:orderNo', async (req, res) => {
 });
 
 // 支付回调（微信支付异步通知）
-router.post('/notify', async (req, res) => {
+// P1-2 修复：从 router 中提取为独立函数 handleNotify，在 index.js 中单独注册，
+// 避免被 /api/wechat 下的全局限流（10次/分钟）覆盖导致回调被拒
+const handleNotify = async (req, res) => {
   try {
     const rawBody = Buffer.isBuffer(req.body) ? req.body.toString('utf8') : JSON.stringify(req.body);
     const body = JSON.parse(rawBody);
@@ -371,6 +388,7 @@ router.post('/notify', async (req, res) => {
 
     if (trade_state === 'SUCCESS') {
       let conn;
+      let dbFailed = false;
       try {
         conn = await pool.getConnection();
         await conn.beginTransaction();
@@ -443,8 +461,14 @@ router.post('/notify', async (req, res) => {
       } catch (error) {
         if (conn) await conn.rollback();
         console.error('Update wechat order error:', error);
+        // P0-2 修复：DB 事务失败，标记失败，让微信平台重试回调（不再返回 SUCCESS）
+        dbFailed = true;
       } finally {
         if (conn) conn.release();
+      }
+      // P0-2 修复：事务失败时返回 500 FAIL，微信会重试；正常流程返回 SUCCESS
+      if (dbFailed) {
+        return res.status(500).json({ code: 'FAIL', message: 'internal error' });
       }
     }
 
@@ -453,6 +477,9 @@ router.post('/notify', async (req, res) => {
     console.error('WeChat notify error:', error.message);
     res.status(500).json({ code: 'FAIL', message: '服务器内部错误' });
   }
-});
+};
+
+// 导出 handleNotify 供 index.js 单独注册（绕过限流）
+router.handleNotify = handleNotify;
 
 module.exports = router;

@@ -30,7 +30,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
   // 默认角色列表
   const DEFAULT_PERSONAS = [
-    { id: 'default', name: '🧠 专业助理 (默认)' }
+    { id: 'default', name: chrome.i18n.getMessage('defaultPersonaName') || '🧠 Professional Assistant (Default)' }
   ];
 
   // 加载设置并显示状态
@@ -68,7 +68,7 @@ document.addEventListener('DOMContentLoaded', () => {
 
     if (!isConfigured) {
       statusDot.classList.remove('active');
-      statusText.textContent = '插件未配置';
+      statusText.textContent = chrome.i18n.getMessage('pluginNotConfigured') || 'Extension not configured';
       quickPanel.style.display = 'none';
       notConfigured.style.display = 'block';
       if (modelInfoBar) modelInfoBar.style.display = 'none';
@@ -99,13 +99,13 @@ document.addEventListener('DOMContentLoaded', () => {
       // 更新状态指示
       if (settings.connectionValid === true) {
         statusDot.classList.add('active');
-        statusText.textContent = '已连接';
+        statusText.textContent = chrome.i18n.getMessage('connected') || 'Connected';
       } else if (settings.connectionValid === false) {
         statusDot.classList.remove('active');
-        statusText.textContent = 'API 连接失败';
+        statusText.textContent = chrome.i18n.getMessage('apiConnFailed') || 'API connection failed';
       } else {
         statusDot.classList.remove('active');
-        statusText.textContent = 'API 未测试';
+        statusText.textContent = chrome.i18n.getMessage('apiNotTested') || 'API not tested';
       }
     }
   }
@@ -141,24 +141,24 @@ document.addEventListener('DOMContentLoaded', () => {
     if (licenseType === 'free') {
       const remaining = Math.max(0, DAILY_LIMIT - effectiveCount);
       if (remaining === 0) {
-        licenseStatus.textContent = '今日配额已用完';
+        licenseStatus.textContent = chrome.i18n.getMessage('quotaExhaustedToday') || "Today's quota exhausted";
         licenseStatus.style.color = 'var(--error)';
-        upgradeBtn.textContent = '已用完 - 升级 Pro';
+        upgradeBtn.textContent = chrome.i18n.getMessage('exhaustedUpgradePro') || 'Exhausted - Upgrade Pro';
         upgradeBtn.className = 'upgrade-btn upgrade-btn-error';
       } else if (remaining <= 5) {
-        licenseStatus.textContent = `免费版 · 剩余 ${remaining} 次`;
+        licenseStatus.textContent = chrome.i18n.getMessage('freeRemaining', [String(remaining)]) || `Free · ${remaining} remaining`;
         licenseStatus.style.color = 'var(--error)';
-        upgradeBtn.textContent = '即将用完 - 升级';
+        upgradeBtn.textContent = chrome.i18n.getMessage('almostExhaustedUpgrade') || 'Almost exhausted - Upgrade';
         upgradeBtn.className = 'upgrade-btn upgrade-btn-warning';
       } else {
-        licenseStatus.textContent = `免费版 · 剩余 ${remaining} 次`;
+        licenseStatus.textContent = chrome.i18n.getMessage('freeRemaining', [String(remaining)]) || `Free · ${remaining} remaining`;
         licenseStatus.style.color = 'var(--success)';
-        upgradeBtn.textContent = '升级 Pro';
+        upgradeBtn.textContent = chrome.i18n.getMessage('upgradePro') || 'Upgrade Pro';
         upgradeBtn.className = 'upgrade-btn';
       }
       upgradeBtn.style.display = 'block';
     } else if (licenseType === 'lifetime') {
-      licenseStatus.textContent = '✨ Pro 永久版';
+      licenseStatus.textContent = chrome.i18n.getMessage('proLifetime') || '✨ Pro Lifetime';
       licenseStatus.style.color = 'var(--success)';
       upgradeBtn.style.display = 'none';
     } else if (licenseType === 'year') {
@@ -167,12 +167,12 @@ document.addEventListener('DOMContentLoaded', () => {
         if (!isNaN(activatedAt.getTime())) {
           const expiresAt = new Date(activatedAt.getTime() + 365 * 24 * 60 * 60 * 1000);
           const daysLeft = Math.ceil((expiresAt - new Date()) / (24 * 60 * 60 * 1000));
-          licenseStatus.textContent = `✨ Pro · 剩余 ${Math.max(0, daysLeft)} 天`;
+          licenseStatus.textContent = chrome.i18n.getMessage('proDaysLeft', [String(Math.max(0, daysLeft))]) || `✨ Pro · ${Math.max(0, daysLeft)} days left`;
         } else {
-          licenseStatus.textContent = '✨ Pro 年付版';
+          licenseStatus.textContent = chrome.i18n.getMessage('proYear') || '✨ Pro Yearly';
         }
       } else {
-        licenseStatus.textContent = '✨ Pro 年付版';
+        licenseStatus.textContent = chrome.i18n.getMessage('proYear') || '✨ Pro Yearly';
       }
       licenseStatus.style.color = 'var(--success)';
       upgradeBtn.style.display = 'none';

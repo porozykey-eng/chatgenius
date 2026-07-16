@@ -253,7 +253,7 @@ function makeDraggable(el) {
       if (!hint) {
         hint = document.createElement('div');
         hint.id = 'wa-ai-drag-hint';
-        hint.textContent = '可拖拽';
+        hint.textContent = chrome.i18n.getMessage('draggable') || 'Draggable';
         hint.style.cssText = 'position:fixed;z-index:10000;background:rgba(0,0,0,0.75);color:#fff;font-size:11px;padding:3px 8px;border-radius:6px;pointer-events:none;font-family:Inter,sans-serif;transition:opacity 0.2s;';
         document.body.appendChild(hint);
       }
@@ -446,10 +446,12 @@ function createAIButton() {
     const shortcut = data.shortcut;
 
     // Add shortcut tooltip with usage hints
+    const _aiReplyLabel = chrome.i18n.getMessage('aiReply') || 'AI Reply';
+    const _aiReplyHint = chrome.i18n.getMessage('aiReplyHint') || 'Right-click for more options · Long-press to drag';
     if (shortcut) {
-      btn.title = `AI 回复 (${shortcut})\n右键更多选项 · 长按可拖拽`;
+      btn.title = `${_aiReplyLabel} (${shortcut})\n${_aiReplyHint}`;
     } else {
-      btn.title = 'AI 回复\n右键更多选项 · 长按可拖拽';
+      btn.title = `${_aiReplyLabel}\n${_aiReplyHint}`;
     }
 
     let themeStyles = '';
@@ -625,12 +627,12 @@ function showFirstUseBubble(btn) {
         `;
         bubble.innerHTML = `
           <div style="display:flex;justify-content:space-between;align-items:center;margin-bottom:8px;">
-            <span style="color:${c.text};font-weight:600;font-size:14px;">💡 快速上手</span>
+            <span style="color:${c.text};font-weight:600;font-size:14px;">${chrome.i18n.getMessage('quickStart') || '💡 Quick Start'}</span>
             <button id="wa-ai-bubble-close" style="background:none;border:none;color:${c.textSecondary};cursor:pointer;font-size:16px;padding:0 2px;">✕</button>
           </div>
-          <div>🖱️ <b>左键</b> 生成回复</div>
-          <div>📋 <b>右键</b> 切换风格</div>
-          <div>✋ <b>长按</b> 拖拽移动</div>
+          <div>${chrome.i18n.getMessage('leftClickGen') || '🖱️ <b>Left-click</b> to generate reply'}</div>
+          <div>${chrome.i18n.getMessage('rightClickStyle') || '📋 <b>Right-click</b> to switch style'}</div>
+          <div>${chrome.i18n.getMessage('longPressDrag') || '✋ <b>Long-press</b> to drag'}</div>
         `;
         document.body.appendChild(bubble);
         // Position near button
@@ -937,9 +939,9 @@ function handleGenerateReply(e) {
     }
 
   // Dynamic progress toast with staged text
-  showToast('正在读取聊天记录...', 'loading', 0);
-  const _toastStage1 = setTimeout(() => showToast('AI 正在思考...', 'loading', 0), 3000);
-  const _toastStage2 = setTimeout(() => showToast('即将完成...', 'loading', 0), 6000);
+  showToast(chrome.i18n.getMessage('readingChat') || 'Reading chat history...', 'loading', 0);
+  const _toastStage1 = setTimeout(() => showToast(chrome.i18n.getMessage('aiThinking') || 'AI is thinking...', 'loading', 0), 3000);
+  const _toastStage2 = setTimeout(() => showToast(chrome.i18n.getMessage('almostDone') || 'Almost done...', 'loading', 0), 6000);
   // P2-5 修复：兜底超时，确保即使 SW 异常回调不触发也能清理 stage 定时器，避免泄漏
   const _toastStageFallback = setTimeout(() => {
     clearTimeout(_toastStage1);
@@ -947,9 +949,9 @@ function handleGenerateReply(e) {
   }, 15000);
 
   const context = getChatContext(platform);
-  
+
   if (context.length === 0) {
-    showToast('未找到聊天记录，请打开一个包含消息的聊天窗口。', 'error');
+    showToast(chrome.i18n.getMessage('noChatFound') || 'No chat history found. Please open a chat window that contains messages.', 'error');
     resetButton(btn, originalHTML);
     hideRegenerateButton();
     return;
@@ -963,17 +965,17 @@ function handleGenerateReply(e) {
     clearTimeout(_toastStage2);
     clearTimeout(_toastStageFallback);
     resetButton(btn, originalHTML);
-    
+
     if (chrome.runtime.lastError) {
-      showToast('插件连接错误: ' + chrome.runtime.lastError.message + ' (请刷新页面重试)', 'error', 5000);
+      showToast((chrome.i18n.getMessage('pluginConnError') || 'Extension connection error: ') + chrome.runtime.lastError.message + (chrome.i18n.getMessage('refreshRetrySuffix') || ' (please refresh the page and retry)'), 'error', 5000);
       hideRegenerateButton();
       return;
     }
-    
+
     if (response && response.success) {
       // Show preview modal instead of directly inserting
       showPreviewModal(response.reply);
-      showToast('回复已生成！请预览编辑后插入。', 'success', 3000);
+      showToast(chrome.i18n.getMessage('replyGeneratedPreview') || 'Reply generated! Please preview, edit, then insert.', 'success', 3000);
       showRegenerateButton();
 
       // Show remaining quota warning for free users
@@ -981,25 +983,26 @@ function handleGenerateReply(e) {
         const remaining = dailyLimit - (currentCount + 1);
         if (remaining > 0 && remaining <= 3) {
           setTimeout(() => {
-            showToast(`今日剩余 ${remaining} 次，明天重置。`, 'info', 5000);
+            showToast(chrome.i18n.getMessage('quotaRemainingToday', [String(remaining)]) || `Today ${remaining} remaining, resets tomorrow.`, 'info', 5000);
           }, 3500);
         }
       }
     } else {
-      let errorMsg = response?.error || '未知错误，请检查 API 设置。';
+      let errorMsg = response?.error || (chrome.i18n.getMessage('unknownApiError') || 'Unknown error, please check API settings.');
       // Rationalize error messages
       if (errorMsg.includes('Failed to fetch') || errorMsg.includes('NetworkError')) {
-        errorMsg = '网络请求失败，请检查您的网络连接或 API 地址是否正确。';
+        errorMsg = chrome.i18n.getMessage('networkRequestFailed') || 'Network request failed. Please check your network connection or API URL.';
       } else if (errorMsg.includes('401')) {
-        errorMsg = 'API 密钥无效或未授权 (HTTP 401)，请检查您的 API Key。';
+        errorMsg = chrome.i18n.getMessage('apiKeyInvalid') || 'API key invalid or unauthorized (HTTP 401). Please check your API Key.';
       } else if (errorMsg.includes('404')) {
-        errorMsg = 'API 地址不存在 (HTTP 404)，请检查 API URL 是否正确。';
+        errorMsg = chrome.i18n.getMessage('apiUrlNotFound') || 'API URL not found (HTTP 404). Please check your API URL.';
       } else if (errorMsg.includes('429')) {
-        errorMsg = '请求过于频繁或额度耗尽 (HTTP 429)，请稍后再试或检查账户余额。';
+        errorMsg = chrome.i18n.getMessage('rateLimited') || 'Too many requests or quota exhausted (HTTP 429). Please try again later or check your balance.';
       } else if (errorMsg.includes('500') || errorMsg.includes('502') || errorMsg.includes('503')) {
-        errorMsg = 'AI 服务端错误 (' + errorMsg.match(/\d{3}/)?.[0] + ')，请稍后再试。';
+        const _status = errorMsg.match(/\d{3}/)?.[0] || '';
+        errorMsg = chrome.i18n.getMessage('aiServerError', [_status]) || 'AI server error (' + _status + '). Please try again later.';
       }
-      showToast('AI 回复出错: ' + errorMsg, 'error', 8000);
+      showToast((chrome.i18n.getMessage('generateFailed') || 'Generation failed: ') + errorMsg, 'error', 8000);
       hideRegenerateButton();
     }
   });
@@ -1032,13 +1035,13 @@ function showQuotaExhaustedPanel() {
   panel.innerHTML = `
     <div style="text-align:center;">
       <div style="font-size:36px;margin-bottom:12px;">⏳</div>
-      <h3 style="color:${c.text};font-size:16px;font-weight:600;margin:0 0 6px 0;">今日免费额度已用完</h3>
-      <p style="color:${c.textSecondary};font-size:13px;margin:0 0 18px 0;">每天 ${DAILY_LIMIT} 次免费额度已耗尽，明天自动重置</p>
+      <h3 style="color:${c.text};font-size:16px;font-weight:600;margin:0 0 6px 0;">${chrome.i18n.getMessage('quotaExhaustedTitle') || "Today's free quota is exhausted"}</h3>
+      <p style="color:${c.textSecondary};font-size:13px;margin:0 0 18px 0;">${chrome.i18n.getMessage('quotaExhaustedDesc', [String(DAILY_LIMIT)]) || 'Your ' + DAILY_LIMIT + ' daily free replies are used up. They reset automatically tomorrow.'}</p>
       <button id="wa-ai-quota-upgrade" style="width:100%;padding:12px;border-radius:8px;border:none;background:linear-gradient(135deg,#7c3aed,#764ba2);color:#fff;font-size:14px;font-weight:600;cursor:pointer;margin-bottom:10px;box-shadow:0 4px 16px rgba(124,58,237,0.35);">
-        ✨ 升级 Pro 无限次使用
+        ${chrome.i18n.getMessage('upgradeProUnlimited') || '✨ Upgrade to Pro for unlimited use'}
       </button>
       <button id="wa-ai-quota-close" style="background:none;border:none;color:${c.textSecondary};font-size:13px;cursor:pointer;">
-        关闭
+        ${chrome.i18n.getMessage('close') || 'Close'}
       </button>
     </div>
   `;
@@ -1071,23 +1074,28 @@ let lastGeneratedReply = null;
 
 // Quick menu templates - grouped for faster scanning
 const QUICK_TEMPLATES_COMMON = [
-  { id: 'friendly', label: '😊 友好回复', prompt: '生成一个友好、热情的回复' },
-  { id: 'professional', label: '💼 专业回复', prompt: '生成一个专业、正式的回复' },
-  { id: 'concise', label: '⚡ 简洁回复', prompt: '生成一个简洁、直接的回复，不超过2句话' },
-  { id: 'detailed', label: '📝 详细回复', prompt: '生成一个详细、全面的回复' }
+  { id: 'friendly', label: '😊 ' + (chrome.i18n.getMessage('tplFriendly') || 'Friendly reply'), prompt: chrome.i18n.getMessage('tplFriendlyPrompt') || 'Generate a friendly, warm reply' },
+  { id: 'professional', label: '💼 ' + (chrome.i18n.getMessage('tplProfessional') || 'Professional reply'), prompt: chrome.i18n.getMessage('tplProfessionalPrompt') || 'Generate a professional, formal reply' },
+  { id: 'concise', label: '⚡ ' + (chrome.i18n.getMessage('tplConcise') || 'Concise reply'), prompt: chrome.i18n.getMessage('tplConcisePrompt') || 'Generate a concise, direct reply, no more than 2 sentences' },
+  { id: 'detailed', label: '📝 ' + (chrome.i18n.getMessage('tplDetailed') || 'Detailed reply'), prompt: chrome.i18n.getMessage('tplDetailedPrompt') || 'Generate a detailed, comprehensive reply' }
 ];
 const QUICK_TEMPLATES_MORE = [
-  { id: 'humorous', label: '😄 幽默回复', prompt: '生成一个轻松幽默的回复' },
-  { id: 'question', label: '❓ 提问回复', prompt: '生成一个带有相关问题的回复，以继续对话' },
-  { id: 'agreement', label: '✅ 同意回复', prompt: '生成一个表示同意/支持的回复' },
-  { id: 'disagreement', label: '🤔 委婉拒绝', prompt: '生成一个委婉表示不同意的回复' },
-  { id: 'thanks', label: '🙏 感谢回复', prompt: '生成一个表达感谢的回复' },
-  { id: 'followup', label: '🔔 跟进提醒', prompt: '生成一个跟进或提醒的回复' }
+  { id: 'humorous', label: '😄 ' + (chrome.i18n.getMessage('tplHumorous') || 'Humorous reply'), prompt: chrome.i18n.getMessage('tplHumorousPrompt') || 'Generate a light, humorous reply' },
+  { id: 'question', label: '❓ ' + (chrome.i18n.getMessage('tplQuestion') || 'Question reply'), prompt: chrome.i18n.getMessage('tplQuestionPrompt') || 'Generate a reply with a relevant question to continue the conversation' },
+  { id: 'agreement', label: '✅ ' + (chrome.i18n.getMessage('tplAgreement') || 'Agreement reply'), prompt: chrome.i18n.getMessage('tplAgreementPrompt') || 'Generate a reply expressing agreement or support' },
+  { id: 'disagreement', label: '🤔 ' + (chrome.i18n.getMessage('tplDisagreement') || 'Polite decline'), prompt: chrome.i18n.getMessage('tplDisagreementPrompt') || 'Generate a reply politely expressing disagreement' },
+  { id: 'thanks', label: '🙏 ' + (chrome.i18n.getMessage('tplThanks') || 'Thank-you reply'), prompt: chrome.i18n.getMessage('tplThanksPrompt') || 'Generate a reply expressing thanks' },
+  { id: 'followup', label: '🔔 ' + (chrome.i18n.getMessage('tplFollowup') || 'Follow-up reminder'), prompt: chrome.i18n.getMessage('tplFollowupPrompt') || 'Generate a follow-up or reminder reply' }
 ];
 const QUICK_TEMPLATES = [...QUICK_TEMPLATES_COMMON, ...QUICK_TEMPLATES_MORE];
 
 // Example chips for custom prompt dialog
-const CUSTOM_PROMPT_EXAMPLES = ['用英语回复', '语气更委婉', '加上表情符号', '简短确认即可'];
+const CUSTOM_PROMPT_EXAMPLES = [
+  chrome.i18n.getMessage('exampleReplyEnglish') || 'Reply in English',
+  chrome.i18n.getMessage('exampleToneMild') || 'Softer tone',
+  chrome.i18n.getMessage('exampleAddEmoji') || 'Add emojis',
+  chrome.i18n.getMessage('exampleShortConfirm') || 'Short confirmation only'
+];
 
 // Handler for closing quick menu from outside clicks (hoisted to allow cleanup)
 let _quickMenuCloseHandler = null;
@@ -1124,8 +1132,8 @@ function createQuickMenu() {
     border-bottom: 1px solid ${c.border};
   `;
   header.innerHTML = `
-    <div style="color: ${c.text}; font-size: 14px; font-weight: 600;">快捷指令</div>
-    <div style="color: ${c.textSecondary}; font-size: 12px; margin-top: 2px;">选择回复风格</div>
+    <div style="color: ${c.text}; font-size: 14px; font-weight: 600;">${chrome.i18n.getMessage('quickCommands') || 'Quick Commands'}</div>
+    <div style="color: ${c.textSecondary}; font-size: 12px; margin-top: 2px;">${chrome.i18n.getMessage('selectReplyStyle') || 'Select reply style'}</div>
   `;
   menu.appendChild(header);
 
@@ -1167,21 +1175,21 @@ function createQuickMenu() {
     const recentTemplates = recentIds.map(id => QUICK_TEMPLATES.find(t => t.id === id)).filter(Boolean);
 
     if (recentTemplates.length > 0) {
-      addSectionLabel('最近使用');
+      addSectionLabel(chrome.i18n.getMessage('recent') || 'Recent');
       recentTemplates.forEach(t => menu.appendChild(renderTemplateItem(t)));
       const sep = document.createElement('div');
       sep.style.cssText = `height:1px;background:${c.border};margin:6px 0;`;
       menu.appendChild(sep);
     }
 
-    addSectionLabel('常用');
+    addSectionLabel(chrome.i18n.getMessage('common') || 'Common');
     QUICK_TEMPLATES_COMMON.forEach(t => menu.appendChild(renderTemplateItem(t)));
 
     const sep2 = document.createElement('div');
     sep2.style.cssText = `height:1px;background:${c.border};margin:6px 0;`;
     menu.appendChild(sep2);
 
-    addSectionLabel('更多风格');
+    addSectionLabel(chrome.i18n.getMessage('moreStyles') || 'More Styles');
     QUICK_TEMPLATES_MORE.forEach(t => menu.appendChild(renderTemplateItem(t)));
   });
   
@@ -1214,7 +1222,7 @@ function createQuickMenu() {
   `;
   customItem.innerHTML = `
     <span style="font-size: 16px;">✨</span>
-    <span>自定义提示...</span>
+    <span>${chrome.i18n.getMessage('customPromptHint') || 'Custom prompt...'}</span>
   `;
   customItem.onmouseover = () => {
     customItem.style.background = c.hoverBg;
@@ -1299,35 +1307,35 @@ function handleQuickTemplate(template) {
   
   const context = getChatContext(platform);
   if (context.length === 0) {
-    showToast('未找到聊天记录', 'error');
+    showToast(chrome.i18n.getMessage('noChatFoundShort') || 'No chat history found', 'error');
     return;
   }
-  
+
   lastContext = context;
-  
-  showToast(`正在生成: ${template.label}...`, 'loading', 0);
-  
+
+  showToast(chrome.i18n.getMessage('generatingTemplate', [template.label]) || `Generating: ${template.label}...`, 'loading', 0);
+
   // Add template prompt to context
   const enhancedContext = [
     ...context,
     { role: 'system', content: template.prompt }
   ];
-  
-  chrome.runtime.sendMessage({ 
-    action: 'generateReply', 
-    context: enhancedContext 
+
+  chrome.runtime.sendMessage({
+    action: 'generateReply',
+    context: enhancedContext
   }, (response) => {
     if (chrome.runtime.lastError) {
-      showToast('插件连接错误: ' + chrome.runtime.lastError.message, 'error', 5000);
+      showToast((chrome.i18n.getMessage('pluginConnError') || 'Extension connection error: ') + chrome.runtime.lastError.message, 'error', 5000);
       return;
     }
-    
+
     if (response && response.success) {
       showPreviewModal(response.reply);
-      showToast('回复已生成！', 'success', 3000);
+      showToast(chrome.i18n.getMessage('replyGenerated') || 'Reply generated!', 'success', 3000);
       showRegenerateButton();
     } else {
-      showToast('生成失败: ' + (response?.error || '未知错误'), 'error', 5000);
+      showToast((chrome.i18n.getMessage('generateFailed') || 'Generation failed: ') + (response?.error || (chrome.i18n.getMessage('unknownError') || 'Unknown error')), 'error', 5000);
     }
   });
 }
@@ -1362,9 +1370,9 @@ function showCustomPromptDialog() {
       box-shadow: ${c.shadow};
       animation: wa-ai-modal-in 0.2s cubic-bezier(0.16, 1, 0.3, 1);
     ">
-      <h3 style="margin: 0 0 8px 0; color: ${c.text}; font-size: 18px; font-weight: 600;">自定义提示</h3>
-      <p style="margin: 0 0 16px 0; color: ${c.textSecondary}; font-size: 14px;">描述你想要的回复风格或内容</p>
-      
+      <h3 style="margin: 0 0 8px 0; color: ${c.text}; font-size: 18px; font-weight: 600;">${chrome.i18n.getMessage('customPromptTitle') || 'Custom Prompt'}</h3>
+      <p style="margin: 0 0 16px 0; color: ${c.textSecondary}; font-size: 14px;">${chrome.i18n.getMessage('customPromptDesc') || 'Describe the reply style or content you want'}</p>
+
       <textarea id="wa-ai-custom-input" style="
         width: 100%;
         min-height: 100px;
@@ -1380,12 +1388,12 @@ function showCustomPromptDialog() {
         font-family: inherit;
         box-sizing: border-box;
         margin-bottom: 12px;
-      " placeholder="例如：用正式的语气回复，表达感谢并询问更多细节..."></textarea>
+      " placeholder="${chrome.i18n.getMessage('customPromptPlaceholder') || 'e.g. Reply in a formal tone, express thanks and ask for more details...'}"></textarea>
 
       <div id="wa-ai-custom-chips" style="display:flex;gap:6px;flex-wrap:wrap;margin-bottom:16px;"></div>
 
       <div style="display:flex;align-items:center;justify-content:space-between;">
-        <span style="color:${c.textSecondary};font-size:12px;">Ctrl+Enter 提交</span>
+        <span style="color:${c.textSecondary};font-size:12px;">${chrome.i18n.getMessage('ctrlEnterSubmit') || 'Ctrl+Enter to submit'}</span>
         <button id="wa-ai-custom-cancel" style="
           padding: 10px 20px;
           border-radius: 8px;
@@ -1395,7 +1403,7 @@ function showCustomPromptDialog() {
           font-size: 14px;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        ">取消</button>
+        ">${chrome.i18n.getMessage('cancel') || 'Cancel'}</button>
         <button id="wa-ai-custom-submit" style="
           padding: 10px 24px;
           border-radius: 8px;
@@ -1406,7 +1414,7 @@ function showCustomPromptDialog() {
           font-weight: 600;
           cursor: pointer;
           transition: all 0.2s cubic-bezier(0.16, 1, 0.3, 1);
-        ">生成回复</button>
+        ">${chrome.i18n.getMessage('generateReply') || 'Generate Reply'}</button>
       </div>
     </div>
   `;
@@ -1436,7 +1444,7 @@ function showCustomPromptDialog() {
     const customPrompt = input.value.trim();
     if (customPrompt) {
       modal.remove();
-      handleQuickTemplate({ id: 'custom', label: '✨ 自定义', prompt: customPrompt });
+      handleQuickTemplate({ id: 'custom', label: chrome.i18n.getMessage('customLabel') || '✨ Custom', prompt: customPrompt });
     }
   });
   
@@ -1492,12 +1500,12 @@ function createPreviewModal() {
         <svg viewBox="0 0 24 24" width="16" height="16" stroke="white" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
       </div>
       <div>
-        <div style="color:${c.text};font-size:15px;font-weight:600;">预览回复</div>
-        <div style="color:${c.textSecondary};font-size:12px;margin-top:1px;">编辑后点击插入</div>
+        <div style="color:${c.text};font-size:15px;font-weight:600;">${chrome.i18n.getMessage('previewReply') || 'Preview Reply'}</div>
+        <div style="color:${c.textSecondary};font-size:12px;margin-top:1px;">${chrome.i18n.getMessage('editThenInsert') || 'Edit then click insert'}</div>
       </div>
     </div>
     <div style="display:flex;align-items:center;gap:6px;">
-      <button id="wa-ai-preview-expand" style="background:${c.inputBg};border:none;color:${c.textSecondary};width:28px;height:28px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;" title="全屏编辑">
+      <button id="wa-ai-preview-expand" style="background:${c.inputBg};border:none;color:${c.textSecondary};width:28px;height:28px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;" title="${chrome.i18n.getMessage('fullscreenEdit') || 'Fullscreen Edit'}">
         <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><polyline points="15 3 21 3 21 9"></polyline><polyline points="9 21 3 21 3 15"></polyline><line x1="21" y1="3" x2="14" y2="10"></line><line x1="3" y1="21" x2="10" y2="14"></line></svg>
       </button>
       <button id="wa-ai-preview-close" style="background:${c.inputBg};border:none;color:${c.textSecondary};width:28px;height:28px;border-radius:7px;cursor:pointer;display:flex;align-items:center;justify-content:center;transition:all 0.15s;">
@@ -1516,7 +1524,7 @@ function createPreviewModal() {
     padding:14px;color:${c.inputText};font-size:14px;line-height:1.6;resize:vertical;outline:none;
     font-family:inherit;transition:border-color 0.2s;box-sizing:border-box;
   `;
-  textarea.placeholder = 'AI 生成的回复将显示在这里...';
+  textarea.placeholder = chrome.i18n.getMessage('previewPlaceholder') || 'AI-generated reply will appear here...';
   panel.appendChild(textarea);
 
   // Button row
@@ -1537,9 +1545,9 @@ function createPreviewModal() {
   const copySvg = '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect><path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path></svg>';
   const insertSvg = '<svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>';
 
-  btnRow.appendChild(mkBtn('wa-ai-preview-regenerate', '重新生成', regenSvg, false));
-  btnRow.appendChild(mkBtn('wa-ai-preview-copy', '复制', copySvg, false));
-  btnRow.appendChild(mkBtn('wa-ai-preview-insert', '插入回复', insertSvg, true));
+  btnRow.appendChild(mkBtn('wa-ai-preview-regenerate', chrome.i18n.getMessage('regenerate') || 'Regenerate', regenSvg, false));
+  btnRow.appendChild(mkBtn('wa-ai-preview-copy', chrome.i18n.getMessage('copy') || 'Copy', copySvg, false));
+  btnRow.appendChild(mkBtn('wa-ai-preview-insert', chrome.i18n.getMessage('insertReply') || 'Insert Reply', insertSvg, true));
   panel.appendChild(btnRow);
 
   // Hover styles
@@ -1573,10 +1581,10 @@ function createPreviewModal() {
       const platform = detectPlatform();
       const success = insertTextIntoInput(text, platform);
       if (success) {
-        showToast('回复已插入！', 'success');
+        showToast(chrome.i18n.getMessage('replyInserted') || 'Reply inserted!', 'success');
         hidePreviewModal();
       } else {
-        showToast('无法自动填充，请手动复制', 'error');
+        showToast(chrome.i18n.getMessage('autoFillFailed') || 'Unable to auto-fill, please copy manually', 'error');
       }
     }
   });
@@ -1585,7 +1593,7 @@ function createPreviewModal() {
   panel.querySelector('#wa-ai-preview-copy').addEventListener('click', () => {
     const ta = panel.querySelector('#wa-ai-preview-textarea');
     navigator.clipboard.writeText(ta.value).then(() => {
-      showToast('已复制到剪贴板！', 'success');
+      showToast(chrome.i18n.getMessage('copiedToClipboard') || 'Copied to clipboard!', 'success');
     });
   });
 
@@ -1593,7 +1601,7 @@ function createPreviewModal() {
   panel.querySelector('#wa-ai-preview-regenerate').addEventListener('click', () => {
     if (lastContext && lastContext.length > 0) {
       const ta = panel.querySelector('#wa-ai-preview-textarea');
-      ta.value = '正在重新生成...';
+      ta.value = chrome.i18n.getMessage('regenerating') || 'Regenerating reply...';
       ta.disabled = true;
       chrome.runtime.sendMessage({ action: 'generateReply', context: lastContext }, (response) => {
         ta.disabled = false;
@@ -1601,16 +1609,16 @@ function createPreviewModal() {
         if (chrome.runtime.lastError) {
           console.warn('Message error:', chrome.runtime.lastError.message);
           ta.value = lastGeneratedReply || '';
-          showToast('插件连接错误: ' + chrome.runtime.lastError.message, 'error', 5000);
+          showToast((chrome.i18n.getMessage('pluginConnError') || 'Extension connection error: ') + chrome.runtime.lastError.message, 'error', 5000);
           return;
         }
         if (response && response.success) {
           ta.value = response.reply;
           lastGeneratedReply = response.reply;
-          showToast('回复已重新生成！', 'success');
+          showToast(chrome.i18n.getMessage('replyRegenerated') || 'Reply regenerated!', 'success');
         } else {
           ta.value = lastGeneratedReply || '';
-          showToast('重新生成失败', 'error');
+          showToast(chrome.i18n.getMessage('regenFailed') || 'Regeneration failed', 'error');
         }
       });
     }
@@ -1653,14 +1661,14 @@ function showExpandedEditor(text) {
   overlay.innerHTML = `
     <div style="background:${c.bg};border-radius:20px;padding:28px;width:90%;max-width:520px;max-height:80vh;display:flex;flex-direction:column;box-shadow:${c.shadow};animation:wa-ai-modal-in 0.2s cubic-bezier(0.16,1,0.3,1);">
       <div style="display:flex;align-items:center;justify-content:space-between;margin-bottom:16px;">
-        <div style="color:${c.text};font-size:16px;font-weight:600;">全屏编辑</div>
+        <div style="color:${c.text};font-size:16px;font-weight:600;">${chrome.i18n.getMessage('fullscreenEdit') || 'Fullscreen Edit'}</div>
         <button id="wa-ai-exp-close" style="background:${c.inputBg};border:none;color:${c.textSecondary};width:32px;height:32px;border-radius:8px;cursor:pointer;display:flex;align-items:center;justify-content:center;">
           <svg viewBox="0 0 24 24" width="18" height="18" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
         </button>
       </div>
       <textarea id="wa-ai-exp-textarea" style="flex:1;min-height:160px;background:${c.inputBg};border:1px solid ${c.inputBorder};border-radius:12px;padding:16px;color:${c.inputText};font-size:15px;line-height:1.6;resize:vertical;outline:none;font-family:inherit;"></textarea>
       <div style="display:flex;gap:10px;margin-top:16px;">
-        <button id="wa-ai-exp-insert" style="flex:1;padding:12px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#7c3aed,#764ba2);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(124,58,237,0.4);">插入回复</button>
+        <button id="wa-ai-exp-insert" style="flex:1;padding:12px 20px;border-radius:8px;border:none;background:linear-gradient(135deg,#7c3aed,#764ba2);color:#fff;font-size:14px;font-weight:600;cursor:pointer;display:flex;align-items:center;justify-content:center;gap:8px;box-shadow:0 4px 16px rgba(124,58,237,0.4);">${chrome.i18n.getMessage('insertReply') || 'Insert Reply'}</button>
       </div>
     </div>
   `;
@@ -1674,7 +1682,7 @@ function showExpandedEditor(text) {
     const t = expTa.value.trim();
     if (t) {
       insertTextIntoInput(t, detectPlatform());
-      showToast('回复已插入！', 'success');
+      showToast(chrome.i18n.getMessage('replyInserted') || 'Reply inserted!', 'success');
       overlay.remove();
     }
   });
@@ -1725,7 +1733,7 @@ function createRegenerateButton() {
       <path d="M21 12a9 9 0 0 1-15 6.7L3 16"></path>
     </svg>
   `;
-  regenBtn.title = '重新生成回复';
+  regenBtn.title = chrome.i18n.getMessage('regenReply') || 'Regenerate reply';
   regenBtn.style.cssText = `
     position: fixed;
     z-index: 9998;
@@ -1767,7 +1775,7 @@ function handleRegenerate(e) {
   e.stopPropagation();
   
   if (!lastContext || lastContext.length === 0) {
-    showToast('没有可用的聊天记录进行重新生成', 'error');
+    showToast(chrome.i18n.getMessage('noContextRegen') || 'No chat history available to regenerate', 'error');
     return;
   }
   
@@ -1788,8 +1796,8 @@ function handleRegenerate(e) {
   `;
   btn.disabled = true;
   
-  showToast('重新生成回复...', 'loading', 0);
-  
+  showToast(chrome.i18n.getMessage('regenerating') || 'Regenerating reply...', 'loading', 0);
+
   chrome.runtime.sendMessage({ action: 'generateReply', context: lastContext }, (response) => {
     btn.innerHTML = `
       <svg viewBox="0 0 24 24" width="14" height="14" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round">
@@ -1800,18 +1808,18 @@ function handleRegenerate(e) {
       </svg>
     `;
     btn.disabled = false;
-    
+
     if (chrome.runtime.lastError) {
-      showToast('插件连接错误: ' + chrome.runtime.lastError.message, 'error', 5000);
+      showToast((chrome.i18n.getMessage('pluginConnError') || 'Extension connection error: ') + chrome.runtime.lastError.message, 'error', 5000);
       return;
     }
-    
+
     if (response && response.success) {
       showPreviewModal(response.reply);
-      showToast('回复已重新生成！请预览编辑后发送。', 'success', 3000);
+      showToast(chrome.i18n.getMessage('replyRegeneratedPreview') || 'Reply regenerated! Please preview, edit, then send.', 'success', 3000);
     } else {
-      let errorMsg = response?.error || '未知错误';
-      showToast('重新生成失败: ' + errorMsg, 'error', 5000);
+      let errorMsg = response?.error || (chrome.i18n.getMessage('unknownError') || 'Unknown error');
+      showToast((chrome.i18n.getMessage('generateFailed') || 'Generation failed: ') + errorMsg, 'error', 5000);
     }
   });
 }
@@ -1989,7 +1997,7 @@ async function _autoGenerateAndInsert() {
   });
   const isPro = usageData.licenseType && usageData.licenseType !== 'free';
   if (!isPro && usageData.dailyReplyCount >= DAILY_LIMIT) {
-    showToast('今日免费配额已用完（' + DAILY_LIMIT + ' 次），请升级 Pro 版', 'error', 5000);
+    showToast(chrome.i18n.getMessage('quotaExhausted', [String(DAILY_LIMIT)]) || "Today's free quota is exhausted (" + DAILY_LIMIT + " replies). Please upgrade to Pro.", 'error', 5000);
     return;
   }
 
@@ -2008,43 +2016,43 @@ async function _autoGenerateAndInsert() {
     _autoReplyLastMsgFingerprint = lastIncoming.message.content;
   }
 
-  showToast('检测到新消息，自动生成回复中...', 'loading', 0);
+  showToast(chrome.i18n.getMessage('autoGenDetected') || 'New message detected, auto-generating reply...', 'loading', 0);
 
   // 在悬浮按钮上显示"思考中"状态
   const btn = document.getElementById('wa-ai-reply-btn');
-  if (btn) _setButtonStatus(btn, 'thinking', '思考中');
+  if (btn) _setButtonStatus(btn, 'thinking', chrome.i18n.getMessage('thinking') || 'Thinking');
 
   chrome.runtime.sendMessage({ action: 'generateReply', context: context }, async (response) => {
     _autoReplyInProgress = false;
 
     if (chrome.runtime.lastError) {
-      showToast('自动回复失败: ' + chrome.runtime.lastError.message, 'error', 4000);
+      showToast((chrome.i18n.getMessage('autoReplyFailed') || 'Auto reply failed: ') + chrome.runtime.lastError.message, 'error', 4000);
       if (btn) _resetButtonStatus(btn);
       return;
     }
 
     if (response && response.success) {
       // 在悬浮按钮上显示"输入中..."状态
-      if (btn) _setButtonStatus(btn, 'typing', '输入中');
+      if (btn) _setButtonStatus(btn, 'typing', chrome.i18n.getMessage('typing') || 'Typing');
       try {
         const success = await typewriterInsert(response.reply, platform);
         if (btn) _resetButtonStatus(btn);
         if (success) {
-          showToast('回复已生成，请检查后发送', 'success', 4000);
+          showToast(chrome.i18n.getMessage('replyGeneratedCheck') || 'Reply generated, please review before sending', 'success', 4000);
         } else {
           // 插入失败则回退到预览弹窗
           showPreviewModal(response.reply);
-          showToast('自动插入失败，已打开预览编辑', 'info', 4000);
+          showToast(chrome.i18n.getMessage('autoInsertFailed') || 'Auto-insert failed, preview editor opened', 'info', 4000);
         }
       } catch (err) {
         if (btn) _resetButtonStatus(btn);
         showPreviewModal(response.reply);
-        showToast('输入异常，已打开预览编辑', 'info', 4000);
+        showToast(chrome.i18n.getMessage('inputException') || 'Input exception, preview editor opened', 'info', 4000);
       }
     } else {
       if (btn) _resetButtonStatus(btn);
-      const errMsg = response?.error || '未知错误';
-      showToast('自动生成失败: ' + errMsg, 'error', 5000);
+      const errMsg = response?.error || (chrome.i18n.getMessage('unknownError') || 'Unknown error');
+      showToast((chrome.i18n.getMessage('autoGenFailed') || 'Auto generation failed: ') + errMsg, 'error', 5000);
     }
   });
 }
@@ -2134,7 +2142,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
     if (regenBtn) regenBtn.remove();
     // 显示提示
     if (typeof showToast === 'function') {
-      showToast('您的许可证已被撤销，如需继续使用请重新激活。', 'error');
+      showToast(chrome.i18n.getMessage('licenseRevoked') || 'Your license has been revoked. Please reactivate to continue using.', 'error');
     } else {
       console.warn('License revoked: AI button removed.');
     }

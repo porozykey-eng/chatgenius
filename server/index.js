@@ -12,6 +12,7 @@ const wechatRouter = require('./wechat');
 const licenseRouter = require('./license');
 const adminRouter = require('./admin');
 const invoiceRouter = require('./invoice');
+const { pool } = require('./config');
 
 const app = express();
 const PORT = process.env.PORT || 3010;
@@ -111,6 +112,11 @@ const invoiceLimiter = rateLimit({
   message: { error: '请求过于频繁，请稍后再试' }
 });
 
+// P1-2 修复：支付回调单独注册（在限流之前），避免被全局限流（10次/分钟）覆盖
+// 支付平台 IP 固定，回调频率由支付平台控制，无需限流
+app.post('/api/alipay/notify', (req, res) => alipayRouter.handleNotify(req, res));
+app.post('/api/wechat/notify', (req, res) => wechatRouter.handleNotify(req, res));
+
 // Routes with rate limiting
 app.use('/api/alipay', alipayLimiter, alipayRouter);
 app.use('/api/wechat', wechatLimiter, wechatRouter);
@@ -131,8 +137,19 @@ app.get(adminRoute, (req, res) => {
 app.use('/api/admin', adminLimiter, adminRouter);
 
 // Health check
+// P1-8 修复：/health 仅做存活检查；新增 /ready 探活 DB 连接，DB 不可用返回 503
 app.get('/health', (req, res) => {
   res.json({ status: 'ok', timestamp: new Date().toISOString() });
+});
+
+app.get('/ready', async (req, res) => {
+  try {
+    await pool.query('SELECT 1');
+    res.json({ status: 'ready', timestamp: new Date().toISOString() });
+  } catch (err) {
+    console.error('Ready check failed:', err.message);
+    res.status(503).json({ status: 'unavailable', error: 'database connection failed' });
+  }
 });
 
 // API 推荐配置（公开接口，CDN 缓存 1 小时）
@@ -239,6 +256,8 @@ process.on('unhandledRejection', (reason, promise) => {
 process.on('uncaughtException', (err) => {
   console.error('Uncaught Exception:', err.message);
   console.error(err.stack);
+  // P1-10 修复：退出进程，由 PM2 重启（状态不可预测，不能继续运行）
+  process.exit(1);
 });
 
 module.exports = app;

@@ -170,7 +170,7 @@ async function sendHeartbeat() {
     } else {
       // Fingerprint mismatch or license revoked — force logout
       console.warn('Heartbeat rejected:', result.reason || 'fingerprint mismatch');
-      await forceLogout(result.reason || '设备指纹不匹配，已被强制下线');
+      await forceLogout(result.reason || (chrome.i18n.getMessage('fingerprintMismatch') || 'Device fingerprint mismatch, you have been forced offline'));
     }
   } catch (err) {
     console.warn('Heartbeat error (network?), will retry next alarm:', err.message);
@@ -214,8 +214,8 @@ async function forceLogout(reason) {
       chrome.notifications.create({
         type: 'basic',
         iconUrl: 'icons/icon128.png',
-        title: '许可证已失效',
-        message: reason || '您的许可证已在其他设备激活，本设备已自动退出登录。',
+        title: chrome.i18n.getMessage('licenseInvalidTitle') || 'License invalidated',
+        message: reason || (chrome.i18n.getMessage('licenseInvalidMsg') || 'Your license has been activated on another device. This device has been logged out automatically.'),
         priority: 2
       });
     }
@@ -401,7 +401,7 @@ async function fetchWithRetry(url, options, retries = MAX_RETRIES) {
       
       // Handle timeout specifically
       if (error.name === 'AbortError') {
-        lastError = new Error(`请求超时 (${FETCH_TIMEOUT / 1000}秒)，请检查网络连接`);
+        lastError = new Error(chrome.i18n.getMessage('requestTimeout', [String(FETCH_TIMEOUT / 1000)]) || `Request timeout (${FETCH_TIMEOUT / 1000}s). Please check your network connection.`);
       } else {
         lastError = error;
       }
@@ -485,12 +485,12 @@ async function tryGenerate(apiUrl, apiKey, modelName, messages) {
         chrome.notifications.create({
           type: 'basic',
           iconUrl: 'icons/icon128.png',
-          title: '需要授权 API 域名',
-          message: `请前往扩展设置页，点击"测试连接"授权 ${hostname} 后重试`,
+          title: chrome.i18n.getMessage('permRequiredTitle') || 'API domain authorization required',
+          message: chrome.i18n.getMessage('permRequiredMsg', [hostname]) || `Please go to the extension settings page, click "Test Connection" to authorize ${hostname} and retry.`,
           priority: 2
         });
       }
-      throw new Error(`API 域名 ${hostname} 未授权，请到设置页点击"测试连接"完成授权`);
+      throw new Error(chrome.i18n.getMessage('permRequiredError', [hostname]) || `API domain ${hostname} is not authorized. Please go to the settings page and click "Test Connection" to complete authorization.`);
     }
     // URL 解析失败，继续尝试请求
   }
@@ -602,7 +602,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       await loadApiSettings(data);
       try {
         if (!data.apiKey) {
-          throw new Error('API Key not configured. Please open settings.');
+          throw new Error(chrome.i18n.getMessage('apiKeyNotConfigured') || 'Please configure the API Key first');
         }
 
         // Server-side license verification for Pro users (prevents client-side tampering)
@@ -611,12 +611,20 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         if (localLicenseType !== 'free' && data.licenseCode) {
           try {
             const localFpData = await chrome.storage.local.get(['deviceFingerprint']);
+            // P0-1 兼容：verify-token 强制要求 fingerprint，缺失时生成并缓存
+            let fingerprint = localFpData.deviceFingerprint;
+            if (!fingerprint) {
+              fingerprint = await generateFingerprintInBackground();
+              if (fingerprint) {
+                await chrome.storage.local.set({ deviceFingerprint: fingerprint });
+              }
+            }
             const verifyResponse = await fetch(`${API_BASE_URL}/api/license/verify-token`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 licenseCode: data.licenseCode,
-                fingerprint: localFpData.deviceFingerprint || null
+                fingerprint: fingerprint
               })
             });
             if (verifyResponse.ok) {
@@ -657,7 +665,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 }
                 
                 if (currentCount >= dailyLimit) {
-                  throw new Error(`免费版每日限制 ${dailyLimit} 次回复已用完。升级到 Pro 版无限制。`);
+                  throw new Error(chrome.i18n.getMessage('freeLimitExhausted', [String(dailyLimit)]) || `Free tier daily limit of ${dailyLimit} replies is exhausted. Upgrade to Pro for unlimited replies.`);
                 }
                 
                 // Increment counter BEFORE API call to prevent race condition
@@ -761,7 +769,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       await loadApiSettings(data);
       try {
         if (!data.apiKey) {
-          throw new Error('请先配置 API Key');
+          throw new Error(chrome.i18n.getMessage('apiKeyNotConfigured') || 'Please configure the API Key first');
         }
         
         // Validate request.messages is an array (defensive against malformed messages)
@@ -795,7 +803,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       try {
         const { licenseCode } = await chrome.storage.local.get(['licenseCode']);
         if (!licenseCode) {
-          sendResponse({ success: false, error: '未激活' });
+          sendResponse({ success: false, error: chrome.i18n.getMessage('notActivated') || 'Not activated' });
           return;
         }
         let fingerprint = (await chrome.storage.local.get(['deviceFingerprint'])).deviceFingerprint;
@@ -804,7 +812,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           if (fingerprint) await chrome.storage.local.set({ deviceFingerprint: fingerprint });
         }
         const timestamp = Date.now().toString();
-        const response = await fetch(`${API_BASE_URL}/api/license/devices`, {
+        const response = await fetchWithRetry(`${API_BASE_URL}/api/license/devices`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -819,7 +827,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         }
         const result = await response.json();
         if (!result.valid) {
-          sendResponse({ success: false, error: result.error || '查询失败' });
+          sendResponse({ success: false, error: result.error || (chrome.i18n.getMessage('queryFailed') || 'Query failed') });
           return;
         }
         sendResponse({
@@ -838,7 +846,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       try {
         const { licenseCode } = await chrome.storage.local.get(['licenseCode']);
         if (!licenseCode) {
-          sendResponse({ success: false, error: '未激活' });
+          sendResponse({ success: false, error: chrome.i18n.getMessage('notActivated') || 'Not activated' });
           return;
         }
         let fingerprint = (await chrome.storage.local.get(['deviceFingerprint'])).deviceFingerprint;
@@ -846,7 +854,7 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
           fingerprint = await generateFingerprintInBackground();
         }
         const timestamp = Date.now().toString();
-        const response = await fetch(`${API_BASE_URL}/api/license/devices/unbind`, {
+        const response = await fetchWithRetry(`${API_BASE_URL}/api/license/devices/unbind`, {
           method: 'POST',
           headers: { 'Content-Type': 'application/json' },
           body: JSON.stringify({
@@ -855,14 +863,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
             timestamp,
             deviceId: request.deviceId,
           })
-        });
+        }, 1);
         if (!response.ok) {
           sendResponse({ success: false, error: `HTTP ${response.status}` });
           return;
         }
         const result = await response.json();
         if (!result.valid) {
-          sendResponse({ success: false, error: result.error || '解绑失败' });
+          sendResponse({ success: false, error: result.error || (chrome.i18n.getMessage('unbindFailed') || 'Unbind failed') });
           return;
         }
         sendResponse({ success: true, message: result.message });
