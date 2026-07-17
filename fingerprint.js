@@ -13,27 +13,23 @@
   async function generateFingerprint() {
     const components = [];
 
-    // 1. Navigator 信息
+    // 严重修复:统一为 SW 可用的稳定特征集,与 background.js generateFingerprintInBackground 完全一致
+    // SW 无 DOM,不能采集 canvas/WebGL/Audio;两端特征集必须完全相同,否则缓存丢失后指纹不一致导致误下线
+
+    // 1. Navigator 信息(SW 可用)
     components.push(navigator.userAgent || '');
     components.push(navigator.language || '');
     components.push((navigator.languages || []).join(','));
     components.push(navigator.platform || '');
     components.push(String(navigator.hardwareConcurrency || 0));
     components.push(String(navigator.deviceMemory || 0));
-    components.push(String(navigator.maxTouchPoints || 0));
-    components.push(String(navigator.cookieEnabled || false));
-    components.push(String(navigator.doNotTrack || ''));
 
-    // 2. Screen 信息
+    // 2. Screen 信息(SW 可用)
     components.push(String(screen.width || 0));
     components.push(String(screen.height || 0));
-    components.push(String(screen.availWidth || 0));
-    components.push(String(screen.availHeight || 0));
     components.push(String(screen.colorDepth || 0));
-    components.push(String(screen.pixelDepth || 0));
-    components.push(String(window.devicePixelRatio || 1));
 
-    // 3. 时区
+    // 3. 时区(SW 可用)
     try {
       components.push(Intl.DateTimeFormat().resolvedOptions().timeZone || '');
     } catch (e) {
@@ -41,70 +37,7 @@
     }
     components.push(String(new Date().getTimezoneOffset()));
 
-    // 4. Canvas 指纹
-    try {
-      const canvas = document.createElement('canvas');
-      canvas.width = 200;
-      canvas.height = 50;
-      const ctx = canvas.getContext('2d');
-      ctx.textBaseline = 'top';
-      ctx.font = '14px Arial';
-      ctx.fillStyle = '#f60';
-      ctx.fillRect(0, 0, 100, 30);
-      ctx.fillStyle = '#069';
-      ctx.fillText('ChatGenius-FP-2026', 2, 15);
-      ctx.fillStyle = 'rgba(102, 204, 0, 0.7)';
-      ctx.fillText('ChatGenius-FP-2026', 4, 17);
-      components.push(canvas.toDataURL());
-    } catch (e) {
-      components.push('canvas-error');
-    }
-
-    // 5. WebGL 指纹（如果可用）
-    try {
-      const canvas = document.createElement('canvas');
-      const gl = canvas.getContext('webgl') || canvas.getContext('experimental-webgl');
-      if (gl) {
-        const debugInfo = gl.getExtension('WEBGL_debug_renderer_info');
-        if (debugInfo) {
-          components.push(gl.getParameter(debugInfo.UNMASKED_VENDOR_WEBGL) || '');
-          components.push(gl.getParameter(debugInfo.UNMASKED_RENDERER_WEBGL) || '');
-        }
-      }
-    } catch (e) {
-      // WebGL 不可用，跳过
-    }
-
-    // 6. Audio 指纹（如果可用）
-    try {
-      const AudioContext = window.OfflineAudioContext || window.webkitOfflineAudioContext;
-      if (AudioContext) {
-        const audioCtx = new AudioContext(1, 5000, 44100);
-        const oscillator = audioCtx.createOscillator();
-        oscillator.type = 'triangle';
-        oscillator.frequency.value = 1000;
-        const compressor = audioCtx.createDynamicsCompressor();
-        compressor.threshold.value = -50;
-        compressor.knee.value = 40;
-        compressor.ratio.value = 12;
-        compressor.attack.value = 0;
-        compressor.release.value = 0.25;
-        oscillator.connect(compressor);
-        compressor.connect(audioCtx.destination);
-        oscillator.start(0);
-        const buffer = await audioCtx.startRendering();
-        const samples = buffer.getChannelData(0);
-        let sum = 0;
-        for (let i = 4500; i < 5000; i++) {
-          sum += Math.abs(samples[i]);
-        }
-        components.push(String(sum));
-      }
-    } catch (e) {
-      // Audio 不可用，跳过
-    }
-
-    // 合并所有特征并生成 SHA-256 哈希
+    // 合并所有特征并生成 SHA-256 哈希(分隔符与 background.js 一致: '|||')
     const raw = components.join('|||');
     const hash = await sha256(raw);
     return hash;

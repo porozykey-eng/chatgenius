@@ -30,4 +30,15 @@ pool.getConnection()
     console.error('❌ MySQL 数据库连接失败:', err.message);
   });
 
-module.exports = { pool };
+// === 套餐价格集中管理(单一数据源,避免多文件默认值不一致)===
+// 所有模块必须从此处引用,禁止在各文件中独立定义默认值
+const PLAN_PRICES = {
+  year: Number(process.env.PRICE_YEAR || 99),
+  lifetime: Number(process.env.PRICE_LIFETIME || 299),
+};
+const PLAN_SUBJECTS = {
+  year: process.env.PLAN_SUBJECT_YEAR || 'ChatGenius AI 浏览器扩展-年付版',
+  lifetime: process.env.PLAN_SUBJECT_LIFETIME || 'ChatGenius AI 浏览器扩展-永久版',
+};
+
+module.exports = { pool, PLAN_PRICES, PLAN_SUBJECTS };

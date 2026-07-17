@@ -201,18 +201,15 @@ async function forceLogout(reason) {
   for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
       // Downgrade to free
-      await chrome.storage.sync.set({
-        licenseType: 'free',
-        licenseInvalid: true
-      });
-      // P1-8 修复：licenseCode 改存 chrome.storage.local
-      await chrome.storage.local.set({ licenseCode: null });
+      await chrome.storage.sync.set({ licenseType: 'free' });
+      // 严重修复:彻底清理所有状态字段(避免残留数据让 UI 误显示 Pro)
+      await chrome.storage.sync.remove(['activatedAt', 'licenseVerified', 'licenseInvalid']);
 
-      // P1-4 修复：apiKey 已迁移到 local，清理 local 而非 sync
-      await chrome.storage.local.remove(['apiKey', 'apiProvider']);
-
-      // Clear local heartbeat cache
-      await chrome.storage.local.remove(['lastHeartbeatAt']);
+      // 严重修复:彻底清理所有敏感与状态字段(包括 deviceFingerprint 避免换设备后复用旧指纹)
+      await chrome.storage.local.remove([
+        'licenseCode', 'apiKey', 'apiProvider', 'apiUrl', 'modelName',
+        'savedApiFingerprint', 'deviceFingerprint', 'lastHeartbeatAt'
+      ]);
 
       // Notify all open tabs to refresh UI
       try {
@@ -257,25 +254,26 @@ async function forceLogout(reason) {
 }
 
 // Background fingerprint generator (fallback when options page hasn't cached one)
+// 严重修复:特征集与分隔符与 fingerprint.js 完全一致,避免缓存丢失后指纹不一致导致误下线
 async function generateFingerprintInBackground() {
   try {
-    // Service Worker has no DOM access — use navigator/screen info only
     const nav = self.navigator || {};
+    const scr = self.screen || {};
     const components = [
       nav.userAgent || '',
       nav.language || '',
       nav.languages ? nav.languages.join(',') : '',
       nav.platform || '',
-      nav.hardwareConcurrency || 0,
-      (nav.deviceMemory || 0).toString(),
-      String(self.screen?.width || 0),
-      String(self.screen?.height || 0),
-      String(self.screen?.colorDepth || 0),
-      new Date().getTimezoneOffset().toString(),
-      Intl.DateTimeFormat().resolvedOptions().timeZone || ''
+      String(nav.hardwareConcurrency || 0),
+      String(nav.deviceMemory || 0),
+      String(scr.width || 0),
+      String(scr.height || 0),
+      String(scr.colorDepth || 0),
+      Intl.DateTimeFormat().resolvedOptions().timeZone || '',
+      String(new Date().getTimezoneOffset())
     ];
-    const raw = components.join('|');
-    // Simple SHA-256 via crypto.subtle
+    // 分隔符与 fingerprint.js 一致: '|||'
+    const raw = components.join('|||');
     const buf = await crypto.subtle.digest('SHA-256', new TextEncoder().encode(raw));
     const arr = Array.from(new Uint8Array(buf));
     return arr.map(b => b.toString(16).padStart(2, '0')).join('');
@@ -544,6 +542,8 @@ async function tryGenerate(apiUrl, apiKey, modelName, messages) {
   if (isAnthropic) {
     headers['x-api-key'] = apiKey.trim();
     headers['anthropic-version'] = '2023-06-01';
+    // 致命修复:Anthropic Messages API 强制要求 max_tokens,缺失返回 400
+    bodyData.max_tokens = 4096;
     // Anthropic uses 'messages' instead of 'messages' in body
     bodyData.messages = messages.map(m => ({
       role: m.role === 'system' ? 'user' : m.role,
@@ -638,43 +638,52 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
         // Server-side license verification for Pro users (prevents client-side tampering)
         const localLicenseType = data.licenseType || 'free';
         let licenseType = localLicenseType;
-        if (localLicenseType !== 'free' && data.licenseCode) {
-          try {
-            const localFpData = await chrome.storage.local.get(['deviceFingerprint']);
-            // P0-1 兼容：verify-token 强制要求 fingerprint，缺失时生成并缓存
-            let fingerprint = localFpData.deviceFingerprint;
-            if (!fingerprint) {
-              fingerprint = await generateFingerprintInBackground();
-              if (fingerprint) {
-                await chrome.storage.local.set({ deviceFingerprint: fingerprint });
-              }
-            }
-            const verifyResponse = await fetchWithRetry(`${API_BASE_URL}/api/license/verify-token`, {
-              method: 'POST',
-              headers: { 'Content-Type': 'application/json' },
-              body: JSON.stringify({
-                licenseCode: data.licenseCode,
-                fingerprint: fingerprint
-              })
-            }, 1); // P1-12 修复:retries=1(避免重试导致重复验证),超时由全局 FETCH_TIMEOUT(30s)控制
-            if (verifyResponse.ok) {
-              const verifyResult = await verifyResponse.json();
-              if (!verifyResult.allowed) {
-                // Server says license is invalid — downgrade and enforce free tier
-                console.warn('Server rejected license, downgrading to free');
-                await chrome.storage.sync.set({ licenseType: 'free', licenseInvalid: true });
-                licenseType = 'free';
-              } else {
-                licenseType = verifyResult.type || localLicenseType;
-                // Sync the verified type back to storage
-                if (verifyResult.type !== localLicenseType) {
-                  await chrome.storage.sync.set({ licenseType: verifyResult.type });
+        // 致命修复:licenseType=pro 但无 licenseCode → 客户端篡改,强制降级为 free
+        if (localLicenseType !== 'free') {
+          if (!data.licenseCode) {
+            console.warn('licenseType is non-free but no licenseCode found, downgrading to free (possible tampering)');
+            await chrome.storage.sync.set({ licenseType: 'free' });
+            licenseType = 'free';
+          } else {
+            try {
+              const localFpData = await chrome.storage.local.get(['deviceFingerprint']);
+              // P0-1 兼容：verify-token 强制要求 fingerprint，缺失时生成并缓存
+              let fingerprint = localFpData.deviceFingerprint;
+              if (!fingerprint) {
+                fingerprint = await generateFingerprintInBackground();
+                if (fingerprint) {
+                  await chrome.storage.local.set({ deviceFingerprint: fingerprint });
                 }
               }
+              // 严重修复:verify-token 添加 timestamp 防重放
+              const verifyResponse = await fetchWithRetry(`${API_BASE_URL}/api/license/verify-token`, {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({
+                  licenseCode: data.licenseCode,
+                  fingerprint: fingerprint,
+                  timestamp: Date.now().toString()
+                })
+              }, 1);
+              if (verifyResponse.ok) {
+                const verifyResult = await verifyResponse.json();
+                if (!verifyResult.allowed) {
+                  // Server says license is invalid — downgrade and enforce free tier
+                  console.warn('Server rejected license, downgrading to free');
+                  await chrome.storage.sync.set({ licenseType: 'free', licenseInvalid: true });
+                  licenseType = 'free';
+                } else {
+                  licenseType = verifyResult.type || localLicenseType;
+                  // Sync the verified type back to storage
+                  if (verifyResult.type !== localLicenseType) {
+                    await chrome.storage.sync.set({ licenseType: verifyResult.type });
+                  }
+                }
+              }
+              // If server is unreachable, fall back to local licenseType (graceful degradation)
+            } catch (verifyErr) {
+              console.warn('License verification failed, using local cache:', verifyErr.message);
             }
-            // If server is unreachable, fall back to local licenseType (graceful degradation)
-          } catch (verifyErr) {
-            console.warn('License verification failed, using local cache:', verifyErr.message);
           }
         }
 

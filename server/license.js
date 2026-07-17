@@ -1,7 +1,7 @@
 // ChatGenius AI Backend - 许可证验证服务 (MySQL)
 const express = require('express');
 const crypto = require('crypto');
-const { pool } = require('./config');
+const { pool, PLAN_PRICES } = require('./config');
 
 const router = express.Router();
 
@@ -250,7 +250,7 @@ function getClientIp(req) {
 
 // 激活码：校验签名 + IP 封禁检查 + 指纹绑定
 router.post('/activate', async (req, res) => {
-  const { code, fingerprint, timestamp, signature } = req.body;
+  const { code, fingerprint, timestamp, signature, email } = req.body;
 
   if (!code) {
     return res.status(400).json({ valid: false, error: '激活码不能为空' });
@@ -310,8 +310,8 @@ router.post('/activate', async (req, res) => {
           : null;
         const now = new Date();
         const [licenseResult] = await conn.query(
-          'INSERT INTO licenses (activation_code, type, activated_at, expires_at, is_active, device_fingerprint, unbind_count, unbind_count_reset_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-          [normalizedCode, activationCode.type, now, expiresAt, true, fingerprint, 0, now]
+          'INSERT INTO licenses (activation_code, type, activated_at, expires_at, is_active, device_fingerprint, unbind_count, unbind_count_reset_at, user_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+          [normalizedCode, activationCode.type, now, expiresAt, true, fingerprint, 0, now, email || null]
         );
         await conn.query(
           'UPDATE activation_codes SET bound_fingerprint = ? WHERE id = ?',
@@ -388,9 +388,9 @@ router.post('/activate', async (req, res) => {
         maxDevices: MAX_DEVICES,
         currentDevices: devices.map(d => ({
           id: d.id,
-          fingerprint: d.device_fingerprint.substring(0, 8) + '...',
+          // 严重修复:不返回 fingerprint 片段(避免泄露指纹特征)
           name: d.device_name,
-          lastSeen: d.last_heartbeat_at,
+          firstSeen: d.first_seen_at,
         })),
       });
     }
@@ -410,8 +410,8 @@ router.post('/activate', async (req, res) => {
       : null;
 
     const [licenseResult] = await conn.query(
-      'INSERT INTO licenses (activation_code, type, activated_at, expires_at, is_active, device_fingerprint, unbind_count, unbind_count_reset_at) VALUES (?, ?, ?, ?, ?, ?, ?, ?)',
-      [normalizedCode, licenseType, new Date(), expiresAt, true, fingerprint, 0, now]
+      'INSERT INTO licenses (activation_code, type, activated_at, expires_at, is_active, device_fingerprint, unbind_count, unbind_count_reset_at, user_email) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [normalizedCode, licenseType, new Date(), expiresAt, true, fingerprint, 0, now, email || null]
     );
 
     // Step 6: 同步插入 license_devices 设备池
@@ -532,7 +532,17 @@ router.post('/rebind', async (req, res) => {
     }
 
     // Step 7: 踢掉旧设备
-    const oldFingerprint = license.device_fingerprint;
+    // 严重修复:先查询被踢设备的指纹(用于后续风控告警),原代码错误地取 license.device_fingerprint
+    // license.device_fingerprint 是最后激活的设备指纹,不一定是被踢的设备指纹
+    const [targetDeviceRows] = await conn.query(
+      'SELECT device_fingerprint FROM license_devices WHERE id = ? AND license_id = ? AND is_active = 1',
+      [parseInt(unbindDeviceId), license.id]
+    );
+    if (targetDeviceRows.length === 0) {
+      await conn.rollback();
+      return res.json({ valid: false, error: '未找到要解绑的设备' });
+    }
+    const oldFingerprint = targetDeviceRows[0].device_fingerprint;
     const kicked = await deactivateDevice(conn, parseInt(unbindDeviceId), license.id);
     if (!kicked) {
       await conn.rollback();
@@ -862,11 +872,12 @@ router.post('/devices', async (req, res) => {
       rebindPaused,
       devices: devices.map(d => ({
         id: d.id,
-        fingerprint: d.device_fingerprint.substring(0, 8) + '...',
+        // 严重修复:不返回 fingerprint 片段(避免泄露指纹特征),仅用 isCurrent 标识当前设备
         name: d.device_name,
         firstSeen: d.first_seen_at,
-        lastSeen: d.last_heartbeat_at,
-        lastIp: d.last_ip,
+        // 严重修复:不返回 lastSeen(精确心跳时间属于敏感行为数据)
+        // 严重修复:lastIp 脱敏
+        lastIp: maskIp(d.last_ip),
         isActive: !!d.is_active,
         isCurrent: d.device_fingerprint === fingerprint,
       })),
@@ -1078,11 +1089,43 @@ router.post('/verify-token', async (req, res) => {
     // 设备池校验：fingerprint 必须命中活跃设备列表（fail-closed，不再可选）
     // 老用户尚未迁移到设备池：自动补录到设备池（宽松策略，避免误伤已激活用户）
     if (!license.device_fingerprint) {
-      // P2-18 修复：自动补录前检查设备池上限，避免超过 MAX_DEVICES
+      // 严重修复:自动补录死循环问题
+      // 原逻辑:设备池已满时返回 device_limit_exceeded,客户端降级为 free,
+      // 下次请求又是老用户无 device_fingerprint → 又自动补录 → 又设备池已满 → 死循环
+      // 修复策略:
+      //   1. 先检查当前 fingerprint 是否已在设备池(含 inactive),如果在则直接重新激活
+      //   2. 设备池已满且当前 fingerprint 不在池中 → 踢掉最老设备加入当前设备
+      //      (老用户的宽松迁移策略,避免卡在 free 状态无法使用 Pro 功能)
+
+      // Step 1: 检查当前 fingerprint 是否已在设备池(含 inactive)
+      const [existingDev] = await conn.query(
+        'SELECT id, is_active FROM license_devices WHERE license_id = ? AND device_fingerprint = ?',
+        [license.id, fingerprint]
+      );
+      if (existingDev.length > 0) {
+        // 设备已在池中:重新激活(如果是 inactive)+ 更新心跳
+        if (!existingDev[0].is_active) {
+          await conn.query(
+            'UPDATE license_devices SET is_active = 1, last_heartbeat_at = ?, last_ip = ? WHERE id = ?',
+            [new Date(), getClientIp(req), existingDev[0].id]
+          );
+        }
+        await conn.query(
+          'UPDATE licenses SET device_fingerprint = ? WHERE id = ?',
+          [fingerprint, license.id]
+        );
+        await conn.commit();
+        return res.json({ allowed: true, type: license.type, remaining: -1 });
+      }
+
+      // Step 2: 当前 fingerprint 不在池中,检查设备池容量
       const devices = await getActiveDevices(conn, license.id);
       if (devices.length >= MAX_DEVICES) {
-        await conn.rollback();
-        return res.json({ allowed: false, reason: 'device_limit_exceeded' });
+        // 死循环修复:踢掉最老设备(getActiveDevices 已按 first_seen_at ASC 排序),加入当前设备
+        // 这是老用户的迁移场景,设备池里的设备可能是历史遗留的脏数据
+        const oldestDevice = devices[0];
+        await conn.query('UPDATE license_devices SET is_active = 0 WHERE id = ?', [oldestDevice.id]);
+        console.warn(`⚠️ 老用户迁移:license_id=${license.id} 设备池已满,踢掉最老设备 ${oldestDevice.id} 以腾出名额`);
       }
       await conn.query(
         'UPDATE licenses SET device_fingerprint = ? WHERE id = ?',
@@ -1150,7 +1193,7 @@ router.post('/lookup-renewal', async (req, res) => {
       canRenew: true,
       expiresAt: exp ? exp.toLocaleDateString('zh-CN') : null,
       newExpiresAt: newExpiry.toLocaleDateString('zh-CN'),
-      price: Number(process.env.PRICE_YEAR || 68),
+      price: PLAN_PRICES.year,
       hasEmail: !!lic.user_email
     });
   } catch (err) {

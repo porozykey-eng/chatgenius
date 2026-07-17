@@ -3,7 +3,7 @@ const express = require('express');
 const fs = require('fs');
 const path = require('path');
 const crypto = require('crypto');
-const { pool } = require('./config');
+const { pool, PLAN_PRICES, PLAN_SUBJECTS } = require('./config');
 const { generateSecureCode, generateBatchId } = require('./admin');
 const { sendActivationCodeEmail } = require('./mail');
 
@@ -172,15 +172,7 @@ async function getPlatformCertificate(serial) {
   return platformCertificates.get(serial);
 }
 
-// P0-1 修复：套餐价格白名单（服务端决定金额，前端传入的 amount 不可信）
-const PLAN_PRICES = {
-  year: Number(process.env.PRICE_YEAR || 99),
-  lifetime: Number(process.env.PRICE_LIFETIME || 299),
-};
-const PLAN_SUBJECTS = {
-  year: process.env.PLAN_SUBJECT_YEAR || 'ChatGenius AI 浏览器扩展-年付版',
-  lifetime: process.env.PLAN_SUBJECT_LIFETIME || 'ChatGenius AI 浏览器扩展-永久版',
-};
+// P0-1 修复：套餐价格白名单从 config.js 集中引入(单一数据源)
 
 // 创建 Native 支付订单（PC 端扫码支付）
 router.post('/create-order', async (req, res) => {
@@ -195,7 +187,7 @@ router.post('/create-order', async (req, res) => {
     }
     try {
       const [licRows] = await pool.query(
-        'SELECT type, is_active FROM licenses WHERE activation_code = ?',
+        'SELECT type, is_active, expires_at FROM licenses WHERE activation_code = ?',
         [normalizedRenewalCode]
       );
       if (licRows.length === 0) {
@@ -206,6 +198,14 @@ router.post('/create-order', async (req, res) => {
       }
       if (!licRows[0].is_active) {
         return res.status(400).json({ success: false, error: '许可证已撤销,请联系客服' });
+      }
+      // 严重修复:30天宽限期检查(与 /lookup-renewal 一致,防止绕过)
+      const exp = licRows[0].expires_at ? new Date(licRows[0].expires_at) : null;
+      if (exp && exp < new Date()) {
+        const daysOverdue = Math.floor((new Date() - exp) / 86400000);
+        if (daysOverdue > 30) {
+          return res.status(400).json({ success: false, error: '许可证已过期超过 30 天,请联系客服续费' });
+        }
       }
       // 检查是否已有 pending 续费订单
       const [pendingRows] = await pool.query(
@@ -494,6 +494,7 @@ const handleNotify = async (req, res) => {
         const orderInfo = orderRows[0];
         const isRenewalOrder = !!(orderInfo && orderInfo.is_renewal && orderInfo.renewal_for_code);
         let newPurchaseCode = null;
+        let renewalEmailInfo = null;
 
         if (isRenewalOrder) {
           // 续费分支:延期 license,不生成新激活码
@@ -501,40 +502,35 @@ const handleNotify = async (req, res) => {
             'SELECT id, type, is_active, expires_at FROM licenses WHERE activation_code = ? FOR UPDATE',
             [orderInfo.renewal_for_code]
           );
-          if (licRows.length > 0) {
-            const lic = licRows[0];
-            const now = new Date();
-            const currentExpiry = lic.expires_at ? new Date(lic.expires_at) : now;
-            const base = currentExpiry > now ? currentExpiry : now;
-            const newExpiry = new Date(base);
-            newExpiry.setFullYear(newExpiry.getFullYear() + 1);
-            await conn.query(
-              'UPDATE licenses SET expires_at = ?, is_active = TRUE, reminder_sent_at = NULL WHERE id = ?',
-              [newExpiry, lic.id]
-            );
-            // orders.activation_code 写入被续费的激活码
-            await conn.query(
-              'UPDATE orders SET activation_code = ? WHERE order_no = ?',
-              [orderInfo.renewal_for_code, out_trade_no]
-            );
-            console.log(`License renewed: ${orderInfo.renewal_for_code}, new expiry: ${newExpiry.toISOString()}`);
-            // 续费成功邮件（异步,不阻塞）
-            if (order.user_email) {
-              try {
-                const { sendRenewalSuccessEmail } = require('./mail');
-                if (typeof sendRenewalSuccessEmail === 'function') {
-                  sendRenewalSuccessEmail(order.user_email, {
-                    activationCode: orderInfo.renewal_for_code,
-                    newExpiresAt: newExpiry.toLocaleDateString('zh-CN'),
-                    orderNo: out_trade_no
-                  }).catch(err => console.error('续费邮件失败:', err.message));
-                }
-              } catch (err) {
-                console.error('续费邮件加载失败:', err.message);
-              }
-            }
-          } else {
-            console.error('Renewal: license not found:', orderInfo.renewal_for_code);
+          if (licRows.length === 0) {
+            // 致命修复:license 不存在时 throw,触发 rollback + 返回 fail,让支付平台重试
+            throw new Error(`Renewal: license not found: ${orderInfo.renewal_for_code}`);
+          }
+          const lic = licRows[0];
+          const now = new Date();
+          const currentExpiry = lic.expires_at ? new Date(lic.expires_at) : now;
+          const base = currentExpiry > now ? currentExpiry : now;
+          const newExpiry = new Date(base);
+          newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+          // 致命修复:UPDATE licenses 时同步 user_email
+          await conn.query(
+            'UPDATE licenses SET expires_at = ?, is_active = TRUE, reminder_sent_at = NULL, user_email = ? WHERE id = ?',
+            [newExpiry, order.user_email || null, lic.id]
+          );
+          // orders.activation_code 写入被续费的激活码
+          await conn.query(
+            'UPDATE orders SET activation_code = ? WHERE order_no = ?',
+            [orderInfo.renewal_for_code, out_trade_no]
+          );
+          console.log(`License renewed: ${orderInfo.renewal_for_code}, new expiry: ${newExpiry.toISOString()}`);
+          // 收集续费邮件信息(commit 后发送)
+          if (order.user_email) {
+            renewalEmailInfo = {
+              email: order.user_email,
+              activationCode: orderInfo.renewal_for_code,
+              newExpiresAt: newExpiry.toLocaleDateString('zh-CN'),
+              orderNo: out_trade_no
+            };
           }
         } else {
           // 原有新购买分支:生成新激活码（与 admin.js /orders/:orderNo/complete 逻辑一致）
@@ -553,6 +549,22 @@ const handleNotify = async (req, res) => {
 
         await conn.commit();
         console.log('WeChat order updated:', out_trade_no);
+
+        // 严重修复:续费成功邮件在 commit 后发送
+        if (renewalEmailInfo) {
+          try {
+            const { sendRenewalSuccessEmail } = require('./mail');
+            if (typeof sendRenewalSuccessEmail === 'function') {
+              sendRenewalSuccessEmail(renewalEmailInfo.email, {
+                activationCode: renewalEmailInfo.activationCode,
+                newExpiresAt: renewalEmailInfo.newExpiresAt,
+                orderNo: renewalEmailInfo.orderNo
+              }).catch(err => console.error('续费邮件失败:', err.message));
+            }
+          } catch (err) {
+            console.error('续费邮件加载失败:', err.message);
+          }
+        }
 
         // 异步发送激活码邮件（仅新购买分支,不阻塞回调响应）
         if (newPurchaseCode && order.user_email) {

@@ -41,21 +41,23 @@ document.addEventListener('DOMContentLoaded', () => {
     activePersonaId: 'default',
     licenseType: 'free',
     licenseCode: null,
-    activatedAt: null,
-    dailyReplyCount: 0,
-    lastResetDate: null
+    activatedAt: null
   }, (syncData) => {
     chrome.storage.local.get({
       aiButtonDisabled: false,
       apiUrl: '',
       apiKey: '',
-      modelName: ''
+      modelName: '',
+      dailyReplyCount: 0,
+      lastResetDate: null
     }, (localData) => {
       const data = {
         ...syncData,
         apiUrl: localData.apiUrl,
         apiKey: localData.apiKey,
-        modelName: localData.modelName
+        modelName: localData.modelName,
+        dailyReplyCount: localData.dailyReplyCount,
+        lastResetDate: localData.lastResetDate
       };
       updateUI(data, localData.aiButtonDisabled || false);
       updateLicenseStatus(data);
