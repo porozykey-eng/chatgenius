@@ -140,45 +140,104 @@ async function sendInvoiceIssuedEmail(to, invoice) {
  */
 async function sendActivationCodeEmail(to, info) {
   const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: #4361ee; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-        <h2 style="margin: 0;">ChatGenius 激活码</h2>
-      </div>
-      <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-        <p style="color: #374151; font-size: 15px;">您好，感谢您购买 ChatGenius！以下是您的激活码：</p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f8fafc;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(15,23,42,0.08);">
 
-        <div style="text-align: center; background: #ffffff; border: 2px dashed #4361ee; border-radius: 8px; padding: 20px; margin: 20px 0;">
-          <div style="font-family: 'Courier New', Courier, monospace; font-size: 28px; font-weight: 700; color: #4361ee; letter-spacing: 2px; word-break: break-all;">${escapeHtml(info.activationCode)}</div>
-        </div>
+          <!-- Hero -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);padding:48px 40px 40px;text-align:center;">
+              <div style="font-size:13px;font-weight:600;color:#94a3b8;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;">ChatGenius AI</div>
+              <h1 style="margin:0;font-size:26px;font-weight:600;color:#ffffff;letter-spacing:-0.5px;">购买成功</h1>
+              <div style="width:40px;height:2px;background:#4361ee;margin:20px auto 0;"></div>
+            </td>
+          </tr>
 
-        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <!-- Body -->
           <tr>
-            <td style="padding: 8px 0; color: #6b7280; width: 100px;">套餐类型</td>
-            <td style="padding: 8px 0; color: #111827; font-weight: 500;">${escapeHtml(info.plan)}</td>
+            <td style="padding:40px;">
+              <p style="margin:0 0 8px;font-size:16px;color:#0f172a;font-weight:500;">您好</p>
+              <p style="margin:0 0 32px;font-size:15px;color:#64748b;line-height:1.7;">
+                感谢您购买 ChatGenius!请使用以下激活码完成产品激活。
+              </p>
+
+              <!-- 激活码卡片 -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#eff6ff;border:1px solid #dbeafe;border-radius:12px;margin-bottom:32px;">
+                <tr>
+                  <td style="padding:28px;text-align:center;">
+                    <div style="font-size:11px;font-weight:600;color:#4361ee;letter-spacing:2px;text-transform:uppercase;margin-bottom:12px;">您的激活码</div>
+                    <div style="font-family:'SF Mono',Monaco,Consolas,'Courier New',monospace;font-size:24px;font-weight:700;color:#0f172a;letter-spacing:1px;word-break:break-all;">${escapeHtml(info.activationCode)}</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- 订单信息 -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:32px;">
+                <tr>
+                  <td style="padding:14px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="font-size:13px;color:#94a3b8;letter-spacing:0.5px;">套餐</span>
+                    <span style="float:right;font-size:14px;color:#0f172a;font-weight:500;">${escapeHtml(info.plan)}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="font-size:13px;color:#94a3b8;letter-spacing:0.5px;">订单号</span>
+                    <span style="float:right;font-size:14px;color:#0f172a;font-family:'SF Mono',Monaco,monospace;">${escapeHtml(info.orderNo)}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 0;">
+                    <span style="font-size:13px;color:#94a3b8;letter-spacing:0.5px;">到期时间</span>
+                    <span style="float:right;font-size:14px;color:#0f172a;font-weight:500;">${escapeHtml(info.expiresAt)}</span>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- 激活步骤 -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f8fafc;border-radius:12px;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:24px;">
+                    <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:16px;letter-spacing:0.5px;">激活步骤</div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                      <tr>
+                        <td style="padding:6px 0;color:#64748b;font-size:14px;line-height:1.6;"><span style="color:#4361ee;font-weight:600;">01</span> &nbsp;&nbsp;点击浏览器工具栏中的 ChatGenius 扩展图标</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;color:#64748b;font-size:14px;line-height:1.6;"><span style="color:#4361ee;font-weight:600;">02</span> &nbsp;&nbsp;进入扩展设置页面</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;color:#64748b;font-size:14px;line-height:1.6;"><span style="color:#4361ee;font-weight:600;">03</span> &nbsp;&nbsp;找到「激活产品」选项</td>
+                      </tr>
+                      <tr>
+                        <td style="padding:6px 0;color:#64748b;font-size:14px;line-height:1.6;"><span style="color:#4361ee;font-weight:600;">04</span> &nbsp;&nbsp;粘贴激活码并确认</td>
+                      </tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">如有疑问,请回复此邮件或联系客服。</p>
+            </td>
           </tr>
+
+          <!-- Footer -->
           <tr>
-            <td style="padding: 8px 0; color: #6b7280;">订单号</td>
-            <td style="padding: 8px 0; color: #111827;">${escapeHtml(info.orderNo)}</td>
+            <td style="background:#0f172a;padding:24px 40px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#64748b;line-height:1.6;">本邮件由 ChatGenius 系统自动发送<br>© 2026 ChatGenius AI · All rights reserved</p>
+            </td>
           </tr>
-          <tr>
-            <td style="padding: 8px 0; color: #6b7280;">到期时间</td>
-            <td style="padding: 8px 0; color: #111827;">${escapeHtml(info.expiresAt)}</td>
-          </tr>
+
         </table>
-
-        <div style="background: #eff6ff; border-radius: 6px; padding: 16px; margin: 16px 0;">
-          <p style="margin: 0 0 8px 0; color: #1e40af; font-weight: 600; font-size: 14px;">激活步骤：</p>
-          <ol style="margin: 0; padding-left: 20px; color: #374151; font-size: 14px; line-height: 1.8;">
-            <li>点击浏览器工具栏中的 ChatGenius 扩展图标</li>
-            <li>进入扩展设置页面</li>
-            <li>找到「激活产品」选项</li>
-            <li>将上方激活码粘贴到输入框中并确认</li>
-          </ol>
-        </div>
-
-        <p style="color: #9ca3af; font-size: 13px; margin-top: 24px;">如有疑问，请回复此邮件或联系 support@chatgenius.ai</p>
-      </div>
-    </div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
   `;
 
   return sendMail(to, '【ChatGenius】您的激活码', html, []);
@@ -193,39 +252,101 @@ async function sendExpiringReminderEmail(to, info) {
   // 安全：renewUrl 和 activationCode 用 escapeHtml 转义
   const safeRenewUrl = /^https?:\/\//.test(info.renewUrl) ? info.renewUrl : '#';
   const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: #1a73e8; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-        <h2 style="margin: 0;">ChatGenius AI 到期提醒</h2>
-      </div>
-      <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-        <p style="color: #374151; font-size: 15px;">您好，您的 ChatGenius 年付许可证即将到期。</p>
-        <p style="color: #374151; font-size: 15px;">到期日期：<strong style="color: #dc2626;">${escapeHtml(info.expiresAt)}</strong></p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f8fafc;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(15,23,42,0.08);">
 
-        <div style="text-align: center; margin: 24px 0;">
-          <a href="${escapeHtml(safeRenewUrl)}" style="display: inline-block; background: #1a73e8; color: white; padding: 14px 36px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 16px;">立即续费</a>
-        </div>
+          <!-- Hero -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);padding:48px 40px 40px;text-align:center;">
+              <div style="font-size:13px;font-weight:600;color:#94a3b8;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;">ChatGenius AI</div>
+              <h1 style="margin:0;font-size:26px;font-weight:600;color:#ffffff;letter-spacing:-0.5px;">许可证即将到期</h1>
+              <div style="width:40px;height:2px;background:#f59e0b;margin:20px auto 0;"></div>
+            </td>
+          </tr>
 
-        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <!-- Body -->
           <tr>
-            <td style="padding: 8px 0; color: #6b7280; width: 120px;">当前到期时间</td>
-            <td style="padding: 8px 0; color: #111827; font-weight: 500;">${escapeHtml(info.expiresAt)}</td>
+            <td style="padding:40px;">
+              <p style="margin:0 0 8px;font-size:16px;color:#0f172a;font-weight:500;">您好</p>
+              <p style="margin:0 0 32px;font-size:15px;color:#64748b;line-height:1.7;">
+                您的 ChatGenius 年付许可证即将到期,为避免服务中断,请及时续费。
+              </p>
+
+              <!-- 到期日期卡片 -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#fef3c7;border:1px solid #fde68a;border-radius:12px;margin-bottom:32px;">
+                <tr>
+                  <td style="padding:28px;text-align:center;">
+                    <div style="font-size:11px;font-weight:600;color:#92400e;letter-spacing:2px;text-transform:uppercase;margin-bottom:10px;">到期日期</div>
+                    <div style="font-size:28px;font-weight:700;color:#0f172a;letter-spacing:-0.5px;">${escapeHtml(info.expiresAt)}</div>
+                    <div style="font-size:13px;color:#78716c;margin-top:8px;">到期后将无法使用 AI 自动回复功能</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- CTA 按钮 -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:32px;">
+                <tr>
+                  <td align="center;">
+                    <!--[if mso]>
+                    <v:roundrect xmlns:v="urn:schemas-microsoft-com:vml" href="${escapeHtml(safeRenewUrl)}" style="height:52px;v-text-anchor:middle;width:280px;" arcsize="20%" fillcolor="#0f172a">
+                      <center style="color:#ffffff;font-family:sans-serif;font-size:15px;font-weight:600;">立即续费 ¥${escapeHtml(info.price)}/年</center>
+                    </v:roundrect>
+                    <![endif]-->
+                    <!--[if !mso]><!-->
+                    <a href="${escapeHtml(safeRenewUrl)}" style="display:inline-block;background:#0f172a;color:#ffffff;padding:16px 48px;border-radius:10px;text-decoration:none;font-size:15px;font-weight:600;letter-spacing:0.5px;">立即续费 ¥${escapeHtml(info.price)}/年</a>
+                    <!--<![endif]-->
+                  </td>
+                </tr>
+              </table>
+
+              <!-- 续费权益 -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:32px;border-top:1px solid #f1f5f9;">
+                <tr>
+                  <td style="padding:24px 0;">
+                    <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:16px;letter-spacing:0.5px;">续费权益</div>
+                    <table role="presentation" cellpadding="0" cellspacing="0" width="100%">
+                      <tr><td style="padding:7px 0;color:#64748b;font-size:14px;">· 无限次 AI 自动回复</td></tr>
+                      <tr><td style="padding:7px 0;color:#64748b;font-size:14px;">· 14+ AI 模型自由切换</td></tr>
+                      <tr><td style="padding:7px 0;color:#64748b;font-size:14px;">· 自定义角色与知识库</td></tr>
+                      <tr><td style="padding:7px 0;color:#64748b;font-size:14px;">· 优先客服支持</td></tr>
+                    </table>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- 客服 -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f8fafc;border-radius:12px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <div style="font-size:13px;font-weight:600;color:#0f172a;margin-bottom:6px;">需要帮助?</div>
+                    <div style="font-size:13px;color:#64748b;line-height:1.6;">
+                      QQ 群:${escapeHtml(info.qqGroup || '客服群')}${info.qqGroupLink ? ` · <a href="${escapeHtml(info.qqGroupLink)}" style="color:#4361ee;text-decoration:none;">点击加入</a>` : ''}
+                    </div>
+                  </td>
+                </tr>
+              </table>
+            </td>
           </tr>
+
+          <!-- Footer -->
           <tr>
-            <td style="padding: 8px 0; color: #6b7280;">续费价格</td>
-            <td style="padding: 8px 0; color: #111827; font-weight: 500;">¥${escapeHtml(info.price)} / 年</td>
+            <td style="background:#0f172a;padding:24px 40px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#64748b;line-height:1.6;">本邮件由 ChatGenius 系统自动发送<br>如已续费,请忽略此邮件 · © 2026 ChatGenius AI</p>
+            </td>
           </tr>
+
         </table>
-
-        <div style="background: #eff6ff; border-radius: 6px; padding: 16px; margin: 16px 0;">
-          <p style="margin: 0 0 8px 0; color: #1e40af; font-weight: 600; font-size: 14px;">需要帮助？</p>
-          <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;">
-            加入 QQ 群：${escapeHtml(info.qqGroup || '客服群')}${info.qqGroupLink ? `（<a href="${escapeHtml(info.qqGroupLink)}" style="color: #1a73e8;">点击加入</a>）` : ''}
-          </p>
-        </div>
-
-        <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">本邮件由系统自动发送，如已续费请忽略。</p>
-      </div>
-    </div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
   `;
 
   return sendMail(to, '【ChatGenius】您的年付许可证即将到期', html, []);
@@ -238,45 +359,94 @@ async function sendExpiringReminderEmail(to, info) {
  */
 async function sendRenewalSuccessEmail(to, info) {
   const html = `
-    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
-      <div style="background: #16a34a; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
-        <h2 style="margin: 0;">ChatGenius 续费成功</h2>
-      </div>
-      <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
-        <p style="color: #374151; font-size: 15px;">您好，您的 ChatGenius 许可证已成功续费！</p>
+<!DOCTYPE html>
+<html lang="zh-CN">
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width, initial-scale=1.0"></head>
+<body style="margin:0;padding:0;background:#f8fafc;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI','PingFang SC','Hiragino Sans GB',sans-serif;">
+  <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f8fafc;">
+    <tr>
+      <td align="center" style="padding:40px 20px;">
+        <table role="presentation" cellpadding="0" cellspacing="0" width="600" style="max-width:600px;background:#ffffff;border-radius:16px;overflow:hidden;box-shadow:0 4px 24px rgba(15,23,42,0.08);">
 
-        <div style="text-align: center; background: #ffffff; border: 2px dashed #16a34a; border-radius: 8px; padding: 16px; margin: 20px 0;">
-          <div style="font-family: 'Courier New', Courier, monospace; font-size: 22px; font-weight: 700; color: #16a34a; letter-spacing: 2px; word-break: break-all;">${escapeHtml(info.activationCode)}</div>
-        </div>
+          <!-- Hero -->
+          <tr>
+            <td style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);padding:48px 40px 40px;text-align:center;">
+              <div style="font-size:13px;font-weight:600;color:#94a3b8;letter-spacing:3px;text-transform:uppercase;margin-bottom:16px;">ChatGenius AI</div>
+              <h1 style="margin:0;font-size:26px;font-weight:600;color:#ffffff;letter-spacing:-0.5px;">续费成功</h1>
+              <div style="width:40px;height:2px;background:#10b981;margin:20px auto 0;"></div>
+            </td>
+          </tr>
 
-        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <!-- Body -->
           <tr>
-            <td style="padding: 8px 0; color: #6b7280; width: 120px;">新到期时间</td>
-            <td style="padding: 8px 0; color: #111827; font-weight: 500;">${escapeHtml(info.newExpiresAt)}</td>
+            <td style="padding:40px;">
+              <p style="margin:0 0 8px;font-size:16px;color:#0f172a;font-weight:500;">您好</p>
+              <p style="margin:0 0 32px;font-size:15px;color:#64748b;line-height:1.7;">
+                您的 ChatGenius 许可证已成功续费,以下是本次续费的详细信息。
+              </p>
+
+              <!-- 成功标识卡片 -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#d1fae5;border:1px solid #a7f3d0;border-radius:12px;margin-bottom:32px;">
+                <tr>
+                  <td style="padding:28px;text-align:center;">
+                    <div style="width:48px;height:48px;background:#10b981;border-radius:50%;margin:0 auto 14px;display:flex;align-items:center;justify-content:center;color:#ffffff;font-size:24px;font-weight:700;line-height:1;">✓</div>
+                    <div style="font-size:18px;font-weight:600;color:#065f46;margin-bottom:6px;">续费成功</div>
+                    <div style="font-size:13px;color:#047857;">您的许可证已延期至 ${escapeHtml(info.newExpiresAt)}</div>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- 订单信息 -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="margin-bottom:32px;">
+                <tr>
+                  <td style="padding:14px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="font-size:13px;color:#94a3b8;letter-spacing:0.5px;">激活码</span>
+                    <span style="float:right;font-size:14px;color:#0f172a;font-family:'SF Mono',Monaco,Consolas,monospace;font-weight:500;">${escapeHtml(info.activationCode)}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 0;border-bottom:1px solid #f1f5f9;">
+                    <span style="font-size:13px;color:#94a3b8;letter-spacing:0.5px;">新到期时间</span>
+                    <span style="float:right;font-size:14px;color:#0f172a;font-weight:500;">${escapeHtml(info.newExpiresAt)}</span>
+                  </td>
+                </tr>
+                <tr>
+                  <td style="padding:14px 0;">
+                    <span style="font-size:13px;color:#94a3b8;letter-spacing:0.5px;">订单号</span>
+                    <span style="float:right;font-size:14px;color:#0f172a;font-family:'SF Mono',Monaco,monospace;">${escapeHtml(info.orderNo)}</span>
+                  </td>
+                </tr>
+              </table>
+
+              <!-- 重要提示 -->
+              <table role="presentation" cellpadding="0" cellspacing="0" width="100%" style="background:#f0fdf4;border-left:3px solid #10b981;border-radius:0 12px 12px 0;margin-bottom:24px;">
+                <tr>
+                  <td style="padding:20px 24px;">
+                    <div style="font-size:13px;font-weight:600;color:#065f46;margin-bottom:8px;letter-spacing:0.5px;">重要提示</div>
+                    <div style="font-size:14px;color:#374151;line-height:1.7;">
+                      无需重新激活,扩展程序会自动续期。如扩展未自动续期,请在扩展设置中点击「重新校验许可证」。
+                    </div>
+                  </td>
+                </tr>
+              </table>
+
+              <p style="margin:0;font-size:13px;color:#94a3b8;line-height:1.6;">如有疑问,请回复此邮件或联系客服。</p>
+            </td>
           </tr>
+
+          <!-- Footer -->
           <tr>
-            <td style="padding: 8px 0; color: #6b7280;">订单号</td>
-            <td style="padding: 8px 0; color: #111827;">${escapeHtml(info.orderNo)}</td>
+            <td style="background:#0f172a;padding:24px 40px;text-align:center;">
+              <p style="margin:0;font-size:12px;color:#64748b;line-height:1.6;">本邮件由 ChatGenius 系统自动发送,请勿直接回复<br>© 2026 ChatGenius AI · All rights reserved</p>
+            </td>
           </tr>
+
         </table>
-
-        <div style="background: #f0fdf4; border-radius: 6px; padding: 16px; margin: 16px 0;">
-          <p style="margin: 0; color: #166534; font-weight: 600; font-size: 14px;">重要提示：</p>
-          <p style="margin: 8px 0 0 0; color: #374151; font-size: 14px; line-height: 1.6;">
-            无需重新激活，扩展程序会自动续期。如扩展未自动续期，请在扩展设置中点击「重新校验许可证」。
-          </p>
-        </div>
-
-        <div style="background: #eff6ff; border-radius: 6px; padding: 16px; margin: 16px 0;">
-          <p style="margin: 0; color: #1e40af; font-weight: 600; font-size: 14px;">需要帮助？</p>
-          <p style="margin: 8px 0 0 0; color: #374151; font-size: 14px; line-height: 1.6;">
-            如有疑问，请回复此邮件或联系客服。
-          </p>
-        </div>
-
-        <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">本邮件由系统自动发送，请勿直接回复。</p>
-      </div>
-    </div>
+      </td>
+    </tr>
+  </table>
+</body>
+</html>
   `;
 
   return sendMail(to, '【ChatGenius】续费成功通知', html, []);
