@@ -1457,10 +1457,26 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
     }
   }
 
-  const plans = [
+  type Plan = {
+    name: string;
+    price: string;
+    originalPrice: string | null;
+    period: string;
+    desc: string;
+    features: string[];
+    limitations: string[];
+    cta: string;
+    popular: boolean;
+    hot: boolean;
+    type: 'free' | 'year' | 'lifetime';
+    badge?: string;
+  };
+
+  const plans: Plan[] = [
     {
       name: '免费版',
       price: '¥0',
+      originalPrice: null,
       period: '/ 永久',
       desc: '适合轻度用户尝鲜体验',
       features: [
@@ -1475,7 +1491,7 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
       cta: '免费开始',
       popular: false,
       hot: false,
-      type: 'free' as const,
+      type: 'free',
     },
     {
       name: 'Pro 年付',
@@ -1498,7 +1514,7 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
       cta: '立即订阅',
       popular: false,
       hot: false,
-      type: 'year' as const,
+      type: 'year',
     },
     {
       name: 'Pro 永久版',
@@ -1517,7 +1533,7 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
       cta: '立即购买',
       popular: true,
       hot: true,
-      type: 'lifetime' as const,
+      type: 'lifetime',
     },
   ]
 
