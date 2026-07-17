@@ -93,14 +93,16 @@ function BackToTop() {
 }
 
 // ==================== Payment Modal ====================
-function PaymentModal({ 
-  isOpen, 
-  onClose, 
-  plan 
-}: { 
-  isOpen: boolean; 
-  onClose: () => void; 
-  plan: { name: string; price: string; type: 'year' | 'lifetime' } | null 
+function PaymentModal({
+  isOpen,
+  onClose,
+  plan,
+  renewalInfo
+}: {
+  isOpen: boolean;
+  onClose: () => void;
+  plan: { name: string; price: string; type: 'year' | 'lifetime' } | null
+  renewalInfo: { code: string; expiresAt: string; newExpiresAt: string; price: number } | null
 }) {
   const [step, setStep] = useState<'payment' | 'qrcode' | 'success'>('payment')
   const [activationCode, setActivationCode] = useState('')
@@ -118,11 +120,16 @@ function PaymentModal({
     setLoading(true)
     setCodeError('')
 
+    // 续费模式强制年付
+    const planType = renewalInfo ? 'year' : (plan?.type || 'lifetime')
+
     const result = await activationService.createOrder(
       plan?.name || '',
       plan?.price || '',
-      plan?.type || 'lifetime',
-      channel
+      planType,
+      channel,
+      undefined,
+      renewalInfo?.code
     )
 
     setLoading(false)
@@ -1435,7 +1442,19 @@ function TestimonialsSection() {
 }
 
 // ==================== Pricing Section ====================
-function PricingSection({ onDownload }: { onDownload: () => void }) {
+function PricingSection({
+  onDownload,
+  renewalInfo,
+  setRenewalInfo,
+  renewalError,
+  setRenewalError
+}: {
+  onDownload: () => void
+  renewalInfo: { code: string; expiresAt: string; newExpiresAt: string; price: number } | null
+  setRenewalInfo: (info: { code: string; expiresAt: string; newExpiresAt: string; price: number } | null) => void
+  renewalError: string
+  setRenewalError: (err: string) => void
+}) {
   const [modalOpen, setModalOpen] = useState(false)
   const [selectedPlan, setSelectedPlan] = useState<{ name: string; price: string; type: 'year' | 'lifetime' } | null>(null)
   const [pricing, setPricing] = useState<Pricing>({ year: { price: 68 }, lifetime: { price: 98 } })
@@ -1543,9 +1562,40 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
         <div className="absolute inset-0 bg-gradient-to-b from-background via-violet-950/10 to-background" />
         
         <div className="container max-w-6xl mx-auto px-6 relative z-10">
-          <motion.div 
-            initial="hidden" 
-            whileInView="visible" 
+          {renewalInfo && (
+            <div className="mb-8 p-4 bg-gradient-to-r from-violet-600/20 to-purple-600/20 border border-violet-500/30 rounded-lg">
+              <div className="flex items-center justify-between flex-wrap gap-3">
+                <div>
+                  <p className="text-sm font-semibold text-white">
+                    🔄 续费模式 · 激活码: {renewalInfo.code.slice(0, 4)}****{renewalInfo.code.slice(-4)}
+                  </p>
+                  <p className="text-xs text-white/60 mt-1">
+                    当前到期: {renewalInfo.expiresAt} · 续费后到期: {renewalInfo.newExpiresAt}
+                  </p>
+                </div>
+                <button
+                  onClick={() => { setRenewalInfo(null); window.history.replaceState({}, '', window.location.pathname) }}
+                  className="text-xs text-white/50 hover:text-white/80 transition-colors"
+                >
+                  取消续费 →
+                </button>
+              </div>
+            </div>
+          )}
+          {renewalError && (
+            <div className="mb-8 p-4 bg-red-500/10 border border-red-500/30 rounded-lg">
+              <p className="text-sm text-red-400">{renewalError}</p>
+              <button
+                onClick={() => setRenewalError('')}
+                className="text-xs text-white/50 hover:text-white/80 transition-colors mt-1"
+              >
+                关闭
+              </button>
+            </div>
+          )}
+          <motion.div
+            initial="hidden"
+            whileInView="visible"
             viewport={{ once: true }}
             variants={stagger}
             className="text-center mb-20"
@@ -1646,10 +1696,11 @@ function PricingSection({ onDownload }: { onDownload: () => void }) {
         </div>
       </section>
 
-      <PaymentModal 
-        isOpen={modalOpen} 
-        onClose={() => setModalOpen(false)} 
-        plan={selectedPlan} 
+      <PaymentModal
+        isOpen={modalOpen}
+        onClose={() => setModalOpen(false)}
+        plan={selectedPlan}
+        renewalInfo={renewalInfo}
       />
     </>
   )
@@ -2007,6 +2058,10 @@ function App() {
   const [paymentStatus, setPaymentStatus] = useState<'pending' | 'success' | 'failed' | null>(null)
   const [paymentOrderNo, setPaymentOrderNo] = useState('')
   const [paidActivationCode, setPaidActivationCode] = useState('')
+  // 续费模式相关状态
+  const [renewalInfo, setRenewalInfo] = useState<{ code: string; expiresAt: string; newExpiresAt: string; price: number } | null>(null)
+  const [renewalError, setRenewalError] = useState('')
+  const [isRenewalOrder, setIsRenewalOrder] = useState(false)
   const [showInvoiceModal, setShowInvoiceModal] = useState(false)
   const [qqGroup, setQqGroup] = useState('')
   const [qqGroupLink, setQqGroupLink] = useState('')
@@ -2044,6 +2099,7 @@ function App() {
             const status = await activationService.queryPaymentStatus(pendingOrder, pendingChannel)
             if (status.paid) {
               setPaymentStatus('success')
+              setIsRenewalOrder(!!status.isRenewal)
               if (status.activationCode) {
                 setPaidActivationCode(status.activationCode)
               }
@@ -2078,6 +2134,31 @@ function App() {
     return () => {
       pollTimersRef.current.forEach(t => clearTimeout(t))
       pollTimersRef.current.clear()
+    }
+  }, [])
+
+  // 续费模式：从 URL 参数 ?renew=CODE 读取并查询续费信息
+  useEffect(() => {
+    const params = new URLSearchParams(window.location.search)
+    const renewCode = params.get('renew')
+    if (renewCode) {
+      activationService.lookupRenewal(renewCode).then(data => {
+        if (data.canRenew) {
+          setRenewalInfo({
+            code: renewCode.toUpperCase(),
+            expiresAt: data.expiresAt || '',
+            newExpiresAt: data.newExpiresAt || '',
+            price: data.price || 68
+          })
+          // 自动滚动到定价区
+          const pricingSection = document.getElementById('pricing')
+          if (pricingSection) {
+            pricingSection.scrollIntoView({ behavior: 'smooth' })
+          }
+        } else {
+          setRenewalError(data.error || '激活码不可续费')
+        }
+      })
     }
   }, [])
 
@@ -2149,6 +2230,18 @@ function App() {
               {paymentStatus === 'pending' && <Clock className="w-5 h-5 animate-pulse" />}
               <div>
                 {paymentStatus === 'success' && (
+                  isRenewalOrder ? (
+                    <div>
+                      <p className="font-semibold">续费成功！</p>
+                      <p className="text-sm text-white/60">订单号：{paymentOrderNo}</p>
+                      <p className="text-sm text-green-400 mt-2">
+                        ✓ 您的许可证已延期,无需重新激活
+                      </p>
+                      <p className="text-xs text-white/50 mt-2">
+                        如扩展未自动续期,请在扩展设置中点击"重新校验许可证"
+                      </p>
+                    </div>
+                  ) : (
             <div>
               <p className="font-semibold">支付成功！</p>
               <p className="text-sm text-white/60">订单号：{paymentOrderNo}</p>
@@ -2195,6 +2288,7 @@ function App() {
                 </div>
               )}
             </div>
+                  )
           )}
                 {paymentStatus === 'failed' && (
                   <div>
@@ -2228,7 +2322,13 @@ function App() {
         <ModelsSection />
         <UseCasesSection />
         <TestimonialsSection />
-        <PricingSection onDownload={handleDownload} />
+        <PricingSection
+          onDownload={handleDownload}
+          renewalInfo={renewalInfo}
+          setRenewalInfo={setRenewalInfo}
+          renewalError={renewalError}
+          setRenewalError={setRenewalError}
+        />
         <TrustBadgesSection />
         <FAQSection />
         <CTASection onDownload={handleDownload} isDownloading={isDownloading} />

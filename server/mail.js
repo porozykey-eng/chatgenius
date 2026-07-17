@@ -184,4 +184,102 @@ async function sendActivationCodeEmail(to, info) {
   return sendMail(to, '【ChatGenius】您的激活码', html, []);
 }
 
-module.exports = { sendMail, sendInvoiceIssuedEmail, sendActivationCodeEmail, initTransporter };
+/**
+ * 发送年付许可证即将到期提醒邮件
+ * @param {string} to - 收件人邮箱
+ * @param {object} info - 到期信息 { activationCode, expiresAt, renewUrl, price, qqGroup, qqGroupLink }
+ */
+async function sendExpiringReminderEmail(to, info) {
+  // 安全：renewUrl 和 activationCode 用 escapeHtml 转义
+  const safeRenewUrl = /^https?:\/\//.test(info.renewUrl) ? info.renewUrl : '#';
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #1a73e8; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+        <h2 style="margin: 0;">ChatGenius AI 到期提醒</h2>
+      </div>
+      <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+        <p style="color: #374151; font-size: 15px;">您好，您的 ChatGenius 年付许可证即将到期。</p>
+        <p style="color: #374151; font-size: 15px;">到期日期：<strong style="color: #dc2626;">${escapeHtml(info.expiresAt)}</strong></p>
+
+        <div style="text-align: center; margin: 24px 0;">
+          <a href="${escapeHtml(safeRenewUrl)}" style="display: inline-block; background: #1a73e8; color: white; padding: 14px 36px; border-radius: 6px; text-decoration: none; font-weight: 600; font-size: 16px;">立即续费</a>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr>
+            <td style="padding: 8px 0; color: #6b7280; width: 120px;">当前到期时间</td>
+            <td style="padding: 8px 0; color: #111827; font-weight: 500;">${escapeHtml(info.expiresAt)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #6b7280;">续费价格</td>
+            <td style="padding: 8px 0; color: #111827; font-weight: 500;">¥${escapeHtml(info.price)} / 年</td>
+          </tr>
+        </table>
+
+        <div style="background: #eff6ff; border-radius: 6px; padding: 16px; margin: 16px 0;">
+          <p style="margin: 0 0 8px 0; color: #1e40af; font-weight: 600; font-size: 14px;">需要帮助？</p>
+          <p style="margin: 0; color: #374151; font-size: 14px; line-height: 1.6;">
+            加入 QQ 群：${escapeHtml(info.qqGroup || '客服群')}${info.qqGroupLink ? `（<a href="${escapeHtml(info.qqGroupLink)}" style="color: #1a73e8;">点击加入</a>）` : ''}
+          </p>
+        </div>
+
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">本邮件由系统自动发送，如已续费请忽略。</p>
+      </div>
+    </div>
+  `;
+
+  return sendMail(to, '【ChatGenius】您的年付许可证即将到期', html, []);
+}
+
+/**
+ * 发送续费成功通知邮件
+ * @param {string} to - 收件人邮箱
+ * @param {object} info - 续费信息 { activationCode, newExpiresAt, orderNo }
+ */
+async function sendRenewalSuccessEmail(to, info) {
+  const html = `
+    <div style="font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', sans-serif; max-width: 600px; margin: 0 auto; padding: 20px;">
+      <div style="background: #16a34a; color: white; padding: 20px; border-radius: 8px 8px 0 0;">
+        <h2 style="margin: 0;">ChatGenius 续费成功</h2>
+      </div>
+      <div style="background: #f9fafb; padding: 24px; border: 1px solid #e5e7eb; border-top: none; border-radius: 0 0 8px 8px;">
+        <p style="color: #374151; font-size: 15px;">您好，您的 ChatGenius 许可证已成功续费！</p>
+
+        <div style="text-align: center; background: #ffffff; border: 2px dashed #16a34a; border-radius: 8px; padding: 16px; margin: 20px 0;">
+          <div style="font-family: 'Courier New', Courier, monospace; font-size: 22px; font-weight: 700; color: #16a34a; letter-spacing: 2px; word-break: break-all;">${escapeHtml(info.activationCode)}</div>
+        </div>
+
+        <table style="width: 100%; border-collapse: collapse; margin: 16px 0;">
+          <tr>
+            <td style="padding: 8px 0; color: #6b7280; width: 120px;">新到期时间</td>
+            <td style="padding: 8px 0; color: #111827; font-weight: 500;">${escapeHtml(info.newExpiresAt)}</td>
+          </tr>
+          <tr>
+            <td style="padding: 8px 0; color: #6b7280;">订单号</td>
+            <td style="padding: 8px 0; color: #111827;">${escapeHtml(info.orderNo)}</td>
+          </tr>
+        </table>
+
+        <div style="background: #f0fdf4; border-radius: 6px; padding: 16px; margin: 16px 0;">
+          <p style="margin: 0; color: #166534; font-weight: 600; font-size: 14px;">重要提示：</p>
+          <p style="margin: 8px 0 0 0; color: #374151; font-size: 14px; line-height: 1.6;">
+            无需重新激活，扩展程序会自动续期。如扩展未自动续期，请在扩展设置中点击「重新校验许可证」。
+          </p>
+        </div>
+
+        <div style="background: #eff6ff; border-radius: 6px; padding: 16px; margin: 16px 0;">
+          <p style="margin: 0; color: #1e40af; font-weight: 600; font-size: 14px;">需要帮助？</p>
+          <p style="margin: 8px 0 0 0; color: #374151; font-size: 14px; line-height: 1.6;">
+            如有疑问，请回复此邮件或联系客服。
+          </p>
+        </div>
+
+        <p style="color: #9ca3af; font-size: 12px; margin-top: 24px;">本邮件由系统自动发送，请勿直接回复。</p>
+      </div>
+    </div>
+  `;
+
+  return sendMail(to, '【ChatGenius】续费成功通知', html, []);
+}
+
+module.exports = { sendMail, sendInvoiceIssuedEmail, sendActivationCodeEmail, sendExpiringReminderEmail, sendRenewalSuccessEmail, initTransporter };

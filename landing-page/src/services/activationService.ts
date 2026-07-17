@@ -50,7 +50,8 @@ export const activationService = {
     _price: string,
     type: 'year' | 'lifetime',
     channel: 'alipay' | 'wechat' | 'paypal',
-    _userEmail?: string
+    _userEmail?: string,
+    renewalCode?: string
   ): Promise<{ success: boolean; payForm?: string; codeUrl?: string; orderNo?: string; error?: string }> {
     try {
       // 根据渠道调用不同的 API
@@ -59,7 +60,7 @@ export const activationService = {
       const res = await fetchWithTimeout(`${API_BASE}${apiPath}`, {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ type }),
+        body: JSON.stringify({ type, renewal_code: renewalCode }),
       }, 10000);
 
       const data = await res.json();
@@ -87,7 +88,7 @@ export const activationService = {
   // 查询支付状态
   // H5 修复：根据 channel 调用对应渠道端点，避免微信订单走支付宝端点导致查询失败
   // P2-4 修复：channel 改为必填参数，避免默认 alipay 导致微信订单查询失败
-  async queryPaymentStatus(orderNo: string, channel: 'alipay' | 'wechat'): Promise<{ paid: boolean; status?: string; activationCode?: string; type?: string; error?: string }> {
+  async queryPaymentStatus(orderNo: string, channel: 'alipay' | 'wechat'): Promise<{ paid: boolean; status?: string; activationCode?: string; type?: string; isRenewal?: boolean; error?: string }> {
     try {
       const endpoint = channel === 'wechat' ? '/wechat/query-order/' : '/alipay/query-order/';
       // P2-2 修复：添加 8 秒超时
@@ -98,6 +99,7 @@ export const activationService = {
         status: data.status,
         activationCode: data.activationCode,
         type: data.type,
+        isRenewal: data.isRenewal,
         error: data.error,
       };
     } catch (err) {
@@ -130,6 +132,32 @@ export const activationService = {
     } catch (err) {
       console.error('Get license error:', err);
       return null;
+    }
+  },
+
+  // 查询激活码续费信息
+  async lookupRenewal(code: string): Promise<{ canRenew: boolean; expiresAt?: string; newExpiresAt?: string; price?: number; hasEmail?: boolean; error?: string }> {
+    try {
+      const res = await fetchWithTimeout(`${API_BASE}/license/lookup-renewal`, {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ code: code.trim().toUpperCase() }),
+      }, 8000);
+      const data = await res.json();
+      return {
+        canRenew: data.canRenew,
+        expiresAt: data.expiresAt,
+        newExpiresAt: data.newExpiresAt,
+        price: data.price,
+        hasEmail: data.hasEmail,
+        error: data.error,
+      };
+    } catch (err) {
+      if (err instanceof DOMException && err.name === 'AbortError') {
+        return { canRenew: false, error: '查询超时，请稍后重试' };
+      }
+      console.error('Lookup renewal error:', err);
+      return { canRenew: false, error: '查询失败' };
     }
   },
 

@@ -1115,4 +1115,48 @@ router.post('/verify-token', async (req, res) => {
   }
 });
 
+// 续费预校验:验证激活码可续费并返回信息
+router.post('/lookup-renewal', async (req, res) => {
+  const { code } = req.body;
+  if (!code || !/^[A-Za-z0-9\-]{1,64}$/.test(code)) {
+    return res.json({ canRenew: false, error: '激活码格式无效' });
+  }
+  try {
+    const [rows] = await pool.query(
+      'SELECT type, is_active, expires_at, user_email FROM licenses WHERE activation_code = ?',
+      [code.toUpperCase()]
+    );
+    if (rows.length === 0) return res.json({ canRenew: false, error: '激活码不存在' });
+    const lic = rows[0];
+    if (lic.type !== 'year') return res.json({ canRenew: false, error: '永久版无需续费' });
+    if (!lic.is_active) return res.json({ canRenew: false, error: '许可证已撤销,请联系客服' });
+
+    const now = new Date();
+    const exp = lic.expires_at ? new Date(lic.expires_at) : null;
+    // 允许过期 30 天内续费
+    if (exp && exp < now) {
+      const daysOverdue = Math.floor((now - exp) / 86400000);
+      if (daysOverdue > 30) {
+        return res.json({ canRenew: false, error: '许可证已过期超过 30 天,请联系客服续费' });
+      }
+    }
+
+    // 预测续费后到期时间
+    const base = (exp && exp > now) ? exp : now;
+    const newExpiry = new Date(base);
+    newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+
+    res.json({
+      canRenew: true,
+      expiresAt: exp ? exp.toLocaleDateString('zh-CN') : null,
+      newExpiresAt: newExpiry.toLocaleDateString('zh-CN'),
+      price: Number(process.env.PRICE_YEAR || 68),
+      hasEmail: !!lic.user_email
+    });
+  } catch (err) {
+    console.error('Lookup renewal error:', err.message);
+    res.status(500).json({ canRenew: false, error: '服务器错误' });
+  }
+});
+
 module.exports = router;

@@ -184,17 +184,53 @@ const PLAN_SUBJECTS = {
 
 // 创建 Native 支付订单（PC 端扫码支付）
 router.post('/create-order', async (req, res) => {
-  const { type, email } = req.body;
+  const { type, email, renewal_code } = req.body;
 
-  if (!type) {
+  // 续费流程:验证激活码可续费并强制 type='year'
+  let finalType = type;
+  const normalizedRenewalCode = renewal_code ? String(renewal_code).toUpperCase() : null;
+  if (normalizedRenewalCode) {
+    if (!/^[A-Za-z0-9\-]{1,64}$/.test(normalizedRenewalCode)) {
+      return res.status(400).json({ success: false, error: '激活码格式无效' });
+    }
+    try {
+      const [licRows] = await pool.query(
+        'SELECT type, is_active FROM licenses WHERE activation_code = ?',
+        [normalizedRenewalCode]
+      );
+      if (licRows.length === 0) {
+        return res.status(400).json({ success: false, error: '激活码不存在' });
+      }
+      if (licRows[0].type !== 'year') {
+        return res.status(400).json({ success: false, error: '永久版无需续费' });
+      }
+      if (!licRows[0].is_active) {
+        return res.status(400).json({ success: false, error: '许可证已撤销,请联系客服' });
+      }
+      // 检查是否已有 pending 续费订单
+      const [pendingRows] = await pool.query(
+        'SELECT id FROM orders WHERE renewal_for_code = ? AND is_renewal = 1 AND status = ?',
+        [normalizedRenewalCode, 'pending']
+      );
+      if (pendingRows.length > 0) {
+        return res.status(400).json({ success: false, error: '已有未完成的续费订单,请先完成或取消' });
+      }
+    } catch (err) {
+      console.error('Renewal pre-check error:', err.message);
+      return res.status(500).json({ success: false, error: '服务器错误' });
+    }
+    finalType = 'year'; // 强制 year,忽略前端传入的 type
+  }
+
+  if (!finalType) {
     return res.status(400).json({ success: false, error: '参数不完整' });
   }
 
-  if (!PLAN_PRICES[type]) {
+  if (!PLAN_PRICES[finalType]) {
     return res.status(400).json({ success: false, error: '套餐类型无效' });
   }
-  const numAmount = PLAN_PRICES[type];
-  const subject = PLAN_SUBJECTS[type];
+  const numAmount = PLAN_PRICES[finalType];
+  const subject = PLAN_SUBJECTS[finalType];
 
   // P0 安全修复：服务端生成订单号（crypto.randomBytes，CSPRNG），防止客户端可预测订单号导致激活码 IDOR
   const orderNo = 'CG' + crypto.randomBytes(12).toString('hex').toUpperCase();
@@ -208,8 +244,8 @@ router.post('/create-order', async (req, res) => {
     // P1-5 修复：先入库创建 pending 订单，再调微信 API
     // 避免 API 成功 DB 失败导致用户已付款但订单不存在
     await pool.query(
-      'INSERT INTO orders (order_no, plan, price, type, channel, status, user_email) VALUES (?, ?, ?, ?, ?, ?, ?)',
-      [orderNo, subject, numAmount, type, 'wechat', 'pending', email || null]
+      'INSERT INTO orders (order_no, plan, price, type, channel, status, user_email, is_renewal, renewal_for_code) VALUES (?, ?, ?, ?, ?, ?, ?, ?, ?)',
+      [orderNo, subject, numAmount, finalType, 'wechat', 'pending', email || null, normalizedRenewalCode ? 1 : 0, normalizedRenewalCode]
     );
 
     // 请求体
@@ -313,7 +349,7 @@ router.get('/query-order/:orderNo', async (req, res) => {
 
   try {
     const [rows] = await pool.query(
-      'SELECT status, activation_code, type FROM orders WHERE order_no = ?',
+      'SELECT status, activation_code, type, is_renewal FROM orders WHERE order_no = ?',
       [orderNo]
     );
 
@@ -326,11 +362,13 @@ router.get('/query-order/:orderNo', async (req, res) => {
 
     // 注意：激活码完整返回。落地页是用户获取激活码的唯一途径（前端未传 email，邮件发送不可用）。
     // P1-4 通过 IP 频率限制（20次/60秒）降低枚举风险。后续若启用邮件发送，可改为掩码返回。
+    // 续费订单返回被续费的激活码,前端根据 isRenewal 区分显示
     res.json({
       paid: isPaid,
       status: order.status,
       activationCode: isPaid && order.activation_code ? order.activation_code : undefined,
       type: order.type,
+      isRenewal: !!order.is_renewal,
     });
   } catch (error) {
     console.error('WeChat query order error:', error.message);
@@ -448,28 +486,80 @@ const handleNotify = async (req, res) => {
           ['completed', new Date(), transaction_id, order.id]
         );
 
-        // 生成激活码（与 admin.js /orders/:orderNo/complete 逻辑一致）
-        const prefixMap = { year: 'YEAR', lifetime: 'PRO' };
-        const prefix = prefixMap[order.type] || 'YEAR';
-        const code = generateSecureCode(prefix);
-        await conn.query(
-          'INSERT INTO activation_codes (code, type, status, batch_id) VALUES (?, ?, ?, ?)',
-          [code, order.type || 'year', 'unused', generateBatchId()]
+        // 读取订单的 is_renewal 和 renewal_for_code
+        const [orderRows] = await conn.query(
+          'SELECT is_renewal, renewal_for_code FROM orders WHERE order_no = ?',
+          [out_trade_no]
         );
-        await conn.query(
-          'UPDATE orders SET activation_code = ? WHERE id = ?',
-          [code, order.id]
-        );
+        const orderInfo = orderRows[0];
+        const isRenewalOrder = !!(orderInfo && orderInfo.is_renewal && orderInfo.renewal_for_code);
+        let newPurchaseCode = null;
+
+        if (isRenewalOrder) {
+          // 续费分支:延期 license,不生成新激活码
+          const [licRows] = await conn.query(
+            'SELECT id, type, is_active, expires_at FROM licenses WHERE activation_code = ? FOR UPDATE',
+            [orderInfo.renewal_for_code]
+          );
+          if (licRows.length > 0) {
+            const lic = licRows[0];
+            const now = new Date();
+            const currentExpiry = lic.expires_at ? new Date(lic.expires_at) : now;
+            const base = currentExpiry > now ? currentExpiry : now;
+            const newExpiry = new Date(base);
+            newExpiry.setFullYear(newExpiry.getFullYear() + 1);
+            await conn.query(
+              'UPDATE licenses SET expires_at = ?, is_active = TRUE, reminder_sent_at = NULL WHERE id = ?',
+              [newExpiry, lic.id]
+            );
+            // orders.activation_code 写入被续费的激活码
+            await conn.query(
+              'UPDATE orders SET activation_code = ? WHERE order_no = ?',
+              [orderInfo.renewal_for_code, out_trade_no]
+            );
+            console.log(`License renewed: ${orderInfo.renewal_for_code}, new expiry: ${newExpiry.toISOString()}`);
+            // 续费成功邮件（异步,不阻塞）
+            if (order.user_email) {
+              try {
+                const { sendRenewalSuccessEmail } = require('./mail');
+                if (typeof sendRenewalSuccessEmail === 'function') {
+                  sendRenewalSuccessEmail(order.user_email, {
+                    activationCode: orderInfo.renewal_for_code,
+                    newExpiresAt: newExpiry.toLocaleDateString('zh-CN'),
+                    orderNo: out_trade_no
+                  }).catch(err => console.error('续费邮件失败:', err.message));
+                }
+              } catch (err) {
+                console.error('续费邮件加载失败:', err.message);
+              }
+            }
+          } else {
+            console.error('Renewal: license not found:', orderInfo.renewal_for_code);
+          }
+        } else {
+          // 原有新购买分支:生成新激活码（与 admin.js /orders/:orderNo/complete 逻辑一致）
+          const prefixMap = { year: 'YEAR', lifetime: 'PRO' };
+          const prefix = prefixMap[order.type] || 'YEAR';
+          newPurchaseCode = generateSecureCode(prefix);
+          await conn.query(
+            'INSERT INTO activation_codes (code, type, status, batch_id) VALUES (?, ?, ?, ?)',
+            [newPurchaseCode, order.type || 'year', 'unused', generateBatchId()]
+          );
+          await conn.query(
+            'UPDATE orders SET activation_code = ? WHERE id = ?',
+            [newPurchaseCode, order.id]
+          );
+        }
 
         await conn.commit();
         console.log('WeChat order updated:', out_trade_no);
 
-        // 异步发送激活码邮件（不阻塞回调响应）
-        if (order.user_email) {
+        // 异步发送激活码邮件（仅新购买分支,不阻塞回调响应）
+        if (newPurchaseCode && order.user_email) {
           const planName = order.type === 'lifetime' ? '终身版' : '年付版';
           const expiresAt = order.type === 'lifetime' ? '永久有效' : new Date(Date.now() + 365 * 86400 * 1000).toLocaleDateString('zh-CN');
           sendActivationCodeEmail(order.user_email, {
-            activationCode: code,
+            activationCode: newPurchaseCode,
             plan: planName,
             orderNo: out_trade_no,
             expiresAt,
