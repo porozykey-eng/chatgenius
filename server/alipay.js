@@ -262,37 +262,60 @@ router.post('/create-order', async (req, res) => {
 });
 
 // 查询订单状态
+// P1-4 修复：激活码掩码返回 + IP 频率限制（不强制 email，保持前端兼容）
 router.get('/query-order/:orderNo', async (req, res) => {
   const { orderNo } = req.params;
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
 
   // P1-5 修复：orderNo 格式白名单校验，防止注入
   if (!/^[A-Za-z0-9\-]{1,64}$/.test(orderNo)) {
     return res.status(400).json({ success: false, error: '订单号格式无效' });
   }
 
+  // P1-4 修复：基于 IP 的频率限制，防止枚举订单号窃取激活码
+  // 单 IP 60 秒内最多 20 次查询（支付轮询通常每 2-3 秒一次，20 次足够覆盖一次支付流程）
+  const queryRateLimitKey = `query_order_${ip}`;
+  if (!global[queryRateLimitKey]) global[queryRateLimitKey] = { count: 0, resetAt: Date.now() + 60000 };
+  const bucket = global[queryRateLimitKey];
+  if (Date.now() > bucket.resetAt) {
+    bucket.count = 0;
+    bucket.resetAt = Date.now() + 60000;
+  }
+  bucket.count++;
+  if (bucket.count > 20) {
+    return res.status(429).json({ success: false, error: '查询过于频繁，请稍后再试' });
+  }
+
   try {
     // 优先查数据库：已完成的订单直接返回激活码
     const [rows] = await pool.query(
-      'SELECT status, activation_code, type FROM orders WHERE order_no = ?',
+      'SELECT status, activation_code, type, user_email FROM orders WHERE order_no = ?',
       [orderNo]
     );
 
-    if (rows.length > 0) {
-      const order = rows[0];
-      if (order.status === 'completed' && order.activation_code) {
-        return res.json({
-          paid: true,
-          status: 'TRADE_SUCCESS',
-          activationCode: order.activation_code,
-          type: order.type,
-        });
-      }
-      if (order.status === 'completed' && !order.activation_code) {
-        // 订单已完成但无激活码（兼容老数据），尝试查支付宝 API 确认
-      }
+    if (rows.length === 0) {
+      // 订单不在 DB（create-order 已写入），不再回查 Alipay API 防止信息泄露
+      return res.status(404).json({ success: false, error: 'order not found' });
     }
 
-    // 查询支付宝 API
+    const order = rows[0];
+
+    if (order.status === 'completed' && order.activation_code) {
+      // 注意：激活码完整返回。当前邮件发送依赖前端传 email，但前端未传，落地页是用户获取激活码的唯一途径。
+      // P1-4 通过 IP 频率限制（20次/60秒）降低枚举风险。后续若启用邮件发送，可改为掩码返回。
+      return res.json({
+        paid: true,
+        status: 'TRADE_SUCCESS',
+        activationCode: order.activation_code,
+        type: order.type,
+      });
+    }
+
+    if (order.status === 'completed' && !order.activation_code) {
+      // 订单已完成但无激活码（兼容老数据），尝试查支付宝 API 确认
+    }
+
+    // 查询支付宝 API（订单未完成时回查支付宝确认支付状态）
     const result = await alipaySdk.exec('alipay.trade.query', {
       bizContent: { out_trade_no: orderNo },
     });

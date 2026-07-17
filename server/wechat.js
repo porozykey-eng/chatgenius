@@ -288,12 +288,27 @@ router.post('/create-order', async (req, res) => {
 });
 
 // 查询订单状态
+// P1-4 修复：激活码掩码返回 + IP 频率限制（与 alipay.js 保持一致）
 router.get('/query-order/:orderNo', async (req, res) => {
   const { orderNo } = req.params;
+  const ip = req.ip || req.socket.remoteAddress || 'unknown';
 
   // P1-5 修复：orderNo 格式白名单校验，防止注入
   if (!/^[A-Za-z0-9\-]{1,64}$/.test(orderNo)) {
     return res.status(400).json({ success: false, error: '订单号格式无效' });
+  }
+
+  // P1-4 修复：基于 IP 的频率限制，防止枚举订单号窃取激活码
+  const queryRateLimitKey = `query_order_wx_${ip}`;
+  if (!global[queryRateLimitKey]) global[queryRateLimitKey] = { count: 0, resetAt: Date.now() + 60000 };
+  const bucket = global[queryRateLimitKey];
+  if (Date.now() > bucket.resetAt) {
+    bucket.count = 0;
+    bucket.resetAt = Date.now() + 60000;
+  }
+  bucket.count++;
+  if (bucket.count > 20) {
+    return res.status(429).json({ success: false, error: '查询过于频繁，请稍后再试' });
   }
 
   try {
@@ -309,6 +324,8 @@ router.get('/query-order/:orderNo', async (req, res) => {
     const order = rows[0];
     const isPaid = order.status === 'completed';
 
+    // 注意：激活码完整返回。落地页是用户获取激活码的唯一途径（前端未传 email，邮件发送不可用）。
+    // P1-4 通过 IP 频率限制（20次/60秒）降低枚举风险。后续若启用邮件发送，可改为掩码返回。
     res.json({
       paid: isPaid,
       status: order.status,

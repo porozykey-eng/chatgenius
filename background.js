@@ -36,6 +36,11 @@ chrome.runtime.onStartup.addListener(async () => {
 // License verification function
 async function verifyLicenseOnStartup() {
   try {
+    // P1-15 修复:如果上次 forceLogout 失败,优先重试,不继续 license 检查
+    if (pendingForceLogout) {
+      await forceLogout(forceLogoutReason);
+      return;
+    }
     // P1-8 修复：licenseCode 改存 chrome.storage.local（敏感凭据不进 sync）
     const { licenseType } = await chrome.storage.sync.get(['licenseType']);
     const { licenseCode } = await chrome.storage.local.get(['licenseCode']);
@@ -46,7 +51,7 @@ async function verifyLicenseOnStartup() {
         const apiUrl = API_BASE_URL; // SYNC: must match options.js
         // Sanitize licenseCode to prevent URL injection
         const safeCode = encodeURIComponent(String(licenseCode).slice(0, 64));
-        const response = await fetch(`${apiUrl}/api/license/status/${safeCode}`);
+        const response = await fetchWithRetry(`${apiUrl}/api/license/status/${safeCode}`, {}, 1); // P1-12 修复:retries=1,超时由全局 FETCH_TIMEOUT(30s)控制
         
         if (!response.ok) {
           // Server error (5xx) or unexpected status: don't downgrade, use local cache
@@ -109,6 +114,11 @@ chrome.alarms.onAlarm.addListener((alarm) => {
 // Send heartbeat to server — verifies fingerprint consistency
 async function sendHeartbeat() {
   try {
+    // P1-15 修复:如果上次 forceLogout 失败,优先重试,不继续心跳
+    if (pendingForceLogout) {
+      await forceLogout(forceLogoutReason);
+      return;
+    }
     // P1-8 修复：licenseCode 改存 chrome.storage.local
     const { licenseType } = await chrome.storage.sync.get(['licenseType']);
     const { licenseCode } = await chrome.storage.local.get(['licenseCode']);
@@ -146,7 +156,7 @@ async function sendHeartbeat() {
     // 请求时间戳（服务端用于防重放校验）
     const timestamp = Date.now().toString();
 
-    const response = await fetch(`${API_BASE_URL}/api/license/heartbeat`, {
+    const response = await fetchWithRetry(`${API_BASE_URL}/api/license/heartbeat`, {
       method: 'POST',
       headers: { 'Content-Type': 'application/json' },
       body: JSON.stringify({
@@ -154,7 +164,7 @@ async function sendHeartbeat() {
         fingerprint,
         timestamp
       })
-    });
+    }, 2); // P1-12 修复:retries=2(心跳可重试),超时由全局 FETCH_TIMEOUT(30s)控制
 
     if (!response.ok) {
       console.warn(`Heartbeat HTTP ${response.status}, will retry next alarm`);
@@ -177,53 +187,73 @@ async function sendHeartbeat() {
   }
 }
 
+// P1-15 修复:forceLogout 重试与持久化标志——失败后下次 license 检查时重试
+let pendingForceLogout = false;
+let forceLogoutReason = null;
+
 // Force logout — downgrade to free and clear sensitive data
 async function forceLogout(reason) {
-  try {
-    // Downgrade to free
-    await chrome.storage.sync.set({
-      licenseType: 'free',
-      licenseInvalid: true
-    });
-    // P1-8 修复：licenseCode 改存 chrome.storage.local
-    await chrome.storage.local.set({ licenseCode: null });
+  // 标记待强制登出(失败后下次 license 检查时会重试)
+  pendingForceLogout = true;
+  forceLogoutReason = reason;
 
-    // P1-4 修复：apiKey 已迁移到 local，清理 local 而非 sync
-    await chrome.storage.local.remove(['apiKey', 'apiProvider']);
-
-    // Clear local heartbeat cache
-    await chrome.storage.local.remove(['lastHeartbeatAt']);
-
-    // Notify all open tabs to refresh UI
+  const maxRetries = 3;
+  for (let attempt = 1; attempt <= maxRetries; attempt++) {
     try {
-      const tabs = await chrome.tabs.query({});
-      for (const tab of tabs) {
-        if (tab.id) {
-          chrome.tabs.sendMessage(tab.id, {
-            action: 'LICENSE_REVOKED',
-            reason: reason
-          }).catch(() => { /* tab may not have listener */ });
-        }
-      }
-    } catch (e) {
-      // Ignore tab messaging errors
-    }
-
-    // Show desktop notification
-    if (chrome.notifications) {
-      chrome.notifications.create({
-        type: 'basic',
-        iconUrl: 'icons/icon128.png',
-        title: chrome.i18n.getMessage('licenseInvalidTitle') || 'License invalidated',
-        message: reason || (chrome.i18n.getMessage('licenseInvalidMsg') || 'Your license has been activated on another device. This device has been logged out automatically.'),
-        priority: 2
+      // Downgrade to free
+      await chrome.storage.sync.set({
+        licenseType: 'free',
+        licenseInvalid: true
       });
-    }
+      // P1-8 修复：licenseCode 改存 chrome.storage.local
+      await chrome.storage.local.set({ licenseCode: null });
 
-    console.warn('Force logout completed:', reason);
-  } catch (err) {
-    console.error('Force logout failed:', err);
+      // P1-4 修复：apiKey 已迁移到 local，清理 local 而非 sync
+      await chrome.storage.local.remove(['apiKey', 'apiProvider']);
+
+      // Clear local heartbeat cache
+      await chrome.storage.local.remove(['lastHeartbeatAt']);
+
+      // Notify all open tabs to refresh UI
+      try {
+        const tabs = await chrome.tabs.query({});
+        for (const tab of tabs) {
+          if (tab.id) {
+            chrome.tabs.sendMessage(tab.id, {
+              action: 'LICENSE_REVOKED',
+              reason: reason
+            }).catch(() => { /* tab may not have listener */ });
+          }
+        }
+      } catch (e) {
+        // Ignore tab messaging errors
+      }
+
+      // Show desktop notification
+      if (chrome.notifications) {
+        chrome.notifications.create({
+          type: 'basic',
+          iconUrl: 'icons/icon128.png',
+          title: chrome.i18n.getMessage('licenseInvalidTitle') || 'License invalidated',
+          message: reason || (chrome.i18n.getMessage('licenseInvalidMsg') || 'Your license has been activated on another device. This device has been logged out automatically.'),
+          priority: 2
+        });
+      }
+
+      // 成功,清除待重试标志
+      pendingForceLogout = false;
+      forceLogoutReason = null;
+      console.warn('Force logout completed:', reason);
+      return;
+    } catch (err) {
+      console.error(`Force logout attempt ${attempt} failed:`, err);
+      if (attempt < maxRetries) {
+        await new Promise(r => setTimeout(r, 1000 * attempt)); // 指数退避
+      }
+    }
   }
+  // 所有重试均失败:保留 pendingForceLogout=true,下次 license 检查时重试
+  console.error('All force logout retries failed, will retry on next license check');
 }
 
 // Background fingerprint generator (fallback when options page hasn't cached one)
@@ -619,14 +649,14 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
                 await chrome.storage.local.set({ deviceFingerprint: fingerprint });
               }
             }
-            const verifyResponse = await fetch(`${API_BASE_URL}/api/license/verify-token`, {
+            const verifyResponse = await fetchWithRetry(`${API_BASE_URL}/api/license/verify-token`, {
               method: 'POST',
               headers: { 'Content-Type': 'application/json' },
               body: JSON.stringify({
                 licenseCode: data.licenseCode,
                 fingerprint: fingerprint
               })
-            });
+            }, 1); // P1-12 修复:retries=1(避免重试导致重复验证),超时由全局 FETCH_TIMEOUT(30s)控制
             if (verifyResponse.ok) {
               const verifyResult = await verifyResponse.json();
               if (!verifyResult.allowed) {
@@ -742,13 +772,19 @@ chrome.runtime.onMessage.addListener((request, sender, sendResponse) => {
       } catch (error) {
         // Roll back daily count if it was incremented but request failed
         if (dailyCountIncremented) {
-          try {
-            const usageData = await chrome.storage.local.get(['dailyReplyCount']);
-            const currentCount = usageData.dailyReplyCount || 1;
-            await chrome.storage.local.set({ dailyReplyCount: Math.max(0, currentCount - 1) });
-          } catch (rollbackErr) {
-            console.warn('Failed to rollback daily count:', rollbackErr);
-          }
+          // P1-14 修复:配额回滚加锁,避免并发失败导致计数误差
+          await new Promise((resolve) => {
+            _dailyLimitLock = _dailyLimitLock.then(async () => {
+              try {
+                const usageData = await chrome.storage.local.get(['dailyReplyCount']);
+                const currentCount = usageData.dailyReplyCount || 1;
+                await chrome.storage.local.set({ dailyReplyCount: Math.max(0, currentCount - 1) });
+              } catch (rollbackErr) {
+                console.warn('Failed to rollback daily count:', rollbackErr);
+              }
+              resolve();
+            }).catch(() => { resolve(); }); // 防御性 catch,防止链断裂
+          });
         }
         
         // Track failed requests

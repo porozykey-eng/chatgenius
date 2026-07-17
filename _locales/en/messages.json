@@ -7,6 +7,10 @@
     "message": "AI-powered auto-reply assistant for WhatsApp, Messenger and Facebook, with multi-model AI support, custom personas, and smart knowledge base integration.",
     "description": "Description of the extension"
   },
+  "draftProtected": {
+    "message": "Draft protected. AI reply generated but not auto-filled. Click AI button to view.",
+    "description": "Shown when user draft is protected from auto-reply"
+  },
   "aiReply": {
     "message": "AI Reply",
     "description": "Floating button tooltip title"

@@ -1973,6 +1973,47 @@ function _hasUnrepliedMessage(platform) {
   return true;
 }
 
+// P1-13 修复:保护用户草稿,避免自动回复覆盖
+// 仅用于自动回复模式;用户手动点击 AI 按钮/预览插入不受此保护(那属于用户主动行为)
+async function protectDraftAndFill(aiReply, platform) {
+  // 定位输入框(与 typewriterInsert 一致的查询逻辑)
+  let inputEl = null;
+  if (platform === PLATFORMS.WHATSAPP) {
+    inputEl = document.querySelector('#main footer div[contenteditable="true"][data-tab="10"]') ||
+              document.querySelector('#main footer div[contenteditable="true"]');
+  } else if (platform === PLATFORMS.MESSENGER) {
+    inputEl = document.querySelector('div[contenteditable="true"][role="textbox"]') ||
+              document.querySelector('div[aria-label="Message"][contenteditable="true"]') ||
+              document.querySelector('div[aria-label="Message"]');
+  }
+  if (!inputEl) {
+    // 输入框找不到,退回原填充逻辑
+    return await typewriterInsert(aiReply, platform);
+  }
+
+  // 读取当前草稿(input/textarea 用 value,contenteditable 用 textContent/innerText)
+  let currentDraft = '';
+  if (inputEl.tagName === 'INPUT' || inputEl.tagName === 'TEXTAREA') {
+    currentDraft = inputEl.value || '';
+  } else {
+    currentDraft = inputEl.textContent || inputEl.innerText || '';
+  }
+
+  // 用户已有草稿(非空且与 AI 回复不同)则不自动覆盖
+  if (currentDraft.trim().length > 0 && currentDraft.trim() !== aiReply.trim()) {
+    showToast(
+      chrome.i18n.getMessage('draftProtected') || 'Draft protected. AI reply generated but not auto-filled. Click AI button to view.',
+      'info',
+      5000
+    );
+    // 保存 AI 回复供用户手动选择
+    window.__pendingAiReply = aiReply;
+    return 'protected'; // 草稿已保护,未填充(三态: true=已填充 / 'protected'=草稿保护 / false=技术失败)
+  }
+  // 无草稿或草稿与回复相同,正常填充
+  return await typewriterInsert(aiReply, platform);
+}
+
 async function _autoGenerateAndInsert() {
   if (_autoReplyInProgress) return;
   const platform = detectPlatform();
@@ -2035,10 +2076,12 @@ async function _autoGenerateAndInsert() {
       // 在悬浮按钮上显示"输入中..."状态
       if (btn) _setButtonStatus(btn, 'typing', chrome.i18n.getMessage('typing') || 'Typing');
       try {
-        const success = await typewriterInsert(response.reply, platform);
+        const fillResult = await protectDraftAndFill(response.reply, platform); // P1-13 修复:保护用户草稿,自动回复不覆盖已有输入
         if (btn) _resetButtonStatus(btn);
-        if (success) {
+        if (fillResult === true) {
           showToast(chrome.i18n.getMessage('replyGeneratedCheck') || 'Reply generated, please review before sending', 'success', 4000);
+        } else if (fillResult === 'protected') {
+          // P1-13:草稿已保护,protectDraftAndFill 已提示用户并将 AI 回复保存至 window.__pendingAiReply,不重复弹窗
         } else {
           // 插入失败则回退到预览弹窗
           showPreviewModal(response.reply);

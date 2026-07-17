@@ -7,6 +7,10 @@
     "message": "为 WhatsApp、Messenger 和 Facebook 提供 AI 智能自动回复，支持多种 AI 模型、自定义角色与知识库。",
     "description": "Description of the extension"
   },
+  "draftProtected": {
+    "message": "已保护你的草稿，AI 回复已生成但未自动填充，点击 AI 按钮查看",
+    "description": "Shown when user draft is protected from auto-reply"
+  },
   "aiReply": {
     "message": "AI 回复",
     "description": "Floating button tooltip title"

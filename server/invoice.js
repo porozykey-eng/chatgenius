@@ -26,9 +26,13 @@ function isValidEmail(email) {
   return /^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(email);
 }
 
-// 纳税人识别号校验（18位统一社会信用代码或15位/20位税号）
+// P1-21 修复：纳税人识别号校验（18位统一社会信用代码或15位营业执照注册号，不支持20位）
+const TAX_ID_PATTERN = /^[0-9A-Z]{15}$|^[0-9A-Z]{18}$/;
 function isValidTaxNumber(tax) {
-  return /^[A-Z0-9]{15,20}$/.test(tax);
+  if (!tax || !TAX_ID_PATTERN.test(tax)) {
+    return false;
+  }
+  return true;
 }
 
 // POST /api/invoice/submit - 提交发票申请
@@ -63,7 +67,7 @@ router.post('/submit', invoiceLimiter, async (req, res) => {
       return res.status(400).json({ success: false, error: '企业发票必须填写纳税人识别号' });
     }
     if (!isValidTaxNumber(taxNumber)) {
-      return res.status(400).json({ success: false, error: '纳税人识别号格式不正确（15-20位字母或数字）' });
+      return res.status(400).json({ success: false, error: '税号必须为 15 位营业执照注册号或 18 位统一社会信用代码' });
     }
   }
 
@@ -73,7 +77,7 @@ router.post('/submit', invoiceLimiter, async (req, res) => {
     await conn.beginTransaction();
     // 验证订单存在且已完成（行锁，防并发）
     const [orders] = await conn.query(
-      'SELECT order_no, price, status, activation_code, type FROM orders WHERE order_no = ? FOR UPDATE',
+      'SELECT order_no, price, status, activation_code, type, completed_at FROM orders WHERE order_no = ? FOR UPDATE',
       [orderNo]
     );
 
@@ -86,6 +90,22 @@ router.post('/submit', invoiceLimiter, async (req, res) => {
     if (order.status !== 'completed') {
       await conn.rollback();
       return res.status(400).json({ success: false, error: '订单未完成，无法申请发票' });
+    }
+
+    // P1-20 修复：跨年订单不可开票（违反《发票管理办法》）
+    if (order.completed_at) {
+      const completedDate = new Date(order.completed_at);
+      const now = new Date();
+      const currentYear = now.getFullYear();
+      const orderYear = completedDate.getFullYear();
+      if (orderYear < currentYear) {
+        await conn.rollback();
+        return res.status(400).json({
+          success: false,
+          error: '该订单完成时间跨年，无法开具发票，请联系客服',
+          code: 'CROSS_YEAR_INVOICE'
+        });
+      }
     }
 
     // P1-2 修复：校验订单归属（激活码必须属于此订单，通过 orders.activation_code 关联）
