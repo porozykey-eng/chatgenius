@@ -2675,6 +2675,7 @@ function initApp() {
   const statRepliesEl = document.getElementById('statReplies');
   const statSuccessEl = document.getElementById('statSuccess');
   const statQuotaEl = document.getElementById('statQuota');
+  const footerStatQuotaEl = document.getElementById('footerStatQuota');
 
   function updateStats() {
     chrome.storage.local.get({ totalReplies: 0, successCount: 0, failedCount: 0 }, (data) => {
@@ -2707,6 +2708,20 @@ function initApp() {
         return;
       }
       const licenseType = licenseData.licenseType || 'free';
+      // Hero 许可证状态显示
+      const heroLicenseValueEl = document.getElementById('heroLicenseValue');
+      if (heroLicenseValueEl) {
+        if (licenseType === 'lifetime') {
+          heroLicenseValueEl.textContent = '✨ 永久版';
+          heroLicenseValueEl.style.color = 'var(--success)';
+        } else if (licenseType === 'year') {
+          heroLicenseValueEl.textContent = '✨ 年度版';
+          heroLicenseValueEl.style.color = 'var(--success)';
+        } else {
+          heroLicenseValueEl.textContent = '免费版';
+          heroLicenseValueEl.style.color = 'var(--text-primary)';
+        }
+      }
       if (licenseType === 'free') {
         chrome.storage.local.get(['dailyReplyCount', 'lastResetDate'], (usageData) => {
           if (chrome.runtime.lastError) {
@@ -2715,10 +2730,14 @@ function initApp() {
           }
           const today = new Date().toISOString().split('T')[0];
           const effectiveCount = usageData.lastResetDate === today ? (usageData.dailyReplyCount || 0) : 0;
-          if (statQuotaEl) statQuotaEl.textContent = effectiveCount + '/' + DAILY_LIMIT;
+          const quotaText = effectiveCount + '/' + DAILY_LIMIT;
+          if (statQuotaEl) statQuotaEl.textContent = quotaText;
+          if (footerStatQuotaEl) footerStatQuotaEl.textContent = quotaText;
         });
       } else {
-        if (statQuotaEl) statQuotaEl.textContent = I18N[currentLang]['statPro' + (licenseType === 'lifetime' ? 'Lifetime' : 'Year')] || licenseType;
+        const proText = I18N[currentLang]['statPro' + (licenseType === 'lifetime' ? 'Lifetime' : 'Year')] || licenseType;
+        if (statQuotaEl) statQuotaEl.textContent = proText;
+        if (footerStatQuotaEl) footerStatQuotaEl.textContent = proText;
       }
     });
   }
@@ -2821,38 +2840,37 @@ function initApp() {
     }
   }
 
-  // === Dashboard 信息卡数据填充 ===
+  // === Dashboard 信息卡数据填充(兼容 Hero 区) ===
   function updateDashboard() {
-    // 当前 AI 角色
+    // 当前 AI 角色(若存在)
     const dashPersona = document.getElementById('dashCurrentPersona');
     if (dashPersona) {
       const active = personas.find(p => p.id === activePersonaId);
       dashPersona.textContent = active ? (active.name || 'Unnamed') : 'None';
     }
 
-    // 模型状态
+    // 模型状态(Hero 区 #dashModelName)
     const dashModel = document.getElementById('dashModelName');
-    const dashModelStatus = document.getElementById('dashModelStatus');
-    if (dashModel && dashModelStatus) {
-      chrome.storage.local.get(['apiKey', 'apiUrl', 'modelName'], (data) => {
+    if (dashModel) {
+      chrome.storage.local.get(['apiKey', 'apiUrl', 'modelName', 'connectionValid'], (data) => {
         if (chrome.runtime.lastError) return;
         if (data.apiKey && data.apiUrl) {
-          dashModel.textContent = data.modelName || 'Custom';
-          chrome.storage.local.get(['connectionValid'], (localData) => {
-            if (localData.connectionValid === true) {
-              dashModelStatus.innerHTML = '<span class="status-dot online"></span><span>Online</span>';
-            } else {
-              dashModelStatus.innerHTML = '<span class="status-dot idle"></span><span>未测试</span>';
-            }
-          });
+          const modelName = data.modelName || 'Custom';
+          if (data.connectionValid === true) {
+            dashModel.textContent = modelName;
+            dashModel.style.color = 'var(--success)';
+          } else {
+            dashModel.textContent = modelName;
+            dashModel.style.color = 'var(--text-primary)';
+          }
         } else {
           dashModel.textContent = '未配置';
-          dashModelStatus.innerHTML = '<span class="status-dot offline"></span><span>未连接</span>';
+          dashModel.style.color = 'var(--text-tertiary)';
         }
       });
     }
 
-    // 知识库统计
+    // 知识库统计(若存在)
     const dashKnowledge = document.getElementById('dashKnowledgeCount');
     const dashDocs = document.getElementById('dashKnowledgeDocs');
     if (dashKnowledge && dashDocs) {

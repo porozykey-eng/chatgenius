@@ -21,8 +21,8 @@
       --border: #ededed;
       --border-strong: #d4d4d4;
       --text-primary: #1a1a1a;
-      --text-secondary: #666666;
-      --text-tertiary: #999999;
+      --text-secondary: #4b5563;
+      --text-tertiary: #6b7280;
       --accent: #4361ee;
       --accent-hover: #3451d1;
       --accent-active: #2a40b8;
@@ -57,8 +57,8 @@
       --border: #262626;
       --border-strong: #404040;
       --text-primary: #fafafa;
-      --text-secondary: #999999;
-      --text-tertiary: #666666;
+      --text-secondary: #d1d5db;
+      --text-tertiary: #9ca3af;
       --accent: #4361ee;
       --accent-hover: #5571f5;
       --accent-active: #6782f7;
@@ -84,7 +84,7 @@
       padding: 0;
       height: 100%;
       font-family: var(--font);
-      font-size: 13px;
+      font-size: 14px;
       line-height: 1.5;
       background: var(--bg);
       color: var(--text-primary);
@@ -101,7 +101,7 @@
     }
     input, select, textarea {
       font-family: inherit;
-      font-size: 13px;
+      font-size: 14px;
       color: var(--text-primary);
     }
     a { color: var(--accent); text-decoration: none; }
@@ -237,9 +237,9 @@
       min-height: 0;
     }
 
-    /* ---------- Sidebar (56px narrow) ---------- */
+    /* ---------- Sidebar (200px with icon + text) ---------- */
     .sidebar {
-      width: 56px;
+      width: 220px;
       flex-shrink: 0;
       position: sticky;
       top: 48px;
@@ -247,29 +247,33 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 12px 8px;
+      padding: 16px 12px;
       border-right: 1px solid var(--border);
       background: var(--bg);
     }
     .sidebar-nav {
       display: flex;
       flex-direction: column;
-      gap: 4px;
+      gap: 2px;
     }
     .nav-item {
       position: relative;
-      width: 40px;
-      height: 40px;
+      width: 100%;
+      height: 38px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 12px;
+      padding: 0 12px;
       border-radius: var(--radius-sm);
       color: var(--text-secondary);
       transition: var(--transition);
       border: none;
       background: transparent;
+      font-size: 14px;
+      font-weight: 500;
     }
-    .nav-item svg { width: 18px; height: 18px; }
+    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .nav-item-label { font-size: 14px; }
     .nav-item:hover {
       background: var(--bg-hover);
       color: var(--text-primary);
@@ -282,88 +286,143 @@
     .nav-item.active::before {
       content: "";
       position: absolute;
-      left: -8px;
+      left: -12px;
       top: 50%;
       transform: translateY(-50%);
-      width: 2px;
+      width: 3px;
       height: 20px;
       background: var(--accent);
       border-radius: 0 2px 2px 0;
     }
-    /* Tooltip label (shown on hover) */
-    .nav-item-label {
-      position: absolute;
-      left: calc(100% + 12px);
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--bg-elevated);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-md);
-      padding: 4px 10px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 500;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 150ms ease;
-      z-index: 1000;
-    }
-    .nav-item:hover .nav-item-label { opacity: 1; }
 
     .sidebar-divider {
       height: 1px;
       background: var(--border);
-      margin: 8px 4px;
+      margin: 12px 4px;
     }
-    .sidebar-footer { display: flex; flex-direction: column; gap: 4px; }
+    .sidebar-footer { display: flex; flex-direction: column; gap: 2px; }
     .theme-toggle {
       position: relative;
-      width: 40px;
-      height: 40px;
+      width: 100%;
+      height: 38px;
       display: flex;
       align-items: center;
-      justify-content: center;
+      gap: 12px;
+      padding: 0 12px;
       border-radius: var(--radius-sm);
       color: var(--text-secondary);
       transition: var(--transition);
+      font-size: 14px;
+      font-weight: 500;
     }
     .theme-toggle:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .theme-toggle svg { width: 18px; height: 18px; }
-    .theme-toggle-label {
-      position: absolute;
-      left: calc(100% + 12px);
-      top: 50%;
-      transform: translateY(-50%);
-      background: var(--bg-elevated);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      box-shadow: var(--shadow-md);
-      padding: 4px 10px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 500;
-      white-space: nowrap;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 150ms ease;
-      z-index: 1000;
-    }
-    .theme-toggle:hover .theme-toggle-label { opacity: 1; }
+    .theme-toggle svg { width: 18px; height: 18px; flex-shrink: 0; }
 
     /* ---------- Main Content ---------- */
     .main-content {
       flex: 1;
       min-width: 0;
-      padding: 32px 40px 80px;
+      padding: 28px 40px 80px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-    .main-content > * { width: 100%; max-width: 720px; }
+    .main-content > * { width: 100%; max-width: 880px; }
 
-    .hero-header, .dashboard-cards { display: none; }
+    /* Tab Content 切换动画 */
+    .tab-content { display: none; }
+    .tab-content.active {
+      display: block;
+      animation: tabFadeIn 180ms ease-out;
+    }
+    @keyframes tabFadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* ---------- Hero Section (品牌锚点 + 状态摘要) ---------- */
+    .hero-section {
+      width: 100%;
+      max-width: 880px;
+      margin-bottom: 24px;
+      padding: 20px 24px;
+      background: var(--bg-card);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      flex-wrap: wrap;
+    }
+    .hero-brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+      min-width: 0;
+    }
+    .hero-logo {
+      width: 44px;
+      height: 44px;
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
+      color: #fff;
+      border-radius: var(--radius-md);
+      box-shadow: 0 2px 8px var(--accent-glow);
+    }
+    .hero-logo svg { width: 22px; height: 22px; }
+    .hero-brand-text { min-width: 0; }
+    .hero-title {
+      margin: 0;
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.01em;
+      line-height: 1.3;
+    }
+    .hero-subtitle {
+      margin: 2px 0 0;
+      font-size: 13px;
+      color: var(--text-tertiary);
+      line-height: 1.4;
+    }
+    .hero-status-row {
+      display: flex;
+      align-items: center;
+      gap: 16px;
+      flex-wrap: wrap;
+    }
+    .hero-status-item {
+      display: flex;
+      flex-direction: column;
+      gap: 2px;
+      min-width: 0;
+    }
+    .hero-status-label {
+      font-size: 11px;
+      font-weight: 500;
+      color: var(--text-tertiary);
+      text-transform: uppercase;
+      letter-spacing: 0.04em;
+    }
+    .hero-status-value {
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+      max-width: 160px;
+      overflow: hidden;
+      text-overflow: ellipsis;
+      white-space: nowrap;
+    }
+    .hero-status-divider {
+      width: 1px;
+      height: 28px;
+      background: var(--border);
+    }
 
     /* Hidden DOM (keeps ids but invisible) */
     .hidden-dom { display: none !important; }
@@ -1293,14 +1352,16 @@
     .privacy-notice {
       display: flex;
       align-items: center;
-      gap: 6px;
-      padding: 10px 12px;
-      margin-top: 16px;
+      gap: 8px;
+      padding: 12px 16px;
+      margin-top: 24px;
       background: var(--bg-card);
       border: 1px solid var(--border);
+      border-top: 2px solid var(--accent);
       border-radius: var(--radius-sm);
-      font-size: 11px;
+      font-size: 12px;
       color: var(--text-secondary);
+      box-shadow: var(--shadow-sm);
     }
     .privacy-notice-icon { color: var(--accent); flex-shrink: 0; }
 
@@ -1628,7 +1689,7 @@
         <span class="page-title" data-i18n="title">ChatGenius AI 设置</span>
       </div>
       <div class="top-bar-right">
-        <button class="icon-btn search-trigger" id="cmdTrigger" type="button" aria-label="搜索设置">
+        <button class="icon-btn search-trigger" id="cmdTrigger" type="button" aria-label="搜索设置" title="搜索设置、角色、FAQ (⌘K)">
           <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <circle cx="11" cy="11" r="8"></circle>
             <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
@@ -1656,23 +1717,23 @@
     </header>
 
     <div class="app-body">
-      <!-- Sidebar (56px narrow) -->
+      <!-- Sidebar (220px with icon + text) -->
       <aside class="sidebar">
         <nav class="sidebar-nav">
-          <button class="nav-item tab-btn active" id="nav-personas" type="button" data-tab="personas" aria-controls="tab-personas" aria-current="page">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <span class="nav-item-label" data-i18n="tabPersonas">AI 角色</span>
-          </button>
-          <button class="nav-item tab-btn" type="button" id="nav-api" data-tab="api" aria-controls="tab-api" aria-current="false">
+          <button class="nav-item tab-btn active" id="nav-api" type="button" data-tab="api" aria-controls="tab-api" aria-current="page">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M5 8h14M5 8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2M5 8v3a4 4 0 0 0 4 4h6a4 4 0 0 0 4-4V8"></path>
               <line x1="12" y1="15" x2="12" y2="19"></line>
               <rect x="9" y="19" width="6" height="3" rx="1"></rect>
             </svg>
             <span class="nav-item-label" data-i18n="tabApi">大模型 API</span>
+          </button>
+          <button class="nav-item tab-btn" type="button" id="nav-personas" data-tab="personas" aria-controls="tab-personas" aria-current="false">
+            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
+              <circle cx="12" cy="7" r="4"></circle>
+            </svg>
+            <span class="nav-item-label" data-i18n="tabPersonas">AI 角色</span>
           </button>
           <button class="nav-item tab-btn" type="button" id="nav-knowledge" data-tab="knowledge" aria-controls="tab-knowledge" aria-current="false">
             <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -1726,39 +1787,36 @@
 
       <!-- Main Content -->
       <main class="main-content">
-        <!-- Hidden DOM: Hero Header + Dashboard (keep ids only) -->
-        <div class="hidden-dom">
-          <div class="hero-header">
-            <h1 class="hero-title">ChatGenius AI</h1>
-            <p class="hero-subtitle">管理 AI 角色、模型与知识库</p>
-          </div>
-          <div class="dashboard-cards">
-            <div class="dashboard-card">
-              <div class="dashboard-card-label">当前 AI</div>
-              <div class="dashboard-card-value" id="dashCurrentPersona">Default</div>
-              <div class="dashboard-card-status">
-                <span class="status-dot online"></span>
-                <span>正在使用</span>
-              </div>
+        <!-- Hero Header: 品牌锚点 + 状态摘要 -->
+        <header class="hero-section">
+          <div class="hero-brand">
+            <div class="hero-logo" aria-hidden="true">
+              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
+              </svg>
             </div>
-            <div class="dashboard-card">
-              <div class="dashboard-card-label">模型</div>
-              <div class="dashboard-card-value" id="dashModelName">未配置</div>
-              <div class="dashboard-card-status" id="dashModelStatus">
-                <span class="status-dot offline"></span>
-                <span>未连接</span>
-              </div>
-            </div>
-            <div class="dashboard-card">
-              <div class="dashboard-card-label">知识库</div>
-              <div class="dashboard-card-value" id="dashKnowledgeCount">0 个知识库</div>
-              <div class="dashboard-card-status">
-                <span class="status-dot idle"></span>
-                <span id="dashKnowledgeDocs">0 Documents</span>
-              </div>
+            <div class="hero-brand-text">
+              <h1 class="hero-title">ChatGenius AI</h1>
+              <p class="hero-subtitle" data-i18n="subtitle">管理 AI 角色、模型与知识库</p>
             </div>
           </div>
-        </div>
+          <div class="hero-status-row">
+            <div class="hero-status-item" id="heroModelStatus">
+              <span class="hero-status-label" data-i18n="heroModel">模型</span>
+              <span class="hero-status-value" id="dashModelName">未配置</span>
+            </div>
+            <div class="hero-status-divider" aria-hidden="true"></div>
+            <div class="hero-status-item" id="heroLicenseStatus">
+              <span class="hero-status-label" data-i18n="heroLicense">许可证</span>
+              <span class="hero-status-value" id="heroLicenseValue">免费版</span>
+            </div>
+            <div class="hero-status-divider" aria-hidden="true"></div>
+            <div class="hero-status-item" id="heroQuotaStatus">
+              <span class="hero-status-label" data-i18n="heroQuota">今日配额</span>
+              <span class="hero-status-value" id="statQuota">0/50</span>
+            </div>
+          </div>
+        </header>
 
         <!-- API Status Bar -->
         <div id="apiStatusBar" class="api-status-bar hidden">
@@ -1793,7 +1851,7 @@
         </div>
 
         <!-- Tab Content: Personas -->
-        <div class="tab-content active" id="tab-personas" role="tabpanel" aria-labelledby="nav-personas">
+        <div class="tab-content" id="tab-personas" role="tabpanel" aria-labelledby="nav-personas">
           <div class="panel-grid">
             <details class="panel" open>
               <summary class="panel-header">
@@ -1917,7 +1975,7 @@
         </div>
 
         <!-- Tab Content: API -->
-        <div class="tab-content" id="tab-api" role="tabpanel" aria-labelledby="nav-api">
+        <div class="tab-content active" id="tab-api" role="tabpanel" aria-labelledby="nav-api">
           <div class="panel-grid">
             <details class="panel" open>
               <summary class="panel-header">
@@ -2171,7 +2229,7 @@
                 </div>
               </div>
             </details>
-            <details class="panel" id="devicePanel">
+            <details class="panel" id="devicePanel" open>
               <summary class="panel-header">
                 <div class="panel-icon">
                   <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
@@ -2260,7 +2318,7 @@
                 <polyline points="12 6 12 12 16 14"></polyline>
               </svg>
               <span class="footer-status-label" data-i18n="statQuota">今日配额:</span>
-              <span class="footer-status-value" id="statQuota">0/50</span>
+              <span class="footer-status-value" id="footerStatQuota">0/50</span>
             </div>
           </div>
         </footer>
