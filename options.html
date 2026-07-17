@@ -237,9 +237,9 @@
       min-height: 0;
     }
 
-    /* ---------- Sidebar (200px with icon + text) ---------- */
+    /* ---------- Sidebar (180px with icon + text) ---------- */
     .sidebar {
-      width: 220px;
+      width: 180px;
       flex-shrink: 0;
       position: sticky;
       top: 48px;
@@ -247,7 +247,7 @@
       display: flex;
       flex-direction: column;
       justify-content: space-between;
-      padding: 16px 12px;
+      padding: 16px 10px;
       border-right: 1px solid var(--border);
       background: var(--bg);
     }
@@ -286,7 +286,7 @@
     .nav-item.active::before {
       content: "";
       position: absolute;
-      left: -12px;
+      left: -10px;
       top: 50%;
       transform: translateY(-50%);
       width: 3px;
@@ -322,12 +322,12 @@
     .main-content {
       flex: 1;
       min-width: 0;
-      padding: 28px 40px 80px;
+      padding: 24px 32px 80px;
       display: flex;
       flex-direction: column;
       align-items: center;
     }
-    .main-content > * { width: 100%; max-width: 880px; }
+    .main-content > * { width: 100%; max-width: 900px; }
 
     /* Tab Content 切换动画 */
     .tab-content { display: none; }
@@ -343,7 +343,7 @@
     /* ---------- Hero Section (品牌锚点 + 状态摘要) ---------- */
     .hero-section {
       width: 100%;
-      max-width: 880px;
+      max-width: 900px;
       margin-bottom: 24px;
       padding: 20px 24px;
       background: var(--bg-card);
@@ -1078,44 +1078,6 @@
       margin: 0;
     }
     .tutorial-note { margin-top: 10px; color: var(--text-tertiary); font-size: 11px; }
-
-    .api-guide-banner {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 14px;
-      background: var(--accent-light);
-      border: 1px solid var(--accent);
-      border-radius: var(--radius-md);
-      font-size: 12px;
-      margin-bottom: 16px;
-    }
-    .api-guide-banner-icon { color: var(--accent); display: flex; }
-    .api-guide-banner-text { flex: 1; display: flex; flex-direction: column; gap: 2px; }
-    .api-guide-banner-text strong { color: var(--text-primary); font-size: 13px; }
-    .api-guide-banner-text span { color: var(--text-secondary); }
-    .api-guide-banner-btn {
-      height: 28px;
-      padding: 0 12px;
-      background: var(--accent);
-      color: #fff;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      font-weight: 500;
-      transition: var(--transition);
-    }
-    .api-guide-banner-btn:hover { background: var(--accent-hover); color: #fff; }
-    .api-guide-banner-close {
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-sm);
-      color: var(--text-secondary);
-      transition: var(--transition);
-    }
-    .api-guide-banner-close:hover { background: var(--bg-hover); color: var(--text-primary); }
 
     /* =========================================================
        Shortcut cards
@@ -2058,21 +2020,6 @@
                 </div>
               </div>
             </details>
-            <div class="api-guide-banner" id="apiGuideBanner">
-              <div class="api-guide-banner-icon">
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                  <path d="M12 9v4"></path><path d="M12 17h.01"></path><path d="M10.29 3.86 1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path>
-                </svg>
-              </div>
-              <div class="api-guide-banner-text">
-                <strong data-i18n="guideEntryTitle">大模型配置指南</strong>
-                <span data-i18n="guideEntryDesc">不知道如何获取 API Key？查看详细教程</span>
-              </div>
-              <a href="https://chat.sopie.cc/guide/" target="_blank" rel="noopener" class="api-guide-banner-btn" data-i18n="viewGuide">去配置</a>
-              <button type="button" class="api-guide-banner-close" id="apiGuideBannerClose" aria-label="关闭">
-                <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="18" y1="6" x2="6" y2="18"></line><line x1="6" y1="6" x2="18" y2="18"></line></svg>
-              </button>
-            </div>
           </div>
         </div>
 
