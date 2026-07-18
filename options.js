@@ -425,6 +425,26 @@ const PERSONA_TEMPLATES = [
 // Main
 // ================================
 function initApp() {
+  // ---- Theme Init ----
+  try {
+    const savedTheme = localStorage.getItem('chatgenius_theme');
+    if (savedTheme === 'dark' || savedTheme === 'light') {
+      document.documentElement.setAttribute('data-theme', savedTheme);
+    }
+  } catch (e) {
+    // localStorage 不可用时忽略
+  }
+  const initialTheme = document.documentElement.getAttribute('data-theme') || 'light';
+  const initialLabel = initialTheme === 'dark' ? '浅色模式' : '深色模式';
+  const initialTitle = initialTheme === 'dark' ? '切换浅色模式' : '切换深色模式';
+  document.querySelectorAll('#themeToggle, #headerThemeToggle').forEach(btn => {
+    if (!btn) return;
+    btn.setAttribute('title', initialTitle);
+    btn.setAttribute('aria-label', initialTitle);
+    const textEl = btn.querySelector('#themeToggleText');
+    if (textEl) textEl.textContent = initialLabel;
+  });
+
   // ---- Theme Toggle ----
   function toggleTheme() {
     const currentTheme = document.documentElement.getAttribute('data-theme');
@@ -435,6 +455,16 @@ function initApp() {
     } catch (e) {
       // localStorage 不可用时忽略
     }
+    // 同步更新两个主题切换按钮的文案与可访问属性
+    const themeLabel = newTheme === 'dark' ? '浅色模式' : '深色模式';
+    const themeTitle = newTheme === 'dark' ? '切换浅色模式' : '切换深色模式';
+    document.querySelectorAll('#themeToggle, #headerThemeToggle').forEach(btn => {
+      if (!btn) return;
+      btn.setAttribute('title', themeTitle);
+      btn.setAttribute('aria-label', themeTitle);
+      const textEl = btn.querySelector('#themeToggleText');
+      if (textEl) textEl.textContent = themeLabel;
+    });
   }
 
   const themeToggle = document.getElementById('themeToggle');
@@ -528,7 +558,7 @@ function initApp() {
     _cmdFiltered = q ? items.filter(it => it.label.toLowerCase().includes(q) || it.hint.toLowerCase().includes(q) || it.id.includes(q)) : items;
 
     if (!_cmdFiltered.length) {
-      cmdResults.innerHTML = '<div class="cmd-empty">' + escapeHtml(I18N[currentLang].noMatchingFaq || 'No results') + '</div>';
+      cmdResults.innerHTML = '<div class="command-empty">未找到相关设置，尝试其他关键词</div>';
       _cmdActiveIndex = -1;
       return;
     }
@@ -774,17 +804,6 @@ function initApp() {
   tabBtns.forEach(btn => {
     btn.addEventListener('click', () => {
       switchTab(btn.getAttribute('data-tab'));
-    });
-  });
-
-  // ---- details aria-expanded 同步（建议 6） ----
-  document.querySelectorAll('details.panel').forEach(d => {
-    const summary = d.querySelector('summary');
-    if (!summary) return;
-    summary.setAttribute('role', 'button');
-    summary.setAttribute('aria-expanded', d.open ? 'true' : 'false');
-    d.addEventListener('toggle', () => {
-      summary.setAttribute('aria-expanded', d.open ? 'true' : 'false');
     });
   });
 
@@ -1630,13 +1649,23 @@ function initApp() {
   // ---- 悬浮按钮主题预览 ----
   const btnThemeSelect = document.getElementById('btnTheme');
   const themePreviewBtn = document.getElementById('themePreviewBtn');
+  const themePreviewButtons = document.querySelectorAll('.theme-preview-btn');
   function updateThemePreview(theme) {
-    if (!themePreviewBtn) return;
-    themePreviewBtn.className = 'theme-preview-btn theme-' + (theme || 'gradient');
+    const value = theme || 'gradient';
+    if (btnThemeSelect) btnThemeSelect.value = value;
+    themePreviewButtons.forEach(btn => {
+      btn.classList.toggle('selected', btn.getAttribute('data-value') === value || btn.value === value);
+    });
   }
   if (btnThemeSelect) {
     btnThemeSelect.addEventListener('change', () => updateThemePreview(btnThemeSelect.value));
   }
+  themePreviewButtons.forEach(btn => {
+    btn.addEventListener('click', () => {
+      const value = btn.getAttribute('data-value') || btn.value || 'gradient';
+      updateThemePreview(value);
+    });
+  });
 
   // 快捷键录入：点击按钮进入录制模式，按下组合键保存
   let isRecordingShortcut = false;

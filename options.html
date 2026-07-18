@@ -2,1025 +2,414 @@
 <html lang="zh-CN" data-theme="light">
 <head>
   <meta charset="UTF-8">
-  <title data-i18n="pageTitle">ChatGenius AI - 设置</title>
-  <script src="theme-init.js"></script>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>ChatGenius AI 设置</title>
   <style>
-    /* =========================================================
-       Linear Design System
-       ========================================================= */
+    /* =====================================================
+       Design Tokens
+       ===================================================== */
+    :root {
+      --brand: #4361ee;
+      --brand-hover: #3651d4;
+      --brand-light: rgba(67, 97, 238, 0.08);
+      --brand-ring: rgba(67, 97, 238, 0.2);
+      --accent-purple: #725ac1;
+      --success: #10b981;
+      --success-light: rgba(16, 185, 129, 0.08);
+      --warning: #f59e0b;
+      --warning-light: rgba(245, 158, 11, 0.08);
+      --error: #ef4444;
+      --error-light: rgba(239, 68, 68, 0.08);
 
-    /* ---------- Theme Tokens ---------- */
-    :root[data-theme="light"] {
-      color-scheme: light;
-      --bg: #fafafa;
-      --bg-card: #ffffff;
-      --bg-elevated: #ffffff;
-      --bg-hover: #f5f5f5;
-      --bg-selected: #eef2ff;
-      --bg-overlay: rgba(0, 0, 0, 0.45);
-      --border: #ededed;
-      --border-strong: #d4d4d4;
-      --text-primary: #1a1a1a;
+      --bg: #f8f9fa;
+      --bg-surface: #ffffff;
+      --bg-hover: #f2f3f5;
+      --bg-selected: rgba(67, 97, 238, 0.08);
+      --border: #e8eaed;
+      --border-strong: #dadce0;
+
+      --text-primary: #1f2937;
       --text-secondary: #4b5563;
       --text-tertiary: #6b7280;
-      --accent: #4361ee;
-      --accent-hover: #3451d1;
-      --accent-active: #2a40b8;
-      --accent-light: #eef2ff;
-      --accent-glow: rgba(67, 97, 238, 0.1);
-      --accent-secondary: #725ac1;
-      --danger: #ef4444;
-      --danger-hover: #dc2626;
-      --danger-bg: #fef2f2;
-      --success: #10b981;
-      --success-bg: #ecfdf5;
-      --warning: #f59e0b;
-      --warning-bg: #fffbeb;
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.04);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.08);
-      --shadow-lg: 0 8px 24px rgba(0,0,0,0.12);
+      --text-inverse: #ffffff;
+
       --radius-sm: 6px;
       --radius-md: 8px;
-      --radius-lg: 12px;
-      --font: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, sans-serif;
-      --transition: all 150ms ease;
+      --radius-lg: 10px;
+      --radius-xl: 12px;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.04);
+      --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.06);
+      --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.08);
+
+      --transition: all 160ms cubic-bezier(0.4, 0, 0.2, 1);
+      --font-sans: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Helvetica Neue", Arial, "PingFang SC", "Microsoft YaHei", sans-serif;
     }
 
     :root[data-theme="dark"] {
-      color-scheme: dark;
-      --bg: #0a0a0a;
-      --bg-card: #141414;
-      --bg-elevated: #1a1a1a;
-      --bg-hover: #1f1f1f;
-      --bg-selected: #1e1e3f;
-      --bg-overlay: rgba(0, 0, 0, 0.7);
-      --border: #262626;
-      --border-strong: #404040;
-      --text-primary: #fafafa;
-      --text-secondary: #d1d5db;
-      --text-tertiary: #9ca3af;
-      --accent: #4361ee;
-      --accent-hover: #5571f5;
-      --accent-active: #6782f7;
-      --accent-light: rgba(67, 97, 238, 0.18);
-      --accent-glow: rgba(67, 97, 238, 0.25);
-      --accent-secondary: #725ac1;
-      --danger: #ef4444;
-      --danger-hover: #f56565;
-      --danger-bg: rgba(239, 68, 68, 0.12);
-      --success: #10b981;
-      --success-bg: rgba(16, 185, 129, 0.12);
-      --warning: #f59e0b;
-      --warning-bg: rgba(245, 158, 11, 0.12);
-      --shadow-sm: 0 1px 3px rgba(0,0,0,0.4);
-      --shadow-md: 0 4px 12px rgba(0,0,0,0.5);
-      --shadow-lg: 0 8px 24px rgba(0,0,0,0.6);
+      --bg: #1c1c1e;
+      --bg-surface: #2c2c2e;
+      --bg-hover: #3a3a3c;
+      --bg-selected: rgba(67, 97, 238, 0.18);
+      --border: #3a3a3c;
+      --border-strong: #48484a;
+
+      --text-primary: #f2f2f7;
+      --text-secondary: #a1a1aa;
+      --text-tertiary: #8e8e93;
+      --text-inverse: #000000;
+
+      --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.2);
+      --shadow-md: 0 1px 3px rgba(0, 0, 0, 0.3);
+      --shadow-lg: 0 4px 12px rgba(0, 0, 0, 0.4);
     }
 
-    /* ---------- Reset ---------- */
-    * { box-sizing: border-box; }
-    html, body {
-      margin: 0;
-      padding: 0;
-      height: 100%;
-      font-family: var(--font);
+    /* =====================================================
+       Reset & Base
+       ===================================================== */
+    *, *::before, *::after { box-sizing: border-box; }
+    html, body { margin: 0; padding: 0; height: 100%; }
+    body {
+      font-family: var(--font-sans);
       font-size: 14px;
       line-height: 1.5;
-      background: var(--bg);
       color: var(--text-primary);
+      background: var(--bg);
       -webkit-font-smoothing: antialiased;
       -moz-osx-font-smoothing: grayscale;
-      transition: background 200ms ease, color 200ms ease;
     }
-    button {
-      font-family: inherit;
-      cursor: pointer;
-      border: none;
-      background: none;
-      color: inherit;
-    }
-    input, select, textarea {
-      font-family: inherit;
-      font-size: 14px;
-      color: var(--text-primary);
-    }
-    a { color: var(--accent); text-decoration: none; }
-    a:hover { color: var(--accent-hover); }
+    button { font-family: inherit; cursor: pointer; border: none; background: none; }
+    input, select, textarea { font-family: inherit; font-size: 14px; }
     h1, h2, h3, h4, p { margin: 0; }
-    ::selection { background: var(--accent-glow); }
+    a { color: var(--brand); text-decoration: none; }
+    ul, ol { margin: 0; padding: 0; list-style: none; }
+    svg { display: block; flex-shrink: 0; }
 
-    /* =========================================================
-       Skeleton Screen
-       ========================================================= */
-    .skeleton-screen {
+    /* =====================================================
+       App Shell
+       ===================================================== */
+    .app-shell {
+      display: flex;
+      min-height: 100vh;
+    }
+
+    /* =====================================================
+       Sidebar
+       ===================================================== */
+    .sidebar {
+      width: 220px;
+      flex-shrink: 0;
       position: fixed;
-      inset: 0;
-      background: var(--bg);
-      z-index: 9999;
-      display: flex;
-      flex-direction: column;
-      padding: 32px;
-    }
-    .skeleton-header { margin-bottom: 24px; }
-    .skeleton-body {
-      display: flex;
-      gap: 32px;
-      flex: 1;
-    }
-    .skeleton-sidebar {
-      width: 56px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .skeleton-panel { flex: 1; max-width: 720px; }
-    .skeleton-block {
-      background: linear-gradient(90deg, var(--border) 25%, var(--bg-hover) 50%, var(--border) 75%);
-      background-size: 200% 100%;
-      animation: skeleton-shimmer 1.4s ease-in-out infinite;
-      border-radius: var(--radius-sm);
-    }
-    .skeleton-title { width: 200px; height: 22px; margin-bottom: 8px; }
-    .skeleton-subtitle { width: 320px; height: 14px; }
-    .skeleton-nav-item { width: 40px; height: 40px; border-radius: var(--radius-sm); }
-    .skeleton-panel-title { width: 180px; height: 18px; margin-bottom: 16px; }
-    .skeleton-panel-line { width: 100%; height: 14px; margin-bottom: 8px; }
-    .skeleton-panel-line.short { width: 60%; }
-    .skeleton-card { width: 100%; height: 80px; margin-top: 16px; border-radius: var(--radius-md); }
-    @keyframes skeleton-shimmer {
-      0% { background-position: 200% 0; }
-      100% { background-position: -200% 0; }
-    }
-
-    /* =========================================================
-       Layout: Top Bar + Sidebar + Main
-       ========================================================= */
-    .page-container { min-height: 100vh; display: flex; flex-direction: column; }
-
-    .top-bar {
-      position: sticky;
       top: 0;
+      left: 0;
+      bottom: 0;
+      display: flex;
+      flex-direction: column;
+      background: #f4f5f7;
+      border-right: 1px solid var(--border);
       z-index: 100;
-      height: 48px;
+    }
+    [data-theme="dark"] .sidebar { background: #252528; }
+    .sidebar-brand {
       display: flex;
       align-items: center;
-      justify-content: space-between;
-      padding: 0 20px;
-      background: var(--bg);
+      gap: 10px;
+      padding: 18px 20px;
       border-bottom: 1px solid var(--border);
-      backdrop-filter: saturate(180%) blur(8px);
     }
-    .top-bar-left { display: flex; align-items: center; gap: 8px; }
-    .page-title {
-      font-size: 15px;
-      font-weight: 600;
-      color: var(--text-primary);
-      letter-spacing: -0.01em;
-    }
-    .top-bar-right { display: flex; align-items: center; gap: 8px; }
-
-    .icon-btn {
-      display: inline-flex;
+    .brand-logo {
+      width: 28px;
+      height: 28px;
+      border-radius: var(--radius-sm);
+      background: linear-gradient(135deg, var(--brand), var(--accent-purple));
+      color: #fff;
+      display: flex;
       align-items: center;
       justify-content: center;
-      gap: 6px;
-      height: 32px;
-      padding: 0 8px;
-      border-radius: var(--radius-sm);
-      color: var(--text-secondary);
-      background: transparent;
-      transition: var(--transition);
-      border: 1px solid transparent;
+      font-weight: 700;
+      font-size: 12px;
     }
-    .icon-btn:hover {
-      background: var(--bg-hover);
+    .brand-text {
+      font-weight: 600;
+      font-size: 15px;
       color: var(--text-primary);
-    }
-    .icon-btn:active { transform: scale(0.98); }
-    .icon-btn svg { width: 16px; height: 16px; }
-
-    .search-trigger {
-      padding: 0 10px;
-      min-width: 220px;
-      justify-content: flex-start;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-    }
-    .search-trigger:hover { border-color: var(--border-strong); background: var(--bg-card); }
-    .search-trigger-text {
-      flex: 1;
-      text-align: left;
-      color: var(--text-tertiary);
-      font-size: 13px;
-    }
-    .search-trigger kbd {
-      font-family: var(--font);
-      font-size: 11px;
-      padding: 2px 6px;
-      border-radius: 4px;
-      background: var(--bg-hover);
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-      letter-spacing: 0.5px;
-    }
-
-    /* Theme toggle icon visibility by theme */
-    :root[data-theme="light"] .icon-sun { display: none; }
-    :root[data-theme="light"] .icon-moon { display: block; }
-    :root[data-theme="dark"] .icon-sun { display: block; }
-    :root[data-theme="dark"] .icon-moon { display: none; }
-
-    /* ---------- App Body ---------- */
-    .app-body {
-      display: flex;
-      flex: 1;
-      min-height: 0;
-    }
-
-    /* ---------- Sidebar (180px with icon + text) ---------- */
-    .sidebar {
-      width: 180px;
-      flex-shrink: 0;
-      position: sticky;
-      top: 48px;
-      height: calc(100vh - 48px);
-      display: flex;
-      flex-direction: column;
-      justify-content: space-between;
-      padding: 16px 10px;
-      border-right: 1px solid var(--border);
-      background: var(--bg);
+      letter-spacing: -0.2px;
     }
     .sidebar-nav {
+      flex: 1;
+      padding: 10px 12px;
       display: flex;
       flex-direction: column;
       gap: 2px;
+      overflow-y: auto;
     }
     .nav-item {
       position: relative;
       width: 100%;
-      height: 38px;
+      height: 36px;
       display: flex;
       align-items: center;
-      gap: 12px;
       padding: 0 12px;
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-md);
       color: var(--text-secondary);
-      transition: var(--transition);
-      border: none;
-      background: transparent;
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
+      transition: var(--transition);
+      text-align: left;
     }
-    .nav-item svg { width: 18px; height: 18px; flex-shrink: 0; }
-    .nav-item-label { font-size: 14px; }
-    .nav-item:hover {
-      background: var(--bg-hover);
-      color: var(--text-primary);
-    }
-    .nav-item:active { transform: scale(0.98); }
+    .nav-item svg { display: none; }
+    .nav-item:hover { background: var(--bg-hover); color: var(--text-primary); }
     .nav-item.active {
       background: var(--bg-selected);
-      color: var(--accent);
+      color: var(--brand);
     }
-    .nav-item.active::before {
-      content: "";
-      position: absolute;
-      left: -10px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 3px;
-      height: 20px;
-      background: var(--accent);
-      border-radius: 0 2px 2px 0;
+    .nav-item-label { white-space: nowrap; }
+    .sidebar-footer {
+      padding: 10px 12px;
+      border-top: 1px solid var(--border);
     }
-
-    .sidebar-divider {
-      height: 1px;
-      background: var(--border);
-      margin: 12px 4px;
-    }
-    .sidebar-footer { display: flex; flex-direction: column; gap: 2px; }
     .theme-toggle {
-      position: relative;
       width: 100%;
-      height: 38px;
+      height: 34px;
       display: flex;
       align-items: center;
-      gap: 12px;
+      gap: 8px;
       padding: 0 12px;
-      border-radius: var(--radius-sm);
+      border-radius: var(--radius-md);
       color: var(--text-secondary);
-      transition: var(--transition);
-      font-size: 14px;
+      font-size: 13px;
       font-weight: 500;
+      transition: var(--transition);
     }
     .theme-toggle:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .theme-toggle svg { width: 18px; height: 18px; flex-shrink: 0; }
+    .theme-toggle svg { width: 16px; height: 16px; }
+    .theme-toggle .icon-moon,
+    .theme-toggle .icon-sun { transition: var(--transition); }
+    [data-theme="light"] .theme-toggle .icon-moon,
+    [data-theme="dark"] .theme-toggle .icon-sun { display: block; }
+    [data-theme="light"] .theme-toggle .icon-sun,
+    [data-theme="dark"] .theme-toggle .icon-moon { display: none; }
 
-    /* ---------- Main Content ---------- */
-    .main-content {
+    /* =====================================================
+       Content Area
+       ===================================================== */
+.content-area {
       flex: 1;
-      min-width: 0;
-      padding: 24px 32px 80px;
-      display: flex;
-      flex-direction: column;
-      align-items: center;
+      margin-left: 220px;
+      padding: 40px 56px 80px;
+      min-height: 100vh;
     }
-    .main-content > * { width: 100%; max-width: 900px; }
-
-    /* Tab Content 切换动画 */
-    .tab-content { display: none; }
-    .tab-content.active {
-      display: block;
-      animation: tabFadeIn 180ms ease-out;
-    }
-    @keyframes tabFadeIn {
-      from { opacity: 0; transform: translateY(4px); }
-      to { opacity: 1; transform: translateY(0); }
+    .content-inner {
+      max-width: 800px;
+      margin: 0 auto;
     }
 
-    /* ---------- Hero Section (品牌锚点 + 状态摘要) ---------- */
+    /* =====================================================
+       Hero
+       ===================================================== */
     .hero-section {
-      width: 100%;
-      max-width: 900px;
-      margin-bottom: 24px;
-      padding: 20px 24px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-lg);
-      box-shadow: var(--shadow-sm);
-      display: flex;
-      align-items: center;
-      justify-content: space-between;
-      gap: 24px;
-      flex-wrap: wrap;
+      margin-bottom: 32px;
+      padding-bottom: 20px;
+      border-bottom: 1px solid var(--border);
     }
-    .hero-brand {
-      display: flex;
-      align-items: center;
-      gap: 14px;
-      min-width: 0;
-    }
-    .hero-logo {
-      width: 44px;
-      height: 44px;
-      flex-shrink: 0;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      background: linear-gradient(135deg, var(--accent) 0%, var(--accent-secondary) 100%);
-      color: #fff;
-      border-radius: var(--radius-md);
-      box-shadow: 0 2px 8px var(--accent-glow);
-    }
-    .hero-logo svg { width: 22px; height: 22px; }
-    .hero-brand-text { min-width: 0; }
     .hero-title {
-      margin: 0;
-      font-size: 18px;
+      font-size: 22px;
       font-weight: 700;
       color: var(--text-primary);
-      letter-spacing: -0.01em;
-      line-height: 1.3;
+      letter-spacing: -0.3px;
+      margin-bottom: 6px;
     }
     .hero-subtitle {
-      margin: 2px 0 0;
-      font-size: 13px;
-      color: var(--text-tertiary);
-      line-height: 1.4;
-    }
-    .hero-status-row {
-      display: flex;
-      align-items: center;
-      gap: 16px;
-      flex-wrap: wrap;
-    }
-    .hero-status-item {
-      display: flex;
-      flex-direction: column;
-      gap: 2px;
-      min-width: 0;
-    }
-    .hero-status-label {
-      font-size: 11px;
-      font-weight: 500;
-      color: var(--text-tertiary);
-      text-transform: uppercase;
-      letter-spacing: 0.04em;
-    }
-    .hero-status-value {
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-      max-width: 160px;
-      overflow: hidden;
-      text-overflow: ellipsis;
-      white-space: nowrap;
-    }
-    .hero-status-divider {
-      width: 1px;
-      height: 28px;
-      background: var(--border);
-    }
-
-    /* Hidden DOM (keeps ids but invisible) */
-    .hidden-dom { display: none !important; }
-
-    /* =========================================================
-       Section / Panel (details)
-       ========================================================= */
-    .panel-grid {
-      display: flex;
-      flex-direction: column;
-      gap: 20px;
-      margin-bottom: 24px;
-    }
-    details.panel {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-sm);
-      overflow: hidden;
-      transition: var(--transition);
-    }
-    details.panel[open] { box-shadow: var(--shadow-sm); }
-    .panel-header {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 12px 16px;
-      cursor: pointer;
-      list-style: none;
-      user-select: none;
-      transition: var(--transition);
-    }
-    .panel-header::-webkit-details-marker { display: none; }
-    .panel-header:hover { background: var(--bg-hover); }
-    .panel-icon {
-      width: 28px;
-      height: 28px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-sm);
-      background: var(--accent-light);
-      color: var(--accent);
-      flex-shrink: 0;
-    }
-    .panel-icon svg { width: 16px; height: 16px; }
-    .panel-title {
       font-size: 14px;
-      font-weight: 600;
-      color: var(--text-primary);
-      flex: 1;
-      letter-spacing: -0.01em;
-    }
-    .panel-collapse-btn {
-      width: 16px;
-      height: 16px;
-      color: var(--text-tertiary);
-      transition: transform 200ms ease;
-    }
-    details.panel[open] .panel-collapse-btn { transform: rotate(180deg); }
-    .panel-desc {
-      padding: 0 16px 12px;
-      color: var(--text-secondary);
-      font-size: 12px;
-      line-height: 1.5;
-    }
-    .item-list {
-      padding: 0 16px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-
-    /* =========================================================
-       Forms
-       ========================================================= */
-    .form-grid {
-      display: grid;
-      grid-template-columns: 1fr 1fr;
-      gap: 16px;
-      padding: 0 16px 12px;
-    }
-    .form-group { display: flex; flex-direction: column; gap: 6px; }
-    .form-group.full-width { grid-column: 1 / -1; }
-    .form-label {
-      font-size: 11px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
       color: var(--text-secondary);
     }
-    .form-input, .form-select {
-      height: 32px;
-      padding: 0 10px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text-primary);
-      font-size: 13px;
-      transition: var(--transition);
-      width: 100%;
-      outline: none;
-    }
-    .form-input:hover, .form-select:hover { border-color: var(--border-strong); }
-    .form-input:focus, .form-select:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-glow);
-    }
-    .form-input::placeholder { color: var(--text-tertiary); }
-    .form-select {
-      appearance: none;
-      background-image: url("data:image/svg+xml;utf8,<svg xmlns='http://www.w3.org/2000/svg' width='12' height='12' viewBox='0 0 24 24' fill='none' stroke='%23999' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'><polyline points='6 9 12 15 18 9'/></svg>");
-      background-repeat: no-repeat;
-      background-position: right 10px center;
-      padding-right: 28px;
-    }
-    .form-select option { background: var(--bg-card); color: var(--text-primary); }
-    .form-hint {
-      font-size: 11px;
-      color: var(--text-tertiary);
-      line-height: 1.5;
-    }
-
-    /* ---------- Buttons ---------- */
-    .btn {
-      display: inline-flex;
-      align-items: center;
-      justify-content: center;
-      gap: 6px;
-      height: 32px;
-      padding: 0 14px;
-      border-radius: var(--radius-sm);
-      font-size: 13px;
-      font-weight: 500;
-      transition: var(--transition);
-      border: 1px solid transparent;
-      background: var(--bg-card);
-      color: var(--text-primary);
-    }
-    .btn:hover { background: var(--bg-hover); }
-    .btn:active { transform: scale(0.98); }
-    .btn svg { width: 14px; height: 14px; }
-    .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
-    .btn-primary {
-      background: var(--accent);
-      color: #ffffff;
-      border-color: var(--accent);
-    }
-    .btn-primary:hover {
-      background: var(--accent-hover);
-      border-color: var(--accent-hover);
-      color: #ffffff;
-    }
-    .btn-secondary {
-      background: var(--bg-card);
-      color: var(--text-primary);
-      border-color: var(--border);
-    }
-    .btn-secondary:hover { border-color: var(--border-strong); background: var(--bg-hover); }
-    .btn-destructive {
-      background: var(--danger);
-      color: #ffffff;
-      border-color: var(--danger);
-    }
-    .btn-destructive:hover {
-      background: var(--danger-hover);
-      border-color: var(--danger-hover);
-      color: #ffffff;
-    }
-    .w-full { width: 100%; }
-
-    .persona-actions-row, .faq-actions {
-      display: flex;
-      gap: 8px;
-      flex-wrap: wrap;
-      padding: 0 16px 16px;
-      align-items: center;
-    }
-    .import-export-btns { display: flex; gap: 8px; margin-left: auto; }
-
-    /* =========================================================
-       Persona Cards (dynamic)
-       ========================================================= */
-    .persona-card {
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      padding: 14px 16px;
-      transition: var(--transition);
-      position: relative;
-    }
-    .persona-card:hover { border-color: var(--border-strong); }
-    .persona-card.active {
-      border-color: var(--accent);
-      background: var(--accent-light);
-    }
-    .persona-card-header {
+    .hero-status {
       display: flex;
       align-items: center;
       gap: 12px;
-      margin-bottom: 10px;
+      flex-wrap: wrap;
+      margin-top: 16px;
     }
-    .persona-avatar {
-      width: 32px;
-      height: 32px;
-      border-radius: var(--radius-sm);
-      background: var(--accent-light);
-      color: var(--accent);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      font-size: 13px;
-      font-weight: 600;
-      flex-shrink: 0;
-      border: 1px solid var(--border);
-    }
-    .persona-info { flex: 1; min-width: 0; display: flex; flex-direction: column; gap: 4px; }
-    .persona-name-input {
-      background: transparent;
-      border: none;
-      font-size: 13px;
-      font-weight: 600;
-      color: var(--text-primary);
-      padding: 0;
-      width: 100%;
-      outline: none;
-    }
-    .persona-name-input:focus { color: var(--accent); }
-    .persona-badge {
+    .status-pill {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      color: var(--text-tertiary);
+      gap: 6px;
+      padding: 5px 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: 100px;
+      font-size: 12px;
     }
-    .persona-badge-dot {
+    .status-dot {
       width: 6px;
       height: 6px;
       border-radius: 50%;
       background: var(--text-tertiary);
     }
-    .persona-card.active .persona-badge-dot { background: var(--success); }
-    .persona-actions { display: flex; gap: 4px; opacity: 0; transition: var(--transition); }
-    .persona-card:hover .persona-actions,
-    .persona-card.active .persona-actions { opacity: 1; }
-    .persona-action-btn {
-      width: 26px;
-      height: 26px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-sm);
-      color: var(--text-secondary);
-      transition: var(--transition);
-    }
-    .persona-action-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .persona-action-btn svg { width: 14px; height: 14px; }
-    .persona-prompt-section { display: flex; flex-direction: column; gap: 6px; }
-    .persona-prompt-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-secondary);
-    }
-    .persona-prompt-input {
-      width: 100%;
-      min-height: 64px;
-      padding: 8px 10px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text-primary);
-      font-size: 12px;
-      font-family: inherit;
-      resize: vertical;
-      outline: none;
-      transition: var(--transition);
-    }
-    .persona-prompt-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-glow);
-    }
-    .persona-toggle-btn {
-      height: 24px;
-      padding: 0 10px;
-      font-size: 11px;
-      color: var(--accent);
-      background: var(--accent-light);
-      border-radius: var(--radius-sm);
-      transition: var(--transition);
-    }
-    .persona-toggle-btn:hover { background: var(--accent); color: #fff; }
-    .persona-meta {
-      display: flex;
-      gap: 12px;
-      margin-top: 8px;
-      font-size: 11px;
-      color: var(--text-tertiary);
-    }
-    .persona-meta-item { display: inline-flex; align-items: center; gap: 4px; }
-    .persona-expand-btn {
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-sm);
-      color: var(--text-tertiary);
-      transition: var(--transition);
-    }
-    .persona-expand-btn:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .persona-card.expanded .persona-prompt-section { display: flex; }
-    .persona-card:not(.expanded) .persona-prompt-section { display: none; }
+    .status-dot.connected { background: var(--success); }
+    .status-dot.disconnected { background: var(--error); }
+    .status-label { color: var(--text-tertiary); }
+    .status-value { color: var(--text-primary); font-weight: 600; }
 
-    /* =========================================================
-       Live Preview
-       ========================================================= */
-    .preview-chat {
-      padding: 0 16px 12px;
-      display: flex;
-      flex-direction: column;
-      gap: 10px;
-      max-height: 320px;
-      overflow-y: auto;
-    }
-    .chat-bubble {
-      max-width: 75%;
-      padding: 8px 12px;
-      border-radius: var(--radius-md);
-      font-size: 12px;
-      line-height: 1.5;
-      word-wrap: break-word;
-    }
-    .chat-bubble.user {
-      align-self: flex-end;
-      background: var(--accent);
-      color: #fff;
-      border-bottom-right-radius: 2px;
-    }
-    .chat-bubble.ai {
-      align-self: flex-start;
-      background: var(--bg-hover);
-      color: var(--text-primary);
-      border: 1px solid var(--border);
-      border-bottom-left-radius: 2px;
-    }
-    .preview-input-row {
-      display: flex;
-      gap: 8px;
-      padding: 0 16px 16px;
-    }
-    .preview-input-row .form-input { flex: 1; }
-
-    /* =========================================================
-       FAQ / Knowledge
-       ========================================================= */
-    .faq-toolbar {
-      display: flex;
-      gap: 8px;
-      padding: 0 16px 10px;
-      align-items: center;
-    }
-    .faq-search {
-      position: relative;
-      flex: 1;
-    }
-    .faq-search-icon {
-      position: absolute;
-      left: 10px;
-      top: 50%;
-      transform: translateY(-50%);
-      width: 14px;
-      height: 14px;
-      color: var(--text-tertiary);
-      pointer-events: none;
-    }
-    .faq-search-input {
-      width: 100%;
-      height: 32px;
-      padding: 0 10px 0 30px;
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      background: var(--bg-card);
-      color: var(--text-primary);
-      font-size: 13px;
-      outline: none;
-      transition: var(--transition);
-    }
-    .faq-search-input:focus {
-      border-color: var(--accent);
-      box-shadow: 0 0 0 2px var(--accent-glow);
-    }
-    .faq-category-select {
-      width: auto;
-      min-width: 120px;
-      height: 32px;
-      padding: 0 28px 0 10px;
-    }
-
-    .faq-batch-toolbar {
-      display: flex;
-      justify-content: space-between;
-      align-items: center;
-      gap: 8px;
-      padding: 8px 16px;
-      margin: 0 16px 8px;
-      background: var(--accent-light);
-      border: 1px solid var(--accent);
-      border-radius: var(--radius-sm);
-    }
-    .batch-selection { display: flex; align-items: center; gap: 8px; font-size: 12px; color: var(--text-primary); }
-    .batch-select-all { margin: 0; }
-    .batch-select-label { font-size: 12px; cursor: pointer; }
-    .batch-count { font-size: 11px; color: var(--accent); font-weight: 500; }
-    .batch-actions { display: flex; gap: 6px; align-items: center; }
-    .form-select-sm { height: 28px; font-size: 12px; }
-
-    .faq-item {
-      display: flex;
-      align-items: flex-start;
-      gap: 10px;
-      padding: 10px 12px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      transition: var(--transition);
-    }
-    .faq-item:hover { border-color: var(--border-strong); }
-    .faq-item.selected {
-      border-color: var(--accent);
-      background: var(--accent-light);
-    }
-    .faq-item-checkbox { margin: 4px 0 0 0; cursor: pointer; }
-    .faq-item-header { flex: 1; display: flex; flex-direction: column; gap: 6px; min-width: 0; }
-    .faq-item-input {
-      width: 100%;
-      background: transparent;
-      border: none;
-      border-bottom: 1px dashed var(--border);
-      padding: 2px 0;
-      font-size: 12px;
-      color: var(--text-primary);
-      outline: none;
-      transition: var(--transition);
-    }
-    .faq-item-input:hover { border-bottom-color: var(--border-strong); }
-    .faq-item-input:focus { border-bottom-color: var(--accent); }
-    .faq-item-input.question { font-weight: 500; }
-    .faq-item-input::placeholder { color: var(--text-tertiary); }
-    .faq-actions { display: flex; gap: 4px; }
-    .faq-actions button {
-      width: 24px;
-      height: 24px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-sm);
-      color: var(--text-tertiary);
-      transition: var(--transition);
-    }
-    .faq-actions button:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .faq-actions button svg { width: 12px; height: 12px; }
-
-    /* =========================================================
+    /* =====================================================
        API Status Bar
-       ========================================================= */
+       ===================================================== */
     .api-status-bar {
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      gap: 12px;
-      padding: 10px 14px;
-      margin-bottom: 16px;
-      background: var(--warning-bg);
-      border: 1px solid var(--warning);
-      border-radius: var(--radius-md);
-      font-size: 12px;
-      color: var(--text-primary);
+      justify-content: space-between;
+      gap: 16px;
+      padding: 12px 16px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      margin-bottom: 24px;
     }
-    .api-status-bar.connected {
-      background: var(--success-bg);
-      border-color: var(--success);
-    }
-    .api-status-bar.disconnected {
-      background: var(--danger-bg);
-      border-color: var(--danger);
-    }
-    .api-status-left { display: flex; align-items: center; gap: 8px; }
-    .api-status-dot {
-      width: 8px;
-      height: 8px;
-      border-radius: 50%;
-      background: var(--warning);
-      flex-shrink: 0;
-    }
-    .api-status-bar.connected .api-status-dot { background: var(--success); }
-    .api-status-bar.disconnected .api-status-dot { background: var(--danger); }
-    .api-status-icon { font-size: 14px; }
-    .api-status-text { font-weight: 500; }
-    .api-status-actions { display: flex; gap: 6px; }
-
-    /* =========================================================
-       Free Tier Notification
-       ========================================================= */
-    .free-tier-notification {
-      display: none;
+    .api-status-bar.connected { border-left: 3px solid var(--success); }
+    .api-status-left {
+      display: flex;
       align-items: center;
       gap: 10px;
-      padding: 10px 14px;
-      margin-bottom: 16px;
-      background: var(--accent-light);
-      border: 1px solid var(--accent);
-      border-radius: var(--radius-md);
-      font-size: 12px;
+      font-size: 14px;
+      color: var(--text-secondary);
+    }
+    .api-status-actions { display: flex; gap: 8px; }
+
+    /* =====================================================
+       Tab Content
+       ===================================================== */
+    .tab-content { display: none; animation: fadeIn 180ms ease-out; }
+    .tab-content.active { display: block; }
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(4px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    /* =====================================================
+       Section Cards
+       ===================================================== */
+    .section-card {
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      margin-bottom: 28px;
+      overflow: hidden;
+    }
+    .section-header {
+      padding: 20px 24px 12px;
+    }
+    .section-title h2 {
+      font-size: 18px;
+      font-weight: 700;
+      color: var(--text-primary);
+      letter-spacing: -0.3px;
+      margin-bottom: 4px;
+    }
+    .section-title p {
+      font-size: 13px;
+      color: var(--text-tertiary);
+    }
+    .section-body { padding: 0 24px 24px; }
+
+    /* =====================================================
+       Setting Rows (AdGuard-style list)
+       ===================================================== */
+    .setting-row {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+      padding: 18px 0;
+      border-bottom: 1px solid var(--border);
+      min-height: 64px;
+    }
+    .setting-row:last-child { border-bottom: none; }
+    .setting-row.stack { flex-direction: column; align-items: stretch; gap: 12px; }
+    .setting-info { flex: 1; min-width: 0; }
+    .setting-label {
+      font-size: 14px;
+      font-weight: 500;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .setting-desc {
+      font-size: 13px;
+      color: var(--text-tertiary);
+      line-height: 1.45;
+    }
+    .setting-desc a {
+      color: var(--brand);
+      text-decoration: none;
+    }
+    .setting-desc a:hover { text-decoration: underline; }
+    .setting-control {
+      flex-shrink: 0;
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      max-width: 280px;
+    }
+    .setting-control.full-width {
+      flex: 1 1 100%;
+      max-width: none;
+      width: 100%;
+    }
+
+    /* =====================================================
+       Forms (legacy grid for complex sections)
+       ===================================================== */
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, 1fr);
+      gap: 20px;
+    }
+    .form-grid .full-width { grid-column: 1 / -1; }
+    .form-group { display: flex; flex-direction: column; gap: 6px; }
+    .form-label {
+      font-size: 13px;
+      font-weight: 500;
       color: var(--text-primary);
     }
-    .free-tier-notification.show { display: flex; }
-    .free-tier-notification-left { flex: 1; display: flex; align-items: center; gap: 8px; }
-    .free-tier-notification-icon { display: flex; color: var(--accent); }
-    .free-tier-notification-icon svg { width: 16px; height: 16px; }
-    .free-tier-notification-text { color: var(--text-primary); }
-    .free-tier-notification-btn {
-      height: 28px;
+    .form-input, .form-select {
+      height: 34px;
       padding: 0 12px;
-      background: var(--accent);
-      color: #fff;
-      border-radius: var(--radius-sm);
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
+      color: var(--text-primary);
+      outline: none;
+      transition: var(--transition);
+    }
+    .form-input:hover, .form-select:hover { border-color: var(--text-tertiary); }
+    .form-input:focus, .form-select:focus {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px var(--brand-ring);
+    }
+    .form-input::placeholder { color: var(--text-tertiary); }
+    .form-hint {
       font-size: 12px;
-      font-weight: 500;
-      transition: var(--transition);
+      color: var(--text-tertiary);
+      margin-top: 2px;
     }
-    .free-tier-notification-btn:hover { background: var(--accent-hover); }
-    .free-tier-notification-dismiss {
-      width: 24px;
-      height: 24px;
+    .form-row {
       display: flex;
       align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-sm);
-      color: var(--text-secondary);
-      transition: var(--transition);
+      gap: 12px;
+      flex-wrap: wrap;
     }
-    .free-tier-notification-dismiss:hover { background: var(--bg-hover); color: var(--text-primary); }
-
-    /* =========================================================
-       API Config
-       ========================================================= */
-    .api-config-section { padding: 0 16px 12px; }
-    .api-config-header {
+    .api-key-wrapper {
+      position: relative;
       display: flex;
-      justify-content: space-between;
       align-items: center;
-      margin-bottom: 12px;
     }
-    .api-config-title {
-      font-size: 11px;
-      font-weight: 500;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-secondary);
-    }
-    .api-status-pill {
-      display: inline-flex;
-      align-items: center;
-      gap: 6px;
-      height: 22px;
-      padding: 0 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 500;
-      background: var(--bg-hover);
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-    }
-    .api-status-pill .api-status-dot { width: 6px; height: 6px; background: var(--text-tertiary); }
-    .api-status-pill.connected {
-      background: var(--success-bg);
-      color: var(--success);
-      border-color: var(--success);
-    }
-    .api-status-pill.connected .api-status-dot { background: var(--success); }
-    .api-status-pill.disconnected {
-      background: var(--danger-bg);
-      color: var(--danger);
-      border-color: var(--danger);
-    }
-    .api-status-pill.disconnected .api-status-dot { background: var(--danger); }
-
-    .custom-api-form { display: flex; flex-direction: column; gap: 12px; }
-    .api-key-wrapper { position: relative; display: flex; align-items: center; }
-    .api-key-wrapper .form-input { padding-right: 36px; }
+    .api-key-wrapper .form-input { padding-right: 40px; width: 100%; }
     .api-key-toggle {
       position: absolute;
-      right: 6px;
+      right: 8px;
       top: 50%;
       transform: translateY(-50%);
-      width: 26px;
-      height: 26px;
+      width: 28px;
+      height: 28px;
       display: flex;
       align-items: center;
       justify-content: center;
@@ -1029,594 +418,873 @@
       transition: var(--transition);
     }
     .api-key-toggle:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .key-privacy-note {
-      display: flex;
-      align-items: center;
-      gap: 4px;
-      font-size: 11px;
-      color: var(--text-tertiary);
-    }
-    .key-privacy-note svg { width: 10px; height: 10px; }
-
-    .api-test-row {
-      display: flex;
-      gap: 8px;
-      align-items: center;
-      flex-wrap: wrap;
-    }
-    .key-validation-hint {
-      font-size: 11px;
-      color: var(--text-tertiary);
-    }
-    .key-validation-hint.conflict { color: var(--danger); }
-
-    .key-tutorial {
-      margin-top: 4px;
-      border: 1px dashed var(--border);
-      border-radius: var(--radius-sm);
-      padding: 0 12px;
-    }
-    .key-tutorial summary {
-      padding: 8px 0;
-      cursor: pointer;
-      font-size: 12px;
-      color: var(--accent);
-      list-style: none;
-    }
-    .key-tutorial summary::-webkit-details-marker { display: none; }
-    .key-tutorial summary::before { content: "▸ "; transition: transform 200ms; display: inline-block; }
-    .key-tutorial[open] summary::before { transform: rotate(90deg); }
-    .tutorial-content { padding-bottom: 12px; font-size: 12px; }
-    .tutorial-vendor-title { margin: 8px 0 4px; color: var(--text-primary); }
-    .tutorial-code-block {
-      background: var(--bg-hover);
-      padding: 8px 10px;
-      border-radius: var(--radius-sm);
-      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 11px;
-      color: var(--text-secondary);
-      margin: 0;
-    }
-    .tutorial-note { margin-top: 10px; color: var(--text-tertiary); font-size: 11px; }
-
-    /* =========================================================
-       Shortcut cards
-       ========================================================= */
-    .shortcut-cards {
-      display: flex;
-      flex-direction: column;
-      gap: 8px;
-    }
-    .shortcut-card {
-      display: flex;
-      align-items: center;
-      gap: 10px;
-      padding: 8px 10px;
-      background: var(--bg-hover);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-    }
-    .shortcut-icon { color: var(--text-secondary); flex-shrink: 0; }
-    .shortcut-key, .shortcut-recorder {
-      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 11px;
-      padding: 2px 8px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: 4px;
-      color: var(--text-primary);
-      min-width: 80px;
-      text-align: center;
-      transition: var(--transition);
-    }
-    .shortcut-recorder {
-      cursor: pointer;
-      color: var(--accent);
-      border-color: var(--accent);
-      background: var(--accent-light);
-    }
-    .shortcut-recorder:hover { background: var(--accent); color: #fff; }
-    .shortcut-recorder.recording {
-      background: var(--danger);
-      color: #fff;
-      border-color: var(--danger);
-    }
-    .shortcut-desc { flex: 1; font-size: 12px; color: var(--text-secondary); }
-
-    /* ---------- Theme preview ---------- */
-    .theme-preview {
-      margin-top: 8px;
-      padding: 12px;
-      background: var(--bg-hover);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-    }
-    .theme-preview-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-secondary);
-      margin-bottom: 8px;
-    }
-    .theme-preview-stage {
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      height: 60px;
-    }
-    .theme-preview-btn {
+    .privacy-note {
       display: inline-flex;
-      align-items: center;
-      gap: 4px;
-      padding: 6px 12px;
-      border-radius: 16px;
-      background: var(--accent);
-      color: #fff;
-      font-size: 12px;
-      font-weight: 500;
-      transition: var(--transition);
-    }
-
-    /* =========================================================
-       Account Tab
-       ========================================================= */
-    .license-status-card { padding: 0 16px 12px; display: flex; flex-direction: column; gap: 12px; }
-    .license-status-header { display: flex; align-items: center; gap: 8px; }
-    .license-badge {
-      display: inline-flex;
-      align-items: center;
-      height: 22px;
-      padding: 0 10px;
-      border-radius: 12px;
-      font-size: 11px;
-      font-weight: 500;
-      background: var(--bg-hover);
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-    }
-    .license-badge.free { background: var(--bg-hover); color: var(--text-secondary); }
-    .license-badge.pro { background: var(--success-bg); color: var(--success); border-color: var(--success); }
-
-    .activation-input-group { display: flex; flex-direction: column; gap: 8px; }
-    .activation-input {
-      height: 32px;
-      padding: 0 10px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      color: var(--text-primary);
-      font-family: ui-monospace, "SF Mono", Menlo, Consolas, monospace;
-      font-size: 12px;
-      outline: none;
-      transition: var(--transition);
-    }
-    .activation-input:focus { border-color: var(--accent); box-shadow: 0 0 0 2px var(--accent-glow); }
-    .activation-error {
-      font-size: 11px;
-      color: var(--danger);
-      padding: 4px 8px;
-      background: var(--danger-bg);
-      border-radius: var(--radius-sm);
-    }
-    .activation-btn { width: 100%; }
-    .activation-success {
-      display: none;
       align-items: center;
       gap: 6px;
-      padding: 8px 10px;
-      background: var(--success-bg);
-      border: 1px solid var(--success);
-      border-radius: var(--radius-sm);
       font-size: 12px;
-      color: var(--success);
+      color: var(--text-tertiary);
+      margin-top: 4px;
     }
-    .activation-success.show { display: flex; }
+    .privacy-note svg { width: 12px; height: 12px; }
 
-    /* ---------- Device Management ---------- */
-    .device-mgmt-section { padding: 0 16px 12px; display: flex; flex-direction: column; gap: 12px; }
-    .device-mgmt-summary {
-      display: flex;
-      gap: 16px;
-      align-items: center;
-      padding: 10px 12px;
-      background: var(--bg-hover);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-    }
-    .device-mgmt-stat { display: flex; flex-direction: column; gap: 2px; }
-    .device-mgmt-stat-label {
-      font-size: 11px;
-      text-transform: uppercase;
-      letter-spacing: 0.5px;
-      color: var(--text-secondary);
-    }
-    .device-mgmt-stat-value { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-    .device-mgmt-refresh {
-      margin-left: auto;
+    /* =====================================================
+       Buttons
+       ===================================================== */
+    .btn {
       display: inline-flex;
       align-items: center;
-      gap: 4px;
-      height: 28px;
-      padding: 0 10px;
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      border-radius: var(--radius-sm);
-      font-size: 12px;
+      justify-content: center;
+      gap: 6px;
+      height: 32px;
+      padding: 0 14px;
+      border-radius: var(--radius-md);
+      font-size: 13px;
+      font-weight: 600;
+      transition: var(--transition);
+      white-space: nowrap;
+    }
+    .btn:hover { transform: translateY(-1px); }
+    .btn:active { transform: translateY(0); }
+    .btn-primary {
+      background: var(--brand);
+      color: #fff;
+    }
+    .btn-primary:hover { background: var(--brand-hover); }
+    .btn-secondary {
+      background: var(--bg-surface);
       color: var(--text-primary);
+      border: 1px solid var(--border-strong);
+    }
+    .btn-secondary:hover { background: var(--bg-hover); border-color: var(--border-strong); }
+    .btn-sm { height: 28px; padding: 0 10px; font-size: 12px; }
+    .btn-ghost {
+      background: transparent;
+      color: var(--text-secondary);
+    }
+    .btn-ghost:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .btn-loading {
+      position: relative;
+      color: transparent !important;
+      pointer-events: none;
+    }
+    .btn-loading::after {
+      content: "";
+      position: absolute;
+      width: 14px;
+      height: 14px;
+      border: 2px solid rgba(255,255,255,0.35);
+      border-right-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+    .btn-secondary.btn-loading::after,
+    .btn-ghost.btn-loading::after {
+      border-color: rgba(15, 23, 42, 0.15);
+      border-right-color: var(--text-secondary);
+    }
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    /* =====================================================
+       Toggle Switch
+       ===================================================== */
+    .toggle {
+      position: relative;
+      display: inline-flex;
+      align-items: center;
+      width: 40px;
+      height: 22px;
+      flex-shrink: 0;
+    }
+    .toggle input {
+      opacity: 0;
+      width: 0;
+      height: 0;
+    }
+    .toggle-slider {
+      position: absolute;
+      cursor: pointer;
+      inset: 0;
+      background: var(--border-strong);
+      border-radius: 11px;
       transition: var(--transition);
     }
-    .device-mgmt-refresh:hover { background: var(--bg-hover); }
-    .device-mgmt-warn {
-      padding: 8px 10px;
-      background: var(--warning-bg);
-      border: 1px solid var(--warning);
-      border-radius: var(--radius-sm);
+    .toggle-slider::before {
+      content: "";
+      position: absolute;
+      height: 18px;
+      width: 18px;
+      left: 2px;
+      bottom: 2px;
+      background: #fff;
+      border-radius: 50%;
+      transition: var(--transition);
+      box-shadow: 0 1px 2px rgba(0,0,0,0.15);
+    }
+    .toggle input:checked + .toggle-slider { background: var(--brand); }
+    .toggle input:checked + .toggle-slider::before { transform: translateX(18px); }
+    .toggle input:focus + .toggle-slider { box-shadow: 0 0 0 3px var(--brand-ring); }
+
+    /* =====================================================
+       Form States
+       ===================================================== */
+    .form-input.error, .form-select.error {
+      border-color: var(--error);
+      background: var(--error-light);
+    }
+    .form-input.error:focus, .form-select.error:focus {
+      border-color: var(--error);
+      box-shadow: 0 0 0 3px rgba(239, 68, 68, 0.2);
+    }
+    .form-error-text {
       font-size: 12px;
+      color: var(--error);
+      margin-top: 4px;
+      display: flex;
+      align-items: center;
+      gap: 4px;
+    }
+
+    /* =====================================================
+       API Section Specifics
+       ===================================================== */
+    .api-config-status {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      margin-bottom: 24px;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+    }
+    .api-config-status-label {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      font-size: 14px;
+      font-weight: 600;
       color: var(--text-primary);
     }
-    .device-list { display: flex; flex-direction: column; gap: 8px; }
-    .device-list-empty {
-      padding: 16px;
-      text-align: center;
-      color: var(--text-tertiary);
+    .api-status-indicator {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 10px;
+      border-radius: var(--radius-lg);
       font-size: 12px;
-      border: 1px dashed var(--border);
-      border-radius: var(--radius-sm);
+      font-weight: 600;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
     }
-    .device-card {
+    .api-status-indicator.disconnected {
+      background: var(--error-light);
+      color: var(--error);
+    }
+    .api-status-indicator.connected {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    .api-test-row {
       display: flex;
       align-items: center;
       gap: 12px;
-      padding: 10px 12px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-radius: var(--radius-sm);
-      transition: var(--transition);
-    }
-    .device-card:hover { border-color: var(--border-strong); }
-    .device-card.current { border-color: var(--accent); background: var(--accent-light); }
-    .device-card.inactive { opacity: 0.5; }
-    .device-card-info { flex: 1; min-width: 0; }
-    .device-card-name { font-size: 13px; font-weight: 500; color: var(--text-primary); }
-    .device-card-meta { font-size: 11px; color: var(--text-tertiary); margin-top: 2px; }
-    .device-card-badge {
-      font-size: 11px;
-      padding: 2px 8px;
-      border-radius: 10px;
-      background: var(--bg-hover);
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-    }
-    .device-card-badge.current { background: var(--success-bg); color: var(--success); border-color: var(--success); }
-    .device-card-unbind {
-      height: 26px;
-      padding: 0 10px;
-      border-radius: var(--radius-sm);
-      font-size: 11px;
-      color: var(--text-secondary);
-      border: 1px solid var(--border);
-      background: var(--bg-card);
-      transition: var(--transition);
-    }
-    .device-card-unbind:hover {
-      background: var(--danger);
-      color: #fff;
-      border-color: var(--danger);
-    }
-
-    /* ---------- Data Backup ---------- */
-    .data-backup-section { padding: 0 16px 12px; }
-    .data-backup-btns { display: flex; gap: 8px; flex-wrap: wrap; }
-
-    /* =========================================================
-       Footer & Privacy
-       ========================================================= */
-    .privacy-notice {
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 12px 16px;
       margin-top: 24px;
-      background: var(--bg-card);
-      border: 1px solid var(--border);
-      border-top: 2px solid var(--accent);
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      color: var(--text-secondary);
-      box-shadow: var(--shadow-sm);
-    }
-    .privacy-notice-icon { color: var(--accent); flex-shrink: 0; }
-
-    .page-footer {
-      margin-top: 24px;
-      padding-top: 16px;
-      border-top: 1px solid var(--border);
-    }
-    .footer-status-bar {
-      display: flex;
-      gap: 20px;
       flex-wrap: wrap;
     }
-    .footer-status-item {
-      display: flex;
-      align-items: center;
-      gap: 6px;
-      font-size: 11px;
+    .key-validation-hint {
+      font-size: 13px;
       color: var(--text-secondary);
     }
-    .footer-status-icon { width: 12px; height: 12px; color: var(--text-tertiary); }
-    .footer-status-label { color: var(--text-secondary); }
-    .footer-status-value { color: var(--text-primary); font-weight: 500; }
-
-    /* =========================================================
-       Status dots
-       ========================================================= */
-    .status-dot {
-      display: inline-block;
-      width: 6px;
-      height: 6px;
-      border-radius: 50%;
-      background: var(--text-tertiary);
-    }
-    .status-dot.online { background: var(--success); }
-    .status-dot.offline { background: var(--danger); }
-    .status-dot.idle { background: var(--warning); }
-
-    /* =========================================================
-       Empty State (template)
-       ========================================================= */
-    .empty-state {
-      display: flex;
-      flex-direction: column;
-      align-items: center;
-      gap: 8px;
-      padding: 24px 12px;
-      text-align: center;
-    }
-    .empty-state-icon {
-      width: 40px;
-      height: 40px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-md);
-      background: var(--bg-hover);
-      color: var(--text-tertiary);
-    }
-    .empty-state-icon svg { width: 20px; height: 20px; }
-    .empty-state-title { font-size: 13px; font-weight: 600; color: var(--text-primary); }
-    .empty-state-desc { font-size: 12px; color: var(--text-secondary); }
-    .empty-state-cta { margin-top: 4px; }
-
-    /* =========================================================
-       Toast
-       ========================================================= */
-    .toast {
-      position: fixed;
-      bottom: 24px;
-      right: 24px;
-      display: flex;
-      align-items: center;
-      gap: 8px;
-      padding: 10px 14px;
-      background: var(--bg-elevated);
+    .key-tutorial {
+      margin-top: 20px;
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+    .key-tutorial summary {
+      padding: 12px 16px;
       font-size: 13px;
-      color: var(--text-primary);
-      z-index: 9000;
-      opacity: 0;
-      pointer-events: none;
-      transform: translateY(8px);
+      font-weight: 600;
+      color: var(--text-secondary);
+      cursor: pointer;
+      background: var(--bg);
       transition: var(--transition);
     }
-    .toast.show {
-      opacity: 1;
-      pointer-events: auto;
-      transform: translateY(0);
+    .key-tutorial summary:hover { background: var(--bg-hover); }
+    .tutorial-content {
+      padding: 16px;
+      font-size: 13px;
+      color: var(--text-secondary);
     }
-    .toast svg { width: 16px; height: 16px; color: var(--accent); flex-shrink: 0; }
-    .toast.success svg { color: var(--success); }
-    .toast.error svg { color: var(--danger); }
-    .toast-msg { flex: 1; }
-    .toast-close {
-      width: 20px;
-      height: 20px;
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      border-radius: var(--radius-sm);
-      color: var(--text-tertiary);
-      transition: var(--transition);
-    }
-    .toast-close:hover { background: var(--bg-hover); color: var(--text-primary); }
-    .toast-action {
-      height: 24px;
-      padding: 0 10px;
-      border-radius: var(--radius-sm);
-      font-size: 12px;
-      color: var(--accent);
-      background: var(--accent-light);
-      transition: var(--transition);
-    }
-    .toast-action:hover { background: var(--accent); color: #fff; }
-
-    /* =========================================================
-       Modal
-       ========================================================= */
-    .modal-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-overlay);
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      z-index: 8000;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 150ms ease;
-      backdrop-filter: blur(4px);
-    }
-    .modal-overlay.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .modal-content {
-      width: 480px;
-      max-width: calc(100vw - 32px);
-      max-height: calc(100vh - 64px);
-      overflow-y: auto;
-      background: var(--bg-elevated);
+    .tutorial-content p { margin-bottom: 8px; }
+    .tutorial-code-block {
+      padding: 10px 12px;
+      background: var(--bg);
       border: 1px solid var(--border);
-      border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
+      border-radius: var(--radius-sm);
+      font-family: ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+      font-size: 12px;
+      color: var(--text-primary);
+      margin-bottom: 12px;
+    }
+
+    /* =====================================================
+       Personas
+       ===================================================== */
+    .persona-list {
       display: flex;
       flex-direction: column;
-      transform: translateY(8px) scale(0.98);
-      transition: transform 200ms ease;
+      gap: 12px;
     }
-    .modal-overlay.show .modal-content { transform: translateY(0) scale(1); }
-    .modal-sm { width: 400px; }
-    .modal-header {
-      padding: 14px 18px;
-      border-bottom: 1px solid var(--border);
+    .persona-card {
+      padding: 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      transition: var(--transition);
     }
-    .modal-header h3 {
+    .persona-card:hover { border-color: var(--border-strong); background: var(--bg-surface); }
+    .persona-card.active {
+      border-color: var(--brand);
+      background: var(--brand-light);
+    }
+    .persona-card-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+    }
+    .persona-card-left { display: flex; align-items: center; gap: 12px; }
+    .persona-avatar {
+      width: 36px;
+      height: 36px;
+      border-radius: 50%;
+      background: linear-gradient(135deg, var(--brand), var(--accent-purple));
+      color: #fff;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      font-size: 14px;
+      font-weight: 600;
+    }
+    .persona-name-input {
       font-size: 15px;
       font-weight: 600;
       color: var(--text-primary);
-      letter-spacing: -0.01em;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid transparent;
+      outline: none;
+      width: 200px;
     }
-    .modal-body { padding: 16px 18px; }
-    .modal-footer {
-      padding: 12px 18px;
+    .persona-name-input:focus { border-bottom-color: var(--brand); }
+    .persona-meta {
+      font-size: 12px;
+      color: var(--text-tertiary);
+      margin-top: 2px;
+    }
+    .persona-actions { display: flex; gap: 6px; }
+    .persona-actions-row {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      margin-top: 20px;
+    }
+    .persona-prompt-section {
+      margin-top: 16px;
+      padding-top: 16px;
       border-top: 1px solid var(--border);
-      display: flex;
-      justify-content: flex-end;
-      gap: 8px;
     }
-
-    /* =========================================================
-       Command Palette
-       ========================================================= */
-    .cmd-overlay {
-      position: fixed;
-      inset: 0;
-      background: var(--bg-overlay);
-      display: flex;
-      align-items: flex-start;
-      justify-content: center;
-      padding-top: 12vh;
-      z-index: 9500;
-      opacity: 0;
-      pointer-events: none;
-      transition: opacity 150ms ease;
-      backdrop-filter: blur(4px);
-    }
-    .cmd-overlay.show {
-      opacity: 1;
-      pointer-events: auto;
-    }
-    .cmd-palette {
-      width: 560px;
-      max-width: calc(100vw - 32px);
-      background: var(--bg-elevated);
+    .persona-prompt-section textarea {
+      width: 100%;
+      min-height: 100px;
+      padding: 12px;
+      background: var(--bg-surface);
       border: 1px solid var(--border);
       border-radius: var(--radius-md);
-      box-shadow: var(--shadow-lg);
-      overflow: hidden;
-      transform: translateY(-8px);
-      transition: transform 200ms ease;
+      color: var(--text-primary);
+      resize: vertical;
+      outline: none;
     }
-    .cmd-overlay.show .cmd-palette { transform: translateY(0); }
-    .cmd-input-wrap {
+    .persona-prompt-section textarea:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-ring); }
+    .preview-chat {
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+      padding: 16px;
+      background: var(--bg);
+      border-radius: var(--radius-lg);
+      margin-bottom: 16px;
+      min-height: 120px;
+    }
+    .chat-bubble {
+      max-width: 80%;
+      padding: 10px 14px;
+      border-radius: var(--radius-lg);
+      font-size: 14px;
+      line-height: 1.5;
+    }
+    .chat-bubble.user {
+      align-self: flex-end;
+      background: var(--brand);
+      color: #fff;
+      border-bottom-right-radius: var(--radius-sm);
+    }
+    .chat-bubble.ai {
+      align-self: flex-start;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      color: var(--text-primary);
+      border-bottom-left-radius: var(--radius-sm);
+    }
+    .preview-input-row {
+      display: flex;
+      gap: 10px;
+    }
+    .preview-input-row .form-input { flex: 1; }
+
+    /* =====================================================
+       FAQ / Knowledge
+       ===================================================== */
+    .faq-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      margin-bottom: 16px;
+      flex-wrap: wrap;
+    }
+    .faq-search {
       position: relative;
-      border-bottom: 1px solid var(--border);
+      flex: 1;
+      min-width: 240px;
     }
-    .cmd-input-icon {
+    .faq-search svg {
       position: absolute;
-      left: 14px;
+      left: 12px;
       top: 50%;
       transform: translateY(-50%);
       width: 16px;
       height: 16px;
       color: var(--text-tertiary);
     }
-    .cmd-input {
+    .faq-search-input {
       width: 100%;
-      height: 44px;
-      padding: 0 14px 0 40px;
-      background: transparent;
-      border: none;
+      height: 38px;
+      padding: 0 12px 0 36px;
+      background: var(--bg);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-md);
       color: var(--text-primary);
-      font-size: 14px;
       outline: none;
     }
-    .cmd-input::placeholder { color: var(--text-tertiary); }
-    .cmd-results {
-      max-height: 360px;
-      overflow-y: auto;
-      padding: 6px;
-    }
-    .cmd-item {
+    .faq-search-input:focus { border-color: var(--brand); box-shadow: 0 0 0 3px var(--brand-ring); }
+    .faq-actions-group { display: flex; gap: 8px; }
+    .faq-list {
       display: flex;
-      align-items: center;
+      flex-direction: column;
       gap: 10px;
-      padding: 8px 10px;
-      border-radius: var(--radius-sm);
-      cursor: pointer;
+    }
+    .faq-item {
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
       transition: var(--transition);
     }
-    .cmd-item:hover, .cmd-item.selected {
-      background: var(--bg-hover);
+    .faq-item:hover { border-color: var(--border-strong); background: var(--bg-surface); }
+    .faq-item-header {
+      display: flex;
+      align-items: flex-start;
+      gap: 10px;
     }
-    .cmd-item.selected { background: var(--accent-light); }
-    .cmd-item-icon {
-      width: 24px;
-      height: 24px;
+    .faq-item-checkbox {
+      width: 16px;
+      height: 16px;
+      margin-top: 3px;
+      accent-color: var(--brand);
+    }
+    .faq-item-content { flex: 1; }
+    .faq-item-question {
+      font-weight: 600;
+      color: var(--text-primary);
+      margin-bottom: 4px;
+    }
+    .faq-item-answer {
+      font-size: 13px;
+      color: var(--text-secondary);
+      line-height: 1.5;
+    }
+    .faq-item-category {
+      display: inline-block;
+      padding: 2px 8px;
+      background: var(--brand-light);
+      color: var(--brand);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 600;
+      margin-top: 8px;
+    }
+    .batch-toolbar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 10px 14px;
+      background: var(--brand-light);
+      border: 1px solid rgba(67, 97, 238, 0.15);
+      border-radius: var(--radius-md);
+      margin-bottom: 16px;
+    }
+    .batch-actions { display: flex; gap: 8px; }
+
+    /* =====================================================
+       Settings
+       ===================================================== */
+    .shortcut-cards {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+      gap: 12px;
+    }
+    .shortcut-card {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 14px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+    }
+    .shortcut-card svg { width: 18px; height: 18px; color: var(--text-tertiary); }
+    .shortcut-key {
+      font-family: ui-monospace, monospace;
+      font-size: 13px;
+      font-weight: 600;
+      color: var(--text-primary);
+    }
+    .shortcut-desc {
+      font-size: 12px;
+      color: var(--text-tertiary);
+    }
+    .shortcut-recorder {
+      margin-left: auto;
+      padding: 4px 10px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border-strong);
+      border-radius: var(--radius-sm);
+      font-family: ui-monospace, monospace;
+      font-size: 12px;
+      color: var(--text-primary);
+      transition: var(--transition);
+    }
+    .shortcut-recorder.recording {
+      border-color: var(--brand);
+      box-shadow: 0 0 0 3px var(--brand-ring);
+      color: var(--brand);
+    }
+    .shortcut-recorder.conflict { border-color: var(--error); color: var(--error); }
+    .theme-preview-btn {
+      width: 48px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      border: 2px solid transparent;
+      transition: var(--transition);
+    }
+    .theme-preview-btn:hover { transform: scale(1.05); }
+    .theme-preview-btn.selected { border-color: var(--brand); }
+
+    /* =====================================================
+       Account / License
+       ===================================================== */
+    .license-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 18px 24px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      margin-bottom: 24px;
+    }
+    .license-info { display: flex; align-items: center; gap: 14px; }
+    .license-icon {
+      width: 44px;
+      height: 44px;
+      border-radius: var(--radius-lg);
+      background: linear-gradient(135deg, var(--brand), var(--accent-purple));
+      color: #fff;
       display: flex;
       align-items: center;
       justify-content: center;
-      color: var(--text-secondary);
-      flex-shrink: 0;
     }
-    .cmd-item-icon svg { width: 14px; height: 14px; }
-    .cmd-item-label {
-      flex: 1;
+    .license-title {
+      font-size: 16px;
+      font-weight: 700;
+      color: var(--text-primary);
+      margin-bottom: 2px;
+    }
+    .license-subtitle { font-size: 13px; color: var(--text-secondary); }
+    .license-badge {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 5px 12px;
+      border-radius: var(--radius-lg);
+      font-size: 12px;
+      font-weight: 700;
+      text-transform: uppercase;
+      letter-spacing: 0.3px;
+    }
+    .license-badge.free {
+      background: var(--bg);
+      color: var(--text-secondary);
+      border: 1px solid var(--border);
+    }
+    .license-badge.pro {
+      background: var(--success-light);
+      color: var(--success);
+    }
+    .activation-form {
+      display: flex;
+      gap: 10px;
+    }
+    .activation-form .form-input { flex: 1; text-transform: uppercase; }
+    .activation-message {
       font-size: 13px;
+      margin-top: 10px;
+      padding: 8px 12px;
+      border-radius: var(--radius-md);
+    }
+    .activation-message.success { background: var(--success-light); color: var(--success); }
+    .activation-message.error { background: var(--error-light); color: var(--error); }
+    .device-list {
+      display: flex;
+      flex-direction: column;
+      gap: 10px;
+    }
+    .device-card {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 14px 16px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      transition: var(--transition);
+    }
+    .device-card:hover { border-color: var(--border-strong); }
+    .device-card.inactive { opacity: 0.5; }
+    .device-info { display: flex; align-items: center; gap: 12px; }
+    .device-icon {
+      width: 32px;
+      height: 32px;
+      border-radius: var(--radius-md);
+      background: var(--bg-surface);
+      color: var(--text-secondary);
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    .device-name { font-weight: 600; color: var(--text-primary); }
+    .device-meta { font-size: 12px; color: var(--text-tertiary); }
+    .device-current {
+      padding: 3px 8px;
+      background: var(--success-light);
+      color: var(--success);
+      border-radius: var(--radius-sm);
+      font-size: 11px;
+      font-weight: 700;
+    }
+    .data-actions {
+      display: flex;
+      gap: 10px;
+      flex-wrap: wrap;
+    }
+
+    /* =====================================================
+       Footer Status Bar
+       ===================================================== */
+    .footer-status-bar {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 16px;
+      padding: 14px 20px;
+      margin-top: 40px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-sm);
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+    .footer-stats { display: flex; align-items: center; gap: 16px; }
+    .footer-stat { display: flex; align-items: center; gap: 6px; }
+    .footer-stat strong { color: var(--text-primary); }
+
+    /* =====================================================
+       Top utility bar inside content
+       ===================================================== */
+    .content-topbar {
+      display: flex;
+      align-items: center;
+      justify-content: flex-end;
+      gap: 10px;
+      margin-bottom: 16px;
+    }
+    .search-trigger {
+      display: flex;
+      align-items: center;
+      gap: 8px;
+      height: 36px;
+      padding: 0 12px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-md);
+      color: var(--text-tertiary);
+      font-size: 13px;
+      transition: var(--transition);
+    }
+    .search-trigger:hover { border-color: var(--border-strong); color: var(--text-primary); }
+    .search-trigger kbd {
+      padding: 2px 6px;
+      background: var(--bg);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-sm);
+      font-family: ui-monospace, monospace;
+      font-size: 11px;
+    }
+
+    /* =====================================================
+       Modals, Toast, Command Palette
+       ===================================================== */
+    .modal-overlay {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: center;
+      justify-content: center;
+      z-index: 1000;
+      opacity: 0;
+      transition: opacity 180ms ease;
+    }
+    .modal-overlay.show { display: flex; opacity: 1; }
+    .modal {
+      width: 90%;
+      max-width: 520px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+      transform: translateY(8px);
+      transition: transform 180ms ease;
+    }
+    .modal-overlay.show .modal { transform: translateY(0); }
+    .modal-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 18px 20px;
+      border-bottom: 1px solid var(--border);
+    }
+    .modal-header h3 { font-size: 16px; font-weight: 700; }
+    .modal-close {
+      width: 28px;
+      height: 28px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: var(--radius-sm);
+      color: var(--text-tertiary);
+      transition: var(--transition);
+    }
+    .modal-close:hover { background: var(--bg-hover); color: var(--text-primary); }
+    .modal-body { padding: 20px; }
+    .modal-footer {
+      display: flex;
+      justify-content: flex-end;
+      gap: 10px;
+      padding: 14px 20px;
+      border-top: 1px solid var(--border);
+      background: var(--bg);
+    }
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      display: none;
+      align-items: center;
+      gap: 12px;
+      padding: 12px 18px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-lg);
+      z-index: 2000;
+      animation: slideUp 180ms ease-out;
+    }
+    .toast.show { display: flex; }
+    @keyframes slideUp {
+      from { opacity: 0; transform: translateY(8px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+    .free-tier-notification {
+      position: fixed;
+      bottom: 80px;
+      right: 24px;
+      padding: 14px 18px;
+      background: var(--warning-light);
+      border: 1px solid rgba(245, 158, 11, 0.2);
+      border-radius: var(--radius-lg);
+      box-shadow: var(--shadow-md);
+      z-index: 1500;
+    }
+    .free-tier-inner {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+    }
+    .command-palette {
+      position: fixed;
+      inset: 0;
+      background: rgba(0, 0, 0, 0.35);
+      backdrop-filter: blur(3px);
+      display: none;
+      align-items: flex-start;
+      justify-content: center;
+      padding-top: 120px;
+      z-index: 1000;
+    }
+    .command-palette.show { display: flex; }
+    .command-palette-box {
+      width: 90%;
+      max-width: 560px;
+      background: var(--bg-surface);
+      border: 1px solid var(--border);
+      border-radius: var(--radius-xl);
+      box-shadow: var(--shadow-lg);
+      overflow: hidden;
+    }
+    .command-input {
+      width: 100%;
+      height: 56px;
+      padding: 0 20px;
+      background: transparent;
+      border: none;
+      border-bottom: 1px solid var(--border);
+      color: var(--text-primary);
+      font-size: 16px;
+      outline: none;
+    }
+    .command-input::placeholder { color: var(--text-tertiary); }
+    .command-results {
+      max-height: 320px;
+      overflow-y: auto;
+      padding: 8px;
+    }
+    .command-item {
+      display: flex;
+      align-items: center;
+      gap: 12px;
+      padding: 10px 12px;
+      border-radius: var(--radius-md);
+      color: var(--text-secondary);
+      transition: var(--transition);
+    }
+    .command-item:hover, .command-item.active {
+      background: var(--bg-hover);
       color: var(--text-primary);
     }
-    .cmd-item-hint {
-      font-size: 11px;
+    .command-item-icon { width: 20px; text-align: center; }
+    .command-empty, .cmd-empty {
+      padding: 24px;
+      text-align: center;
       color: var(--text-tertiary);
+      font-size: 14px;
     }
 
-    /* =========================================================
-       Utility
-       ========================================================= */
+    /* =====================================================
+       Utilities
+       ===================================================== */
     .hidden { display: none !important; }
-    .mt-2 { margin-top: 8px; }
-    .mt-3 { margin-top: 12px; }
     .mt-4 { margin-top: 16px; }
-    .mb-3 { margin-bottom: 12px; }
+    .mt-6 { margin-top: 24px; }
     .mb-4 { margin-bottom: 16px; }
-    .mb-6 { margin-bottom: 24px; }
-    .flex-end { display: flex; justify-content: flex-end; }
-    .flex-center { display: flex; align-items: center; justify-content: center; }
-    .loaded { }
+    .text-sm { font-size: 13px; }
+    .text-tertiary { color: var(--text-tertiary); }
 
-    /* Scrollbars */
-    ::-webkit-scrollbar { width: 8px; height: 8px; }
-    ::-webkit-scrollbar-track { background: transparent; }
-    ::-webkit-scrollbar-thumb { background: var(--border-strong); border-radius: 4px; }
-    ::-webkit-scrollbar-thumb:hover { background: var(--text-tertiary); }
+    /* =====================================================
+       Skeleton Screen
+       ===================================================== */
+    .skeleton-screen {
+      position: fixed;
+      inset: 0;
+      background: var(--bg);
+      z-index: 9999;
+      display: flex;
+      flex-direction: column;
+    }
+    .skeleton-header {
+      height: 73px;
+      border-bottom: 1px solid var(--border);
+      padding: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+    .skeleton-body {
+      flex: 1;
+      display: flex;
+    }
+    .skeleton-sidebar {
+      width: 220px;
+      border-right: 1px solid var(--border);
+      padding: 20px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+    .skeleton-panel {
+      flex: 1;
+      padding: 32px 48px;
+      display: flex;
+      flex-direction: column;
+      gap: 16px;
+    }
+    .skeleton-block {
+      background: linear-gradient(90deg, var(--border) 25%, var(--bg-hover) 50%, var(--border) 75%);
+      background-size: 200% 100%;
+      border-radius: var(--radius-md);
+      animation: shimmer 1.5s infinite;
+    }
+    .skeleton-title { width: 120px; height: 20px; }
+    .skeleton-subtitle { width: 200px; height: 14px; }
+    .skeleton-nav-item { width: 100%; height: 40px; }
+    .skeleton-panel-title { width: 180px; height: 24px; }
+    .skeleton-panel-line { width: 100%; height: 14px; }
+    .skeleton-panel-line.short { width: 60%; }
+    .skeleton-card { width: 100%; height: 80px; border-radius: var(--radius-lg); }
+    @keyframes shimmer {
+      0% { background-position: 200% 0; }
+      100% { background-position: -200% 0; }
+    }
 
-    @media (max-width: 720px) {
-      .main-content { padding: 20px 16px 60px; }
+    /* =====================================================
+       Responsive
+       ===================================================== */
+    @media (max-width: 900px) {
+      .sidebar { width: 64px; }
+      .brand-text, .nav-item-label, .theme-toggle span { display: none; }
+      .content-area { margin-left: 64px; padding: 20px; }
+      .hero-section { flex-direction: column; align-items: flex-start; }
       .form-grid { grid-template-columns: 1fr; }
-      .search-trigger { min-width: auto; }
-      .search-trigger-text { display: none; }
     }
   </style>
 </head>
@@ -1625,7 +1293,6 @@
   <div id="skeletonScreen" class="skeleton-screen" style="display:none;">
     <div class="skeleton-header">
       <div class="skeleton-block skeleton-title"></div>
-      <div class="skeleton-block skeleton-subtitle"></div>
     </div>
     <div class="skeleton-body">
       <div class="skeleton-sidebar">
@@ -1644,22 +1311,32 @@
     </div>
   </div>
 
-  <div class="page-container" style="opacity:1;">
-    <!-- Top Bar -->
-    <header class="top-bar">
-      <div class="top-bar-left">
-        <span class="page-title" data-i18n="title">ChatGenius AI 设置</span>
+  <div class="app-shell">
+    <!-- Sidebar -->
+    <aside class="sidebar">
+      <div class="sidebar-brand">
+        <div class="brand-logo">CG</div>
+        <div class="brand-text">ChatGenius</div>
       </div>
-      <div class="top-bar-right">
-        <button class="icon-btn search-trigger" id="cmdTrigger" type="button" aria-label="搜索设置" title="搜索设置、角色、FAQ (⌘K)">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <circle cx="11" cy="11" r="8"></circle>
-            <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-          </svg>
-          <span class="search-trigger-text" data-i18n="searchPlaceholder">搜索设置…</span>
-          <kbd id="cmdKbd">⌘K</kbd>
+      <nav class="sidebar-nav" aria-label="主导航">
+        <button class="nav-item tab-btn active" id="nav-api" type="button" data-tab="api" aria-current="page" title="大模型 API" aria-label="大模型 API">
+          <span class="nav-item-label">大模型 API</span>
         </button>
-        <button class="icon-btn" id="headerThemeToggle" type="button" aria-label="切换主题" title="切换主题">
+        <button class="nav-item tab-btn" id="nav-personas" type="button" data-tab="personas" title="AI 角色" aria-label="AI 角色">
+          <span class="nav-item-label">AI 角色</span>
+        </button>
+        <button class="nav-item tab-btn" id="nav-knowledge" type="button" data-tab="knowledge" title="知识库" aria-label="知识库">
+          <span class="nav-item-label">知识库</span>
+        </button>
+        <button class="nav-item tab-btn" id="nav-settings" type="button" data-tab="settings" title="设置" aria-label="设置">
+          <span class="nav-item-label">设置</span>
+        </button>
+        <button class="nav-item tab-btn" id="nav-account" type="button" data-tab="account" title="账户" aria-label="账户">
+          <span class="nav-item-label">账户</span>
+        </button>
+      </nav>
+      <div class="sidebar-footer">
+        <button class="theme-toggle" type="button" id="themeToggle" title="切换深色模式" aria-label="切换深色模式">
           <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
             <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
           </svg>
@@ -1674,64 +1351,21 @@
             <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
             <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
           </svg>
+          <span id="themeToggleText">深色模式</span>
         </button>
       </div>
-    </header>
+    </aside>
 
-    <div class="app-body">
-      <!-- Sidebar (220px with icon + text) -->
-      <aside class="sidebar">
-        <nav class="sidebar-nav">
-          <button class="nav-item tab-btn active" id="nav-api" type="button" data-tab="api" aria-controls="tab-api" aria-current="page">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M5 8h14M5 8a2 2 0 0 1-2-2V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2v1a2 2 0 0 1-2 2M5 8v3a4 4 0 0 0 4 4h6a4 4 0 0 0 4-4V8"></path>
-              <line x1="12" y1="15" x2="12" y2="19"></line>
-              <rect x="9" y="19" width="6" height="3" rx="1"></rect>
-            </svg>
-            <span class="nav-item-label" data-i18n="tabApi">大模型 API</span>
-          </button>
-          <button class="nav-item tab-btn" type="button" id="nav-personas" data-tab="personas" aria-controls="tab-personas" aria-current="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-              <circle cx="12" cy="7" r="4"></circle>
-            </svg>
-            <span class="nav-item-label" data-i18n="tabPersonas">AI 角色</span>
-          </button>
-          <button class="nav-item tab-btn" type="button" id="nav-knowledge" data-tab="knowledge" aria-controls="tab-knowledge" aria-current="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"></path>
-              <path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"></path>
-            </svg>
-            <span class="nav-item-label" data-i18n="tabKnowledge">知识库</span>
-          </button>
-          <button class="nav-item tab-btn" id="nav-settings" type="button" data-tab="settings" aria-controls="tab-settings" aria-current="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="4" y1="21" x2="4" y2="14"></line>
-              <line x1="4" y1="10" x2="4" y2="3"></line>
-              <line x1="12" y1="21" x2="12" y2="12"></line>
-              <line x1="12" y1="8" x2="12" y2="3"></line>
-              <line x1="20" y1="21" x2="20" y2="16"></line>
-              <line x1="20" y1="12" x2="20" y2="3"></line>
-              <line x1="1" y1="14" x2="7" y2="14"></line>
-              <line x1="9" y1="8" x2="15" y2="8"></line>
-              <line x1="17" y1="16" x2="23" y2="16"></line>
-            </svg>
-            <span class="nav-item-label" data-i18n="tabSettings">设置</span>
-          </button>
-          <button class="nav-item tab-btn" id="nav-account" type="button" data-tab="account" aria-controls="tab-account" aria-current="false">
-            <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <rect x="1" y="4" width="22" height="16" rx="2" ry="2"></rect>
-              <line x1="1" y1="10" x2="23" y2="10"></line>
-            </svg>
-            <span class="nav-item-label" data-i18n="tabAccount">账户</span>
-          </button>
-        </nav>
-        <div class="sidebar-footer">
-          <button class="theme-toggle" type="button" id="themeToggle" title="切换主题" aria-label="切换主题">
-            <svg class="icon-moon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+    <!-- Content -->
+    <main class="content-area">
+      <div class="content-inner">
+        <!-- Top utility bar -->
+        <div class="content-topbar">
+          <button class="theme-toggle" type="button" id="headerThemeToggle" title="切换深色模式" aria-label="切换深色模式" style="width: auto;">
+            <svg class="icon-moon" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <path d="M21 12.79A9 9 0 1 1 11.21 3 7 7 0 0 0 21 12.79z"></path>
             </svg>
-            <svg class="icon-sun" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <svg class="icon-sun" width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
               <circle cx="12" cy="12" r="5"></circle>
               <line x1="12" y1="1" x2="12" y2="3"></line>
               <line x1="12" y1="21" x2="12" y2="23"></line>
@@ -1742,624 +1376,725 @@
               <line x1="4.22" y1="19.78" x2="5.64" y2="18.36"></line>
               <line x1="18.36" y1="5.64" x2="19.78" y2="4.22"></line>
             </svg>
-            <span class="theme-toggle-label" data-i18n="themeToggleLabel">切换主题</span>
+          </button>
+          <button class="search-trigger" id="cmdTrigger" type="button" aria-label="搜索设置" title="搜索设置、角色、FAQ (⌘K)">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <circle cx="11" cy="11" r="8"></circle>
+              <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
+            </svg>
+            <span class="search-trigger-text">搜索设置…</span>
+            <kbd id="cmdKbd">⌘K</kbd>
           </button>
         </div>
-      </aside>
 
-      <!-- Main Content -->
-      <main class="main-content">
-        <!-- Hero Header: 品牌锚点 + 状态摘要 -->
+        <!-- Hero -->
         <header class="hero-section">
-          <div class="hero-brand">
-            <div class="hero-logo" aria-hidden="true">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-            </div>
-            <div class="hero-brand-text">
-              <h1 class="hero-title">ChatGenius AI</h1>
-              <p class="hero-subtitle" data-i18n="subtitle">管理 AI 角色、模型与知识库</p>
-            </div>
+          <div class="hero-left">
+            <h1 class="hero-title">设置</h1>
+            <p class="hero-subtitle">管理 AI 模型、角色与账户</p>
           </div>
-          <div class="hero-status-row">
-            <div class="hero-status-item" id="heroModelStatus">
-              <span class="hero-status-label" data-i18n="heroModel">模型</span>
-              <span class="hero-status-value" id="dashModelName">未配置</span>
+          <div class="hero-status">
+            <div class="status-pill" id="heroModelStatus">
+              <span class="status-dot disconnected" id="apiStatusBarDot"></span>
+              <span class="status-label">模型</span>
+              <span class="status-value" id="dashModelName">未配置</span>
             </div>
-            <div class="hero-status-divider" aria-hidden="true"></div>
-            <div class="hero-status-item" id="heroLicenseStatus">
-              <span class="hero-status-label" data-i18n="heroLicense">许可证</span>
-              <span class="hero-status-value" id="heroLicenseValue">免费版</span>
+            <div class="status-pill" id="heroPersonaStatus">
+              <span class="status-dot" style="background: var(--accent-purple);"></span>
+              <span class="status-label">角色</span>
+              <span class="status-value" id="dashCurrentPersona">默认</span>
             </div>
-            <div class="hero-status-divider" aria-hidden="true"></div>
-            <div class="hero-status-item" id="heroQuotaStatus">
-              <span class="hero-status-label" data-i18n="heroQuota">今日配额</span>
-              <span class="hero-status-value" id="statQuota">0/50</span>
+            <div class="status-pill" id="heroKnowledgeStatus">
+              <span class="status-dot" style="background: var(--brand);"></span>
+              <span class="status-label">知识库</span>
+              <span class="status-value"><span id="dashKnowledgeCount">0</span> 条 / <span id="dashKnowledgeDocs">0</span> 文档</span>
+            </div>
+            <div class="status-pill" id="heroLicenseStatus">
+              <span class="status-dot" style="background: var(--text-tertiary);"></span>
+              <span class="status-label">许可证</span>
+              <span class="status-value" id="heroLicenseValue">免费版</span>
+            </div>
+            <div class="status-pill" id="heroQuotaStatus">
+              <span class="status-dot" style="background: var(--warning);"></span>
+              <span class="status-label">今日配额</span>
+              <span class="status-value" id="statQuota">0/50</span>
             </div>
           </div>
         </header>
 
-        <!-- API Status Bar -->
-        <div id="apiStatusBar" class="api-status-bar hidden">
+        <!-- API Guide Banner -->
+        <div id="apiGuideBanner" class="api-status-bar" style="margin-bottom: 16px;">
           <div class="api-status-left">
-            <span class="api-status-dot" id="apiStatusBarDot"></span>
-            <span class="api-status-icon" id="apiStatusIcon"></span>
-            <span class="api-status-text" id="apiStatusBarText"></span>
+            <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--brand);">
+              <circle cx="12" cy="12" r="10"></circle>
+              <line x1="12" y1="16" x2="12" y2="12"></line>
+              <line x1="12" y1="8" x2="12.01" y2="8"></line>
+            </svg>
+            <span>首次使用？填写下方 API 地址、Key 和模型名即可开始</span>
           </div>
           <div class="api-status-actions">
-            <button class="btn btn-sm btn-secondary" type="button" id="apiStatusTestBtn">测试连接</button>
-            <button class="btn btn-sm btn-primary" type="button" id="apiStatusConfigBtn">去配置</button>
+            <button class="btn btn-ghost btn-sm" type="button" id="apiGuideBannerClose">知道了</button>
           </div>
         </div>
 
-        <!-- Free Tier Notification -->
-        <div class="free-tier-notification" id="freeTierNotification">
-          <div class="free-tier-notification-left">
-            <span class="free-tier-notification-icon">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10.29 3.86L1.82 18a2 2 0 0 0 1.71 3h16.94a2 2 0 0 0 1.71-3L13.71 3.86a2 2 0 0 0-3.42 0z"></path><line x1="12" y1="9" x2="12" y2="13"></line><line x1="12" y1="17" x2="12.01" y2="17"></line></svg>
+        <!-- API Status Bar -->
+        <div id="apiStatusBar" class="api-status-bar">
+          <div class="api-status-left">
+            <span id="apiStatusIcon">
+              <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--warning);">
+                <circle cx="12" cy="12" r="10"></circle>
+                <line x1="12" y1="8" x2="12" y2="12"></line>
+                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+              </svg>
             </span>
-            <span class="free-tier-notification-text">
-              今日剩余 <strong id="quotaRemaining">5</strong> 次回复
-            </span>
+            <span id="apiStatusBarText">尚未配置大模型 API，请填写地址、Key 和模型名</span>
           </div>
-          <button class="free-tier-notification-btn" type="button" id="freeTierUpgradeBtn">升级 Pro</button>
-          <button class="free-tier-notification-dismiss" id="freeTierDismissBtn" type="button" aria-label="关闭">
-            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-              <line x1="18" y1="6" x2="6" y2="18"></line>
-              <line x1="6" y1="6" x2="18" y2="18"></line>
-            </svg>
-          </button>
+          <div class="api-status-actions">
+            <button class="btn btn-secondary btn-sm" type="button" id="apiStatusTestBtn">测试连接</button>
+            <button class="btn btn-primary btn-sm" type="button" id="apiStatusConfigBtn">去配置</button>
+          </div>
         </div>
 
-        <!-- Tab Content: Personas -->
-        <div class="tab-content" id="tab-personas" role="tabpanel" aria-labelledby="nav-personas">
-          <div class="panel-grid">
-            <details class="panel" open>
-              <summary class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M20 21v-2a4 4 0 0 0-4-4H8a4 4 0 0 0-4 4v2"></path>
-                    <circle cx="12" cy="7" r="4"></circle>
-                  </svg>
-                </div>
-                <h2 class="panel-title" data-i18n="personaSettings">自定义角色</h2>
-                <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </summary>
-              <p class="panel-desc" data-i18n="personaHelp">创建多个 AI 角色，选择一个作为当前激活角色。</p>
-              <div class="item-list" id="personaList"></div>
-              <div class="persona-actions-row">
-                <button class="btn btn-primary" type="button" id="addPersonaBtn" data-i18n="addPersona">+ 添加角色</button>
-                <button class="btn btn-secondary" type="button" id="templateLibraryBtn">
-                  <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="7" height="7"></rect><rect x="14" y="3" width="7" height="7"></rect><rect x="14" y="14" width="7" height="7"></rect><rect x="3" y="14" width="7" height="7"></rect></svg>
-                  <span data-i18n="templateLibrary">模板库</span>
-                </button>
+        <!-- Tab: API -->
+        <div class="tab-content active" id="tab-api" role="tabpanel" aria-labelledby="nav-api">
+          <section class="section-card">
+            <div class="section-header">
+              <div class="section-title">
+                <h2>API 配置</h2>
+                <p>配置 AI 服务提供商和 API 密钥</p>
               </div>
-            </details>
-            <details class="panel" open>
-              <summary class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="3" y="3" width="18" height="18" rx="2" ry="2"></rect>
-                    <line x1="9" y1="9" x2="15" y2="15"></line>
-                    <line x1="15" y1="9" x2="9" y2="15"></line>
-                  </svg>
+            </div>
+            <div class="section-body">
+              <div class="api-config-status">
+                <div class="api-config-status-label">
+                  <span>AI 引擎</span>
                 </div>
-                <h2 class="panel-title" data-i18n="livePreview">实时人设预览</h2>
-                <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </summary>
-              <p class="panel-desc" data-i18n="previewHelp">测试当前激活角色的回复效果。</p>
+                <div class="api-status-indicator disconnected" id="apiStatusIndicator">
+                  <span class="status-dot disconnected"></span>
+                  <span id="apiStatusText">未连接</span>
+                </div>
+              </div>
+
+              <div class="setting-list">
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">API 提供商</div>
+                    <div class="setting-desc">选择你要使用的 AI 服务</div>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-select" id="apiProvider" style="width: 180px;">
+                      <option value="deepseek">DeepSeek</option>
+                      <option value="openai">OpenAI</option>
+                      <option value="anthropic">Anthropic</option>
+                      <option value="google">Google Gemini</option>
+                      <option value="qwen">通义千问</option>
+                      <option value="glm">智谱清言</option>
+                      <option value="custom">自定义</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="setting-row stack">
+                  <div class="setting-info">
+                    <div class="setting-label">API 地址 (URL)</div>
+                    <div class="setting-desc">OpenAI 兼容格式，通常以 /chat/completions 结尾</div>
+                  </div>
+                  <div class="setting-control full-width">
+                    <input type="text" class="form-input" id="apiUrlInput" placeholder="https://api.deepseek.com/v1/chat/completions" autocomplete="off" spellcheck="false" autocapitalize="off" style="width: 100%;">
+                  </div>
+                </div>
+                <div class="setting-row stack">
+                  <div class="setting-info">
+                    <div class="setting-label">API Key</div>
+                    <div class="setting-desc">仅保存在浏览器本地，不会上传</div>
+                  </div>
+                  <div class="setting-control full-width">
+                    <div class="api-key-wrapper" style="width: 100%;">
+                      <input type="password" class="form-input" id="apiKey" placeholder="粘贴您的 API Key" autocomplete="off" spellcheck="false" autocapitalize="off" style="width: 100%;">
+                      <button type="button" class="api-key-toggle" id="apiKeyToggle" title="显示/隐藏">
+                        <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                          <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
+                          <circle cx="12" cy="12" r="3"></circle>
+                        </svg>
+                      </button>
+                    </div>
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">模型名称</div>
+                    <div class="setting-desc">如 gpt-4o、deepseek-chat、glm-4-flash</div>
+                  </div>
+                  <div class="setting-control">
+                    <input type="text" class="form-input" id="modelNameInput" placeholder="deepseek-chat" autocomplete="off" spellcheck="false" autocapitalize="off" style="width: 200px;">
+                  </div>
+                </div>
+              </div>
+
+              <div class="api-test-row">
+                <button class="btn btn-primary" type="button" id="saveApiBtn">保存配置</button>
+                <button class="btn btn-secondary" type="button" id="testApiBtn">测试连接</button>
+                <div id="settingsKeyValidation" class="key-validation-hint"></div>
+              </div>
+
+              <details class="key-tutorial mt-6">
+                <summary>不知道如何获取 API Key？查看常见示例</summary>
+                <div class="tutorial-content">
+                  <p class="tutorial-vendor-title"><strong>DeepSeek（深度求索）</strong></p>
+                  <div class="tutorial-code-block">
+                    URL: https://api.deepseek.com/v1/chat/completions<br>
+                    模型: deepseek-chat
+                  </div>
+                  <p class="tutorial-vendor-title"><strong>智谱清言 (GLM)</strong></p>
+                  <div class="tutorial-code-block">
+                    URL: https://open.bigmodel.cn/api/paas/v4/chat/completions<br>
+                    模型: glm-4-flash
+                  </div>
+                  <p class="tutorial-vendor-title"><strong>通义千问 (Qwen)</strong></p>
+                  <div class="tutorial-code-block">
+                    URL: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions<br>
+                    模型: qwen-plus
+                  </div>
+                  <p class="tutorial-vendor-title"><strong>OpenAI</strong></p>
+                  <div class="tutorial-code-block">
+                    URL: https://api.openai.com/v1/chat/completions<br>
+                    模型: gpt-4o-mini
+                  </div>
+                  <p style="color: var(--text-tertiary);">模型名称会随厂商更新而变化，请以厂商控制台为准。Key 只保存在您的浏览器本地。</p>
+                </div>
+              </details>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-header">
+              
+              <div class="section-title">
+                <h2>实时预览</h2>
+                <p>测试当前激活角色的回复效果</p>
+              </div>
+            </div>
+            <div class="section-body">
               <div class="preview-chat" id="previewChat">
                 <div class="chat-bubble user">Hi, I'd like to ask about your product details.</div>
                 <div class="chat-bubble ai">Hello! I'd be happy to help. Which product would you like to know more about?</div>
               </div>
               <div class="preview-input-row">
-                <input type="text" class="form-input" id="previewInput" data-i18n="previewPlaceholder" placeholder="输入测试消息（支持 Markdown）...">
-                <button class="btn btn-primary" type="button" id="previewSendBtn" data-i18n="sendBtn">发送</button>
+                <input type="text" class="form-input" id="previewInput" placeholder="输入测试消息（支持 Markdown）...">
+                <button class="btn btn-primary" type="button" id="previewSendBtn">发送</button>
               </div>
-            </details>
-          </div>
+            </div>
+          </section>
         </div>
 
-        <!-- Tab Content: Knowledge -->
-        <div class="tab-content" id="tab-knowledge" role="tabpanel" aria-labelledby="nav-knowledge">
-          <div class="panel-grid">
-            <details class="panel" open>
-              <summary class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="10"></circle>
-                    <path d="M9.09 9a3 3 0 0 1 5.83 1c0 2-3 3-3 3"></path>
-                    <line x1="12" y1="17" x2="12.01" y2="17"></line>
-                  </svg>
+        <!-- Tab: Personas -->
+        <div class="tab-content" id="tab-personas" role="tabpanel" aria-labelledby="nav-personas">
+          <section class="section-card">
+            <div class="section-header">
+              
+              <div class="section-title">
+                <h2>自定义角色</h2>
+                <p>创建多个 AI 角色，选择一个作为当前激活角色</p>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="persona-list" id="personaList">
+                <div class="persona-card active">
+                  <div class="persona-card-header">
+                    <div class="persona-card-left">
+                      <div class="persona-avatar">默</div>
+                      <div>
+                        <input type="text" class="persona-name-input" value="默认角色 (Default)">
+                        <div class="persona-meta">当前使用 · 默认</div>
+                      </div>
+                    </div>
+                    <div class="persona-actions">
+                      <button class="btn btn-ghost btn-sm" type="button">编辑</button>
+                      <button class="btn btn-ghost btn-sm" type="button" style="color: var(--error);">删除</button>
+                    </div>
+                  </div>
+                  <div class="persona-prompt-section">
+                    <label class="form-label">角色 Prompt</label>
+                    <textarea placeholder="输入角色指令...">You are a helpful assistant.</textarea>
+                  </div>
                 </div>
-                <h2 class="panel-title" data-i18n="faq">知识库 / FAQ</h2>
-                <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </summary>
-              <p class="panel-desc" data-i18n="faqHelp">添加常见问答，AI 会自然融入这些信息。</p>
+                <div class="persona-card">
+                  <div class="persona-card-header">
+                    <div class="persona-card-left">
+                      <div class="persona-avatar">销</div>
+                      <div>
+                        <input type="text" class="persona-name-input" value="专业销售">
+                        <div class="persona-meta">34 字</div>
+                      </div>
+                    </div>
+                    <div class="persona-actions">
+                      <button class="btn btn-ghost btn-sm" type="button">设为当前</button>
+                      <button class="btn btn-ghost btn-sm" type="button">编辑</button>
+                      <button class="btn btn-ghost btn-sm" type="button" style="color: var(--error);">删除</button>
+                    </div>
+                  </div>
+                </div>
+              </div>
+              <div class="persona-actions-row">
+                <button class="btn btn-primary" type="button" id="addPersonaBtn">+ 添加角色</button>
+                <button class="btn btn-secondary" type="button" id="templateLibraryBtn">📋 模板库</button>
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Tab: Knowledge -->
+        <div class="tab-content" id="tab-knowledge" role="tabpanel" aria-labelledby="nav-knowledge">
+          <section class="section-card">
+            <div class="section-header">
+              
+              <div class="section-title">
+                <h2>知识库 / FAQ</h2>
+                <p>添加常见问答，AI 会自然融入这些信息</p>
+              </div>
+            </div>
+            <div class="section-body">
               <div class="faq-toolbar">
                 <div class="faq-search">
-                  <svg class="faq-search-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
                     <circle cx="11" cy="11" r="8"></circle>
                     <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
                   </svg>
-                  <input type="text" class="faq-search-input" id="faqSearch" data-i18n="faqSearchPlaceholder" placeholder="搜索问答...">
+                  <input type="text" class="faq-search-input" id="faqSearch" placeholder="搜索问答...">
                 </div>
-                <select class="form-select faq-category-select" id="faqCategoryFilter">
-                  <option value="all" data-i18n="allCategories">全部分类</option>
-                  <option value="product" data-i18n="catProduct">产品相关</option>
-                  <option value="price" data-i18n="catPrice">价格咨询</option>
-                  <option value="service" data-i18n="catService">售后服务</option>
-                  <option value="other" data-i18n="catOther">其他</option>
+                <select class="form-select" id="faqCategoryFilter" style="width: 140px;">
+                  <option value="">全部分类</option>
+                  <option value="product">产品</option>
+                  <option value="price">价格</option>
+                  <option value="shipping">物流</option>
                 </select>
+                <div class="faq-actions-group">
+                  <button class="btn btn-secondary" type="button" id="importFaqBtn">导入</button>
+                  <button class="btn btn-secondary" type="button" id="exportFaqBtn">导出</button>
+                </div>
               </div>
-              <div class="faq-batch-toolbar hidden" id="faqBatchToolbar">
-                <div class="batch-selection">
-                  <input type="checkbox" id="faqSelectAll" class="batch-select-all">
-                  <label for="faqSelectAll" class="batch-select-label" data-i18n="batchSelectAll">全选</label>
-                  <span class="batch-count" id="batchCount" data-i18n="batchCountPrefix">已选 </span>
+
+              <div class="batch-toolbar hidden" id="faqBatchToolbar">
+                <div>
+                  <input type="checkbox" id="faqSelectAll" class="faq-item-checkbox">
+                  <label for="faqSelectAll" style="margin-left: 6px; font-size: 13px;">全选</label>
+                  <span id="batchCount" style="margin-left: 8px; color: var(--text-tertiary); font-size: 13px;">已选 0 条</span>
                 </div>
                 <div class="batch-actions">
-                  <button class="btn btn-sm btn-secondary" type="button" id="batchDeleteBtn" data-i18n="batchDelete" title="批量删除">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><polyline points="3 6 5 6 21 6"></polyline><path d="M19 6v14a2 2 0 0 1-2 2H7a2 2 0 0 1-2-2V6m3 0V4a2 2 0 0 1 2-2h4a2 2 0 0 1 2 2v2"></path></svg>
-                    <span data-i18n="batchDelete">删除</span>
-                  </button>
-                  <select class="form-select form-select-sm" id="batchCategorySelect">
-                    <option value="" data-i18n="batchMoveTo">移动到分类...</option>
-                    <option value="product" data-i18n="catProduct">产品相关</option>
-                    <option value="price" data-i18n="catPrice">价格咨询</option>
-                    <option value="service" data-i18n="catService">售后服务</option>
-                    <option value="other" data-i18n="catOther">其他</option>
+                  <select class="form-select form-select-sm" id="batchCategorySelect" style="width: 120px;">
+                    <option value="">移动到...</option>
+                    <option value="product">产品</option>
+                    <option value="price">价格</option>
+                    <option value="shipping">物流</option>
                   </select>
-                  <button class="btn btn-sm btn-secondary" type="button" id="smartCategorizeBtn" data-i18n="smartCategorize" title="智能分类">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M12 2a10 10 0 1 0 10 10H12V2z"></path><path d="M12 12 2.1 12.1"></path><path d="M19.5 19.5c-1.4-1.4-3.5-2.8-6-3.5"></path></svg>
-                    <span data-i18n="smartCategorize">智能分类</span>
-                  </button>
+                  <button class="btn btn-secondary btn-sm" type="button" id="smartCategorizeBtn">智能分类</button>
+                  <button class="btn btn-secondary btn-sm" type="button" id="batchDeleteBtn" style="color: var(--error);">删除</button>
                 </div>
               </div>
-              <div class="item-list" id="faqList"></div>
-              <div class="faq-actions">
-                <button class="btn btn-secondary btn-add" type="button" id="addFaqBtn" data-i18n="addFaq">+ 添加问答</button>
-                <div class="import-export-btns">
-                  <button class="btn btn-secondary" type="button" id="importFaqBtn" data-i18n="importBtn" title="导入FAQ">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="7 10 12 15 17 10"></polyline><line x1="12" y1="15" x2="12" y2="3"></line></svg>
-                    <span data-i18n="importBtn">导入</span>
-                  </button>
-                  <button class="btn btn-secondary" type="button" id="exportFaqBtn" data-i18n="exportBtn" title="导出FAQ">
-                    <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path><polyline points="17 8 12 3 7 8"></polyline><line x1="12" y1="3" x2="12" y2="15"></line></svg>
-                    <span data-i18n="exportBtn">导出</span>
-                  </button>
+
+              <div class="faq-list" id="faqList">
+                <div class="faq-item">
+                  <div class="faq-item-header">
+                    <input type="checkbox" class="faq-item-checkbox">
+                    <div class="faq-item-content">
+                      <div class="faq-item-question">你们的产品支持哪些平台？</div>
+                      <div class="faq-item-answer">目前支持 WhatsApp、Messenger 和 Facebook 网页版，后续会支持更多平台。</div>
+                      <span class="faq-item-category">产品</span>
+                    </div>
+                  </div>
                 </div>
+                <div class="faq-item">
+                  <div class="faq-item-header">
+                    <input type="checkbox" class="faq-item-checkbox">
+                    <div class="faq-item-content">
+                      <div class="faq-item-question">如何升级 Pro 版本？</div>
+                      <div class="faq-item-answer">可以在账户页面输入激活码，或访问官网购买。</div>
+                      <span class="faq-item-category">价格</span>
+                    </div>
+                  </div>
+                </div>
+              </div>
+
+              <div class="persona-actions-row">
+                <button class="btn btn-primary" type="button" id="addFaqBtn">+ 添加问答</button>
               </div>
               <input type="file" id="faqFileInput" accept=".json" class="hidden">
-            </details>
-          </div>
+            </div>
+          </section>
         </div>
 
-        <!-- Tab Content: API -->
-        <div class="tab-content active" id="tab-api" role="tabpanel" aria-labelledby="nav-api">
-          <div class="panel-grid">
-            <details class="panel" open>
-              <summary class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 2a10 10 0 1 0 10 10H12V2z"></path>
-                    <path d="M12 12 2.1 12.1"></path>
-                    <path d="M19.5 19.5c-1.4-1.4-3.5-2.8-6-3.5"></path>
-                  </svg>
-                </div>
-                <h2 class="panel-title" data-i18n="apiConfig">API 配置</h2>
-                <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </summary>
-              <p class="panel-desc" data-i18n="apiConfigDesc">配置 AI 服务提供商和 API 密钥。</p>
-              <div class="api-config-section">
-                <div class="api-config-header">
-                  <span class="api-config-title" data-i18n="apiProvider">AI 引擎</span>
-                  <div class="api-status-pill disconnected" id="apiStatusIndicator">
-                    <span class="api-status-dot"></span>
-                    <span id="apiStatusText" data-i18n="apiDisconnected">未连接</span>
-                  </div>
-                </div>
-                <div class="custom-api-form">
-                  <div class="form-grid">
-                    <div class="form-group full-width">
-                      <label class="form-label" for="apiUrlInput">API 地址 (URL)</label>
-                      <input type="text" class="form-input" id="apiUrlInput" placeholder="https://api.deepseek.com/v1/chat/completions" autocomplete="off" spellcheck="false" autocapitalize="off">
-                      <div class="form-hint">OpenAI 兼容格式，通常以 /chat/completions 结尾</div>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label" for="apiKey" data-i18n="apiKey">API Key</label>
-                      <div class="api-key-wrapper">
-                        <input type="password" class="form-input" id="apiKey" placeholder="粘贴您的 API Key" autocomplete="off" spellcheck="false" autocapitalize="off">
-                        <button type="button" class="api-key-toggle" id="apiKeyToggle" title="显示/隐藏">
-                          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                            <path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"></path>
-                            <circle cx="12" cy="12" r="3"></circle>
-                          </svg>
-                        </button>
-                      </div>
-                      <div class="key-privacy-note"><svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect><path d="M7 11V7a5 5 0 0 1 10 0v4"></path></svg> 仅保存在浏览器本地，不会上传</div>
-                    </div>
-                    <div class="form-group">
-                      <label class="form-label" for="modelNameInput">模型名称</label>
-                      <input type="text" class="form-input" id="modelNameInput" placeholder="deepseek-chat" autocomplete="off" spellcheck="false" autocapitalize="off">
-                      <div class="form-hint">如 gpt-4o、deepseek-chat、glm-4-flash</div>
-                    </div>
-                  </div>
-                  <div class="api-test-row">
-                    <button class="btn btn-primary" type="button" id="saveApiBtn" data-i18n="saveConfig">保存配置</button>
-                    <button class="btn btn-secondary" type="button" id="testApiBtn" data-i18n="testConnection">测试连接</button>
-                    <div id="settingsKeyValidation" class="key-validation-hint"></div>
-                  </div>
-                  <details class="key-tutorial">
-                    <summary>不知道怎么填？查看常见示例</summary>
-                    <div class="tutorial-content">
-                      <p class="tutorial-vendor-title"><strong>DeepSeek（深度求索）</strong></p>
-                      <p class="tutorial-code-block">
-                        URL: https://api.deepseek.com/v1/chat/completions<br>
-                        模型: deepseek-chat
-                      </p>
-                      <p class="tutorial-vendor-title"><strong>智谱清言 (GLM)</strong></p>
-                      <p class="tutorial-code-block">
-                        URL: https://open.bigmodel.cn/api/paas/v4/chat/completions<br>
-                        模型: glm-4-flash
-                      </p>
-                      <p class="tutorial-vendor-title"><strong>通义千问 (Qwen)</strong></p>
-                      <p class="tutorial-code-block">
-                        URL: https://dashscope.aliyuncs.com/compatible-mode/v1/chat/completions<br>
-                        模型: qwen-plus
-                      </p>
-                      <p class="tutorial-vendor-title"><strong>OpenAI</strong></p>
-                      <p class="tutorial-code-block">
-                        URL: https://api.openai.com/v1/chat/completions<br>
-                        模型: gpt-4o-mini
-                      </p>
-                      <p class="tutorial-note">模型名称会随厂商更新而变化，请以厂商控制台为准。Key 只保存在您的浏览器本地。</p>
-                    </div>
-                  </details>
-                </div>
-              </div>
-            </details>
-          </div>
-        </div>
-
-        <!-- Tab Content: Settings -->
+        <!-- Tab: Settings -->
         <div class="tab-content" id="tab-settings" role="tabpanel" aria-labelledby="nav-settings">
-          <div class="panel-grid">
-            <details class="panel" open>
-              <summary class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M12 20h9"></path>
-                    <path d="M16.5 3.5a2.121 2.121 0 0 1 3 3L7 19l-4 1 1-4L16.5 3.5z"></path>
-                  </svg>
-                </div>
-                <h2 class="panel-title" data-i18n="replySettings">回复偏好</h2>
-                <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </summary>
-              <div class="form-grid mt-4">
-                <div class="form-group">
-                  <label class="form-label" for="tone" data-i18n="tone">回复语气</label>
-                  <select class="form-select" id="tone">
-                    <option value="auto" data-i18n="toneAuto">自动 (根据语境)</option>
-                    <option value="professional" data-i18n="tonePro">专业严谨</option>
-                    <option value="friendly" data-i18n="toneFriendly">热情友好</option>
-                    <option value="empathetic" data-i18n="toneEmpathetic">共情理解</option>
-                    <option value="direct" data-i18n="toneDirect">直接干练</option>
-                  </select>
-                </div>
-                <div class="form-group">
-                  <label class="form-label" for="replyLength" data-i18n="replyLength">回复长度</label>
-                  <select class="form-select" id="replyLength">
-                    <option value="auto" data-i18n="lenAuto">自动</option>
-                    <option value="short" data-i18n="lenShort">简短 (1-2句话)</option>
-                    <option value="medium" data-i18n="lenMedium">适中 (2-4句话)</option>
-                    <option value="long" data-i18n="lenLong">详细</option>
-                  </select>
-                </div>
+          <section class="section-card">
+            <div class="section-header">
+              
+              <div class="section-title">
+                <h2>回复偏好</h2>
+                <p>调整 AI 回复的语气、长度与生成方式</p>
               </div>
-            </details>
-            <details class="panel" open>
-              <summary class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M13 2 3 14h9l-1 8 10-12h-9l1-8z"></path>
-                  </svg>
-                </div>
-                <h2 class="panel-title" data-i18n="genMode">生成模式</h2>
-                <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </summary>
-              <div class="form-grid mt-4">
-                <div class="form-group full-width">
-                  <label class="form-label" for="generationMode" data-i18n="genModeLabel">回复生成方式</label>
-                  <select class="form-select" id="generationMode">
-                    <option value="auto" data-i18n="genModeAuto">自动检索（检测到未回复消息自动生成）</option>
-                    <option value="manual" data-i18n="genModeManual">手动生成（点击悬浮图标）</option>
-                  </select>
-                  <div class="form-hint mt-2" data-i18n="genModeHint">自动模式：检测到客户未回复消息时自动生成回复并填入输入框（不会自动发送）；手动模式：点击悬浮图标生成回复。</div>
-                </div>
-              </div>
-            </details>
-            <details class="panel" open>
-              <summary class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <circle cx="12" cy="12" r="3"></circle>
-                    <path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path>
-                  </svg>
-                </div>
-                <h2 class="panel-title" data-i18n="uiSettings">界面与交互</h2>
-                <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </summary>
-              <div class="form-grid mt-4">
-                <div class="form-group full-width">
-                  <div class="form-label" id="shortcutLabel" data-i18n="shortcut">快捷键</div>
-                  <div class="shortcut-cards" role="group" aria-labelledby="shortcutLabel">
-                    <div class="shortcut-card">
-                      <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"></circle><path d="M19.4 15a1.65 1.65 0 0 0 .33 1.82l.06.06a2 2 0 0 1 0 2.83 2 2 0 0 1-2.83 0l-.06-.06a1.65 1.65 0 0 0-1.82-.33 1.65 1.65 0 0 0-1 1.51V21a2 2 0 0 1-2 2 2 2 0 0 1-2-2v-.09A1.65 1.65 0 0 0 9 19.4a1.65 1.65 0 0 0-1.82.33l-.06.06a2 2 0 0 1-2.83 0 2 2 0 0 1 0-2.83l.06-.06a1.65 1.65 0 0 0 .33-1.82 1.65 1.65 0 0 0-1.51-1H3a2 2 0 0 1-2-2 2 2 0 0 1 2-2h.09A1.65 1.65 0 0 0 4.6 9a1.65 1.65 0 0 0-.33-1.82l-.06-.06a2 2 0 0 1 0-2.83 2 2 0 0 1 2.83 0l.06.06a1.65 1.65 0 0 0 1.82.33H9a1.65 1.65 0 0 0 1-1.51V3a2 2 0 0 1 2-2 2 2 0 0 1 2 2v.09a1.65 1.65 0 0 0 1 1.51 1.65 1.65 0 0 0 1.82-.33l.06-.06a2 2 0 0 1 2.83 0 2 2 0 0 1 0 2.83l-.06.06a1.65 1.65 0 0 0-.33 1.82V9a1.65 1.65 0 0 0 1.51 1H21a2 2 0 0 1 2 2 2 2 0 0 1-2 2h-.09a1.65 1.65 0 0 0-1.51 1z"></path></svg>
-                      <span class="shortcut-desc">打开/关闭悬浮按钮</span>
-                      <button type="button" class="shortcut-recorder" id="shortcutRecorder" title="点击后按下组合键">Alt + 1</button>
-                    </div>
-                    <div class="shortcut-card">
-                      <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"></line><polygon points="22 2 15 22 11 13 2 9 22 2"></polygon></svg>
-                      <span class="shortcut-key">Ctrl+Enter</span>
-                      <span class="shortcut-desc">生成 AI 回复</span>
-                    </div>
-                    <div class="shortcut-card">
-                      <svg class="shortcut-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                      <span class="shortcut-key">Ctrl+R</span>
-                      <span class="shortcut-desc">重新生成回复</span>
-                    </div>
+            </div>
+            <div class="section-body">
+              <div class="setting-list">
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">回复语气</div>
+                    <div class="setting-desc">AI 回复客户时使用的整体风格</div>
                   </div>
-                  <div class="form-hint mt-2" id="shortcutHint">点击右侧按钮后按下组合键（至少含 Ctrl/Alt/Shift/Cmd 之一）。Esc 取消。</div>
+                  <div class="setting-control">
+                    <select class="form-select" id="tone" style="width: 160px;">
+                      <option value="auto">自动</option>
+                      <option value="professional">专业</option>
+                      <option value="friendly">友好</option>
+                      <option value="concise">简洁</option>
+                    </select>
+                  </div>
                 </div>
-                <div class="form-group">
-                  <label class="form-label" for="btnTheme" data-i18n="btnTheme">悬浮按钮主题</label>
-                  <select class="form-select" id="btnTheme">
-                    <option value="gradient" data-i18n="themeGradient">品牌靛蓝（默认）</option>
-                    <option value="aurora" data-i18n="themeAurora">极光渐变</option>
-                    <option value="sunset" data-i18n="themeSunset">日落暖橙</option>
-                    <option value="ocean" data-i18n="themeOcean">海洋深蓝</option>
-                    <option value="carbon" data-i18n="themeCarbon">碳纤维黑</option>
-                    <option value="neon" data-i18n="themeNeon">赛博霓虹</option>
-                    <option value="minimal" data-i18n="themeMinimal">极简黑白</option>
-                    <option value="glass" data-i18n="themeGlass">毛玻璃</option>
-                  </select>
-                  <div class="theme-preview" id="themePreview" aria-hidden="true">
-                    <div class="theme-preview-label">实时预览</div>
-                    <div class="theme-preview-stage">
-                      <span class="theme-preview-btn" id="themePreviewBtn">
-                        <svg viewBox="0 0 24 24" width="16" height="16" stroke="currentColor" stroke-width="2" fill="none" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path></svg>
-                        <span>AI</span>
-                      </span>
-                    </div>
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">回复长度</div>
+                    <div class="setting-desc">控制生成回复的详细程度</div>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-select" id="replyLength" style="width: 160px;">
+                      <option value="auto">自动</option>
+                      <option value="short">简短</option>
+                      <option value="medium">适中</option>
+                      <option value="long">详细</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="setting-row">
+                  <div class="setting-info">
+                    <div class="setting-label">生成模式</div>
+                    <div class="setting-desc">自动模式自动填入输入框，手动模式需点击悬浮图标</div>
+                  </div>
+                  <div class="setting-control">
+                    <select class="form-select" id="generationMode" style="width: 160px;">
+                      <option value="auto">自动模式</option>
+                      <option value="manual">手动模式</option>
+                    </select>
                   </div>
                 </div>
               </div>
-            </details>
-          </div>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-header">
+              
+              <div class="section-title">
+                <h2>界面与交互</h2>
+                <p>自定义悬浮按钮外观与快捷键</p>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="form-grid">
+                <div class="form-group full-width">
+                  <label class="form-label">悬浮按钮主题</label>
+                  <div class="form-row">
+                    <button class="theme-preview-btn selected" type="button" id="themePreviewBtn" data-value="gradient" style="background: linear-gradient(135deg, #4361ee, #725ac1);"></button>
+                    <button class="theme-preview-btn" type="button" data-value="blue" style="background: #4361ee;"></button>
+                    <button class="theme-preview-btn" type="button" data-value="dark" style="background: #1e293b;"></button>
+                    <button class="theme-preview-btn" type="button" data-value="light" style="background: #f1f5f9; border-color: var(--border-strong);"></button>
+                    <select id="btnTheme" class="hidden">
+                      <option value="gradient" selected>渐变</option>
+                      <option value="blue">蓝色</option>
+                      <option value="dark">深色</option>
+                      <option value="light">浅色</option>
+                    </select>
+                  </div>
+                </div>
+                <div class="form-group full-width">
+                  <label class="form-label" id="shortcutLabel">快捷键</label>
+                  <div class="shortcut-cards">
+                    <div class="shortcut-card">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <circle cx="12" cy="12" r="10"></circle>
+                        <line x1="12" y1="8" x2="12" y2="12"></line>
+                        <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                      </svg>
+                      <div>
+                        <div class="shortcut-key" id="shortcut">Alt + 1</div>
+                        <div class="shortcut-desc">打开/关闭悬浮按钮</div>
+                      </div>
+                      <button class="shortcut-recorder" id="shortcutRecorder" type="button">点击修改</button>
+                    </div>
+                    <div class="shortcut-card">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="4 7 4 4 20 4 20 7"></polyline>
+                        <line x1="9" y1="20" x2="15" y2="20"></line>
+                        <line x1="12" y1="4" x2="12" y2="20"></line>
+                      </svg>
+                      <div>
+                        <div class="shortcut-key">Ctrl+Enter</div>
+                        <div class="shortcut-desc">生成 AI 回复</div>
+                      </div>
+                    </div>
+                    <div class="shortcut-card">
+                      <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <polyline points="23 4 23 10 17 10"></polyline>
+                        <polyline points="1 20 1 14 7 14"></polyline>
+                        <path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path>
+                      </svg>
+                      <div>
+                        <div class="shortcut-key">Ctrl+R</div>
+                        <div class="shortcut-desc">重新生成回复</div>
+                      </div>
+                    </div>
+                  </div>
+                </div>
+              </div>
+            </div>
+          </section>
         </div>
 
-        <!-- Tab Content: Account -->
+        <!-- Tab: Account -->
         <div class="tab-content" id="tab-account" role="tabpanel" aria-labelledby="nav-account">
-          <div class="panel-grid">
-            <details class="panel" open>
-              <summary class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <polygon points="12 2 15.09 8.26 22 9.27 17 14.14 18.18 21.02 12 17.77 5.82 21.02 7 14.14 2 9.27 8.91 8.26 12 2"></polygon>
-                  </svg>
-                </div>
-                <h2 class="panel-title" data-i18n="licenseStatus">许可证状态</h2>
-                <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </summary>
-              <p class="panel-desc" data-i18n="licenseDesc">当前为免费版，每日限制 50 次回复。升级 Pro 解锁无限回复。</p>
-              <div class="license-status-card">
-                <div class="license-status-header">
-                  <span class="license-badge free" id="licenseBadge">
-                    <span id="licenseType">免费版</span>
-                  </span>
-                </div>
-                <button class="btn btn-primary w-full" type="button" id="upgradeBtn" data-i18n="upgradeBtn">升级至 Pro 版</button>
-                <div class="activation-input-group">
-                  <input type="text" class="activation-input" id="activationCodeInput" data-i18n="activatePlaceholder" placeholder="输入激活码（如 PRO-XXXX-XXXX）">
-                  <div class="activation-error hidden" id="activationError"></div>
-                  <button class="btn btn-primary activation-btn" type="button" id="activateBtn">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                    <span data-i18n="activateLabel">激活</span>
-                  </button>
-                  <div class="activation-success" id="activationSuccess">
-                    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path><polyline points="22 4 12 14.01 9 11.01"></polyline></svg>
-                    <span data-i18n="activateSuccessPrefix">激活成功！已升级到 </span>
-                    <span id="licenseTypeDisplay"></span>
-                  </div>
-                </div>
+          <div class="license-card">
+            <div class="license-info">
+              <div class="license-icon">
+                <svg width="22" height="22" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                  <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                  <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                </svg>
               </div>
-            </details>
-            <details class="panel" id="devicePanel" open>
-              <summary class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
-                    <line x1="8" y1="21" x2="16" y2="21"></line>
-                    <line x1="12" y1="17" x2="12" y2="21"></line>
-                  </svg>
-                </div>
-                <h2 class="panel-title" data-i18n="deviceManagement">设备管理</h2>
-                <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </summary>
-              <p class="panel-desc" data-i18n="deviceMgmtDesc">查看当前激活码绑定的设备，可主动解绑旧设备以腾出名额。最多绑定 2 台设备，每月可换绑 1 次。</p>
-              <div class="device-mgmt-section">
-                <div class="device-mgmt-summary">
-                  <div class="device-mgmt-stat">
-                    <span class="device-mgmt-stat-label" data-i18n="deviceSlots">已用名额</span>
-                    <span class="device-mgmt-stat-value" id="deviceSlotsValue">-</span>
-                  </div>
-                  <div class="device-mgmt-stat">
-                    <span class="device-mgmt-stat-label" data-i18n="deviceRebindRemaining">本月剩余换绑</span>
-                    <span class="device-mgmt-stat-value" id="deviceRebindValue">-</span>
-                  </div>
-                  <button class="btn btn-secondary device-mgmt-refresh" type="button" id="refreshDevicesBtn">
-                    <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="23 4 23 10 17 10"></polyline><polyline points="1 20 1 14 7 14"></polyline><path d="M3.51 9a9 9 0 0 1 14.85-3.36L23 10M1 14l4.64 4.36A9 9 0 0 0 20.49 15"></path></svg>
-                    <span data-i18n="refresh">刷新</span>
-                  </button>
-                </div>
-                <div class="device-mgmt-warn hidden" id="deviceRebindPausedWarn"></div>
-                <div class="device-list" id="deviceList">
-                  <div class="device-list-empty" data-i18n="deviceListEmpty">激活后可查看设备列表</div>
-                </div>
+              <div>
+                <div class="license-title" id="licenseTypeDisplay">免费版</div>
+                <div class="license-subtitle" id="licenseType">使用免费版，每日 50 次回复额度</div>
               </div>
-            </details>
-            <details class="panel" open>
-              <summary class="panel-header">
-                <div class="panel-icon">
-                  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                    <path d="M21 15v4a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2v-4"></path>
-                    <polyline points="17 8 12 3 7 8"></polyline>
-                    <line x1="12" y1="3" x2="12" y2="15"></line>
-                  </svg>
-                </div>
-                <h2 class="panel-title" data-i18n="dataBackup">数据备份</h2>
-                <svg class="panel-collapse-btn" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><polyline points="6 9 12 15 18 9"></polyline></svg>
-              </summary>
-              <p class="panel-desc" data-i18n="dataBackupDesc">导出或导入全部设置（角色、FAQ、偏好、API 配置）。</p>
-              <div class="data-backup-section">
-                <div class="data-backup-btns">
-                  <button class="btn btn-secondary" type="button" id="exportAllSettingsBtn" data-i18n="exportAllSettings">导出全部设置</button>
-                  <button class="btn btn-secondary" type="button" id="importAllSettingsBtn" data-i18n="importSettings">导入设置</button>
-                  <input type="file" id="allSettingsFileInput" class="hidden" accept=".json">
-                </div>
-              </div>
-            </details>
-          </div>
-        </div>
-
-        <!-- Privacy Notice -->
-        <div class="privacy-notice">
-          <svg class="privacy-notice-icon" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-            <path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"></path>
-          </svg>
-          <span data-i18n="privacyNotice">您的数据仅存储在浏览器本地，不会上传到服务器。API Key 仅用于直接调用 AI 服务。</span>
-        </div>
-
-        <!-- Page Footer -->
-        <footer class="page-footer">
-          <div class="footer-status-bar">
-            <div class="footer-status-item">
-              <svg class="footer-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-              </svg>
-              <span class="footer-status-label" data-i18n="statReplies">累计回复:</span>
-              <span class="footer-status-value" id="statReplies">0</span>
             </div>
-            <div class="footer-status-item">
-              <svg class="footer-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <polyline points="22 12 18 12 15 21 9 3 6 12 2 12"></polyline>
-              </svg>
-              <span class="footer-status-label" data-i18n="statSuccess">成功率:</span>
-              <span class="footer-status-value" id="statSuccess" data-tooltip="暂无数据">-</span>
-            </div>
-            <div class="footer-status-item">
-              <svg class="footer-status-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-                <circle cx="12" cy="12" r="10"></circle>
-                <polyline points="12 6 12 12 16 14"></polyline>
-              </svg>
-              <span class="footer-status-label" data-i18n="statQuota">今日配额:</span>
-              <span class="footer-status-value" id="footerStatQuota">0/50</span>
+            <div style="display: flex; align-items: center; gap: 12px;">
+              <span class="license-badge free" id="licenseBadge">FREE</span>
+              <button class="btn btn-primary" type="button" id="upgradeBtn">升级 Pro</button>
             </div>
           </div>
+
+          <section class="section-card">
+            <div class="section-header">
+              
+              <div class="section-title">
+                <h2>激活码</h2>
+                <p>输入激活码解锁 Pro 功能</p>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="setting-row">
+                <div class="setting-info">
+                  <div class="setting-label">激活码</div>
+                  <div class="setting-desc">输入购买获得的激活码解锁 Pro 功能</div>
+                </div>
+                <div class="setting-control" style="max-width: 320px;">
+                  <div class="activation-form" style="display: flex; gap: 8px; width: 100%;">
+                    <input type="text" class="form-input" id="activationCodeInput" placeholder="输入激活码" autocomplete="off" autocapitalize="off" style="flex: 1;">
+                    <button class="btn btn-primary" type="button" id="activateBtn">激活</button>
+                  </div>
+                </div>
+              </div>
+              <div id="activationError" class="activation-message error hidden">激活码无效，请检查后重试。</div>
+              <div id="activationSuccess" class="activation-message success hidden">激活成功！</div>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-header">
+              
+              <div class="section-title">
+                <h2>设备管理</h2>
+                <p>管理已激活的设备，保护账户安全</p>
+              </div>
+            </div>
+            <div class="section-body">
+              <div style="display: flex; align-items: center; gap: 16px; margin-bottom: 16px; font-size: 13px; color: var(--text-secondary);">
+                <span>设备槽位: <strong id="deviceSlotsValue">1/3</strong></span>
+                <span>剩余换绑: <strong id="deviceRebindValue">3</strong></span>
+                <button class="btn btn-secondary btn-sm" type="button" id="refreshDevicesBtn" style="margin-left: auto;">刷新</button>
+              </div>
+              <div id="deviceRebindPausedWarn" class="activation-message error hidden" style="margin-bottom: 16px;">换绑功能已暂停，请联系客服。</div>
+              <div class="device-list" id="deviceList">
+                <div class="device-card">
+                  <div class="device-info">
+                    <div class="device-icon">
+                      <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                        <rect x="2" y="3" width="20" height="14" rx="2" ry="2"></rect>
+                        <line x1="8" y1="21" x2="16" y2="21"></line>
+                        <line x1="12" y1="17" x2="12" y2="21"></line>
+                      </svg>
+                    </div>
+                    <div>
+                      <div class="device-name">当前设备</div>
+                      <div class="device-meta">Chrome on Windows · 最后在线 刚刚</div>
+                    </div>
+                  </div>
+                  <span class="device-current">当前使用</span>
+                </div>
+              </div>
+            </div>
+          </section>
+
+          <section class="section-card">
+            <div class="section-header">
+              
+              <div class="section-title">
+                <h2>数据备份</h2>
+                <p>导出或导入全部设置</p>
+              </div>
+            </div>
+            <div class="section-body">
+              <div class="data-actions">
+                <button class="btn btn-secondary" type="button" id="exportAllSettingsBtn">导出全部设置</button>
+                <button class="btn btn-secondary" type="button" id="importAllSettingsBtn">导入设置</button>
+                <input type="file" id="allSettingsFileInput" accept=".json" class="hidden">
+              </div>
+            </div>
+          </section>
+        </div>
+
+        <!-- Footer -->
+        <footer class="footer-status-bar">
+          <div class="footer-stats">
+            <div class="footer-stat">
+              <span>累计回复</span>
+              <strong id="statReplies">0</strong>
+            </div>
+            <div class="footer-stat">
+              <span>成功率</span>
+              <strong id="statSuccess">0%</strong>
+            </div>
+            <div class="footer-stat">
+              <span>今日配额</span>
+              <strong id="footerStatQuota">0/50</strong>
+            </div>
+            <div class="footer-stat footer-status-item" id="saveStatusEl"></div>
+          </div>
+          <div>数据仅存储在浏览器本地</div>
         </footer>
-      </main>
-    </div>
-  </div>
-
-  <!-- Toast -->
-  <div class="toast" id="toast">
-    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
-      <polyline points="22 4 12 14.01 9 11.01"></polyline>
-    </svg>
-    <span class="toast-msg" id="toastMsg">保存成功</span>
-  </div>
-
-  <!-- Template Modal -->
-  <div class="modal-overlay" id="templateModal" role="dialog" aria-modal="true" aria-labelledby="templateModalTitle">
-    <div class="modal-content">
-      <div class="modal-header">
-        <h3 id="templateModalTitle" data-i18n="templateLibrary">角色模板库</h3>
       </div>
-      <div class="modal-body">
-        <p class="panel-desc" data-i18n="templateHelp">选择一个预设模板快速创建新角色。</p>
-        <div class="item-list" id="templateGrid"></div>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" id="closeTemplateBtn" data-i18n="close">关闭</button>
-      </div>
-    </div>
+    </main>
   </div>
 
   <!-- Upgrade Modal -->
-  <div class="modal-overlay" id="upgradeModal" role="dialog" aria-modal="true" aria-labelledby="upgradeModalTitle">
-    <div class="modal-content">
+  <div class="modal-overlay" id="upgradeModal">
+    <div class="modal">
       <div class="modal-header">
-        <h3 id="upgradeModalTitle" data-i18n="upgradeModalTitle">升级 ChatGenius Pro</h3>
+        <h3>升级 Pro</h3>
+        <button class="modal-close" id="closeUpgradeModal" type="button" aria-label="关闭">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div class="modal-body">
-        <p class="panel-desc" data-i18n="upgradeModalDesc">升级到 Pro 版解锁无限回复、高级角色模板、优先支持等专属功能。</p>
-      </div>
-      <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" id="closeUpgradeModal" data-i18n="close">关闭</button>
-        <button class="btn btn-primary" type="button" id="upgradeOptionBuy" data-i18n="upgradeBtn">立即升级</button>
-        <button class="btn btn-secondary" type="button" id="useActivationCodeBtn" data-i18n="haveActivationCode">我有激活码</button>
+        <p>解锁无限回复、更多角色和高级模型支持。</p>
+        <button class="btn btn-primary mt-4" type="button" id="useActivationCodeBtn">使用激活码</button>
       </div>
     </div>
   </div>
 
   <!-- Confirm Modal -->
-  <div class="modal-overlay" id="confirmModal" role="dialog" aria-modal="true" aria-labelledby="confirmTitle">
-    <div class="modal-content modal-sm">
+  <div class="modal-overlay" id="confirmModal">
+    <div class="modal" style="max-width: 420px;">
       <div class="modal-header">
         <h3 id="confirmTitle">确认</h3>
+        <button class="modal-close" type="button" aria-label="关闭" onclick="document.getElementById('confirmModal').classList.remove('show')">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
       </div>
       <div class="modal-body">
-        <p class="panel-desc" id="confirmMessage">确定要执行此操作吗？</p>
+        <p id="confirmMessage">确定要执行此操作吗？</p>
       </div>
       <div class="modal-footer">
-        <button class="btn btn-secondary" type="button" id="confirmCancelBtn" data-i18n="cancel">取消</button>
-        <button class="btn btn-destructive" type="button" id="confirmOkBtn" data-i18n="confirm">确认</button>
+        <button class="btn btn-secondary" type="button" id="confirmCancelBtn">取消</button>
+        <button class="btn btn-primary" type="button" id="confirmOkBtn">确定</button>
+      </div>
+    </div>
+  </div>
+
+  <!-- Template Modal -->
+  <div class="modal-overlay" id="templateModal">
+    <div class="modal" style="max-width: 640px;">
+      <div class="modal-header">
+        <h3>角色模板库</h3>
+        <button class="modal-close" id="closeTemplateBtn" type="button" aria-label="关闭">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+            <line x1="18" y1="6" x2="6" y2="18"></line>
+            <line x1="6" y1="6" x2="18" y2="18"></line>
+          </svg>
+        </button>
+      </div>
+      <div class="modal-body">
+        <div class="faq-list" id="templateGrid">
+          <div class="faq-item">
+            <div class="faq-item-question">专业客服</div>
+            <div class="faq-item-answer">礼貌、耐心、专业的客户支持角色</div>
+          </div>
+          <div class="faq-item">
+            <div class="faq-item-question">销售专家</div>
+            <div class="faq-item-answer">善于挖掘需求、促成成交的销售角色</div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </div>
+
+  <!-- Toast -->
+  <div class="toast" id="toast">
+    <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" style="color: var(--success);">
+      <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+      <polyline points="22 4 12 14.01 9 11.01"></polyline>
+    </svg>
+    <span id="toastMsg">操作成功</span>
+    <button class="modal-close toast-close" type="button" aria-label="关闭" style="margin-left: auto;">
+      <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <line x1="18" y1="6" x2="6" y2="18"></line>
+        <line x1="6" y1="6" x2="18" y2="18"></line>
+      </svg>
+    </button>
+  </div>
+
+  <!-- Command Palette -->
+  <div class="command-palette" id="cmdOverlay">
+    <div class="command-palette-box">
+        <input type="text" class="command-input" id="cmdInput" placeholder="搜索设置、角色或 FAQ..." autocomplete="off">
+        <div class="command-results" id="cmdResults">
+          <div class="command-item active">
+          <span class="command-item-icon">⚙️</span>
+          <div>
+            <div style="font-weight: 600; color: var(--text-primary);">API 配置</div>
+            <div style="font-size: 12px;">大模型 API 设置</div>
+          </div>
+        </div>
+        <div class="command-item">
+          <span class="command-item-icon">👤</span>
+          <div>
+            <div style="font-weight: 600; color: var(--text-primary);">AI 角色</div>
+            <div style="font-size: 12px;">管理自定义角色</div>
+          </div>
+        </div>
       </div>
     </div>
   </div>
 
   <!-- Empty State Template -->
   <template id="emptyStateTpl">
-    <div class="empty-state">
-      <div class="empty-state-icon">
-        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round">
-          <path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"></path>
-        </svg>
-      </div>
-      <div class="empty-state-title"></div>
-      <div class="empty-state-desc"></div>
+    <div class="empty-state" style="padding: 40px 24px; text-align: center; color: var(--text-tertiary);">
+      <div class="empty-state-icon" style="width: 48px; height: 48px; margin: 0 auto 16px; border-radius: var(--radius-lg); background: var(--brand-light); color: var(--brand); display: flex; align-items: center; justify-content: center; font-size: 20px;">📭</div>
+      <div class="empty-state-title" style="font-size: 15px; font-weight: 600; color: var(--text-primary); margin-bottom: 4px;"></div>
+      <div class="empty-state-desc" style="font-size: 13px;"></div>
     </div>
   </template>
 
-  <!-- Command Palette -->
-  <div class="cmd-overlay" id="cmdOverlay" role="dialog" aria-modal="true" aria-label="命令面板">
-    <div class="cmd-palette">
-      <div class="cmd-input-wrap">
-        <svg class="cmd-input-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
-          <circle cx="11" cy="11" r="8"></circle>
-          <line x1="21" y1="21" x2="16.65" y2="16.65"></line>
-        </svg>
-        <input class="cmd-input" id="cmdInput" placeholder="搜索设置、角色、FAQ…" autocomplete="off" spellcheck="false">
-      </div>
-      <div class="cmd-results" id="cmdResults"></div>
+  <!-- Free Tier Notification -->
+  <div class="free-tier-notification hidden" id="freeTierNotification">
+    <div class="free-tier-inner">
+      <span>今日剩余 <strong id="quotaRemaining">5</strong> 次回复</span>
+      <button class="btn btn-primary btn-sm" type="button" id="freeTierUpgradeBtn">升级 Pro</button>
+      <button class="btn btn-ghost btn-sm" type="button" id="freeTierDismissBtn">关闭</button>
     </div>
   </div>
 
-  <script src="fingerprint.js"></script>
   <script src="options.js"></script>
-  <script src="skeleton-fallback.js"></script>
 </body>
 </html>
